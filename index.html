@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OHM Certificates</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --text:#c9d1d9;--muted:#8b949e;--accent:#58a6ff;--accent-dim:#1f3a5f;
+  --success:#3fb950;--warn:#d29922;--error:#f85149;--red-dim:#3b1a1a;
+  --green-dim:#1a3b20;--warn-dim:#3b2e0a;--radius:8px;--sidebar:240px;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme=dark]){
+    --bg:#f6f8fa;--surface:#ffffff;--surface2:#f0f2f5;--border:#d0d7de;
+    --text:#1f2328;--muted:#656d76;--accent:#0969da;--accent-dim:#dbeafe;
+    --red-dim:#ffdce0;--green-dim:#dcffe4;--warn-dim:#fff3cd;
+  }
+}
+:root[data-theme=light]{
+  --bg:#f6f8fa;--surface:#ffffff;--surface2:#f0f2f5;--border:#d0d7de;
+  --text:#1f2328;--muted:#656d76;--accent:#0969da;--accent-dim:#dbeafe;
+  --red-dim:#ffdce0;--green-dim:#dcffe4;--warn-dim:#fff3cd;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Inter,system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--text);line-height:1.5}
+button{cursor:pointer;font-family:inherit;font-size:14px}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
+a{color:var(--accent);text-decoration:none}
+
+/* ---- AUTH ---- */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:400px}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .logo-mark{font-size:32px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.auth-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.auth-tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.auth-tab{background:none;border:none;color:var(--muted);padding:10px 16px;font-size:14px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.2s}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.form-control{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);outline:none;transition:.2s}
+.form-control:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);font-weight:500;border:none;transition:.2s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--error);color:#fff}
+.btn-danger:hover{filter:brightness(1.1)}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{filter:brightness(1.1)}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-full{width:100%;justify-content:center}
+.auth-link{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+.auth-error{background:var(--red-dim);border:1px solid var(--error);color:var(--error);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-bottom:16px}
+
+/* ---- APP LAYOUT ---- */
+#app{display:none;height:100vh;overflow:hidden}
+#app.visible{display:flex}
+#sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;transition:.25s}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo{font-size:20px;font-weight:700;color:var(--accent)}
+.sidebar-title{font-size:13px;font-weight:600;color:var(--text)}
+.sidebar-nav{flex:1;padding:8px 0}
+.nav-section{margin:4px 0}
+.nav-section-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;color:var(--muted);font-weight:500;cursor:pointer;border-radius:0;transition:.15s;user-select:none;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item .nav-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.nav-item .nav-badge{margin-left:auto;background:var(--error);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-item.disabled{opacity:.5;pointer-events:none}
+.nav-coming{font-size:10px;color:var(--warn);margin-left:auto}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.user-row{display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-role{font-size:11px;color:var(--muted)}
+.btn-logout{background:none;border:none;color:var(--muted);padding:4px;font-size:16px;border-radius:4px}
+.btn-logout:hover{color:var(--error)}
+
+/* ---- CONTENT ---- */
+#content-area{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.view{display:none;flex:1;padding:24px;max-width:1200px;width:100%}
+.view.active{display:block}
+.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.view-title{font-size:20px;font-weight:700}
+.view-subtitle{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ---- CARDS ---- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:4px}
+.stat-value{font-size:28px;font-weight:700;line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-card.success .stat-value{color:var(--success)}
+.stat-card.warn .stat-value{color:var(--warn)}
+.stat-card.error .stat-value{color:var(--error)}
+
+/* ---- FORM SECTIONS ---- */
+.form-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.form-section-title{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.field-grid-3{grid-template-columns:repeat(3,1fr)}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-group label{font-size:12px;font-weight:500;color:var(--muted)}
+.field-group input,.field-group select,.field-group textarea{padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:100%;outline:none;transition:.15s}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--accent)}
+.field-group textarea{resize:vertical;min-height:70px}
+
+/* ---- APPLIANCE TABLE ---- */
+.appliance-table-wrap{overflow-x:auto}
+.appliance-table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+.appliance-table th{background:var(--surface2);border:1px solid var(--border);padding:8px 6px;font-weight:600;color:var(--muted);text-align:left;white-space:nowrap}
+.appliance-table td{border:1px solid var(--border);padding:4px 4px}
+.appliance-table input,.appliance-table select{background:transparent;border:none;color:var(--text);width:100%;padding:4px;outline:none;font-size:12px}
+.appliance-table input:focus,.appliance-table select:focus{background:var(--accent-dim)}
+.result-pass{color:var(--success);font-weight:700}
+.result-fail{color:var(--error);font-weight:700}
+.btn-remove-row{background:none;border:none;color:var(--error);font-size:16px;padding:2px 6px;border-radius:4px;cursor:pointer}
+.btn-remove-row:hover{background:var(--red-dim)}
+
+/* ---- HISTORY / LIST ---- */
+.list-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.search-input{flex:1;min-width:200px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);outline:none}
+.search-input:focus{border-color:var(--accent)}
+.cert-list{display:flex;flex-direction:column;gap:10px}
+.cert-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cert-row-info{flex:1;min-width:0}
+.cert-ref{font-size:13px;font-weight:700;color:var(--accent)}
+.cert-address{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cert-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.cert-row-actions{display:flex;gap:6px;flex-shrink:0}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-draft{background:var(--surface2);color:var(--muted)}
+.badge-done{background:var(--green-dim);color:var(--success)}
+.badge-overdue{background:var(--red-dim);color:var(--error)}
+.badge-due{background:var(--warn-dim);color:var(--warn)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:14px}
+
+/* ---- SETTINGS ---- */
+.settings-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto}
+.settings-tab{background:none;border:none;padding:10px 16px;color:var(--muted);font-size:13px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:.15s}
+.settings-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.settings-pane{display:none}
+.settings-pane.active{display:block}
+
+/* ---- PLACEHOLDER ---- */
+.placeholder-view{text-align:center;padding:80px 20px}
+.placeholder-view .ph-icon{font-size:64px;margin-bottom:16px;opacity:.3}
+.placeholder-view h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.placeholder-view p{color:var(--muted);font-size:14px;max-width:400px;margin:0 auto}
+
+/* ---- MODAL ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+/* ---- TOAST ---- */
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:340px}
+.toast{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;animation:slideIn .2s ease}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--error)}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.warn{border-left:3px solid var(--warn)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+
+/* ---- OVERLAY ---- */
+#loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#fff}
+#loading-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- SIGNATURE ---- */
+.sig-canvas{border:2px dashed var(--border);border-radius:var(--radius);cursor:crosshair;touch-action:none;background:var(--surface2);display:block}
+.sig-controls{display:flex;gap:8px;margin-top:8px}
+.sig-preview{max-width:200px;border:1px solid var(--border);border-radius:4px;background:#fff}
+
+/* ---- MOBILE ---- */
+.mobile-header{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;align-items:center;gap:12px}
+.hamburger{background:none;border:none;color:var(--text);font-size:22px;padding:4px;cursor:pointer}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50}
+
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+
+@media(max-width:768px){
+  :root{--sidebar:280px}
+  #sidebar{position:fixed;left:calc(var(--sidebar)*-1);top:0;bottom:0;z-index:60;transition:.25s}
+  #sidebar.open{left:0}
+  .sidebar-overlay.active{display:block}
+  .mobile-header{display:flex}
+  #content-area{overflow-y:auto}
+  .view{padding:16px}
+  .field-grid-3{grid-template-columns:1fr 1fr}
+}
+
+/* ---- PAT CERT TEMPLATE (hidden, for html2canvas) ---- */
+#pat-cert-print{position:fixed;left:-9999px;top:0;width:794px;font-family:Arial,sans-serif;font-size:11px;color:#000;z-index:-1}
+.cert-page{background:#fff;width:794px;min-height:1123px;padding:28px 32px;box-sizing:border-box;color:#000}
+.cert-hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a6b;padding-bottom:12px;margin-bottom:16px}
+.cert-hdr-left h1{font-size:15px;font-weight:700;color:#1a3a6b;margin-bottom:4px}
+.cert-hdr-left p{font-size:10px;color:#555;margin:1px 0}
+.cert-hdr-right{text-align:right}
+.cert-hdr-right .cert-logo{font-size:26px;font-weight:900;color:#1a3a6b;letter-spacing:-1px}
+.cert-hdr-right .cert-ref{font-size:10px;color:#333;margin-top:2px}
+.cert-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cert-info-box{border:1px solid #ccc;border-radius:4px;padding:8px 10px}
+.cert-info-box h4{font-size:9px;font-weight:700;text-transform:uppercase;color:#1a3a6b;margin-bottom:6px;letter-spacing:.05em}
+.cert-info-row{display:flex;gap:4px;margin-bottom:3px;font-size:10px}
+.cert-info-row span:first-child{color:#555;min-width:80px;font-weight:500}
+.cert-table-title{font-size:11px;font-weight:700;color:#1a3a6b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.cert-app-table{width:100%;border-collapse:collapse;font-size:9px}
+.cert-app-table th{background:#1a3a6b;color:#fff;padding:5px 4px;font-size:8px;text-align:left;border:1px solid #1a3a6b}
+.cert-app-table td{border:1px solid #ccc;padding:4px;background:#fff}
+.cert-app-table tr:nth-child(even) td{background:#f8f8f8}
+.cert-pass{color:#16a34a;font-weight:700}
+.cert-fail{color:#dc2626;font-weight:700}
+.cert-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;padding-top:12px;border-top:2px solid #1a3a6b}
+.cert-footer-left p{font-size:10px;color:#333;margin-bottom:4px}
+.cert-sig-line{border-top:1px solid #333;width:180px;margin-top:30px;padding-top:4px;font-size:9px;color:#555}
+.cert-badge{display:inline-block;padding:4px 12px;border-radius:4px;font-size:13px;font-weight:700;margin-left:12px}
+.cert-badge-pass{background:#dcfce7;color:#16a34a;border:1px solid #16a34a}
+.cert-badge-fail{background:#fee2e2;color:#dc2626;border:1px solid #dc2626}
+</style>
+</head>
+<body>
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><div class="logo-mark">OHM</div><p>Certificates Platform</p></div>
+    <div id="auth-error" class="auth-error" hidden></div>
+    <!-- Login -->
+    <div id="auth-login">
+      <div class="auth-tab-bar">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <div class="form-group"><label>Email</label><input class="form-control" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="form-group"><label>Password</label><input class="form-control" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+      <div class="auth-link"><a href="#" onclick="switchAuthTab('forgot');return false">Forgot password?</a></div>
+    </div>
+    <!-- Register -->
+    <div id="auth-register" hidden>
+      <div class="auth-tab-bar">
+        <button class="auth-tab" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab active" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <div class="form-group"><label>Full Name</label><input class="form-control" id="reg-name" type="text" placeholder="Your name"></div>
+      <div class="form-group"><label>Email</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input class="form-control" id="reg-pass" type="password" placeholder="Min 8 characters"></div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">Create Account</button>
+    </div>
+    <!-- Forgot -->
+    <div id="auth-forgot" hidden>
+      <h3 style="margin-bottom:16px;font-size:16px">Reset Password</h3>
+      <div class="form-group"><label>Email</label><input class="form-control" id="forgot-email" type="email" placeholder="you@example.com"></div>
+      <button class="btn btn-primary btn-full" onclick="doForgot()">Send Reset Email</button>
+      <div class="auth-link"><a href="#" onclick="switchAuthTab('login');return false">Back to sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span style="font-weight:700;color:var(--accent)">OHM Certificates</span>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">OHM</span>
+      <span class="sidebar-title">Certificates</span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">⊞</span>Dashboard</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">PAT Testing</div>
+        <div class="nav-item" data-view="pat-new" onclick="navigate('pat-new')"><span class="nav-icon">✚</span>New PAT Test</div>
+        <div class="nav-item" data-view="pat-history" onclick="navigate('pat-history')"><span class="nav-icon">≡</span>PAT History</div>
+        <div class="nav-item" data-view="pat-renewals" onclick="navigate('pat-renewals')"><span class="nav-icon">⏰</span>Renewals <span id="pat-renewal-badge" class="nav-badge" hidden>0</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Gas Safety</div>
+        <div class="nav-item" data-view="gas-new" onclick="navigate('gas-new')"><span class="nav-icon">✚</span>New CP12</div>
+        <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">≡</span>CP12 History</div>
+        <div class="nav-item" data-view="gas-renewals" onclick="navigate('gas-renewals')"><span class="nav-icon">⏰</span>Gas Renewals <span id="gas-renewal-badge" class="nav-badge" hidden>0</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Coming Soon</div>
+        <div class="nav-item disabled"><span class="nav-icon">🔥</span>Fire Risk<span class="nav-coming">Soon</span></div>
+        <div class="nav-item disabled"><span class="nav-icon">💡</span>Emergency Lighting<span class="nav-coming">Soon</span></div>
+        <div class="nav-item disabled"><span class="nav-icon">⚡</span>Periodic Inspection<span class="nav-coming">Soon</span></div>
+        <div class="nav-item disabled"><span class="nav-icon">📋</span>Installation Cert<span class="nav-coming">Soon</span></div>
+        <div class="nav-item disabled"><span class="nav-icon">🌀</span>AOV Panel<span class="nav-coming">Soon</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">System</div>
+        <div class="nav-item" data-view="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</div>
+        <div class="nav-item" id="audit-nav" data-view="audit" onclick="navigate('audit')" style="display:none"><span class="nav-icon">📄</span>Audit Log</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info"><div class="user-name" id="user-name-display">Loading…</div><div class="user-role" id="user-role-display">engineer</div></div>
+        <button class="btn-logout" onclick="doLogout()" title="Sign out">⏻</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main id="content-area">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><button class="btn btn-primary btn-sm" onclick="navigate('pat-new')">+ New PAT Test</button></div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card warn"><div class="stat-label">PAT Renewals Due</div><div class="stat-value" id="stat-pat-due">—</div><div class="stat-sub">Next 30 days</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total CP12s</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">CP12 Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card error"><div class="stat-label">Gas Renewals Due</div><div class="stat-value" id="stat-gas-due">—</div><div class="stat-sub">Next 30 days</div></div>
+      </div>
+      <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px" id="recent-grids">
+        <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Recent CP12s</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAT NEW/EDIT -->
+    <div class="view" id="view-pat-new">
+      <div class="view-header">
+        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="navigate('pat-history')">← Back</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-pdf" onclick="generatePATPDF()" hidden>⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-email" onclick="emailPAT()" hidden>✉ Email</button>
+          <button class="btn btn-success btn-sm" id="btn-pat-complete" onclick="completePAT()">✓ Complete</button>
+          <button class="btn btn-primary btn-sm" id="btn-pat-save" onclick="savePAT()">💾 Save Draft</button>
+        </div>
+      </div>
+      <!-- Details -->
+      <div class="form-section">
+        <div class="form-section-title">Certificate Details</div>
+        <div class="field-grid">
+          <div class="field-group"><label>Test Date *</label><input type="date" id="pat-test-date"></div>
+          <div class="field-group"><label>Engineer Name *</label><input type="text" id="pat-engineer" placeholder="Full name"></div>
+          <div class="field-group"><label>Next Test Date</label><input type="date" id="pat-next-date"></div>
+        </div>
+      </div>
+      <!-- Property -->
+      <div class="form-section">
+        <div class="form-section-title">Property / Client Details</div>
+        <div class="field-grid">
+          <div class="field-group" style="grid-column:1/-1"><label>Property Address *</label><input type="text" id="pat-address" placeholder="Full address including postcode"></div>
+          <div class="field-group"><label>Landlord / Owner Name</label><input type="text" id="pat-landlord" placeholder="Name or company"></div>
+          <div class="field-group"><label>Agency Name</label><input type="text" id="pat-agency" placeholder="If applicable"></div>
+          <div class="field-group"><label>Phone Number</label><input type="tel" id="pat-phone" placeholder="07..."></div>
+          <div class="field-group"><label>Email Address</label><input type="email" id="pat-email" placeholder="For certificate delivery"></div>
+        </div>
+      </div>
+      <!-- Appliances -->
+      <div class="form-section">
+        <div class="form-section-title">Appliances Tested</div>
+        <div class="appliance-table-wrap">
+          <table class="appliance-table" id="pat-app-table">
+            <thead><tr>
+              <th style="width:28px">#</th>
+              <th style="min-width:90px">Location</th>
+              <th style="min-width:130px">Description</th>
+              <th style="min-width:80px">Make</th>
+              <th style="min-width:80px">Model</th>
+              <th style="min-width:90px">Serial No</th>
+              <th style="width:56px">Visual</th>
+              <th style="width:64px">Earth mΩ</th>
+              <th style="width:68px">Insul MΩ</th>
+              <th style="width:64px">Leak mA</th>
+              <th style="width:56px">Func</th>
+              <th style="width:60px">Result</th>
+              <th style="min-width:90px">Next Test</th>
+              <th style="width:28px"></th>
+            </tr></thead>
+            <tbody id="pat-app-body"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATAppliance()">+ Add Appliance</button>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="savePAT()">💾 Save Draft</button>
+        <button class="btn btn-success" id="btn-pat-complete2" onclick="completePAT()">✓ Complete &amp; Issue</button>
+        <button class="btn btn-secondary" onclick="navigate('pat-history')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- PAT HISTORY -->
+    <div class="view" id="view-pat-history">
+      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('pat-new')">+ New PAT Test</button></div>
+      <div class="list-controls">
+        <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
+        <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="cert-list" id="pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- PAT RENEWALS -->
+    <div class="view" id="view-pat-renewals">
+      <div class="view-header"><div><div class="view-title">PAT Renewals</div><div class="view-subtitle">Appliances approaching test date</div></div></div>
+      <div class="cert-list" id="pat-renewals-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- GAS NEW/EDIT -->
+    <div class="view" id="view-gas-new">
+      <div class="view-header">
+        <div><div class="view-title" id="gas-form-title">New CP12</div><div class="view-subtitle" id="gas-form-ref"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="navigate('gas-history')">← Back</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="generateGasPDF()" hidden>⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
+          <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save Draft</button>
+        </div>
+      </div>
+      <!-- Engineer -->
+      <div class="form-section">
+        <div class="form-section-title">Engineer &amp; Business Details</div>
+        <div class="field-grid">
+          <div class="field-group"><label>Cert Date *</label><input type="date" id="gas-cert-date"></div>
+          <div class="field-group"><label>Next Check Date *</label><input type="date" id="gas-next-date"></div>
+          <div class="field-group"><label>Engineer Name *</label><input type="text" id="gas-engineer" placeholder="Full name"></div>
+          <div class="field-group"><label>Licence No</label><input type="text" id="gas-licence" placeholder="ACS/CCN number"></div>
+          <div class="field-group"><label>Gas Safe Reg No</label><input type="text" id="gas-safe-no" placeholder="Registration number"></div>
+          <div class="field-group" style="grid-column:1/-1"><label>Business Address</label><input type="text" id="gas-biz-address" placeholder="Business address"></div>
+          <div class="field-group"><label>Business Phone</label><input type="tel" id="gas-biz-phone"></div>
+          <div class="field-group"><label>Business Email</label><input type="email" id="gas-biz-email"></div>
+        </div>
+      </div>
+      <!-- Addresses -->
+      <div class="form-section">
+        <div class="form-section-title">Property Details</div>
+        <div class="field-grid">
+          <div class="field-group"><label>Landlord Address</label><textarea id="gas-landlord-addr" rows="2" placeholder="Landlord/owner full address"></textarea></div>
+          <div class="field-group"><label>Landlord Postcode</label><input type="text" id="gas-landlord-pc" placeholder="SW1A 1AA"></div>
+          <div class="field-group"><label>Installation Address *</label><textarea id="gas-install-addr" rows="2" placeholder="Property where work was done"></textarea></div>
+          <div class="field-group"><label>Installation Postcode</label><input type="text" id="gas-install-pc" placeholder="SW1A 1AA"></div>
+          <div class="field-group" style="grid-column:1/-1"><label>Work Details / Comments</label><textarea id="gas-work-details" rows="2" placeholder="Description of work carried out"></textarea></div>
+        </div>
+      </div>
+      <!-- Pipework -->
+      <div class="form-section">
+        <div class="form-section-title">Pipework &amp; Safety Checks</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px">
+          <div id="gas-pipework-checks"></div>
+        </div>
+      </div>
+      <!-- Appliances -->
+      <div class="form-section">
+        <div class="form-section-title">Gas Appliances (up to 5)</div>
+        <div id="gas-app-container"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addGasAppliance()" id="btn-add-gas-app">+ Add Appliance</button>
+      </div>
+      <!-- Defects -->
+      <div class="form-section">
+        <div class="form-section-title">Defects / Warning Notices</div>
+        <div id="gas-defects-container"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addGasDefect()">+ Add Defect</button>
+        <div class="field-grid" style="margin-top:14px">
+          <div class="field-group" style="grid-column:1/-1"><label>Remedial Action Required</label><textarea id="gas-remedial" rows="2" placeholder="Describe remedial action if applicable"></textarea></div>
+        </div>
+      </div>
+      <!-- Signatures -->
+      <div class="form-section">
+        <div class="form-section-title">Signatures</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div class="field-group" style="margin-bottom:8px"><label>Issued By (Engineer)</label><input type="text" id="gas-sig-issued-name" placeholder="Print name"></div>
+            <canvas class="sig-canvas" id="gas-sig-issued-canvas" width="320" height="100"></canvas>
+            <div class="sig-controls">
+              <button class="btn btn-secondary btn-sm" onclick="clearSig('gas-sig-issued-canvas')">Clear</button>
+              <img id="gas-sig-issued-preview" class="sig-preview" hidden>
+            </div>
+          </div>
+          <div>
+            <div class="field-group" style="margin-bottom:8px"><label>Received By (Tenant/Owner)</label><input type="text" id="gas-sig-received-name" placeholder="Print name"></div>
+            <canvas class="sig-canvas" id="gas-sig-received-canvas" width="320" height="100"></canvas>
+            <div class="sig-controls">
+              <button class="btn btn-secondary btn-sm" onclick="clearSig('gas-sig-received-canvas')">Clear</button>
+              <img id="gas-sig-received-preview" class="sig-preview" hidden>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveGas()">💾 Save Draft</button>
+        <button class="btn btn-success" onclick="completeGas()">✓ Complete &amp; Issue</button>
+        <button class="btn btn-secondary" onclick="navigate('gas-history')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- GAS HISTORY -->
+    <div class="view" id="view-gas-history">
+      <div class="view-header"><div><div class="view-title">CP12 History</div><div class="view-subtitle">All gas safety certificate records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New CP12</button></div>
+      <div class="list-controls">
+        <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
+        <select id="gas-filter" onchange="filterGasList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="cert-list" id="gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- GAS RENEWALS -->
+    <div class="view" id="view-gas-renewals">
+      <div class="view-header"><div><div class="view-title">Gas Renewals</div><div class="view-subtitle">Properties needing annual gas safety check</div></div></div>
+      <div class="cert-list" id="gas-renewals-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="view-header"><div><div class="view-title">Settings</div><div class="view-subtitle">Company &amp; application configuration</div></div><button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button></div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab('company')">Company</button>
+        <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
+        <button class="settings-tab" onclick="switchSettingsTab('pat')">PAT Defaults</button>
+        <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas Defaults</button>
+        <button class="settings-tab" onclick="switchSettingsTab('profile')">My Profile</button>
+      </div>
+      <div class="settings-pane active" id="pane-company">
+        <div class="form-section">
+          <div class="form-section-title">Company Information</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-company-name" placeholder="Your company or trading name"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-company-phone"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-company-email"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address</label><input type="text" id="s-company-address" placeholder="Full address"></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-company-website" placeholder="https://"></div>
+            <div class="field-group"><label>Registered No / VAT</label><input type="text" id="s-company-regno"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-email">
+        <div class="form-section">
+          <div class="form-section-title">Email Method</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Method</label>
+              <select id="s-email-method">
+                <option value="script">Google Apps Script</option>
+                <option value="brevo">Brevo / Sendinblue</option>
+              </select>
+            </div>
+            <div class="field-group" style="grid-column:1/-1"><label>Google Apps Script URL</label><input type="url" id="s-script-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Brevo API Key</label><input type="password" id="s-brevo-key" placeholder="xkeysib-…"></div>
+            <div class="field-group"><label>From Email (sender)</label><input type="email" id="s-from-email" placeholder="info@yourcompany.com"></div>
+            <div class="field-group"><label>From Name</label><input type="text" id="s-from-name" placeholder="OHM Electrical"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-pat">
+        <div class="form-section">
+          <div class="form-section-title">PAT Test Defaults</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-pat-prefix" placeholder="OHM" maxlength="10"></div>
+            <div class="field-group"><label>Default Retest Period</label>
+              <select id="s-pat-period"><option value="12">1 Year (12 months)</option><option value="24">2 Years</option><option value="6">6 Months</option><option value="3">3 Months</option></select>
+            </div>
+            <div class="field-group"><label>Default Engineer</label><input type="text" id="s-pat-engineer" placeholder="Default engineer name"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-gas">
+        <div class="form-section">
+          <div class="form-section-title">Gas Certificate Defaults</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-gas-prefix" placeholder="OHM" maxlength="10"></div>
+            <div class="field-group"><label>Gas Safe Reg No</label><input type="text" id="s-gas-safe-no"></div>
+            <div class="field-group"><label>Engineer Licence No</label><input type="text" id="s-gas-licence"></div>
+            <div class="field-group"><label>Default Engineer</label><input type="text" id="s-gas-engineer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-profile">
+        <div class="form-section">
+          <div class="form-section-title">My Profile</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Full Name</label><input type="text" id="s-profile-name"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-profile-email" disabled style="opacity:.6"></div>
+            <div class="field-group"><label>Gas Safe No</label><input type="text" id="s-profile-gas"></div>
+            <div class="field-group"><label>Licence No</label><input type="text" id="s-profile-licence"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="view" id="view-audit">
+      <div class="view-header"><div><div class="view-title">Audit Log</div><div class="view-subtitle">All system activity</div></div></div>
+      <div id="audit-list"><div class="empty-state"><div class="empty-icon">📄</div><p>Loading…</p></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-backdrop hidden" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="confirm-title">Confirm</div><button class="modal-close" onclick="closeModal('confirm-modal')">×</button></div>
+    <p id="confirm-msg" style="font-size:14px;color:var(--muted)"></p>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button><button class="btn btn-primary" id="confirm-ok">Confirm</button></div>
+  </div>
+</div>
+
+<!-- PAT CERT PRINT AREA (html2canvas) -->
+<div id="pat-cert-print"></div>
+<script>
+'use strict';
+// ========== CONFIG ==========
+const SUPABASE_URL = 'https://iihnfgmsfshrgrhargxz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpaG5mZ21zZnNocmdyaGFyZ3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTA1MDAsImV4cCI6MjEwMzkyNjUwMH0.h3N4tW20cByuA28lmbYd5iSsfJoQ7lelvzWDKHMfK5Q';
+
+// ========== SUPABASE CLIENT ==========
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ========== STATE ==========
+let currentUser = null, currentProfile = null, currentView = 'dashboard';
+let editingPATId = null, editingGasId = null;
+let patReports = [], gasReports = [], appSettings = {};
+
+// ========== AUTH ==========
+function switchAuthTab(tab) {
+  document.querySelectorAll('#auth-screen .auth-tab').forEach(t=>t.classList.remove('active'));
+  ['auth-login','auth-register','auth-forgot'].forEach(id=>document.getElementById(id).hidden=true);
+  clearAuthError();
+  if(tab==='login'){document.getElementById('auth-login').hidden=false;document.querySelectorAll('#auth-login .auth-tab')[0].classList.add('active');}
+  else if(tab==='register'){document.getElementById('auth-register').hidden=false;}
+  else{document.getElementById('auth-forgot').hidden=false;}
+}
+function clearAuthError(){const e=document.getElementById('auth-error');e.hidden=true;e.textContent='';}
+function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.hidden=false;}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){showAuthError('Please enter email and password.');return;}
+  showOverlay('Signing in…');
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  hideOverlay();
+  if(error){showAuthError(error.message);}
+}
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!name||!email||!pass){showAuthError('All fields required.');return;}
+  if(pass.length<8){showAuthError('Password must be at least 8 characters.');return;}
+  showOverlay('Creating account…');
+  const{error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+  hideOverlay();
+  if(error){showAuthError(error.message);}
+  else{toast('Account created! Check email to confirm then sign in.','success',6000);switchAuthTab('login');}
+}
+async function doForgot(){
+  const email=document.getElementById('forgot-email').value.trim();
+  if(!email){showAuthError('Enter your email.');return;}
+  const{error}=await sb.auth.resetPasswordForEmail(email);
+  if(error){showAuthError(error.message);}
+  else{toast('Reset email sent!','success');switchAuthTab('login');}
+}
+async function doLogout(){
+  await sb.auth.signOut();
+}
+
+async function onLogin(user){
+  currentUser=user;
+  document.getElementById('auth-screen').hidden=true;
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('app').style.display='flex';
+  // Load profile
+  const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  currentProfile=profile||{id:user.id,email:user.email,full_name:user.email,role:'engineer'};
+  // Update UI
+  const name=currentProfile.full_name||currentProfile.email||'User';
+  document.getElementById('user-name-display').textContent=name;
+  document.getElementById('user-role-display').textContent=currentProfile.role||'engineer';
+  document.getElementById('user-avatar').textContent=(name[0]||'U').toUpperCase();
+  if(currentProfile.role==='admin'){document.getElementById('audit-nav').style.display='flex';}
+  // Load settings then navigate
+  await loadAppSettings();
+  navigate('dashboard');
+}
+function onLogout(){
+  currentUser=null; currentProfile=null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').hidden=false;
+  clearAuthError();
+}
+
+// ========== NAVIGATION ==========
+function navigate(view){
+  currentView=view;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl=document.querySelector(`.nav-item[data-view="${view}"]`);
+  if(navEl)navEl.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const viewEl=document.getElementById(`view-${view}`);
+  if(viewEl){viewEl.classList.add('active');viewEl.scrollTop=0;}
+  document.getElementById('content-area').scrollTop=0;
+  closeSidebar();
+  // Load view data
+  if(view==='dashboard')loadDashboard();
+  else if(view==='pat-history')loadPATHistory();
+  else if(view==='pat-new'){newPAT();}
+  else if(view==='pat-renewals')loadPATRenewals();
+  else if(view==='gas-history')loadGasHistory();
+  else if(view==='gas-new'){newGasCert();}
+  else if(view==='gas-renewals')loadGasRenewals();
+  else if(view==='settings')loadSettingsUI();
+  else if(view==='audit')loadAuditLog();
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('active');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active');}
+
+// ========== OVERLAYS & TOAST ==========
+function showOverlay(msg){document.getElementById('overlay-msg').textContent=msg||'Loading…';document.getElementById('loading-overlay').classList.add('active');}
+function hideOverlay(){document.getElementById('loading-overlay').classList.remove('active');}
+function toast(msg,type='info',duration=3500){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},duration);
+}
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function confirm2(title,msg,cb){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-ok').onclick=()=>{closeModal('confirm-modal');cb();};
+  openModal('confirm-modal');
+}
+
+// ========== SETTINGS (app_config table) ==========
+async function loadAppSettings(){
+  const{data}=await sb.from('app_config').select('key,value');
+  appSettings={};
+  if(data)data.forEach(r=>appSettings[r.key]=r.value);
+}
+function getSetting(key,def=''){return appSettings[key]??def;}
+async function upsertSetting(key,value){
+  await sb.from('app_config').upsert({key,value,updated_at:new Date().toISOString()},{onConflict:'key'});
+  appSettings[key]=value;
+}
+function loadSettingsUI(){
+  // Company
+  document.getElementById('s-company-name').value=getSetting('company_name');
+  document.getElementById('s-company-phone').value=getSetting('company_phone');
+  document.getElementById('s-company-email').value=getSetting('company_email');
+  document.getElementById('s-company-address').value=getSetting('company_address');
+  document.getElementById('s-company-website').value=getSetting('company_website');
+  document.getElementById('s-company-regno').value=getSetting('company_regno');
+  // Email
+  document.getElementById('s-email-method').value=getSetting('email_method','script');
+  document.getElementById('s-script-url').value=getSetting('email_script_url');
+  document.getElementById('s-brevo-key').value=getSetting('brevo_api_key');
+  document.getElementById('s-from-email').value=getSetting('email_from');
+  document.getElementById('s-from-name').value=getSetting('email_from_name');
+  // PAT
+  document.getElementById('s-pat-prefix').value=getSetting('pat_prefix','OHM');
+  document.getElementById('s-pat-period').value=getSetting('pat_period','12');
+  document.getElementById('s-pat-engineer').value=getSetting('pat_default_engineer');
+  // Gas
+  document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
+  document.getElementById('s-gas-safe-no').value=getSetting('gas_safe_no');
+  document.getElementById('s-gas-licence').value=getSetting('gas_licence');
+  document.getElementById('s-gas-engineer').value=getSetting('gas_default_engineer');
+  // Profile
+  document.getElementById('s-profile-name').value=currentProfile?.full_name||'';
+  document.getElementById('s-profile-email').value=currentProfile?.email||currentUser?.email||'';
+  document.getElementById('s-profile-gas').value=currentProfile?.gas_safe_no||'';
+  document.getElementById('s-profile-licence').value=currentProfile?.licence_no||'';
+}
+async function saveSettings(){
+  showOverlay('Saving…');
+  const pairs=[
+    ['company_name',document.getElementById('s-company-name').value],
+    ['company_phone',document.getElementById('s-company-phone').value],
+    ['company_email',document.getElementById('s-company-email').value],
+    ['company_address',document.getElementById('s-company-address').value],
+    ['company_website',document.getElementById('s-company-website').value],
+    ['company_regno',document.getElementById('s-company-regno').value],
+    ['email_method',document.getElementById('s-email-method').value],
+    ['email_script_url',document.getElementById('s-script-url').value],
+    ['brevo_api_key',document.getElementById('s-brevo-key').value],
+    ['email_from',document.getElementById('s-from-email').value],
+    ['email_from_name',document.getElementById('s-from-name').value],
+    ['pat_prefix',document.getElementById('s-pat-prefix').value||'OHM'],
+    ['pat_period',document.getElementById('s-pat-period').value],
+    ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
+    ['gas_prefix',document.getElementById('s-gas-prefix').value||'OHM'],
+    ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
+    ['gas_licence',document.getElementById('s-gas-licence').value],
+    ['gas_default_engineer',document.getElementById('s-gas-engineer').value],
+  ];
+  for(const[k,v]of pairs)await upsertSetting(k,v);
+  // Save profile
+  const profileUpdate={full_name:document.getElementById('s-profile-name').value,gas_safe_no:document.getElementById('s-profile-gas').value,licence_no:document.getElementById('s-profile-licence').value};
+  await sb.from('profiles').update(profileUpdate).eq('id',currentUser.id);
+  Object.assign(currentProfile,profileUpdate);
+  hideOverlay();toast('Settings saved ✓','success');
+}
+function switchSettingsTab(tab){
+  document.querySelectorAll('.settings-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.settings-pane').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`pane-${tab}`).classList.add('active');
+}
+
+// ========== DASHBOARD ==========
+async function loadDashboard(){
+  const[{data:pats},{data:gases}]=await Promise.all([
+    sb.from('pat_reports').select('id,status,test_date,appliances'),
+    sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address')
+  ]);
+  const today=new Date();const in30=new Date(today);in30.setDate(in30.getDate()+30);
+  const patTotal=pats?.length||0;
+  const patDone=(pats||[]).filter(r=>r.status==='completed').length;
+  // Count appliances with next test date in next 30 days
+  let patDue=0;
+  (pats||[]).filter(r=>r.status==='completed').forEach(r=>{
+    (r.appliances||[]).forEach(a=>{if(a.next_test){const d=new Date(a.next_test);if(d>=today&&d<=in30)patDue++;}});
+  });
+  const gasTotal=gases?.length||0;
+  const gasDone=(gases||[]).filter(r=>r.status==='completed').length;
+  let gasDue=0;
+  (gases||[]).filter(r=>r.status==='completed'&&r.next_check_date).forEach(r=>{
+    const d=parseGasDate(r.next_check_date);if(d&&d>=today&&d<=in30)gasDue++;
+  });
+  document.getElementById('stat-pat-total').textContent=patTotal;
+  document.getElementById('stat-pat-complete').textContent=patDone;
+  document.getElementById('stat-pat-due').textContent=patDue;
+  document.getElementById('stat-gas-total').textContent=gasTotal;
+  document.getElementById('stat-gas-complete').textContent=gasDone;
+  document.getElementById('stat-gas-due').textContent=gasDue;
+  // Update badges
+  const patBadge=document.getElementById('pat-renewal-badge');
+  patBadge.textContent=patDue;patBadge.hidden=patDue===0;
+  const gasBadge=document.getElementById('gas-renewal-badge');
+  gasBadge.textContent=gasDue;gasBadge.hidden=gasDue===0;
+  // Recent lists
+  const recentPat=(pats||[]).slice(-5).reverse();
+  const recentGas=(gases||[]).slice(-5).reverse();
+  document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${r.test_date||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
+  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${r.cert_date||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div>';
+}
+
+// ========== PAT - HELPERS ==========
+function addPATAppliance(data={}){
+  const tbody=document.getElementById('pat-app-body');
+  const n=tbody.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td style="text-align:center;color:var(--muted)">${n}</td>
+    <td><input type="text" value="${data.location||''}" placeholder="Room/area"></td>
+    <td><input type="text" value="${data.description||''}" placeholder="Appliance description"></td>
+    <td><input type="text" value="${data.make||''}" placeholder="Make"></td>
+    <td><input type="text" value="${data.model||''}" placeholder="Model"></td>
+    <td><input type="text" value="${data.serial||''}" placeholder="Serial no"></td>
+    <td><select><option value="PASS" ${data.visual==='PASS'?'selected':''}>✓ PASS</option><option value="FAIL" ${data.visual==='FAIL'?'selected':''}>✗ FAIL</option></select></td>
+    <td><input type="text" value="${data.earth||''}" placeholder="mΩ"></td>
+    <td><input type="text" value="${data.insulation||''}" placeholder="MΩ"></td>
+    <td><input type="text" value="${data.leakage||''}" placeholder="mA"></td>
+    <td><select><option value="PASS" ${data.func==='PASS'?'selected':''}>✓ PASS</option><option value="FAIL" ${data.func==='FAIL'?'selected':''}>✗ FAIL</option></select></td>
+    <td><select class="result-sel" onchange="updateRowResult(this)"><option value="PASS" ${data.result==='PASS'?'selected':''}>PASS</option><option value="FAIL" ${data.result==='FAIL'?'selected':''}>FAIL</option></select></td>
+    <td><input type="date" value="${data.next_test||''}"></td>
+    <td><button class="btn-remove-row" onclick="this.closest('tr').remove();renumberPATRows()">×</button></td>`;
+  tbody.appendChild(tr);
+  updateRowResult(tr.querySelector('.result-sel'));
+}
+function renumberPATRows(){document.getElementById('pat-app-body').querySelectorAll('tr').forEach((tr,i)=>{tr.cells[0].textContent=i+1;});}
+function updateRowResult(sel){
+  const row=sel.closest('tr');
+  const val=sel.value;
+  sel.className='result-sel '+(val==='PASS'?'result-pass':'result-fail');
+}
+function getPATAppliances(){
+  const rows=[...document.getElementById('pat-app-body').rows];
+  return rows.map(tr=>{
+    const cells=tr.querySelectorAll('input,select');
+    return{location:cells[0].value,description:cells[1].value,make:cells[2].value,model:cells[3].value,serial:cells[4].value,visual:cells[5].value,earth:cells[6].value,insulation:cells[7].value,leakage:cells[8].value,func:cells[9].value,result:cells[10].value,next_test:cells[11].value};
+  });
+}
+function populatePATForm(r){
+  document.getElementById('pat-test-date').value=r.test_date||'';
+  document.getElementById('pat-engineer').value=r.engineer||'';
+  document.getElementById('pat-next-date').value=r.next_test_date||'';
+  document.getElementById('pat-address').value=r.property_address||'';
+  document.getElementById('pat-landlord').value=r.landlord_name||'';
+  document.getElementById('pat-agency').value=r.agency_name||'';
+  document.getElementById('pat-phone').value=r.phone_number||'';
+  document.getElementById('pat-email').value=r.email_address||'';
+  document.getElementById('pat-app-body').innerHTML='';
+  (r.appliances||[]).forEach(a=>addPATAppliance(a));
+  if((r.appliances||[]).length===0)addPATAppliance();
+}
+function getPATFormData(){
+  return{
+    test_date:document.getElementById('pat-test-date').value,
+    next_test_date:document.getElementById('pat-next-date').value,
+    engineer:document.getElementById('pat-engineer').value,
+    property_address:document.getElementById('pat-address').value,
+    landlord_name:document.getElementById('pat-landlord').value,
+    agency_name:document.getElementById('pat-agency').value,
+    phone_number:document.getElementById('pat-phone').value,
+    email_address:document.getElementById('pat-email').value,
+    appliances:getPATAppliances()
+  };
+}
+function newPAT(){
+  editingPATId=null;
+  document.getElementById('pat-form-title').textContent='New PAT Test';
+  document.getElementById('pat-form-ref').textContent='';
+  document.getElementById('btn-pat-pdf').hidden=true;
+  document.getElementById('btn-pat-email').hidden=true;
+  // Defaults from settings
+  const today=new Date().toISOString().split('T')[0];
+  const nm=parseInt(getSetting('pat_period','12'));
+  const nd=new Date();nd.setMonth(nd.getMonth()+nm);
+  document.getElementById('pat-test-date').value=today;
+  document.getElementById('pat-next-date').value=nd.toISOString().split('T')[0];
+  document.getElementById('pat-engineer').value=getSetting('pat_default_engineer');
+  document.getElementById('pat-address').value='';
+  document.getElementById('pat-landlord').value='';
+  document.getElementById('pat-agency').value='';
+  document.getElementById('pat-phone').value='';
+  document.getElementById('pat-email').value='';
+  document.getElementById('pat-app-body').innerHTML='';
+  addPATAppliance();addPATAppliance();
+}
+async function loadPATForm(id){
+  showOverlay('Loading…');
+  const{data:r,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
+  hideOverlay();
+  if(error){toast('Error loading report','error');return;}
+  editingPATId=id;
+  document.getElementById('pat-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit PAT Test';
+  document.getElementById('pat-form-ref').textContent=r.ref_number||'Draft';
+  const isDone=r.status==='completed';
+  document.getElementById('btn-pat-pdf').hidden=!isDone;
+  document.getElementById('btn-pat-email').hidden=!isDone;
+  document.getElementById('btn-pat-complete').disabled=isDone;
+  document.getElementById('btn-pat-complete2').disabled=isDone;
+  populatePATForm(r);
+  navigate('pat-new');
+}
+async function savePAT(){
+  const d=getPATFormData();
+  if(!d.property_address){toast('Property address required','error');return;}
+  showOverlay('Saving…');
+  let err;
+  if(editingPATId){
+    ({error:err}=await sb.from('pat_reports').update({...d,updated_at:new Date().toISOString()}).eq('id',editingPATId));
+  } else {
+    const{data:created,error:e}=await sb.from('pat_reports').insert({...d,status:'draft',created_by:currentUser.id}).select().single();
+    err=e;if(created)editingPATId=created.id;
+  }
+  hideOverlay();
+  if(err){toast('Save failed: '+err.message,'error');}
+  else{toast('Saved ✓','success');await logAudit('save','PAT draft saved','pat',d.property_address);}
+}
+async function completePAT(){
+  const d=getPATFormData();
+  if(!d.property_address||!d.test_date){toast('Address and date required','error');return;}
+  await savePAT();
+  if(!editingPATId){toast('Save failed','error');return;}
+  showOverlay('Issuing certificate…');
+  // Get next serial
+  const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'pat'});
+  const prefix=getSetting('pat_prefix','OHM');
+  const refNum=`${prefix}-PAT-${String(serial).padStart(4,'0')}`;
+  const{error}=await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingPATId);
+  hideOverlay();
+  if(error){toast('Error issuing: '+error.message,'error');return;}
+  document.getElementById('pat-form-ref').textContent=refNum;
+  document.getElementById('pat-form-title').textContent=`PAT — ${refNum}`;
+  document.getElementById('btn-pat-pdf').hidden=false;
+  document.getElementById('btn-pat-email').hidden=false;
+  document.getElementById('btn-pat-complete').disabled=true;
+  document.getElementById('btn-pat-complete2').disabled=true;
+  toast(`Certificate issued: ${refNum}`,'success',5000);
+  await logAudit('complete','PAT issued','pat',refNum);
+}
+
+// ========== PAT - HISTORY ==========
+async function loadPATHistory(){
+  showOverlay('Loading…');
+  const{data,error}=await sb.from('pat_reports').select('*').order('created_at',{ascending:false});
+  hideOverlay();
+  patReports=data||[];
+  renderPATList(patReports);
+}
+function renderPATList(reports){
+  const el=document.getElementById('pat-list');
+  if(!reports.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests found</p></div>';return;}
+  el.innerHTML=reports.map(r=>`
+    <div class="cert-row">
+      <div class="cert-row-info">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cert-ref">${r.ref_number||'DRAFT'}</span>
+          <span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span>
+        </div>
+        <div class="cert-address">${r.property_address||'No address'}</div>
+        <div class="cert-meta">${r.test_date||'No date'} · ${(r.appliances||[]).length} appliance(s) · ${r.engineer||'—'}</div>
+      </div>
+      <div class="cert-row-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadPATForm('${r.id}')">Edit</button>
+        ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="openPATPDF('${r.id}')">PDF</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deletePAT('${r.id}')">×</button>
+      </div>
+    </div>`).join('');
+}
+function filterPATList(){
+  const q=document.getElementById('pat-search').value.toLowerCase();
+  const s=document.getElementById('pat-filter').value;
+  renderPATList(patReports.filter(r=>{
+    const matchS=!s||r.status===s;
+    const matchQ=!q||(r.property_address||'').toLowerCase().includes(q)||(r.ref_number||'').toLowerCase().includes(q)||(r.landlord_name||'').toLowerCase().includes(q);
+    return matchS&&matchQ;
+  }));
+}
+async function deletePAT(id){
+  confirm2('Delete PAT Test','This will permanently delete this report. Are you sure?',async()=>{
+    await sb.from('pat_reports').delete().eq('id',id);
+    toast('Deleted','warn');loadPATHistory();
+  });
+}
+
+// ========== PAT - RENEWALS ==========
+async function loadPATRenewals(){
+  const{data}=await sb.from('pat_reports').select('id,ref_number,property_address,appliances,engineer').eq('status','completed');
+  const today=new Date();const in60=new Date(today);in60.setDate(in60.getDate()+60);
+  const due=[];
+  (data||[]).forEach(r=>{
+    (r.appliances||[]).forEach(a=>{
+      if(a.next_test){const d=new Date(a.next_test);if(d<=in60){due.push({...r,appliance:a,due_date:d});}}
+    });
+  });
+  due.sort((a,b)=>a.due_date-b.due_date);
+  const el=document.getElementById('pat-renewals-list');
+  if(!due.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><p>No renewals due in the next 60 days</p></div>';return;}
+  el.innerHTML=due.map(r=>{
+    const dStr=r.due_date.toLocaleDateString('en-GB');const overdue=r.due_date<today;
+    return`<div class="cert-row">
+      <div class="cert-row-info">
+        <div style="display:flex;gap:8px;align-items:center"><span class="cert-ref">${r.ref_number||'—'}</span><span class="badge badge-${overdue?'overdue':'due'}">${overdue?'OVERDUE':'Due '+dStr}</span></div>
+        <div class="cert-address">${r.property_address}</div>
+        <div class="cert-meta">${r.appliance.description||'Appliance'} · ${r.appliance.location||'—'}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="startRenewalPAT('${r.id}')">Renew</button></div>`;
+  }).join('');
+}
+function startRenewalPAT(sourceId){navigate('pat-new');/* Could pre-fill from source */}
+
+// ========== PAT - PDF ==========
+async function openPATPDF(id){
+  const{data:r}=await sb.from('pat_reports').select('*').eq('id',id).single();
+  if(r)generatePATPDFFromData(r);
+}
+async function generatePATPDF(){
+  if(!editingPATId){toast('Save the report first','warn');return;}
+  const{data:r}=await sb.from('pat_reports').select('*').eq('id',editingPATId).single();
+  if(r)generatePATPDFFromData(r);
+}
+async function generatePATPDFFromData(r){
+  showOverlay('Generating PDF…');
+  const co={name:getSetting('company_name','OHM Electrical'),phone:getSetting('company_phone'),email:getSetting('company_email'),address:getSetting('company_address')};
+  // Build cert HTML
+  const apps=r.appliances||[];
+  const passCount=apps.filter(a=>a.result==='PASS').length;
+  const failCount=apps.length-passCount;
+  const certHtml=`<div class="cert-page">
+    <div class="cert-hdr">
+      <div class="cert-hdr-left">
+        <h1>PORTABLE APPLIANCE TEST CERTIFICATE</h1>
+        <p>${co.name}${co.address?' · '+co.address:''}</p>
+        <p>${co.phone?co.phone+' · ':''}${co.email||''}</p>
+      </div>
+      <div class="cert-hdr-right">
+        <div class="cert-logo">${getSetting('company_name','OHM').split(' ').map(w=>w[0]).join('').substring(0,3)}</div>
+        <div class="cert-ref">${r.ref_number||'DRAFT'}</div>
+      </div>
+    </div>
+    <div class="cert-info-grid">
+      <div class="cert-info-box">
+        <h4>Property Details</h4>
+        <div class="cert-info-row"><span>Address:</span><span>${r.property_address||'—'}</span></div>
+        <div class="cert-info-row"><span>Landlord:</span><span>${r.landlord_name||'—'}</span></div>
+        <div class="cert-info-row"><span>Agency:</span><span>${r.agency_name||'—'}</span></div>
+        <div class="cert-info-row"><span>Phone:</span><span>${r.phone_number||'—'}</span></div>
+        <div class="cert-info-row"><span>Email:</span><span>${r.email_address||'—'}</span></div>
+      </div>
+      <div class="cert-info-box">
+        <h4>Test Details</h4>
+        <div class="cert-info-row"><span>Test Date:</span><span>${r.test_date||'—'}</span></div>
+        <div class="cert-info-row"><span>Next Test:</span><span>${r.next_test_date||'—'}</span></div>
+        <div class="cert-info-row"><span>Engineer:</span><span>${r.engineer||'—'}</span></div>
+        <div class="cert-info-row"><span>Total Items:</span><span>${apps.length}</span></div>
+        <div class="cert-info-row"><span>Pass / Fail:</span><span>${passCount} PASS / ${failCount} FAIL</span></div>
+      </div>
+    </div>
+    <div class="cert-table-title">Appliances Tested</div>
+    <table class="cert-app-table">
+      <thead><tr><th>#</th><th>Location</th><th>Description</th><th>Make</th><th>Model</th><th>Serial</th><th>Visual</th><th>Earth mΩ</th><th>Insul MΩ</th><th>Leak mA</th><th>Func</th><th>Result</th><th>Next Test</th></tr></thead>
+      <tbody>${apps.map((a,i)=>`<tr>
+        <td>${i+1}</td><td>${a.location||''}</td><td>${a.description||''}</td><td>${a.make||''}</td><td>${a.model||''}</td><td>${a.serial||''}</td>
+        <td class="cert-${a.visual==='PASS'?'pass':'fail'}">${a.visual||''}</td>
+        <td>${a.earth||''}</td><td>${a.insulation||''}</td><td>${a.leakage||''}</td>
+        <td class="cert-${a.func==='PASS'?'pass':'fail'}">${a.func||''}</td>
+        <td class="cert-${a.result==='PASS'?'pass':'fail'}">${a.result||''}</td>
+        <td>${a.next_test||''}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="cert-footer">
+      <div class="cert-footer-left">
+        <p>This certificate was produced by ${co.name}</p>
+        <p>Certificate No: ${r.ref_number||'DRAFT'} · Issued: ${new Date().toLocaleDateString('en-GB')}</p>
+        <div class="cert-sig-line">Authorised Signature</div>
+      </div>
+      <div style="text-align:center">
+        <div class="cert-badge cert-badge-${failCount===0?'pass':'fail'}">${failCount===0?'ALL PASS':failCount+' FAILED'}</div>
+      </div>
+    </div>
+  </div>`;
+  const printEl=document.getElementById('pat-cert-print');
+  printEl.innerHTML=certHtml;
+  try{
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    const scale=isIOS?2:3;
+    const canvas=await html2canvas(printEl.querySelector('.cert-page'),{scale,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,297,undefined,'FAST');
+    const filename=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+    if(isIOS){
+      const blob=new Blob([pdf.output('arraybuffer')],{type:'application/pdf'});
+      window.open(URL.createObjectURL(blob),'_blank');
+      toast('PDF ready — tap Share → Save to Files','info',7000);
+    } else {
+      pdf.save(filename);toast('PDF downloaded ✓','success');
+    }
+    await logAudit('pdf','PAT PDF downloaded','pat',r.ref_number||r.id);
+  } catch(e){toast('PDF error: '+e.message,'error');}
+  finally{hideOverlay();printEl.innerHTML='';}
+}
+
+// ========== PAT - EMAIL ==========
+async function emailPAT(){
+  if(!editingPATId){toast('No report loaded','warn');return;}
+  const{data:r}=await sb.from('pat_reports').select('*').eq('id',editingPATId).single();
+  if(!r){toast('Report not found','error');return;}
+  if(!r.email_address){toast('No email on this report','warn');return;}
+  const method=getSetting('email_method','script');
+  if(method==='script'){
+    const scriptUrl=getSetting('email_script_url');
+    if(!scriptUrl){toast('Google Apps Script URL not set in Settings','error');return;}
+    showOverlay('Sending email…');
+    try{
+      await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:r.email_address,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
+      toast('Email sent ✓','success');
+      await logAudit('email','PAT emailed','pat',r.ref_number);
+    } catch(e){toast('Email failed','error');}
+    finally{hideOverlay();}
+  } else {
+    toast('Generate the PDF manually and attach to email','info',5000);
+  }
+}
+</script>
+<script>
+// ========== GAS - PIPEWORK CHECKS ==========
+const PIPEWORK_ITEMS=[
+  'Pipework installation/condition satisfactory',
+  'Adequate ventilation provided',
+  'Satisfactory flue arrangement',
+  'Safety devices operating correctly',
+  'Emergency control accessible'
+];
+function initGasPipework(){
+  document.getElementById('gas-pipework-checks').innerHTML=PIPEWORK_ITEMS.map((label,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px;background:var(--surface2);border-radius:6px;margin-bottom:6px">
+      <label style="flex:1;font-size:13px">${label}</label>
+      <div style="display:flex;gap:8px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="SAT"> Satisfactory</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="UNSAT"> Unsatisfactory</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="NA" checked> N/A</label>
+      </div>
+    </div>`).join('');
+}
+function getPipeworkValues(){
+  return PIPEWORK_ITEMS.map((_,i)=>{
+    const sel=document.querySelector(`input[name="pw${i}"]:checked`);
+    return sel?sel.value:'NA';
+  });
+}
+function setPipeworkValues(vals){
+  (vals||[]).forEach((v,i)=>{
+    const radio=document.querySelector(`input[name="pw${i}"][value="${v}"]`);
+    if(radio)radio.checked=true;
+  });
+}
+
+// ========== GAS - APPLIANCES ==========
+let gasAppCount=0;
+const GAS_FLUE_TYPES=['Open Flue','Room Sealed','Balanced Flue','Flueless','Fan Assisted'];
+function addGasAppliance(data={}){
+  if(gasAppCount>=5){toast('Maximum 5 appliances per certificate','warn');return;}
+  gasAppCount++;const n=gasAppCount;
+  const container=document.getElementById('gas-app-container');
+  const div=document.createElement('div');
+  div.id=`gas-app-${n}`;
+  div.style.cssText='border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;background:var(--surface2)';
+  div.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--accent)">Appliance ${n}</div>
+      <button class="btn btn-danger btn-sm" onclick="removeGasAppliance(${n})">Remove</button>
+    </div>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+      <div class="field-group"><label>Appliance Type</label><input type="text" id="ga${n}-type" value="${data.type||''}" placeholder="e.g. Boiler"></div>
+      <div class="field-group"><label>Make</label><input type="text" id="ga${n}-make" value="${data.make||''}" placeholder="Make/brand"></div>
+      <div class="field-group"><label>Model</label><input type="text" id="ga${n}-model" value="${data.model||''}"></div>
+      <div class="field-group"><label>GC Number</label><input type="text" id="ga${n}-gc" value="${data.gc||''}"></div>
+      <div class="field-group"><label>Location</label><input type="text" id="ga${n}-loc" value="${data.location||''}" placeholder="Room"></div>
+      <div class="field-group"><label>Serial No</label><input type="text" id="ga${n}-serial" value="${data.serial||''}"></div>
+      <div class="field-group"><label>Input Kg/h</label><input type="text" id="ga${n}-kgh" value="${data.kgh||''}"></div>
+      <div class="field-group"><label>Input Btu/h</label><input type="text" id="ga${n}-btuh" value="${data.btuh||''}"></div>
+      <div class="field-group"><label>Op. Pressure</label><input type="text" id="ga${n}-op-pressure" value="${data.op_pressure||''}" placeholder="mbar"></div>
+      <div class="field-group"><label>Burner Pressure</label><input type="text" id="ga${n}-burn-pressure" value="${data.burn_pressure||''}" placeholder="mbar"></div>
+      <div class="field-group"><label>Heat Input</label><input type="text" id="ga${n}-heat" value="${data.heat_input||''}" placeholder="kW"></div>
+      <div class="field-group"><label>Flue Type</label>
+        <select id="ga${n}-flue">${GAS_FLUE_TYPES.map(f=>`<option value="${f}" ${data.flue_type===f?'selected':''}>${f}</option>`).join('')}</select>
+      </div>
+      <div class="field-group"><label>Safety Devices</label><input type="text" id="ga${n}-safety" value="${data.safety_devices||''}" placeholder="FSD, etc."></div>
+      <div class="field-group"><label>CO Test</label>
+        <select id="ga${n}-co"><option value="PASS" ${data.co_test==='PASS'?'selected':''}>Pass</option><option value="FAIL" ${data.co_test==='FAIL'?'selected':''}>Fail</option><option value="N/A" ${(data.co_test||'N/A')==='N/A'?'selected':''}>N/A</option></select>
+      </div>
+      <div class="field-group"><label>Operational Test</label>
+        <select id="ga${n}-op"><option value="PASS" ${data.op_test==='PASS'?'selected':''}>Pass</option><option value="FAIL" ${data.op_test==='FAIL'?'selected':''}>Fail</option></select>
+      </div>
+      <div class="field-group"><label>Satisfactory?</label>
+        <select id="ga${n}-sat"><option value="Yes" ${(data.satisfactory||'Yes')==='Yes'?'selected':''}>Yes</option><option value="No" ${data.satisfactory==='No'?'selected':''}>No</option></select>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  if(gasAppCount>=5)document.getElementById('btn-add-gas-app').disabled=true;
+}
+function removeGasAppliance(n){
+  const el=document.getElementById(`gas-app-${n}`);if(el)el.remove();
+  gasAppCount=Math.max(0,gasAppCount-1);
+  document.getElementById('btn-add-gas-app').disabled=false;
+}
+function getGasAppliances(){
+  const out=[];
+  document.querySelectorAll('[id^="gas-app-"]').forEach(div=>{
+    const n=div.id.split('-')[2];
+    const g=id=>document.getElementById(`ga${n}-${id}`)?.value||'';
+    out.push({type:g('type'),make:g('make'),model:g('model'),gc:g('gc'),location:g('loc'),serial:g('serial'),kgh:g('kgh'),btuh:g('btuh'),op_pressure:g('op-pressure'),burn_pressure:g('burn-pressure'),heat_input:g('heat'),flue_type:g('flue'),safety_devices:g('safety'),co_test:g('co'),op_test:g('op'),satisfactory:g('sat')});
+  });
+  return out;
+}
+
+// ========== GAS - DEFECTS ==========
+let gasDefectCount=0;
+function addGasDefect(data={}){
+  gasDefectCount++;const n=gasDefectCount;
+  const container=document.getElementById('gas-defects-container');
+  const div=document.createElement('div');
+  div.id=`gas-defect-${n}`;
+  div.style.cssText='display:flex;gap:10px;align-items:center;margin-bottom:8px';
+  div.innerHTML=`
+    <div style="flex:1"><input type="text" id="gd${n}-desc" value="${data.description||''}" placeholder="Defect description" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text)"></div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap"><input type="checkbox" id="gd${n}-warn" ${data.warning_notice?'checked':''}> Warning Notice</label>
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('gas-defect-${n}').remove()">×</button>`;
+  container.appendChild(div);
+}
+function getGasDefects(){
+  const out=[];
+  document.querySelectorAll('[id^="gas-defect-"]').forEach(div=>{
+    const n=div.id.split('-')[2];
+    out.push({description:document.getElementById(`gd${n}-desc`)?.value||'',warning_notice:document.getElementById(`gd${n}-warn`)?.checked||false});
+  });
+  return out.filter(d=>d.description);
+}
+
+// ========== GAS - FORM ==========
+function newGasCert(){
+  editingGasId=null;gasAppCount=0;gasDefectCount=0;
+  document.getElementById('gas-form-title').textContent='New CP12';
+  document.getElementById('gas-form-ref').textContent='';
+  document.getElementById('btn-gas-pdf').hidden=true;
+  document.getElementById('btn-gas-email').hidden=true;
+  const today=new Date().toISOString().split('T')[0];
+  const nd=new Date();nd.setFullYear(nd.getFullYear()+1);
+  document.getElementById('gas-cert-date').value=today;
+  document.getElementById('gas-next-date').value=nd.toISOString().split('T')[0];
+  document.getElementById('gas-engineer').value=getSetting('gas_default_engineer');
+  document.getElementById('gas-licence').value=getSetting('gas_licence');
+  document.getElementById('gas-safe-no').value=getSetting('gas_safe_no');
+  document.getElementById('gas-biz-address').value=getSetting('company_address');
+  document.getElementById('gas-biz-phone').value=getSetting('company_phone');
+  document.getElementById('gas-biz-email').value=getSetting('company_email');
+  ['gas-landlord-addr','gas-landlord-pc','gas-install-addr','gas-install-pc','gas-work-details','gas-remedial'].forEach(id=>document.getElementById(id).value='');
+  initGasPipework();
+  document.getElementById('gas-app-container').innerHTML='';
+  document.getElementById('gas-defects-container').innerHTML='';
+  clearSig('gas-sig-issued-canvas');clearSig('gas-sig-received-canvas');
+  document.getElementById('gas-sig-issued-name').value='';
+  document.getElementById('gas-sig-received-name').value='';
+  addGasAppliance();
+}
+async function loadGasForm(id){
+  showOverlay('Loading…');
+  const{data:r,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
+  hideOverlay();
+  if(error){toast('Error loading','error');return;}
+  editingGasId=id;gasAppCount=0;gasDefectCount=0;
+  document.getElementById('gas-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit CP12';
+  document.getElementById('gas-form-ref').textContent=r.ref_number||'Draft';
+  document.getElementById('btn-gas-pdf').hidden=r.status!=='completed';
+  document.getElementById('btn-gas-email').hidden=r.status!=='completed';
+  document.getElementById('gas-cert-date').value=r.cert_date||'';
+  document.getElementById('gas-next-date').value=r.next_check_date||'';
+  document.getElementById('gas-engineer').value=r.engineer||'';
+  document.getElementById('gas-licence').value=r.engineer_licence_no||'';
+  document.getElementById('gas-safe-no').value=r.gas_safe_no||'';
+  document.getElementById('gas-biz-address').value=r.business_address||'';
+  document.getElementById('gas-biz-phone').value=r.business_phone||'';
+  document.getElementById('gas-biz-email').value=r.business_email||'';
+  document.getElementById('gas-landlord-addr').value=r.landlord_address||'';
+  document.getElementById('gas-landlord-pc').value=r.landlord_postcode||'';
+  document.getElementById('gas-install-addr').value=r.install_address||'';
+  document.getElementById('gas-install-pc').value=r.install_postcode||'';
+  document.getElementById('gas-work-details').value=r.work_details||'';
+  document.getElementById('gas-remedial').value=r.remedial_action||'';
+  document.getElementById('gas-sig-issued-name').value=r.sig_issued_name||'';
+  document.getElementById('gas-sig-received-name').value=r.sig_received_name||'';
+  initGasPipework();setPipeworkValues(r.pipework||[]);
+  document.getElementById('gas-app-container').innerHTML='';
+  (r.appliances||[]).forEach(a=>addGasAppliance(a));
+  if((r.appliances||[]).length===0)addGasAppliance();
+  document.getElementById('gas-defects-container').innerHTML='';
+  (r.defects||[]).forEach(d=>addGasDefect(d));
+  if(r.sig_issued_image)restoreSig('gas-sig-issued-canvas',r.sig_issued_image);
+  if(r.sig_received_image)restoreSig('gas-sig-received-canvas',r.sig_received_image);
+  navigate('gas-new');
+}
+function getGasFormData(){
+  return{
+    cert_date:document.getElementById('gas-cert-date').value,
+    next_check_date:document.getElementById('gas-next-date').value,
+    engineer:document.getElementById('gas-engineer').value,
+    engineer_licence_no:document.getElementById('gas-licence').value,
+    gas_safe_no:document.getElementById('gas-safe-no').value,
+    business_address:document.getElementById('gas-biz-address').value,
+    business_phone:document.getElementById('gas-biz-phone').value,
+    business_email:document.getElementById('gas-biz-email').value,
+    landlord_address:document.getElementById('gas-landlord-addr').value,
+    landlord_postcode:document.getElementById('gas-landlord-pc').value,
+    install_address:document.getElementById('gas-install-addr').value,
+    install_postcode:document.getElementById('gas-install-pc').value,
+    work_details:document.getElementById('gas-work-details').value,
+    remedial_action:document.getElementById('gas-remedial').value,
+    pipework:getPipeworkValues(),
+    appliances:getGasAppliances(),
+    defects:getGasDefects(),
+    sig_issued_name:document.getElementById('gas-sig-issued-name').value,
+    sig_issued_image:getCanvasDataURL('gas-sig-issued-canvas'),
+    sig_received_name:document.getElementById('gas-sig-received-name').value,
+    sig_received_image:getCanvasDataURL('gas-sig-received-canvas')
+  };
+}
+async function saveGas(){
+  const d=getGasFormData();
+  if(!d.install_address){toast('Installation address required','error');return;}
+  showOverlay('Saving…');
+  let err;
+  if(editingGasId){
+    ({error:err}=await sb.from('gas_certs').update({...d,updated_at:new Date().toISOString()}).eq('id',editingGasId));
+  } else {
+    const{data:c,error:e}=await sb.from('gas_certs').insert({...d,status:'draft',created_by:currentUser.id}).select().single();
+    err=e;if(c)editingGasId=c.id;
+  }
+  hideOverlay();
+  if(err){toast('Save failed: '+err.message,'error');}
+  else{toast('Saved ✓','success');await logAudit('save','Gas draft saved','gas',d.install_address);}
+}
+async function completeGas(){
+  const d=getGasFormData();
+  if(!d.install_address||!d.cert_date){toast('Address and date required','error');return;}
+  await saveGas();
+  if(!editingGasId){toast('Save failed','error');return;}
+  showOverlay('Issuing certificate…');
+  const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'gas'});
+  const prefix=getSetting('gas_prefix','OHM');
+  const refNum=`${prefix}-CP12-${String(serial).padStart(4,'0')}`;
+  const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingGasId);
+  hideOverlay();
+  if(error){toast('Error issuing: '+error.message,'error');return;}
+  document.getElementById('gas-form-ref').textContent=refNum;
+  document.getElementById('gas-form-title').textContent=`CP12 — ${refNum}`;
+  document.getElementById('btn-gas-pdf').hidden=false;
+  document.getElementById('btn-gas-email').hidden=false;
+  toast(`CP12 issued: ${refNum}`,'success',5000);
+  await logAudit('complete','CP12 issued','gas',refNum);
+}
+
+// ========== GAS - HISTORY ==========
+async function loadGasHistory(){
+  showOverlay('Loading…');
+  const{data}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false});
+  hideOverlay();
+  gasReports=data||[];renderGasList(gasReports);
+}
+function renderGasList(reports){
+  const el=document.getElementById('gas-list');
+  if(!reports.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s found</p></div>';return;}
+  el.innerHTML=reports.map(r=>`
+    <div class="cert-row">
+      <div class="cert-row-info">
+        <div style="display:flex;gap:8px;align-items:center"><span class="cert-ref">${r.ref_number||'DRAFT'}</span><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>
+        <div class="cert-address">${r.install_address||'No address'}</div>
+        <div class="cert-meta">${r.cert_date||'No date'} · Next: ${r.next_check_date||'—'} · ${r.engineer||'—'}</div>
+      </div>
+      <div class="cert-row-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadGasForm('${r.id}')">Edit</button>
+        ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="openGasPDF('${r.id}')">PDF</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteGas('${r.id}')">×</button>
+      </div>
+    </div>`).join('');
+}
+function filterGasList(){
+  const q=document.getElementById('gas-search').value.toLowerCase();
+  const s=document.getElementById('gas-filter').value;
+  renderGasList(gasReports.filter(r=>{
+    const mS=!s||r.status===s;
+    const mQ=!q||(r.install_address||'').toLowerCase().includes(q)||(r.ref_number||'').toLowerCase().includes(q);
+    return mS&&mQ;
+  }));
+}
+async function deleteGas(id){
+  confirm2('Delete CP12','This will permanently delete this certificate.',async()=>{
+    await sb.from('gas_certs').delete().eq('id',id);
+    toast('Deleted','warn');loadGasHistory();
+  });
+}
+async function loadGasRenewals(){
+  const{data}=await sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer').eq('status','completed');
+  const today=new Date();const in60=new Date(today);in60.setDate(in60.getDate()+60);
+  const due=(data||[]).filter(r=>{if(!r.next_check_date)return false;const d=parseGasDate(r.next_check_date);return d&&d<=in60;}).sort((a,b)=>parseGasDate(a.next_check_date)-parseGasDate(b.next_check_date));
+  const el=document.getElementById('gas-renewals-list');
+  if(!due.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><p>No gas renewals due in the next 60 days</p></div>';return;}
+  el.innerHTML=due.map(r=>{const d=parseGasDate(r.next_check_date);const ov=d<today;return`<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px"><span class="cert-ref">${r.ref_number||'—'}</span><span class="badge badge-${ov?'overdue':'due'}">${ov?'OVERDUE':'Due '+d.toLocaleDateString('en-GB')}</span></div><div class="cert-address">${r.install_address||'—'}</div><div class="cert-meta">${r.engineer||'—'}</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New CP12</button></div>`;}).join('');
+}
+
+// ========== GAS - PDF (jsPDF vector) ==========
+async function openGasPDF(id){const{data:r}=await sb.from('gas_certs').select('*').eq('id',id).single();if(r)generateGasPDFFromData(r);}
+async function generateGasPDF(){
+  if(!editingGasId){toast('Save first','warn');return;}
+  const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
+  if(r)generateGasPDFFromData(r);
+}
+async function generateGasPDFFromData(r){
+  showOverlay('Generating PDF…');
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=14,TW=W-M*2;
+  const co={name:getSetting('company_name','OHM'),phone:getSetting('company_phone'),email:getSetting('company_email'),address:getSetting('company_address')};
+  // Helper fns
+  const row=(y,label,val,lw=50)=>{doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text(label,M,y);doc.setFont(undefined,'normal');doc.text(String(val||'—'),M+lw,y);};
+  const box=(x,y,w,h,fill)=>{if(fill){doc.setFillColor(fill);doc.rect(x,y,w,h,'F');}else{doc.rect(x,y,w,h);}};
+  // — PAGE 1 HEADER —
+  doc.setFillColor(26,58,107);doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont(undefined,'bold');
+  doc.text('LANDLORD GAS SAFETY RECORD',M,10);
+  doc.setFontSize(9);doc.setFont(undefined,'normal');
+  doc.text('(CP12 Gas Safety Certificate)',M,16);
+  doc.setFontSize(9);doc.text(`${co.name}  ${co.phone||''}  ${co.email||''}`,W-M,10,{align:'right'});
+  doc.text(`Cert: ${r.ref_number||'DRAFT'}  Issued: ${r.cert_date||'—'}  Next: ${r.next_check_date||'—'}`,W-M,16,{align:'right'});
+  doc.setTextColor(0,0,0);
+  let y=28;
+  // — ENGINEER —
+  doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
+  doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text('ENGINEER DETAILS',M+2,y+4);y+=8;
+  row(y,'Engineer:',r.engineer,55);row(y,'Licence No:',r.engineer_licence_no,100);y+=5;
+  row(y,'Gas Safe Reg:',r.gas_safe_no,55);row(y,'Business:',r.business_address,100);y+=5;
+  row(y,'Phone:',r.business_phone,55);row(y,'Email:',r.business_email,100);y+=8;
+  // — ADDRESSES —
+  doc.setFillColor(240,242,245);doc.rect(M,y,TW/2-2,6,'F');doc.rect(M+TW/2+2,y,TW/2-2,6,'F');
+  doc.setFont(undefined,'bold');
+  doc.text('LANDLORD / OWNER ADDRESS',M+2,y+4);
+  doc.text('INSTALLATION ADDRESS',M+TW/2+4,y+4);
+  y+=7;doc.setFont(undefined,'normal');doc.setFontSize(8);
+  const landlordLines=doc.splitTextToSize((r.landlord_address||'—')+'\n'+(r.landlord_postcode||''),TW/2-4);
+  const installLines=doc.splitTextToSize((r.install_address||'—')+'\n'+(r.install_postcode||''),TW/2-4);
+  doc.text(landlordLines,M+2,y);doc.text(installLines,M+TW/2+4,y);
+  y+=Math.max(landlordLines.length,installLines.length)*4+6;
+  // — WORK DETAILS —
+  if(r.work_details){
+    doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
+    doc.setFont(undefined,'bold');doc.text('WORK CARRIED OUT',M+2,y+4);y+=7;
+    doc.setFont(undefined,'normal');
+    const wLines=doc.splitTextToSize(r.work_details,TW-4);doc.text(wLines,M+2,y);y+=wLines.length*4+6;
+  }
+  // — PIPEWORK CHECKS —
+  doc.setFillColor(26,58,107);doc.rect(M,y,TW,6,'F');
+  doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('PIPEWORK / VENTILATION CHECKS',M+2,y+4);
+  doc.setTextColor(0,0,0);y+=7;
+  (r.pipework||[]).forEach((val,i)=>{
+    if(i%2===0)doc.setFillColor(248,248,248);else doc.setFillColor(255,255,255);
+    doc.rect(M,y-3,TW,5,'F');
+    doc.setFont(undefined,'normal');doc.setFontSize(8);
+    doc.text(PIPEWORK_ITEMS[i]||'',M+2,y);
+    const col=val==='SAT'?[22,163,74]:val==='UNSAT'?[220,38,38]:[100,100,100];
+    doc.setTextColor(...col);doc.setFont(undefined,'bold');doc.text(val,W-M-2,y,{align:'right'});
+    doc.setTextColor(0,0,0);y+=5;
+  });
+  y+=4;
+  // — APPLIANCES TABLE —
+  doc.setFillColor(26,58,107);doc.rect(M,y,TW,6,'F');
+  doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('GAS APPLIANCES',M+2,y+4);
+  doc.setTextColor(0,0,0);y+=7;
+  const appCols=[['Type',22],['Make',20],['Model',20],['Location',20],['Op.Press',16],['Flue',18],['CO Test',14],['Op Test',14],['SAT?',14]];
+  let cx=M;appCols.forEach(([h,w])=>{doc.setFillColor(230,235,245);doc.rect(cx,y,w,5,'F');doc.setFontSize(7);doc.setFont(undefined,'bold');doc.text(h,cx+1,y+3.5);cx+=w;});y+=6;
+  (r.appliances||[]).forEach((a,i)=>{
+    if(i%2===0)doc.setFillColor(252,252,252);else doc.setFillColor(255,255,255);
+    doc.rect(M,y,TW,5,'F');
+    cx=M;const appVals=[a.type,a.make,a.model,a.location,a.op_pressure,a.flue_type,a.co_test,a.op_test,a.satisfactory];
+    appCols.forEach(([,w],j)=>{doc.setFontSize(7);doc.setFont(undefined,'normal');doc.text(String(appVals[j]||'').substring(0,14),cx+1,y+3.5);cx+=w;});y+=5;
+  });
+  y+=6;
+  // — DEFECTS — (check if need new page)
+  if(y>240){doc.addPage();y=20;}
+  if((r.defects||[]).length){
+    doc.setFillColor(220,38,38);doc.rect(M,y,TW,6,'F');
+    doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('DEFECTS / WARNING NOTICES',M+2,y+4);
+    doc.setTextColor(0,0,0);y+=7;
+    (r.defects||[]).forEach((d,i)=>{
+      doc.setFont(undefined,'normal');doc.setFontSize(8);
+      const dLines=doc.splitTextToSize((i+1)+'. '+d.description,TW-30);
+      doc.text(dLines,M+2,y);
+      if(d.warning_notice){doc.setTextColor(220,38,38);doc.setFont(undefined,'bold');doc.text('⚠ WARNING NOTICE ISSUED',W-M-2,y,{align:'right'});doc.setTextColor(0,0,0);}
+      y+=dLines.length*4+2;
+    });
+    y+=4;
+  }
+  if(r.remedial_action){
+    doc.setFont(undefined,'bold');doc.setFontSize(8);doc.text('Remedial Action:',M,y);y+=5;
+    doc.setFont(undefined,'normal');const rLines=doc.splitTextToSize(r.remedial_action,TW-4);doc.text(rLines,M+2,y);y+=rLines.length*4+8;
+  }
+  // — SIGNATURES —
+  if(y>230){doc.addPage();y=20;}
+  doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
+  doc.setFont(undefined,'bold');doc.text('DECLARATIONS & SIGNATURES',M+2,y+4);y+=8;
+  doc.setFont(undefined,'normal');doc.setFontSize(8);
+  doc.text('I confirm that the appliances listed have been inspected and tested in accordance with BS 7671 and Gas Safety (Installation and Use) Regulations.',M,y,{maxWidth:TW});y+=10;
+  // Signature boxes
+  const sigW=TW/2-5;
+  doc.rect(M,y,sigW,28);doc.rect(M+sigW+10,y,sigW,28);
+  doc.setFont(undefined,'bold');doc.text('Issued By (Engineer)',M+2,y+5);doc.text('Received By (Tenant/Owner)',M+sigW+12,y+5);
+  doc.setFont(undefined,'normal');
+  doc.text('Name: '+(r.sig_issued_name||''),M+2,y+10);doc.text('Name: '+(r.sig_received_name||''),M+sigW+12,y+10);
+  // Render signatures as images if available
+  try{if(r.sig_issued_image&&r.sig_issued_image.startsWith('data:')){doc.addImage(r.sig_issued_image,'PNG',M+2,y+12,sigW-4,14);}}catch(e){}
+  try{if(r.sig_received_image&&r.sig_received_image.startsWith('data:')){doc.addImage(r.sig_received_image,'PNG',M+sigW+12,y+12,sigW-4,14);}}catch(e){}
+  doc.text('Signature: ____________________',M+2,y+24);doc.text('Signature: ____________________',M+sigW+12,y+24);y+=34;
+  doc.setFontSize(8);doc.setTextColor(100,100,100);
+  doc.text(`${co.name||'OHM'} · Gas Safe Reg: ${r.gas_safe_no||getSetting('gas_safe_no','N/A')} · Cert: ${r.ref_number||'DRAFT'}`,W/2,y,{align:'center'});
+  const filename=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(isIOS){const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});window.open(URL.createObjectURL(blob),'_blank');toast('PDF ready — tap Share → Save to Files','info',7000);}
+  else{doc.save(filename);toast('PDF downloaded ✓','success');}
+  await logAudit('pdf','CP12 PDF downloaded','gas',r.ref_number||r.id);
+  hideOverlay();
+}
+async function emailGas(){
+  if(!editingGasId){toast('No certificate loaded','warn');return;}
+  const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
+  if(!r){toast('Not found','error');return;}
+  const method=getSetting('email_method','script');
+  const scriptUrl=getSetting('email_script_url');
+  const toEmail=r.business_email||getSetting('company_email');
+  if(method==='script'&&scriptUrl&&toEmail){
+    showOverlay('Sending…');
+    try{await fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({to:toEmail,subject:`Gas Safety Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.install_address,type:'gas'})});}
+    catch(e){}finally{hideOverlay();}
+    toast('Email sent ✓','success');await logAudit('email','CP12 emailed','gas',r.ref_number);
+  } else {toast('Generate PDF and send manually','info',5000);}
+}
+
+// ========== SIGNATURE CANVAS ==========
+function initSigCanvas(canvasId){
+  const canvas=document.getElementById(canvasId);if(!canvas)return;
+  const ctx=canvas.getContext('2d');let drawing=false;let lx=0,ly=0;
+  ctx.strokeStyle='#1a3a6b';ctx.lineWidth=2;ctx.lineCap='round';
+  const pos=(e)=>{const r=canvas.getBoundingClientRect();const cl=e.touches?e.touches[0]:e;return{x:(cl.clientX-r.left)*(canvas.width/r.width),y:(cl.clientY-r.top)*(canvas.height/r.height)};};
+  canvas.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);lx=p.x;ly=p.y;});
+  canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;});
+  canvas.addEventListener('mouseup',()=>drawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);lx=p.x;ly=p.y;},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;},{passive:false});
+  canvas.addEventListener('touchend',()=>drawing=false);
+}
+function clearSig(canvasId){const canvas=document.getElementById(canvasId);if(canvas){canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);}}
+function getCanvasDataURL(canvasId){const c=document.getElementById(canvasId);if(!c)return null;const ctx=c.getContext('2d');const imageData=ctx.getImageData(0,0,c.width,c.height);const hasContent=imageData.data.some((v,i)=>i%4!==3&&v!==0);return hasContent?c.toDataURL('image/png'):null;}
+function restoreSig(canvasId,dataUrl){if(!dataUrl)return;const canvas=document.getElementById(canvasId);if(!canvas)return;const img=new Image();img.onload=()=>canvas.getContext('2d').drawImage(img,0,0);img.src=dataUrl;}
+
+// ========== AUDIT LOG ==========
+async function logAudit(action,detail,certType='',refNumber=''){
+  try{await sb.from('audit_log').insert({user_id:currentUser?.id,user_email:currentUser?.email,action,detail,cert_type:certType,ref_number:refNumber});}catch(e){}
+}
+async function loadAuditLog(){
+  const{data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);
+  const el=document.getElementById('audit-list');
+  if(!data||!data.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No audit entries</p></div>';return;}
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:8px;color:var(--muted)">Time</th><th style="text-align:left;padding:8px;color:var(--muted)">Action</th><th style="text-align:left;padding:8px;color:var(--muted)">Type</th><th style="text-align:left;padding:8px;color:var(--muted)">Detail</th><th style="text-align:left;padding:8px;color:var(--muted)">User</th></tr></thead>
+    <tbody>${data.map(e=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;color:var(--muted);white-space:nowrap;font-size:12px">${new Date(e.created_at).toLocaleString('en-GB')}</td><td style="padding:8px">${e.action||''}</td><td style="padding:8px"><span class="badge badge-${e.cert_type==='gas'?'due':'done'}">${e.cert_type||'—'}</span></td><td style="padding:8px">${e.detail||''}</td><td style="padding:8px;font-size:12px;color:var(--muted)">${e.user_email||'—'}</td></tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ========== UTILITIES ==========
+function parseGasDate(s){
+  if(!s)return null;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s);
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){const[d,m,y]=s.split('/');return new Date(`${y}-${m}-${d}`);}
+  return new Date(s);
+}
+
+// ========== INIT ==========
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session)await onLogin(session.user);
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session)await onLogin(session.user);
+    if(event==='SIGNED_OUT')onLogout();
+  });
+  // Enter on auth fields
+  ['login-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
+  ['reg-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});});
+  // Init signature canvases
+  initSigCanvas('gas-sig-issued-canvas');
+  initSigCanvas('gas-sig-received-canvas');
+}
+init();
+</script>
+</body>
+</html>
