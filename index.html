@@ -728,7 +728,7 @@ a{color:var(--accent);text-decoration:none}
               <div class="info-box-body">
                 <div class="compact-address has-copy-action">
                   <textarea class="address-main" data-field="landlord_address" placeholder="Landlord / customer name and address&#10;Including postcode" rows="4"></textarea>
-                  <button type="button" class="copy-address-btn no-print" title="Copy to installation address" onclick="copyLandlordToInstall()">
+                  <button type="button" class="copy-address-btn no-print" title="Copy from installation address" onclick="copyInstallationToLandlord()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                   </button>
                   <div class="pc-line">
@@ -786,51 +786,11 @@ a{color:var(--accent);text-decoration:none}
                 </div>
                 <table class="defects-table">
                   <tbody>
-                    <tr>
-                      <td class="num">1</td>
-                      <td class="desc"><input type="text" data-field="defect_1_desc" placeholder="Defect description"></td>
-                      <td class="warn">
-                        <div class="choice-group">
-                          <button class="choice-cycle warn-cycle" data-field="defect_1_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="num">2</td>
-                      <td class="desc"><input type="text" data-field="defect_2_desc" placeholder="Defect description"></td>
-                      <td class="warn">
-                        <div class="choice-group">
-                          <button class="choice-cycle warn-cycle" data-field="defect_2_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="num">3</td>
-                      <td class="desc"><input type="text" data-field="defect_3_desc" placeholder="Defect description"></td>
-                      <td class="warn">
-                        <div class="choice-group">
-                          <button class="choice-cycle warn-cycle" data-field="defect_3_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="num">4</td>
-                      <td class="desc"><input type="text" data-field="defect_4_desc" placeholder="Defect description"></td>
-                      <td class="warn">
-                        <div class="choice-group">
-                          <button class="choice-cycle warn-cycle" data-field="defect_4_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="num">5</td>
-                      <td class="desc"><input type="text" data-field="defect_5_desc" placeholder="Defect description"></td>
-                      <td class="warn">
-                        <div class="choice-group">
-                          <button class="choice-cycle warn-cycle" data-field="defect_5_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
-                        </div>
-                      </td>
-                    </tr>
+                    <tr><td class="num">1</td><td class="desc"><input type="text" data-field="defect_1"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_1" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_1"></div></td></tr>
+                    <tr><td class="num">2</td><td class="desc"><input type="text" data-field="defect_2"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_2" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_2"></div></td></tr>
+                    <tr><td class="num">3</td><td class="desc"><input type="text" data-field="defect_3"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_3" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_3"></div></td></tr>
+                    <tr><td class="num">4</td><td class="desc"><input type="text" data-field="defect_4"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_4" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_4"></div></td></tr>
+                    <tr><td class="num">5</td><td class="desc"><input type="text" data-field="defect_5"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_5" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_5"></div></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -859,26 +819,11 @@ a{color:var(--accent);text-decoration:none}
                 </div>
                 <table class="pipe-table">
                   <tbody>
-                    <tr>
-                      <td class="label">Gas pipework installation/condition satisfactory</td>
-                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_1" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
-                    </tr>
-                    <tr>
-                      <td class="label">Adequate ventilation provided</td>
-                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_2" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
-                    </tr>
-                    <tr>
-                      <td class="label">Satisfactory flue arrangement</td>
-                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_3" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
-                    </tr>
-                    <tr>
-                      <td class="label">Safety devices operating correctly</td>
-                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_4" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
-                    </tr>
-                    <tr>
-                      <td class="label">Emergency control valve accessible &amp; labelled</td>
-                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_5" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
-                    </tr>
+                    <tr><td class="label">Gas Tightness Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_gas_tight" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_gas_tight"></div></td></tr>
+                    <tr><td class="label">Standing / Working Pressure Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_pressure" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_pressure"></div></td></tr>
+                    <tr><td class="label">Gas Installation Visual Check</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_visual" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_visual"></div></td></tr>
+                    <tr><td class="label">Meter / Governor Condition</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_meter" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_meter"></div></td></tr>
+                    <tr><td class="label">Emergency Control Accessible</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_emergency" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_emergency"></div></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -887,30 +832,28 @@ a{color:var(--accent);text-decoration:none}
               <div class="sig-box">
                 <!-- Issued by -->
                 <div class="sig-inner">
-                  <div class="sig-inner-title">Issued By (Engineer / Gas Safe Registered)</div>
+                  <div class="sig-inner-title">Record issued by the engineer:</div>
                   <div class="sig-field">
-                    <label>Name
-                      <button class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_issued')">Clear</button>
-                    </label>
-                    <input type="text" data-field="issuer_name" placeholder="Engineer's printed name">
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_issued','Engineer Signature')"></canvas>
+                    <button type="button" class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_issued')">Clear</button>
                   </div>
                   <div class="sig-field">
-                    <label>Signature <span class="sig-tap-hint">(tap to sign)</span></label>
-                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" onclick="openCP12SigModal('sig_issued','Engineer Signature')"></canvas>
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="issuer_name" style="text-transform:uppercase;">
                   </div>
                 </div>
                 <!-- Received by -->
                 <div class="sig-inner">
-                  <div class="sig-inner-title">Received By (Tenant / Homeowner)</div>
+                  <div class="sig-inner-title">Record received by (tenant / landlord / homeowner / agent):</div>
                   <div class="sig-field">
-                    <label>Name
-                      <button class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_received')">Clear</button>
-                    </label>
-                    <input type="text" data-field="recipient_name" placeholder="Recipient's printed name">
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_received','Recipient Signature')"></canvas>
+                    <button type="button" class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_received')">Clear</button>
                   </div>
                   <div class="sig-field">
-                    <label>Signature <span class="sig-tap-hint">(tap to sign)</span></label>
-                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" onclick="openCP12SigModal('sig_received','Recipient Signature')"></canvas>
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="receiver_name" style="text-transform:uppercase;">
                   </div>
                 </div>
                 <!-- Attention box -->
@@ -943,24 +886,24 @@ a{color:var(--accent);text-decoration:none}
             </div>
           </div>
           <div class="p2-column-header">
-            <div class="p2-head-cell">#</div>
+            <div class="p2-head-cell">App. No.</div>
             <div class="p2-head-cell">Location</div>
-            <div class="p2-head-cell">Type of Appliance</div>
-            <div class="p2-head-cell">Make</div>
+            <div class="p2-head-cell">Type</div>
+            <div class="p2-head-cell">Manufacturer</div>
             <div class="p2-head-cell">Model</div>
-            <div class="p2-head-cell">Flue Type</div>
-            <div class="p2-head-cell important">Landlord's Appliance</div>
-            <div class="p2-head-cell important">Appliance Safe to Use</div>
-            <div class="p2-head-cell">Op. Pressure mbar / Heat Input kW</div>
-            <div class="p2-head-cell">Safety Devices Satisfactory</div>
-            <div class="p2-head-cell">Burner Pressure mbar</div>
-            <div class="p2-head-cell">Heat Input kW/h</div>
-            <div class="p2-head-cell">Flue / Ventilation Check</div>
-            <div class="p2-head-cell">Visual Condition Satisfactory</div>
-            <div class="p2-head-cell">Serviced at Inspection</div>
-            <div class="p2-head-cell">Visual CO Warning</div>
+            <div class="p2-head-cell">Owned by Landlord / Homeowner?</div>
+            <div class="p2-head-cell">Inspected?</div>
+            <div class="p2-head-cell">Type of Flue</div>
+            <div class="p2-head-cell important">Operating Pressure (mbar) / Heat Input</div>
+            <div class="p2-head-cell important">Safety Device(s) Op.</div>
+            <div class="p2-head-cell important">Ventilation Safety Checks</div>
+            <div class="p2-head-cell important">Visual Condition of Flue &amp; Termination</div>
+            <div class="p2-head-cell important">Flue Operation Check</div>
+            <div class="p2-head-cell important">Combustion Analyser Reading</div>
+            <div class="p2-head-cell important">Serviced?</div>
+            <div class="p2-head-cell important">Safe to Use?</div>
           </div>
-          <div class="appliance-cards" id="cp12AppCards">
+          <div class="appliance-cards" id="applianceCards">
             <!-- Built by buildCP12ApplianceCards() -->
           </div>
         </div><!-- end page2 -->
@@ -1684,9 +1627,28 @@ async function emailPAT(){
 // ========== CP12 CHOICE CYCLES ==========
 function cycleCP12Choice(btn){
   const opts=(btn.dataset.options||'✓,✕,N/A').split(',');
-  const cur=opts.indexOf(btn.dataset.current);
-  const next=opts[(cur+1)%opts.length];
-  btn.dataset.current=next;btn.textContent=next;
+  const grp=btn.dataset.group;
+  if(grp){
+    // data-group pattern: value stored in sibling hidden input
+    const hi=btn.closest('.choice-group')&&btn.closest('.choice-group').querySelector(`[data-field="${grp}"]`);
+    const cur=opts.indexOf(hi?hi.value:'');
+    const next=opts[(cur+1)%opts.length];
+    btn.textContent=next;
+    if(hi)hi.value=next;
+  } else {
+    // Legacy data-field-on-button pattern
+    const cur=opts.indexOf(btn.dataset.current||'');
+    const next=opts[(cur+1)%opts.length];
+    btn.dataset.current=next;btn.textContent=next;
+  }
+}
+function refreshChoiceGroups(){
+  document.querySelectorAll('#cp12Wrap .choice-cycle[data-group]').forEach(btn=>{
+    const grp=btn.dataset.group;
+    const hi=btn.closest('.choice-group')&&btn.closest('.choice-group').querySelector(`[data-field="${grp}"]`);
+    if(hi)btn.textContent=hi.value||(btn.dataset.options||'').split(',')[0]||'';
+    else btn.textContent=(btn.dataset.options||'').split(',')[0]||'';
+  });
 }
 
 // ========== CP12 FAST DATE INPUT ==========
@@ -1762,12 +1724,12 @@ function loadCP12Logo(){
 }
 
 // ========== CP12 HELPERS ==========
-function copyLandlordToInstall(){
+function copyInstallationToLandlord(){
   const la=document.querySelector('[data-field="landlord_address"]');
   const lp=document.querySelector('[data-field="landlord_postcode"]');
   const ia=document.querySelector('[data-field="install_address"]');
   const ip=document.querySelector('[data-field="install_postcode"]');
-  if(ia&&la)ia.value=la.value;if(ip&&lp)ip.value=lp.value;
+  if(la&&ia)la.value=ia.value;if(lp&&ip)lp.value=ip.value;
 }
 function cp12Field(f){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return'';
@@ -1776,54 +1738,46 @@ function cp12Field(f){
 function setCP12Field(f,v){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
   if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
-  else el.value=v||'';
+  else{el.value=v||'';
+    // If hidden input used by a data-group button, refresh button text
+    if(el.type==='hidden'){const btn=el.closest('.choice-group')&&el.closest('.choice-group').querySelector(`.choice-cycle[data-group="${f}"]`);if(btn)btn.textContent=v||(btn.dataset.options||'').split(',')[0]||'';}
+  }
 }
 
 // ========== CP12 APPLIANCE CARDS ==========
-const CP12_FLUE_TYPES=['Open Flue','Room Sealed','Balanced Flue','Flueless','Fan Assisted'];
 function buildCP12ApplianceCards(){
-  const container=document.getElementById('cp12AppCards');if(!container)return;
+  const container=document.getElementById('applianceCards');if(!container)return;
   container.innerHTML='';
   for(let n=1;n<=5;n++)container.insertAdjacentHTML('beforeend',buildSingleCP12ApplianceCard(n));
 }
+function _cc(field,opts){return`<div class="appliance-value-cell choice-cell"><div class="choice-group"><button type="button" class="choice-cycle" data-group="${field}" data-options="${opts}" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="${field}"></div></div>`;}
 function buildSingleCP12ApplianceCard(n){
-  const fs=CP12_FLUE_TYPES.map(f=>`<option value="${f}">${f}</option>`).join('');
-  return`<div class="appliance-card" id="cp12App${n}">
+  return`<div class="appliance-card" id="cp12App${n}" data-appliance-row="${n}">
     <div class="appliance-main-shell"><div class="appliance-value-row">
-      <div class="appliance-value-cell number-cell"><input class="appliance-number-input" type="text" value="${n}" readonly tabindex="-1"></div>
-      <div class="appliance-value-cell location"><textarea data-field="app${n}_location" placeholder="Location" rows="2"></textarea></div>
-      <div class="appliance-value-cell type"><textarea data-field="app${n}_type" placeholder="e.g. Boiler" rows="2"></textarea></div>
-      <div class="appliance-value-cell make"><textarea data-field="app${n}_make" placeholder="Make" rows="2"></textarea></div>
-      <div class="appliance-value-cell model"><textarea data-field="app${n}_model" placeholder="Model" rows="2"></textarea></div>
-      <div class="appliance-value-cell"><select data-field="app${n}_flue">${fs}</select></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_landlord" data-options="Yes,No,N/A" data-current="Yes" onclick="cycleCP12Choice(this)">Yes</button></div></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_safe" data-options="Yes,No,N/A" data-current="Yes" onclick="cycleCP12Choice(this)">Yes</button></div></div>
-      <div class="appliance-value-cell"><input type="text" data-field="app${n}_op_pressure" value="20 mbar" placeholder="mbar/kW"></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_safety_dev" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
-      <div class="appliance-value-cell"><input type="text" data-field="app${n}_burner_pressure" placeholder="mbar"></div>
-      <div class="appliance-value-cell"><input type="text" data-field="app${n}_heat_input" placeholder="kW/h"></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_flue_check" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_visual" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_serviced" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div></div>
-      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_co_warn" data-options="Yes,No,N/A" data-current="No" onclick="cycleCP12Choice(this)">No</button></div></div>
+      <div class="appliance-value-cell number-cell"><div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle no-print" onclick="toggleCP12AppRow(${n})">— not in use</button></div></div>
+      <div class="appliance-value-cell location"><textarea data-field="app${n}_location" placeholder="Location" rows="1"></textarea></div>
+      <div class="appliance-value-cell type"><textarea data-field="app${n}_type" placeholder="Type" rows="1"></textarea></div>
+      <div class="appliance-value-cell make"><textarea data-field="app${n}_make" placeholder="Manufacturer" rows="1"></textarea></div>
+      <div class="appliance-value-cell model"><textarea data-field="app${n}_model" placeholder="Model" rows="1"></textarea></div>
+      ${_cc(`app${n}_ownership`,'Yes,No')}
+      ${_cc(`app${n}_inspected`,'Yes,No')}
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_flue_type" placeholder="FL"></div>
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_op_pressure" placeholder="20 mbar"></div>
+      ${_cc(`app${n}_safety_dev`,'Pass,Fail,N/A')}
+      ${_cc(`app${n}_vent`,'Pass,Fail,N/A')}
+      ${_cc(`app${n}_visual`,'N/A,Pass,Fail')}
+      ${_cc(`app${n}_flue_flow`,'N/A,Pass,Fail')}
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_combustion" placeholder="N/A"></div>
+      ${_cc(`app${n}_serviced`,'No,Yes')}
+      ${_cc(`app${n}_safe_to_use`,'Yes,No')}
     </div></div>
-    <div class="co-hanger">
-      <div class="co-hanger-title">CO<br>Alarm</div>
-      <div class="co-mini-grid">
-        <div class="co-mini"><label>CO Alarm Present</label><button class="choice-cycle" data-field="app${n}_co_present" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
-        <div class="co-mini"><label>CO Alarm in Date</label><button class="choice-cycle" data-field="app${n}_co_date" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
-        <div class="co-mini"><label>CO Alarm Test Pass</label><button class="choice-cycle" data-field="app${n}_co_test" data-options="Pass,Fail,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
-        <div class="co-mini"><label>Advice Given</label><button class="choice-cycle" data-field="app${n}_co_advice" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
-      </div>
-    </div>
-    <button class="app-row-toggle no-print" onclick="toggleCP12AppRow(${n})">— DISABLE SLOT ${n} —</button>
   </div>`;
 }
 function toggleCP12AppRow(n){
   const card=document.getElementById(`cp12App${n}`);if(!card)return;
   const disabled=card.classList.toggle('is-disabled');
   const btn=card.querySelector('.app-row-toggle');
-  if(btn)btn.textContent=disabled?`+ ENABLE SLOT ${n} +`:`— DISABLE SLOT ${n} —`;
+  if(btn)btn.textContent=disabled?`+ ENABLE SLOT ${n} +`:`— not in use`;
 }
 
 // ========== CP12 DATA BRIDGE ==========
@@ -1836,19 +1790,21 @@ function collectCP12FormData(){
       const loc=cp12Field(`app${n}_location`),type=cp12Field(`app${n}_type`);
       if(loc||type)appliances.push({
         location:loc,type:type,make:cp12Field(`app${n}_make`),model:cp12Field(`app${n}_model`),
-        flue_type:cp12Field(`app${n}_flue`),landlord_appliance:cp12Field(`app${n}_landlord`),
-        safe_to_use:cp12Field(`app${n}_safe`),op_pressure:cp12Field(`app${n}_op_pressure`),
-        safety_devices:cp12Field(`app${n}_safety_dev`),burner_pressure:cp12Field(`app${n}_burner_pressure`),
-        heat_input:cp12Field(`app${n}_heat_input`),flue_check:cp12Field(`app${n}_flue_check`),
-        visual_condition:cp12Field(`app${n}_visual`),serviced:cp12Field(`app${n}_serviced`),
-        co_warning:cp12Field(`app${n}_co_warn`),co_present:cp12Field(`app${n}_co_present`),
-        co_in_date:cp12Field(`app${n}_co_date`),co_test:cp12Field(`app${n}_co_test`),
-        co_advice:cp12Field(`app${n}_co_advice`)
+        flue_type:cp12Field(`app${n}_flue_type`),
+        ownership:cp12Field(`app${n}_ownership`),inspected:cp12Field(`app${n}_inspected`),
+        op_pressure:cp12Field(`app${n}_op_pressure`),
+        safety_devices:cp12Field(`app${n}_safety_dev`),
+        ventilation:cp12Field(`app${n}_vent`),
+        visual_condition:cp12Field(`app${n}_visual`),
+        flue_flow:cp12Field(`app${n}_flue_flow`),
+        combustion:cp12Field(`app${n}_combustion`),
+        serviced:cp12Field(`app${n}_serviced`),
+        safe_to_use:cp12Field(`app${n}_safe_to_use`)
       });
     }
   }
   const defects=[];
-  for(let i=1;i<=5;i++){const desc=cp12Field(`defect_${i}_desc`);const warn=cp12Field(`defect_${i}_warn`);if(desc)defects.push({description:desc,warning_notice:warn!=='N/A',warning_type:warn});}
+  for(let i=1;i<=5;i++){const desc=cp12Field(`defect_${i}`);const warn=cp12Field(`defect_warn_${i}`);if(desc)defects.push({description:desc,warning_notice:warn!=='N/A',warning_type:warn});}
   const getSig=fieldKey=>{const c=document.querySelector(`[data-sig-field="${fieldKey}"]`);if(!c)return null;const ctx=c.getContext('2d');const id=ctx.getImageData(0,0,c.width,c.height);return Array.from(id.data).some((v,i)=>i%4!==3&&v!==0)?c.toDataURL('image/png'):null;};
   const certDate=cp12Field('cert_date');const nextDate=cp12Field('next_check_date');
   return{
@@ -1860,10 +1816,10 @@ function collectCP12FormData(){
     landlord_address:cp12Field('landlord_address'),landlord_postcode:cp12Field('landlord_postcode'),
     install_address:cp12Field('install_address'),install_postcode:cp12Field('install_postcode'),
     work_details:cp12Field('work_details'),remedial_action:cp12Field('remedial_action'),
-    pipework:[cp12Field('pipe_1'),cp12Field('pipe_2'),cp12Field('pipe_3'),cp12Field('pipe_4'),cp12Field('pipe_5')],
+    pipework:[cp12Field('pipe_gas_tight'),cp12Field('pipe_pressure'),cp12Field('pipe_visual'),cp12Field('pipe_meter'),cp12Field('pipe_emergency')],
     appliances:appliances,defects:defects,
     sig_issued_name:cp12Field('issuer_name'),sig_issued_image:getSig('sig_issued'),
-    sig_received_name:cp12Field('recipient_name'),sig_received_image:getSig('sig_received')
+    sig_received_name:cp12Field('receiver_name'),sig_received_image:getSig('sig_received')
   };
 }
 function populateCP12Form(r){
@@ -1876,25 +1832,29 @@ function populateCP12Form(r){
   setCP12Field('landlord_address',r.landlord_address||'');setCP12Field('landlord_postcode',r.landlord_postcode||'');
   setCP12Field('install_address',r.install_address||'');setCP12Field('install_postcode',r.install_postcode||'');
   setCP12Field('work_details',r.work_details||'');setCP12Field('remedial_action',r.remedial_action||'');
-  setCP12Field('recipient_name',r.sig_received_name||'');
+  setCP12Field('receiver_name',r.sig_received_name||'');
   const ref=r.ref_number||r.base_ref||'';setCP12Field('cert_ref',ref);setCP12Field('cert_ref_p2',ref);
-  const pf=['pipe_1','pipe_2','pipe_3','pipe_4','pipe_5'];
+  const pf=['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'];
   (r.pipework||[]).forEach((v,i)=>{if(pf[i])setCP12Field(pf[i],v);});
-  (r.defects||[]).forEach((d,i)=>{if(i<5){setCP12Field(`defect_${i+1}_desc`,d.description||'');setCP12Field(`defect_${i+1}_warn`,d.warning_type||(d.warning_notice?'ID':'N/A'));}});
+  (r.defects||[]).forEach((d,i)=>{if(i<5){setCP12Field(`defect_${i+1}`,d.description||'');setCP12Field(`defect_warn_${i+1}`,d.warning_type||(d.warning_notice?'Yes':'N/A'));}});
   (r.appliances||[]).forEach((a,i)=>{
     const n=i+1;if(n>5)return;
     setCP12Field(`app${n}_location`,a.location||'');setCP12Field(`app${n}_type`,a.type||'');
     setCP12Field(`app${n}_make`,a.make||'');setCP12Field(`app${n}_model`,a.model||'');
-    const fEl=document.querySelector(`[data-field="app${n}_flue"]`);if(fEl)fEl.value=a.flue_type||'Open Flue';
-    setCP12Field(`app${n}_landlord`,a.landlord_appliance||'Yes');setCP12Field(`app${n}_safe`,a.safe_to_use||'Yes');
-    setCP12Field(`app${n}_op_pressure`,a.op_pressure||'20 mbar');setCP12Field(`app${n}_safety_dev`,a.safety_devices||'✓');
-    setCP12Field(`app${n}_burner_pressure`,a.burner_pressure||'');setCP12Field(`app${n}_heat_input`,a.heat_input||'');
-    setCP12Field(`app${n}_flue_check`,a.flue_check||'✓');setCP12Field(`app${n}_visual`,a.visual_condition||'✓');
-    setCP12Field(`app${n}_serviced`,a.serviced||'N/A');setCP12Field(`app${n}_co_warn`,a.co_warning||'No');
-    setCP12Field(`app${n}_co_present`,a.co_present||'N/A');setCP12Field(`app${n}_co_date`,a.co_in_date||'N/A');
-    setCP12Field(`app${n}_co_test`,a.co_test||'N/A');setCP12Field(`app${n}_co_advice`,a.co_advice||'N/A');
+    setCP12Field(`app${n}_flue_type`,a.flue_type||'');
+    setCP12Field(`app${n}_ownership`,a.ownership||a.landlord_appliance||'Yes');
+    setCP12Field(`app${n}_inspected`,a.inspected||'Yes');
+    setCP12Field(`app${n}_op_pressure`,a.op_pressure||'20 mbar');
+    setCP12Field(`app${n}_safety_dev`,a.safety_devices||'Pass');
+    setCP12Field(`app${n}_vent`,a.ventilation||'Pass');
+    setCP12Field(`app${n}_visual`,a.visual_condition||'N/A');
+    setCP12Field(`app${n}_flue_flow`,a.flue_flow||'N/A');
+    setCP12Field(`app${n}_combustion`,a.combustion||'N/A');
+    setCP12Field(`app${n}_serviced`,a.serviced||'No');
+    setCP12Field(`app${n}_safe_to_use`,a.safe_to_use||'Yes');
   });
   for(let n=(r.appliances||[]).length+1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&!c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  refreshChoiceGroups();
   if(r.sig_issued_image){const c=document.querySelector('[data-sig-field="sig_issued"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_issued_image;}}
   if(r.sig_received_image){const c=document.querySelector('[data-sig-field="sig_received"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_received_image;}}
 }
@@ -1912,7 +1872,8 @@ function newGasCert(){
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
     else if(el.tagName!=='INPUT'||!el.readOnly)el.value='';
   });
-  ['pipe_1','pipe_2','pipe_3','pipe_4','pipe_5'].forEach(f=>setCP12Field(f,'✓'));
+  ['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'].forEach(f=>setCP12Field(f,'✓'));
+  refreshChoiceGroups();
   for(let n=1;n<=5;n++){setCP12Field(`app${n}_op_pressure`,'20 mbar');const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
   const t=new Date();const dd=String(t.getDate()).padStart(2,'0');const mm=String(t.getMonth()+1).padStart(2,'0');const yyyy=t.getFullYear();
   const today=`${dd}/${mm}/${yyyy}`;setCP12Field('cert_date',today);setCP12Field('next_check_date',oneYearMinusOneDayUK(today));
@@ -1961,14 +1922,17 @@ async function downloadCP12PDF(btn){
 // ========== CP12 INIT ==========
 function initCP12Form(){
   buildCP12ApplianceCards();
+  refreshChoiceGroups();
   document.querySelectorAll('.cp12-form-wrap .fast-date').forEach(el=>attachFastDateInput(el));
   document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>initCP12SigPad(c));
   const certEl=document.getElementById('f_cert_date');
-  if(certEl)certEl.addEventListener('change',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&!ne.value)ne.value=oneYearMinusOneDayUK(certEl.value);});
+  if(certEl)certEl.addEventListener('input',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&certEl.value.length===10)ne.value=oneYearMinusOneDayUK(certEl.value);});
+  // Auto-save every 4 seconds
+  setInterval(function(){try{localStorage.setItem('cp12_autosave_v1',JSON.stringify(collectCP12FormData()));}catch(e){}},4000);
 }
 
 // ========== PIPEWORK ITEMS (kept for PDF generation from history) ==========
-const PIPEWORK_ITEMS=['Pipework installation/condition satisfactory','Adequate ventilation provided','Satisfactory flue arrangement','Safety devices operating correctly','Emergency control accessible'];
+const PIPEWORK_ITEMS=['Gas Tightness Test','Standing / Working Pressure Test','Gas Installation Visual Check','Meter / Governor Condition','Emergency Control Accessible'];
 async function saveGas(){
   const d=getGasFormData();
   if(!d.install_address){toast('Installation address required','error');return;}
