@@ -703,7 +703,7 @@ async function doRegister(){
 async function doForgot(){
   const email=document.getElementById('forgot-email').value.trim();
   if(!email){showAuthError('Enter your email.');return;}
-  const{error}=await sb.auth.resetPasswordForEmail(email);
+  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://ohmdeepcerts.github.io/certificates/'});
   if(error){showAuthError(error.message);}
   else{toast('Reset email sent!','success');switchAuthTab('login');}
 }
