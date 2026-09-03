@@ -240,6 +240,226 @@ a{color:var(--accent);text-decoration:none}
 .cert-badge-pass{background:#dcfce7;color:#16a34a;border:1px solid #16a34a}
 .cert-badge-fail{background:#fee2e2;color:#dc2626;border:1px solid #dc2626}
 </style>
+<style>
+/* ===== CP12 FORM STYLES (GAS CERT template) ===== */
+.cp12-form-wrap{font-family:Arial,Helvetica,sans-serif;font-size:9pt;line-height:1.3;color:#111827;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cp12-form-wrap .page{width:297mm;height:210mm;min-height:210mm;max-height:210mm;background:#fff;margin:12px auto;padding:10mm 12mm;box-shadow:0 0 0 1px #9ca3af,0 10px 30px rgba(0,0,0,.2);position:relative;display:flex;flex-direction:column;overflow:hidden}
+.cp12-form-wrap .merged-header{display:grid;grid-template-columns:20% 80%;min-height:62px;margin-bottom:3px;border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex-shrink:0;background:#1e3a5f}
+.cp12-form-wrap .logo-zone{position:relative;background:#1e3a5f;display:flex;align-items:center;justify-content:center;min-width:0;cursor:pointer;padding:5px 8px}
+.cp12-form-wrap .logo-zone img{display:none;max-width:100%;max-height:54px;width:auto;height:auto}
+.cp12-form-wrap .logo-zone.has-logo img{display:block}
+.cp12-form-wrap .logo-placeholder{color:rgba(255,255,255,.72);font-size:8pt;font-weight:700;text-align:center;line-height:1.2}
+.cp12-form-wrap .logo-zone.has-logo .logo-placeholder{display:none}
+.cp12-form-wrap .logo-zone input[type="file"]{display:none}
+.cp12-form-wrap .header-content{min-width:0;display:flex;flex-direction:column;background:#1e3a5f}
+.cp12-form-wrap .top-bar{display:grid;grid-template-columns:.82fr .68fr .82fr 1.78fr;background:#f59e0b;padding:3px 5px;gap:4px;align-items:center;flex-shrink:0}
+.cp12-form-wrap .top-item{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:3px;font-size:6.8pt}
+.cp12-form-wrap .top-item label{background:transparent;color:#1e3a5f;font-weight:700;padding:0;font-size:6.5pt;line-height:1.05;white-space:normal;border-radius:0}
+.cp12-form-wrap .top-item.gas-number-item{gap:2px}
+.cp12-form-wrap .top-item.gas-number-item label{font-size:5.8pt;line-height:1.0}
+.cp12-form-wrap .top-item input{min-width:0;width:100%;height:16px;background:#fff;border:1px solid rgba(30,58,95,.25);border-radius:2px;padding:1px 4px;font-size:7.3pt;font-weight:600;color:#111827;font-family:inherit}
+.cp12-form-wrap .auto-reference[readonly]{cursor:default;background:#fff!important;color:#111827!important;font-weight:700}
+.cp12-form-wrap .title-box{flex:1;background:#1e3a5f;color:#fff;text-align:left;padding:2px 9px 3px;display:flex;flex-direction:column;justify-content:center;min-height:39px}
+.cp12-form-wrap .title-box .company-input{width:100%;height:20px;background:transparent;border:1px solid transparent;border-radius:2px;color:#fff;font-family:inherit;font-size:16.5pt;font-weight:800;line-height:1;text-align:left;outline:none;margin:0 0 1px;padding:0}
+.cp12-form-wrap .title-box .company-input::placeholder{color:rgba(255,255,255,.6)}
+.cp12-form-wrap .title-box .company-input:focus{border-color:#f59e0b;background:rgba(255,255,255,.05)}
+.cp12-form-wrap .title-box .doctitle{font-size:14.5pt;line-height:1.02;font-weight:800;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}
+.cp12-form-wrap #page1 .merged-header{min-height:80px;margin-bottom:3px}
+.cp12-form-wrap #page1 .logo-zone img{height:62px}
+.cp12-form-wrap #page1 .top-bar{padding:1px 4px;gap:3px}
+.cp12-form-wrap #page1 .top-item input{height:16px}
+.cp12-form-wrap #page1 .title-box{min-height:57px;padding:7px 8px 8px}
+.cp12-form-wrap #page1 .title-box .company-input{height:26px;font-size:19pt;font-weight:800}
+.cp12-form-wrap #page1 .title-box .doctitle{font-size:15.5pt;font-weight:800;line-height:1.02}
+.cp12-form-wrap .info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;flex-shrink:0}
+.cp12-form-wrap .info-box{border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;background:#fff}
+.cp12-form-wrap .info-box-header{background:#1e3a5f;color:#fff;font-size:7.5pt;font-weight:700;text-transform:uppercase;padding:5px 8px;letter-spacing:.05px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.cp12-form-wrap .info-box-body{padding:4px 6px 5px;min-height:0}
+.cp12-form-wrap .compact-address{display:grid;grid-template-columns:minmax(0,1fr) 115px;grid-template-rows:67px 22px;gap:3px 7px;align-items:stretch}
+.cp12-form-wrap .compact-address.has-copy-action{position:relative}
+.cp12-form-wrap .copy-address-btn{position:absolute;top:8px;right:10px;z-index:3;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;background:rgba(255,255,255,.96);color:#1e3a5f;border-radius:4px;padding:0;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.cp12-form-wrap .copy-address-btn svg{width:14px;height:14px;display:block;pointer-events:none}
+.cp12-form-wrap .copy-address-btn:hover{background:#eff6ff;border-color:#1e3a5f}
+.cp12-form-wrap .compact-address.has-copy-action .address-main{padding-right:38px}
+.cp12-form-wrap .compact-address .address-main{grid-column:1/-1;grid-row:1;width:100%;height:67px;min-height:67px;border:1px solid #e5e7eb;border-radius:2px;resize:none;font-family:inherit;font-size:9.2pt;line-height:1.18;outline:none;color:#111827;padding:3px 5px}
+.cp12-form-wrap .compact-address .address-main:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.15)}
+.cp12-form-wrap .compact-address .pc-line{grid-column:2;grid-row:2;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px}
+.cp12-form-wrap .compact-address .pc-line label,.cp12-form-wrap .business-grid label{font-size:7pt;font-weight:700;color:#374151;white-space:nowrap;line-height:1}
+.cp12-form-wrap .compact-address .pc-line input,.cp12-form-wrap .business-grid input{width:100%;min-width:0;height:22px;border:1px solid #d1d5db;border-radius:2px;font-family:inherit;font-size:8.8pt;outline:none;color:#111827;padding:2px 4px}
+.cp12-form-wrap .business-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(115px,.9fr);grid-template-rows:67px 22px;gap:3px 7px;align-items:stretch}
+.cp12-form-wrap .business-grid .business-details{grid-column:1;grid-row:1;width:100%;height:67px;min-height:67px;border:1px solid #e5e7eb;border-radius:2px;resize:none;font-family:inherit;font-size:9.2pt;line-height:1.18;outline:none;color:#111827;padding:3px 5px}
+.cp12-form-wrap .business-grid .business-phone,.cp12-form-wrap .business-grid .business-email,.cp12-form-wrap .business-grid .business-postcode{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px;min-width:0}
+.cp12-form-wrap .business-grid .business-phone{grid-column:2;grid-row:1;align-self:start}
+.cp12-form-wrap .business-grid .business-email{grid-column:1;grid-row:2}
+.cp12-form-wrap .business-grid .business-postcode{grid-column:2;grid-row:2}
+.cp12-form-wrap .bottom-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:0}
+.cp12-form-wrap .left-panel{display:flex;flex-direction:column;gap:8px}
+.cp12-form-wrap .defects-box,.cp12-form-wrap .pipe-box{border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex-shrink:0;height:166px;min-height:166px;max-height:166px}
+.cp12-form-wrap .defects-box-header,.cp12-form-wrap .pipe-box-header{background:#1e3a5f;color:#fff;font-size:7.5pt;font-weight:700;text-transform:uppercase;height:27px;min-height:27px;max-height:27px;padding:0 8px;display:flex;align-items:center}
+.cp12-form-wrap .defects-split-header{display:grid!important;grid-template-columns:minmax(0,1fr) 118px;align-items:stretch!important;padding:0!important}
+.cp12-form-wrap .defects-split-header>span{display:flex;align-items:center;min-height:27px;padding:0 8px}
+.cp12-form-wrap .defects-split-header .warn-heading{justify-content:center;text-align:center;border-left:1px solid rgba(255,255,255,.6);font-size:6.4pt;line-height:1.05;padding-left:2px;padding-right:2px}
+.cp12-form-wrap .pipe-split-header{display:grid!important;grid-template-columns:minmax(0,1fr) 76px;align-items:stretch!important;padding:0!important}
+.cp12-form-wrap .pipe-split-header>span{display:flex;align-items:center;min-height:27px;padding:0 8px}
+.cp12-form-wrap .pipe-split-header .pipe-status-heading{justify-content:center;text-align:center;border-left:1px solid rgba(255,255,255,.6);font-size:6.4pt;line-height:1.05;padding-left:2px;padding-right:2px}
+.cp12-form-wrap .choice-group{width:100%;display:flex;justify-content:center;align-items:center}
+.cp12-form-wrap .choice-cycle{border:1px solid #9ca3af;background:#fff;color:#111827;border-radius:3px;min-width:38px;height:21px;padding:0 6px;font-family:inherit;font-size:7.2pt;font-weight:700;line-height:19px;cursor:pointer;text-align:center;user-select:none}
+.cp12-form-wrap .choice-cycle:hover{background:#f9fafb;border-color:#374151}
+.cp12-form-wrap .choice-cycle[data-current="✓"]{color:#111827;border-color:#9ca3af;font-size:10pt;font-weight:700}
+.cp12-form-wrap .choice-cycle[data-current="✕"]{color:#111827;border-color:#9ca3af;font-size:10pt}
+.cp12-form-wrap .choice-cycle[data-current="N/A"]{color:#6b7280;border-color:#9ca3af;font-size:7pt}
+.cp12-form-wrap .choice-cycle[data-current="Yes"]{color:#111827;border-color:#9ca3af;font-size:7pt;font-weight:700}
+.cp12-form-wrap .choice-cycle[data-current="No"]{color:#111827;border-color:#9ca3af;font-size:7pt;font-weight:700}
+.cp12-form-wrap .choice-cycle[data-current="Pass"]{color:#111827;border-color:#9ca3af;font-size:7pt;font-weight:700}
+.cp12-form-wrap .choice-cycle[data-current="Fail"]{color:#111827;border-color:#9ca3af;font-size:7pt;font-weight:700}
+.cp12-form-wrap .pipe-choice .choice-cycle{min-width:34px}
+.cp12-form-wrap .warn-cycle{min-width:44px;width:44px;height:19px;line-height:17px;font-size:7pt;padding:0 4px}
+.cp12-form-wrap .defects-table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:fixed;height:135px}
+.cp12-form-wrap .defects-table tbody tr,.cp12-form-wrap .pipe-table tr{height:23px}
+.cp12-form-wrap .defects-table tbody td,.cp12-form-wrap .pipe-table td{height:23px}
+.cp12-form-wrap .defects-table td{border:1px solid #1e3a5f;padding:2px 6px;vertical-align:middle}
+.cp12-form-wrap .defects-table td.num{width:26px;text-align:center;font-weight:700;background:#f3f4f6}
+.cp12-form-wrap .defects-table td.desc{width:auto}
+.cp12-form-wrap .defects-table td.desc input{width:100%;height:19px;min-height:19px;border:1px solid #e5e7eb;border-radius:3px;font-family:inherit;font-size:9pt;outline:none;color:#111827;padding:1px 4px}
+.cp12-form-wrap .defects-table td.warn{width:118px;text-align:center;font-size:7.5pt;font-weight:700;color:#374151;white-space:nowrap;padding:2px 4px}
+.cp12-form-wrap .remedial-box{border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex:1;display:flex;flex-direction:column}
+.cp12-form-wrap .remedial-box-header{background:#1e3a5f;color:#fff;font-size:7.5pt;font-weight:700;text-transform:uppercase;padding:5px 8px;display:flex;justify-content:space-between;align-items:center}
+.cp12-form-wrap .remedial-box textarea{flex:1;width:100%;border:none;resize:none;font-family:inherit;font-size:9pt;padding:6px 8px;outline:none;line-height:1.4;color:#111827;min-height:50px}
+.cp12-form-wrap .work-box{border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex:1;display:flex;flex-direction:column}
+.cp12-form-wrap .work-box-header{background:#1e3a5f;color:#fff;font-size:7.5pt;font-weight:700;text-transform:uppercase;padding:5px 8px;letter-spacing:.4px;display:flex;justify-content:space-between;align-items:center}
+.cp12-form-wrap .work-box textarea{width:100%;flex:1;min-height:0;border:none;resize:none;font-family:inherit;font-size:9pt;padding:6px 8px;outline:none;line-height:1.4;color:#111827}
+.cp12-form-wrap .right-panel{display:flex;flex-direction:column;gap:8px}
+.cp12-form-wrap .pipe-table{width:100%;border-collapse:collapse;table-layout:fixed;height:135px}
+.cp12-form-wrap .pipe-table td{border:1px solid #1e3a5f;padding:0;vertical-align:middle}
+.cp12-form-wrap .pipe-table td.label{padding:2px 8px;font-size:8.5pt;font-weight:500;line-height:1.15}
+.cp12-form-wrap .pipe-table td.check{width:76px;text-align:center;background:#f9fafb;padding:2px 4px}
+.cp12-form-wrap .sig-box{border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 170px;grid-template-rows:minmax(0,1fr) minmax(0,1fr);column-gap:12px;row-gap:8px;padding:8px;background:#f9fafb}
+.cp12-form-wrap #page1 .sig-box{grid-template-columns:minmax(0,1fr) 160px;column-gap:10px;row-gap:6px;padding:6px}
+.cp12-form-wrap .sig-inner{grid-column:1;min-width:0;min-height:0;border:1px solid #1e3a5f;border-radius:4px;padding:7px 8px;background:#fff;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:12px;align-items:center}
+.cp12-form-wrap #page1 .sig-inner{padding:5px 7px}
+.cp12-form-wrap .sig-inner:nth-child(1){grid-row:1}
+.cp12-form-wrap .sig-inner:nth-child(2){grid-row:2}
+.cp12-form-wrap .sig-inner-title{grid-column:1/-1;font-size:6.2pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff;background:#1e3a5f;padding:3px 8px;margin:-7px -8px 6px;border-radius:3px 3px 0 0;line-height:1.3}
+.cp12-form-wrap #page1 .sig-inner-title{font-size:5.8pt;padding:3px 7px;margin:-5px -7px 5px}
+.cp12-form-wrap .sig-field{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px;grid-row:2}
+.cp12-form-wrap .sig-field label{font-size:8pt;font-weight:700;color:#111827;white-space:nowrap;line-height:1.1;display:flex;align-items:center;gap:6px}
+.cp12-form-wrap #page1 .sig-field label{font-size:7.5pt}
+.cp12-form-wrap .sig-field:nth-child(2){grid-column:1}
+.cp12-form-wrap .sig-field:nth-child(3){grid-column:2;justify-content:center}
+.cp12-form-wrap .sig-field:nth-child(3) label{justify-content:center}
+.cp12-form-wrap .sig-field:nth-child(3) input{text-align:center}
+.cp12-form-wrap .sig-canvas{width:100%;height:48px;border:1px solid #d1d5db;border-radius:3px;cursor:crosshair;display:block;background:#fff;touch-action:none}
+.cp12-form-wrap #page1 .sig-canvas,.cp12-form-wrap #page1 .sig-field input{height:42px}
+.cp12-form-wrap .sig-canvas:hover{border-color:#3b82f6}
+.cp12-form-wrap .sig-clear-btn{font-size:7.5pt;padding:1px 6px;border:1px solid #e5e7eb;border-radius:3px;background:#fff;cursor:pointer;color:#6b7280;font-family:inherit;margin-left:auto}
+.cp12-form-wrap .sig-clear-btn:hover{background:#fef2f2;border-color:#f0a4a4;color:#dc2626}
+.cp12-form-wrap .sig-tap-hint{font-size:6.5pt;font-weight:400;color:#94a3b8}
+.cp12-form-wrap .attention-wrap{grid-column:2;grid-row:1/span 2;min-width:0;display:flex;align-items:center;justify-content:center}
+.cp12-form-wrap .attention-box{border:3px solid #111827;border-radius:0;width:170px;max-width:100%;background:#fff;overflow:hidden}
+.cp12-form-wrap #page1 .attention-box{width:160px}
+.cp12-form-wrap .attention-box .attn-head{background:#111827;color:#fff;text-align:center;font-weight:700;font-size:11pt;padding:7px 4px;letter-spacing:1px}
+.cp12-form-wrap #page1 .attention-box .attn-head{font-size:10pt;padding:6px 3px}
+.cp12-form-wrap .attention-box .attn-body{min-height:118px;padding:12px 8px;display:flex;flex-direction:column;justify-content:center;text-align:center;font-size:8.5pt;line-height:1.3;color:#374151}
+.cp12-form-wrap #page1 .attention-box .attn-body{min-height:105px;padding:9px 7px;font-size:7.5pt}
+.cp12-form-wrap .attention-box .attn-body input{width:100%;height:36px;border:0;border-radius:0;text-align:center;font-family:inherit;font-size:15pt;font-weight:800;color:#dc2626;background:#fff;outline:none;margin-top:7px;padding:2px}
+.cp12-form-wrap #page1 .attention-box .attn-body input{height:32px;font-size:13pt;margin-top:5px}
+.cp12-form-wrap .fast-date{font-variant-numeric:tabular-nums}
+.cp12-form-wrap .top-item .fast-date{width:108px;text-align:center;letter-spacing:.15px}
+.cp12-form-wrap .next-check-date{cursor:text;caret-color:#dc2626;letter-spacing:.2px}
+.cp12-form-wrap .next-check-date::placeholder{color:#fca5a5;opacity:.75}
+.cp12-form-wrap .page-footer{background:#fef3c7;border:2px solid #1e3a5f;border-radius:6px;color:#1e3a5f;font-size:7.5pt;text-align:center;padding:6px 12px;font-weight:500;line-height:1.4;margin-top:8px;flex-shrink:0}
+/* Page 2 */
+.cp12-form-wrap #page2{display:flex;flex-direction:column;background:#fff}
+.cp12-form-wrap .p2-titlebar{height:30px;flex:0 0 30px;display:grid;grid-template-columns:minmax(0,1fr) 48%;align-items:center;gap:10px;padding:0 9px 0 11px;margin-bottom:10px;background:#1e3a5f;color:#fff;border:2px solid #1e3a5f;border-radius:7px;overflow:hidden}
+.cp12-form-wrap .p2-title{font-size:10pt;font-weight:800;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+.cp12-form-wrap .p2-ref-group{justify-self:end;width:100%;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}
+.cp12-form-wrap .p2-ref-label{font-size:6.2pt;font-weight:800;color:#dbeafe;white-space:nowrap;text-transform:uppercase;letter-spacing:.2px}
+.cp12-form-wrap .p2-ref-box{min-width:0;height:20px;background:#fff;border:1px solid rgba(255,255,255,.65);border-radius:4px;overflow:hidden}
+.cp12-form-wrap .p2-ref-box input{width:100%;height:100%;border:0;outline:0;padding:2px 7px;background:transparent;color:#111827;font-family:inherit;font-size:6.8pt;font-weight:700;text-align:left}
+.cp12-form-wrap .p2-column-header,.cp12-form-wrap .appliance-value-row{display:grid;grid-template-columns:3.5fr 8fr 8fr 8.5fr 6.5fr 7fr 5fr 5fr 7.5fr 7fr 6fr 6fr 5.5fr 7fr 5fr 4.5fr}
+.cp12-form-wrap .p2-column-header{flex:0 0 55px;min-height:55px;margin-bottom:7px;background:#1e3a5f;border:2px solid #1e3a5f;border-radius:7px;overflow:hidden}
+.cp12-form-wrap .p2-head-cell{min-width:0;display:flex;align-items:center;justify-content:center;padding:3px 2px;color:#fff;font-size:6.1pt;line-height:1.08;font-weight:800;text-align:center;border-right:1px solid rgba(255,255,255,.32);overflow:hidden;word-break:break-word}
+.cp12-form-wrap .p2-head-cell:last-child{border-right:0}
+.cp12-form-wrap .p2-head-cell.important{background:rgba(255,255,255,.08)}
+.cp12-form-wrap .appliance-cards{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:repeat(5,auto);align-content:space-between}
+.cp12-form-wrap .appliance-card{display:grid;grid-template-rows:36px auto;row-gap:0}
+.cp12-form-wrap .appliance-main-shell{min-height:0;background:#fff;border:2px solid #1e3a5f;border-radius:6px 6px 0 0;border-bottom:1px dashed #cbd5e1;overflow:hidden}
+.cp12-form-wrap .appliance-value-row{height:100%;min-height:0}
+.cp12-form-wrap .appliance-value-cell{min-width:0;min-height:0;display:flex;align-items:stretch;justify-content:center;background:#fff;border-right:1px solid #1e3a5f;overflow:hidden}
+.cp12-form-wrap .appliance-value-cell:last-child{border-right:0}
+.cp12-form-wrap .appliance-value-cell.number-cell{background:#f8fafc}
+.cp12-form-wrap .appliance-value-cell input,.cp12-form-wrap .appliance-value-cell select{width:100%;min-width:0;height:100%;border:0;outline:0;background:transparent;color:#111827;font-family:inherit;font-size:7.1pt;font-weight:650;line-height:1.05;padding:2px 4px;text-align:center}
+.cp12-form-wrap .appliance-value-cell input:focus,.cp12-form-wrap .appliance-value-cell select:focus{background:#eff6ff;box-shadow:inset 0 0 0 1px #60a5fa}
+.cp12-form-wrap .appliance-number-input{font-size:7.4pt!important;font-weight:900!important;color:#1e3a5f!important}
+.cp12-form-wrap .appliance-value-cell.location,.cp12-form-wrap .appliance-value-cell.type,.cp12-form-wrap .appliance-value-cell.make,.cp12-form-wrap .appliance-value-cell.model{align-items:center;flex-direction:column;justify-content:center}
+.cp12-form-wrap .appliance-value-cell.location textarea,.cp12-form-wrap .appliance-value-cell.type textarea,.cp12-form-wrap .appliance-value-cell.make textarea,.cp12-form-wrap .appliance-value-cell.model textarea{width:100%;height:auto;border:0;outline:0;background:transparent;color:#111827;font-family:inherit;font-size:8.5pt;font-weight:650;line-height:1.25;padding:0 4px 0 6px;text-align:left;resize:none;overflow:hidden;display:block}
+.cp12-form-wrap .appliance-value-cell.location textarea:focus,.cp12-form-wrap .appliance-value-cell.type textarea:focus,.cp12-form-wrap .appliance-value-cell.make textarea:focus,.cp12-form-wrap .appliance-value-cell.model textarea:focus{background:#eff6ff;box-shadow:inset 0 0 0 1px #60a5fa}
+.cp12-form-wrap .co-hanger{width:100%;min-height:20px;display:flex;flex-direction:row;align-items:stretch;background:rgba(251,191,36,.06);border:2px solid #1e3a5f;border-top:1px dashed #cbd5e1;border-radius:0 0 6px 6px;overflow:hidden}
+.cp12-form-wrap .co-hanger-title{flex:0 0 26px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.2);color:#92400e;font-size:5.8pt;font-weight:900;text-transform:uppercase;letter-spacing:.1px;border-right:1px solid #e2e8f0}
+.cp12-form-wrap .co-mini-grid{flex:1;min-width:0;display:flex;flex-direction:row;align-items:stretch}
+.cp12-form-wrap .co-mini{flex:0 0 auto;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:4px;border-left:1px solid #e2e8f0;padding:2px 8px}
+.cp12-form-wrap .co-mini label{min-width:0;flex-shrink:1;color:#64748b;font-size:5.8pt;font-weight:700;white-space:normal;line-height:1.2;text-align:center}
+.cp12-form-wrap .co-mini .choice-cycle{flex-shrink:0;min-width:26px;height:16px;font-size:6.5pt;line-height:14px;padding:0 3px}
+.cp12-form-wrap .app-row-toggle{width:100%;height:11px;min-height:11px;flex-shrink:0;border:0;border-top:1px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:9px;font-weight:700;line-height:11px;cursor:pointer;padding:0;font-family:inherit;display:block;text-align:center;letter-spacing:.5px}
+.cp12-form-wrap .app-row-toggle:hover{background:#fef2f2;color:#dc2626;border-color:#fca5a5}
+.cp12-form-wrap .appliance-card.is-disabled .app-row-toggle{background:#f0fdf4;color:#16a34a;border-color:#86efac}
+.cp12-form-wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell){opacity:.12;pointer-events:none}
+.cp12-form-wrap .appliance-card.is-disabled .co-hanger{display:none}
+.cp12-form-wrap .appliance-card.is-disabled .appliance-main-shell{border-radius:6px;border-bottom:2px solid #1e3a5f}
+.cp12-form-wrap .inline-history-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px auto;width:297mm;overflow:hidden}
+.cp12-form-wrap .inline-history-toggle{width:100%;display:flex;align-items:center;gap:8px;padding:10px 14px;background:#1e3a5f;color:#fff;border:0;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;text-align:left;letter-spacing:.2px}
+.cp12-form-wrap .inline-history-toggle .iht-arrow{margin-left:auto;transition:transform .2s}
+.cp12-form-wrap .inline-history-toggle.open .iht-arrow{transform:rotate(180deg)}
+.cp12-form-wrap .inline-history-body{display:none;padding:12px}
+.cp12-form-wrap .inline-history-body.open{display:block}
+.cp12-form-wrap .inline-history-search{width:100%;padding:7px 10px;border:1px solid #e2e8f0;border-radius:5px;font-family:inherit;font-size:12px;outline:none;margin-bottom:10px}
+.cp12-form-wrap .inline-history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.cp12-form-wrap .ihl-card{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;cursor:pointer;font-size:11px}
+.cp12-form-wrap .ihl-card:hover{border-color:#1e3a5f;background:#eff6ff}
+.cp12-form-wrap .ihl-card-title{font-weight:700;color:#111827;margin-bottom:2px}
+.cp12-form-wrap .ihl-card-sub{color:#64748b;font-size:10px}
+.cp12-form-wrap .ihl-empty{color:#94a3b8;font-size:12px;text-align:center;padding:16px}
+/* Autocomplete */
+.cp12-form-wrap .ac-dropdown,.ac-dropdown{position:fixed;z-index:9999;background:#fff;border:1px solid #d1d5db;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;max-height:220px;overflow-y:auto}
+.cp12-form-wrap .ac-item,.ac-item{padding:8px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:11px}
+.cp12-form-wrap .ac-item:hover,.ac-item:hover,.ac-item.ac-focused,.ac-item.ac-focused{background:#eff6ff}
+.cp12-form-wrap .ac-title,.ac-title{font-weight:600;color:#111827}
+.cp12-form-wrap .ac-sub,.ac-sub{color:#94a3b8;font-size:10px;margin-top:2px}
+/* Signature modal */
+.sig-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);align-items:center;justify-content:center}
+.sig-modal.open{display:flex}
+.sig-modal-box{background:#fff;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:740px;width:90vw}
+.sig-modal-title{font-size:15px;font-weight:700;color:#111827;margin-bottom:4px}
+.sig-modal-hint{font-size:12px;color:#6b7280;margin-bottom:12px}
+#sigModalCanvas{display:block;width:100%;height:200px;border:1.5px solid #d1d5db;border-radius:6px;cursor:crosshair;touch-action:none;background:#fff}
+.sig-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* History toast */
+#cp12Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9998;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#cp12Toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Print: show only CP12 pages */
+@media print{
+  @page{size:A4 landscape;margin:0}
+  body{background:#fff}
+  #sidebar,#auth-screen,.view-header,.view:not(#view-gas-new){display:none!important}
+  #app{display:block!important;height:auto!important;overflow:visible!important}
+  #content-area{overflow:visible!important;display:block!important}
+  #view-gas-new{display:block!important;padding:0!important}
+  #view-gas-new .view-header{display:none!important}
+  .cp12-form-wrap .page{width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;margin:0!important;padding:10mm 12mm!important;box-shadow:none!important;overflow:hidden!important;break-after:page}
+  .cp12-form-wrap .page:last-child{page-break-after:auto;break-after:auto}
+  .cp12-form-wrap .no-print,.no-print{display:none!important}
+  .cp12-form-wrap .inline-history-section{display:none!important}
+  .cp12-form-wrap .sig-clear-btn{display:none!important}
+  .cp12-form-wrap .copy-address-btn{display:none!important}
+  .cp12-form-wrap input::placeholder,.cp12-form-wrap textarea::placeholder{color:transparent!important}
+  .cp12-form-wrap input,.cp12-form-wrap textarea,.cp12-form-wrap select{color:#000!important}
+  .cp12-form-wrap #page1 .attention-box .next-check-date{color:#dc2626!important;-webkit-text-fill-color:#dc2626!important}
+  .cp12-form-wrap #page1 .title-box .company-input{color:#fff!important;-webkit-text-fill-color:#fff!important}
+  .cp12-form-wrap .choice-cycle{border:0!important;background:transparent!important;color:#111827!important;min-width:0!important;width:auto!important;height:20px!important;padding:0 2px!important;font-size:9pt!important;font-weight:700!important;cursor:default!important}
+  .cp12-form-wrap .co-hanger{display:none!important}
+  .cp12-form-wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) *{visibility:hidden!important}
+}
+</style>
 </head>
 <body>
 <!-- ===== AUTH SCREEN ===== -->
@@ -448,90 +668,320 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- GAS NEW/EDIT -->
     <div class="view" id="view-gas-new">
-      <div class="view-header">
+      <div class="view-header no-print">
         <div><div class="view-title" id="gas-form-title">New CP12</div><div class="view-subtitle" id="gas-form-ref"></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="navigate('gas-history')">← Back</button>
-          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="generateGasPDF()" hidden>⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)">⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="window.print()">🖨 Print</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
           <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save Draft</button>
         </div>
       </div>
-      <!-- Engineer -->
-      <div class="form-section">
-        <div class="form-section-title">Engineer &amp; Business Details</div>
-        <div class="field-grid">
-          <div class="field-group"><label>Cert Date *</label><input type="date" id="gas-cert-date"></div>
-          <div class="field-group"><label>Next Check Date *</label><input type="date" id="gas-next-date"></div>
-          <div class="field-group"><label>Engineer Name *</label><input type="text" id="gas-engineer" placeholder="Full name"></div>
-          <div class="field-group"><label>Licence No</label><input type="text" id="gas-licence" placeholder="ACS/CCN number"></div>
-          <div class="field-group"><label>Gas Safe Reg No</label><input type="text" id="gas-safe-no" placeholder="Registration number"></div>
-          <div class="field-group" style="grid-column:1/-1"><label>Business Address</label><input type="text" id="gas-biz-address" placeholder="Business address"></div>
-          <div class="field-group"><label>Business Phone</label><input type="tel" id="gas-biz-phone"></div>
-          <div class="field-group"><label>Business Email</label><input type="email" id="gas-biz-email"></div>
-        </div>
-      </div>
-      <!-- Addresses -->
-      <div class="form-section">
-        <div class="form-section-title">Property Details</div>
-        <div class="field-grid">
-          <div class="field-group"><label>Landlord Address</label><textarea id="gas-landlord-addr" rows="2" placeholder="Landlord/owner full address"></textarea></div>
-          <div class="field-group"><label>Landlord Postcode</label><input type="text" id="gas-landlord-pc" placeholder="SW1A 1AA"></div>
-          <div class="field-group"><label>Installation Address *</label><textarea id="gas-install-addr" rows="2" placeholder="Property where work was done"></textarea></div>
-          <div class="field-group"><label>Installation Postcode</label><input type="text" id="gas-install-pc" placeholder="SW1A 1AA"></div>
-          <div class="field-group" style="grid-column:1/-1"><label>Work Details / Comments</label><textarea id="gas-work-details" rows="2" placeholder="Description of work carried out"></textarea></div>
-        </div>
-      </div>
-      <!-- Pipework -->
-      <div class="form-section">
-        <div class="form-section-title">Pipework &amp; Safety Checks</div>
-        <div style="display:grid;grid-template-columns:1fr;gap:10px">
-          <div id="gas-pipework-checks"></div>
-        </div>
-      </div>
-      <!-- Appliances -->
-      <div class="form-section">
-        <div class="form-section-title">Gas Appliances (up to 5)</div>
-        <div id="gas-app-container"></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addGasAppliance()" id="btn-add-gas-app">+ Add Appliance</button>
-      </div>
-      <!-- Defects -->
-      <div class="form-section">
-        <div class="form-section-title">Defects / Warning Notices</div>
-        <div id="gas-defects-container"></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addGasDefect()">+ Add Defect</button>
-        <div class="field-grid" style="margin-top:14px">
-          <div class="field-group" style="grid-column:1/-1"><label>Remedial Action Required</label><textarea id="gas-remedial" rows="2" placeholder="Describe remedial action if applicable"></textarea></div>
-        </div>
-      </div>
-      <!-- Signatures -->
-      <div class="form-section">
-        <div class="form-section-title">Signatures</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div>
-            <div class="field-group" style="margin-bottom:8px"><label>Issued By (Engineer)</label><input type="text" id="gas-sig-issued-name" placeholder="Print name"></div>
-            <canvas class="sig-canvas" id="gas-sig-issued-canvas" width="320" height="100"></canvas>
-            <div class="sig-controls">
-              <button class="btn btn-secondary btn-sm" onclick="clearSig('gas-sig-issued-canvas')">Clear</button>
-              <img id="gas-sig-issued-preview" class="sig-preview" hidden>
+
+      <!-- CP12 AUTHENTIC FORM WRAP -->
+      <div class="cp12-form-wrap" id="cp12Wrap">
+        <input type="hidden" id="cp12LogoData">
+
+        <!-- ===== PAGE 1 ===== -->
+        <div class="page" id="page1">
+
+          <!-- HEADER -->
+          <div class="merged-header">
+            <div class="logo-zone" id="logoZone" onclick="document.getElementById('logoFileInput').click()" title="Click to add company logo">
+              <img id="logoImg" src="" alt="Company logo">
+              <div class="logo-placeholder">Click to<br>add logo</div>
+              <input type="file" id="logoFileInput" accept="image/*" onchange="handleCP12LogoUpload(event)">
+            </div>
+            <div class="header-content">
+              <div class="top-bar">
+                <div class="top-item">
+                  <label for="f_cert_date">Cert Date</label>
+                  <input id="f_cert_date" type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10">
+                </div>
+                <div class="top-item">
+                  <label>Licence No.</label>
+                  <input type="text" data-field="landlord_ref" placeholder="Licence No.">
+                </div>
+                <div class="top-item gas-number-item">
+                  <label>Gas Safe<br>Reg No.</label>
+                  <input type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12">
+                </div>
+                <div class="top-item wide">
+                  <label>Certificate Ref</label>
+                  <input type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1">
+                </div>
+              </div>
+              <div class="title-box">
+                <input type="text" data-field="company_name" class="company-input" placeholder="Your Company Name Ltd">
+                <div class="doctitle">Landlord/Homeowner Gas Safety Record</div>
+              </div>
             </div>
           </div>
-          <div>
-            <div class="field-group" style="margin-bottom:8px"><label>Received By (Tenant/Owner)</label><input type="text" id="gas-sig-received-name" placeholder="Print name"></div>
-            <canvas class="sig-canvas" id="gas-sig-received-canvas" width="320" height="100"></canvas>
-            <div class="sig-controls">
-              <button class="btn btn-secondary btn-sm" onclick="clearSig('gas-sig-received-canvas')">Clear</button>
-              <img id="gas-sig-received-preview" class="sig-preview" hidden>
+
+          <!-- INFO GRID -->
+          <div class="info-grid">
+            <!-- Landlord/Customer -->
+            <div class="info-box">
+              <div class="info-box-header">Landlord / Customer Details</div>
+              <div class="info-box-body">
+                <div class="compact-address has-copy-action">
+                  <textarea class="address-main" data-field="landlord_address" placeholder="Landlord / customer name and address&#10;Including postcode" rows="4"></textarea>
+                  <button type="button" class="copy-address-btn no-print" title="Copy to installation address" onclick="copyLandlordToInstall()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  </button>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="landlord_postcode" placeholder="SW1A 1AA">
+                  </div>
+                </div>
+              </div>
             </div>
+            <!-- Installation Address -->
+            <div class="info-box">
+              <div class="info-box-header">Installation / Inspection Address</div>
+              <div class="info-box-body">
+                <div class="compact-address">
+                  <textarea class="address-main" data-field="install_address" placeholder="Full address of property inspected" rows="4"></textarea>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="install_postcode" placeholder="SW1A 1AA">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Engineer / Business -->
+            <div class="info-box">
+              <div class="info-box-header">Engineer / Business Details</div>
+              <div class="info-box-body">
+                <div class="business-grid">
+                  <textarea class="business-details" data-field="business_address" placeholder="Business address incl. postcode"></textarea>
+                  <div class="business-phone">
+                    <label>Tel</label>
+                    <input type="text" data-field="business_phone" placeholder="07...">
+                  </div>
+                  <div class="business-email">
+                    <label>Email</label>
+                    <input type="text" data-field="business_email" placeholder="info@...">
+                  </div>
+                  <div class="business-postcode">
+                    <label>PC</label>
+                    <input type="text" data-field="business_postcode" placeholder="Postcode">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOTTOM SPLIT -->
+          <div class="bottom-split">
+            <!-- Left panel -->
+            <div class="left-panel">
+              <!-- Defects -->
+              <div class="defects-box">
+                <div class="defects-box-header defects-split-header">
+                  <span>Defects / Immediately Dangerous / At Risk Notices Issued</span>
+                  <span class="warn-heading">Warning<br>Notice Type</span>
+                </div>
+                <table class="defects-table">
+                  <tbody>
+                    <tr>
+                      <td class="num">1</td>
+                      <td class="desc"><input type="text" data-field="defect_1_desc" placeholder="Defect description"></td>
+                      <td class="warn">
+                        <div class="choice-group">
+                          <button class="choice-cycle warn-cycle" data-field="defect_1_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="num">2</td>
+                      <td class="desc"><input type="text" data-field="defect_2_desc" placeholder="Defect description"></td>
+                      <td class="warn">
+                        <div class="choice-group">
+                          <button class="choice-cycle warn-cycle" data-field="defect_2_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="num">3</td>
+                      <td class="desc"><input type="text" data-field="defect_3_desc" placeholder="Defect description"></td>
+                      <td class="warn">
+                        <div class="choice-group">
+                          <button class="choice-cycle warn-cycle" data-field="defect_3_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="num">4</td>
+                      <td class="desc"><input type="text" data-field="defect_4_desc" placeholder="Defect description"></td>
+                      <td class="warn">
+                        <div class="choice-group">
+                          <button class="choice-cycle warn-cycle" data-field="defect_4_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="num">5</td>
+                      <td class="desc"><input type="text" data-field="defect_5_desc" placeholder="Defect description"></td>
+                      <td class="warn">
+                        <div class="choice-group">
+                          <button class="choice-cycle warn-cycle" data-field="defect_5_warn" data-options="N/A,ID,AR" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!-- Remedial + Work -->
+              <div class="remedial-box">
+                <div class="remedial-box-header">
+                  <span>Remedial Action Required</span>
+                </div>
+                <textarea data-field="remedial_action" placeholder="Describe any remedial action required…"></textarea>
+              </div>
+              <div class="work-box">
+                <div class="work-box-header">
+                  <span>Work Carried Out</span>
+                </div>
+                <textarea data-field="work_details" placeholder="Description of work carried out…"></textarea>
+              </div>
+            </div>
+
+            <!-- Right panel -->
+            <div class="right-panel">
+              <!-- Pipework -->
+              <div class="pipe-box">
+                <div class="pipe-box-header pipe-split-header">
+                  <span>Pipework / Installation Checks</span>
+                  <span class="pipe-status-heading">Satisfactory<br>/ Pass</span>
+                </div>
+                <table class="pipe-table">
+                  <tbody>
+                    <tr>
+                      <td class="label">Gas pipework installation/condition satisfactory</td>
+                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_1" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
+                    </tr>
+                    <tr>
+                      <td class="label">Adequate ventilation provided</td>
+                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_2" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
+                    </tr>
+                    <tr>
+                      <td class="label">Satisfactory flue arrangement</td>
+                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_3" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
+                    </tr>
+                    <tr>
+                      <td class="label">Safety devices operating correctly</td>
+                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_4" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
+                    </tr>
+                    <tr>
+                      <td class="label">Emergency control valve accessible &amp; labelled</td>
+                      <td class="check pipe-choice"><div class="choice-group"><button class="choice-cycle" data-field="pipe_5" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Signatures -->
+              <div class="sig-box">
+                <!-- Issued by -->
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Issued By (Engineer / Gas Safe Registered)</div>
+                  <div class="sig-field">
+                    <label>Name
+                      <button class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_issued')">Clear</button>
+                    </label>
+                    <input type="text" data-field="issuer_name" placeholder="Engineer's printed name">
+                  </div>
+                  <div class="sig-field">
+                    <label>Signature <span class="sig-tap-hint">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" onclick="openCP12SigModal('sig_issued','Engineer Signature')"></canvas>
+                  </div>
+                </div>
+                <!-- Received by -->
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Received By (Tenant / Homeowner)</div>
+                  <div class="sig-field">
+                    <label>Name
+                      <button class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_received')">Clear</button>
+                    </label>
+                    <input type="text" data-field="recipient_name" placeholder="Recipient's printed name">
+                  </div>
+                  <div class="sig-field">
+                    <label>Signature <span class="sig-tap-hint">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" onclick="openCP12SigModal('sig_received','Recipient Signature')"></canvas>
+                  </div>
+                </div>
+                <!-- Attention box -->
+                <div class="attention-wrap">
+                  <div class="attention-box">
+                    <div class="attn-head">ATTENTION</div>
+                    <div class="attn-body">
+                      <div>Next Gas Safety Check Due</div>
+                      <input type="text" data-field="next_check_date" class="fast-date next-check-date" placeholder="DD/MM/YYYY" maxlength="10" title="Next annual gas safety check date">
+                      <div style="margin-top:6px;font-size:7pt;color:#6b7280">This certificate must be kept safe and shown to your gas engineer at the next inspection.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page-footer">
+            This Gas Safety Record is issued under the Gas Safety (Installation &amp; Use) Regulations 1998. A copy must be provided to the landlord/owner and, where applicable, to the tenant within 28 days of the check or at the start of a new tenancy.
+          </div>
+        </div><!-- end page1 -->
+
+        <!-- ===== PAGE 2 ===== -->
+        <div class="page" id="page2">
+          <div class="p2-titlebar">
+            <div class="p2-title">Appliance Inspection Details</div>
+            <div class="p2-ref-group">
+              <span class="p2-ref-label">Certificate Ref:</span>
+              <div class="p2-ref-box"><input type="text" data-field="cert_ref_p2" class="auto-reference" readonly tabindex="-1"></div>
+            </div>
+          </div>
+          <div class="p2-column-header">
+            <div class="p2-head-cell">#</div>
+            <div class="p2-head-cell">Location</div>
+            <div class="p2-head-cell">Type of Appliance</div>
+            <div class="p2-head-cell">Make</div>
+            <div class="p2-head-cell">Model</div>
+            <div class="p2-head-cell">Flue Type</div>
+            <div class="p2-head-cell important">Landlord's Appliance</div>
+            <div class="p2-head-cell important">Appliance Safe to Use</div>
+            <div class="p2-head-cell">Op. Pressure mbar / Heat Input kW</div>
+            <div class="p2-head-cell">Safety Devices Satisfactory</div>
+            <div class="p2-head-cell">Burner Pressure mbar</div>
+            <div class="p2-head-cell">Heat Input kW/h</div>
+            <div class="p2-head-cell">Flue / Ventilation Check</div>
+            <div class="p2-head-cell">Visual Condition Satisfactory</div>
+            <div class="p2-head-cell">Serviced at Inspection</div>
+            <div class="p2-head-cell">Visual CO Warning</div>
+          </div>
+          <div class="appliance-cards" id="cp12AppCards">
+            <!-- Built by buildCP12ApplianceCards() -->
+          </div>
+        </div><!-- end page2 -->
+
+      </div><!-- end cp12-form-wrap -->
+
+      <!-- Signature Modal -->
+      <div class="sig-modal" id="sigModal">
+        <div class="sig-modal-box">
+          <div class="sig-modal-title" id="sigModalTitle">Sign Here</div>
+          <div class="sig-modal-hint">Use your finger or mouse to sign in the box below</div>
+          <canvas id="sigModalCanvas" width="700" height="200"></canvas>
+          <div class="sig-modal-actions">
+            <button class="btn btn-secondary btn-sm" onclick="clearCP12SigModal()">Clear</button>
+            <button class="btn btn-secondary btn-sm" onclick="closeCP12SigModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmCP12SigModal()">Confirm Signature</button>
           </div>
         </div>
       </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" onclick="saveGas()">💾 Save Draft</button>
-        <button class="btn btn-success" onclick="completeGas()">✓ Complete &amp; Issue</button>
-        <button class="btn btn-secondary" onclick="navigate('gas-history')">Cancel</button>
-      </div>
+      <div id="cp12Toast"></div>
+
     </div>
 
     <!-- GAS HISTORY -->
@@ -665,7 +1115,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ========== STATE ==========
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
-let editingPATId = null, editingGasId = null;
+let editingPATId = null, editingGasId = null, _gasCertLoading = false;
 let patReports = [], gasReports = [], appSettings = {};
 
 // ========== AUTH ==========
@@ -769,7 +1219,7 @@ function navigate(view){
   else if(view==='pat-new'){newPAT();}
   else if(view==='pat-renewals')loadPATRenewals();
   else if(view==='gas-history')loadGasHistory();
-  else if(view==='gas-new'){newGasCert();}
+  else if(view==='gas-new'){if(!_gasCertLoading)newGasCert();}
   else if(view==='gas-renewals')loadGasRenewals();
   else if(view==='settings')loadSettingsUI();
   else if(view==='audit')loadAuditLog();
@@ -1231,207 +1681,294 @@ async function emailPAT(){
 }
 </script>
 <script>
-// ========== GAS - PIPEWORK CHECKS ==========
-const PIPEWORK_ITEMS=[
-  'Pipework installation/condition satisfactory',
-  'Adequate ventilation provided',
-  'Satisfactory flue arrangement',
-  'Safety devices operating correctly',
-  'Emergency control accessible'
-];
-function initGasPipework(){
-  document.getElementById('gas-pipework-checks').innerHTML=PIPEWORK_ITEMS.map((label,i)=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:8px;background:var(--surface2);border-radius:6px;margin-bottom:6px">
-      <label style="flex:1;font-size:13px">${label}</label>
-      <div style="display:flex;gap:8px">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="SAT"> Satisfactory</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="UNSAT"> Unsatisfactory</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="pw${i}" value="NA" checked> N/A</label>
-      </div>
-    </div>`).join('');
-}
-function getPipeworkValues(){
-  return PIPEWORK_ITEMS.map((_,i)=>{
-    const sel=document.querySelector(`input[name="pw${i}"]:checked`);
-    return sel?sel.value:'NA';
-  });
-}
-function setPipeworkValues(vals){
-  (vals||[]).forEach((v,i)=>{
-    const radio=document.querySelector(`input[name="pw${i}"][value="${v}"]`);
-    if(radio)radio.checked=true;
-  });
+// ========== CP12 CHOICE CYCLES ==========
+function cycleCP12Choice(btn){
+  const opts=(btn.dataset.options||'✓,✕,N/A').split(',');
+  const cur=opts.indexOf(btn.dataset.current);
+  const next=opts[(cur+1)%opts.length];
+  btn.dataset.current=next;btn.textContent=next;
 }
 
-// ========== GAS - APPLIANCES ==========
-let gasAppCount=0;
-const GAS_FLUE_TYPES=['Open Flue','Room Sealed','Balanced Flue','Flueless','Fan Assisted'];
-function addGasAppliance(data={}){
-  if(gasAppCount>=5){toast('Maximum 5 appliances per certificate','warn');return;}
-  gasAppCount++;const n=gasAppCount;
-  const container=document.getElementById('gas-app-container');
-  const div=document.createElement('div');
-  div.id=`gas-app-${n}`;
-  div.style.cssText='border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;background:var(--surface2)';
-  div.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:13px;font-weight:600;color:var(--accent)">Appliance ${n}</div>
-      <button class="btn btn-danger btn-sm" onclick="removeGasAppliance(${n})">Remove</button>
+// ========== CP12 FAST DATE INPUT ==========
+function attachFastDateInput(el){
+  el.addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'');
+    if(v.length>=2)v=v.slice(0,2)+'/'+v.slice(2);
+    if(v.length>=5)v=v.slice(0,5)+'/'+v.slice(5);
+    this.value=v.slice(0,10);
+  });
+}
+function oneYearMinusOneDayUK(val){
+  if(!val||val.length<10)return'';
+  const p=val.split('/');if(p.length<3)return'';
+  let d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+  y++;d--;
+  if(d===0){m--;if(m===0){m=12;y--;}d=new Date(y,m,0).getDate();}
+  return`${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+
+// ========== CP12 SIGNATURE PADS ==========
+function initCP12SigPad(canvas){
+  if(!canvas||canvas._cp12Init)return;
+  canvas._cp12Init=true;
+  const ctx=canvas.getContext('2d');let drawing=false,lx=0,ly=0;
+  ctx.strokeStyle='#1e3a5f';ctx.lineWidth=2;ctx.lineCap='round';
+  const pos=e=>{const r=canvas.getBoundingClientRect();const cl=e.touches?e.touches[0]:e;return{x:(cl.clientX-r.left)*(canvas.width/r.width),y:(cl.clientY-r.top)*(canvas.height/r.height)};};
+  canvas.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);lx=p.x;ly=p.y;});
+  canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;});
+  canvas.addEventListener('mouseup',()=>drawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);lx=p.x;ly=p.y;},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;},{passive:false});
+  canvas.addEventListener('touchend',()=>drawing=false);
+}
+let cp12SigModalField=null;
+function openCP12SigModal(fieldKey,titleText){
+  cp12SigModalField=fieldKey;
+  document.getElementById('sigModalTitle').textContent=titleText||'Sign Here';
+  document.getElementById('sigModal').classList.add('open');
+  const mc=document.getElementById('sigModalCanvas');
+  mc.getContext('2d').clearRect(0,0,mc.width,mc.height);
+  mc._cp12Init=false;initCP12SigPad(mc);
+}
+function clearCP12SigModal(){const mc=document.getElementById('sigModalCanvas');mc.getContext('2d').clearRect(0,0,mc.width,mc.height);}
+function closeCP12SigModal(){document.getElementById('sigModal').classList.remove('open');cp12SigModalField=null;}
+function confirmCP12SigModal(){
+  if(!cp12SigModalField)return;
+  const mc=document.getElementById('sigModalCanvas');
+  const dataUrl=mc.toDataURL('image/png');
+  const targetCanvas=document.querySelector(`[data-sig-field="${cp12SigModalField}"]`);
+  if(targetCanvas){
+    const ctx=targetCanvas.getContext('2d');
+    ctx.clearRect(0,0,targetCanvas.width,targetCanvas.height);
+    const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,targetCanvas.width,targetCanvas.height);img.src=dataUrl;
+  }
+  closeCP12SigModal();
+}
+function clearCP12Sig(fieldKey){const c=document.querySelector(`[data-sig-field="${fieldKey}"]`);if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);}
+
+// ========== CP12 LOGO ==========
+function handleCP12LogoUpload(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();reader.onload=e=>applyCP12Logo(e.target.result);reader.readAsDataURL(file);
+}
+function applyCP12Logo(dataUrl){
+  const img=document.getElementById('logoImg');const zone=document.getElementById('logoZone');if(!img||!zone)return;
+  img.src=dataUrl;zone.classList.add('has-logo');
+  const hd=document.getElementById('cp12LogoData');if(hd)hd.value=dataUrl;
+  try{localStorage.setItem('cp12_logo_v1',dataUrl);}catch(e){}
+}
+function loadCP12Logo(){
+  try{const s=localStorage.getItem('cp12_logo_v1');if(s)applyCP12Logo(s);}catch(e){}
+}
+
+// ========== CP12 HELPERS ==========
+function copyLandlordToInstall(){
+  const la=document.querySelector('[data-field="landlord_address"]');
+  const lp=document.querySelector('[data-field="landlord_postcode"]');
+  const ia=document.querySelector('[data-field="install_address"]');
+  const ip=document.querySelector('[data-field="install_postcode"]');
+  if(ia&&la)ia.value=la.value;if(ip&&lp)ip.value=lp.value;
+}
+function cp12Field(f){
+  const el=document.querySelector(`[data-field="${f}"]`);if(!el)return'';
+  return el.tagName==='BUTTON'?el.dataset.current||'':el.value||'';
+}
+function setCP12Field(f,v){
+  const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
+  if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
+  else el.value=v||'';
+}
+
+// ========== CP12 APPLIANCE CARDS ==========
+const CP12_FLUE_TYPES=['Open Flue','Room Sealed','Balanced Flue','Flueless','Fan Assisted'];
+function buildCP12ApplianceCards(){
+  const container=document.getElementById('cp12AppCards');if(!container)return;
+  container.innerHTML='';
+  for(let n=1;n<=5;n++)container.insertAdjacentHTML('beforeend',buildSingleCP12ApplianceCard(n));
+}
+function buildSingleCP12ApplianceCard(n){
+  const fs=CP12_FLUE_TYPES.map(f=>`<option value="${f}">${f}</option>`).join('');
+  return`<div class="appliance-card" id="cp12App${n}">
+    <div class="appliance-main-shell"><div class="appliance-value-row">
+      <div class="appliance-value-cell number-cell"><input class="appliance-number-input" type="text" value="${n}" readonly tabindex="-1"></div>
+      <div class="appliance-value-cell location"><textarea data-field="app${n}_location" placeholder="Location" rows="2"></textarea></div>
+      <div class="appliance-value-cell type"><textarea data-field="app${n}_type" placeholder="e.g. Boiler" rows="2"></textarea></div>
+      <div class="appliance-value-cell make"><textarea data-field="app${n}_make" placeholder="Make" rows="2"></textarea></div>
+      <div class="appliance-value-cell model"><textarea data-field="app${n}_model" placeholder="Model" rows="2"></textarea></div>
+      <div class="appliance-value-cell"><select data-field="app${n}_flue">${fs}</select></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_landlord" data-options="Yes,No,N/A" data-current="Yes" onclick="cycleCP12Choice(this)">Yes</button></div></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_safe" data-options="Yes,No,N/A" data-current="Yes" onclick="cycleCP12Choice(this)">Yes</button></div></div>
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_op_pressure" value="20 mbar" placeholder="mbar/kW"></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_safety_dev" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_burner_pressure" placeholder="mbar"></div>
+      <div class="appliance-value-cell"><input type="text" data-field="app${n}_heat_input" placeholder="kW/h"></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_flue_check" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_visual" data-options="✓,✕,N/A" data-current="✓" onclick="cycleCP12Choice(this)">✓</button></div></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_serviced" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div></div>
+      <div class="appliance-value-cell"><div class="choice-group"><button class="choice-cycle" data-field="app${n}_co_warn" data-options="Yes,No,N/A" data-current="No" onclick="cycleCP12Choice(this)">No</button></div></div>
+    </div></div>
+    <div class="co-hanger">
+      <div class="co-hanger-title">CO<br>Alarm</div>
+      <div class="co-mini-grid">
+        <div class="co-mini"><label>CO Alarm Present</label><button class="choice-cycle" data-field="app${n}_co_present" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
+        <div class="co-mini"><label>CO Alarm in Date</label><button class="choice-cycle" data-field="app${n}_co_date" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
+        <div class="co-mini"><label>CO Alarm Test Pass</label><button class="choice-cycle" data-field="app${n}_co_test" data-options="Pass,Fail,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
+        <div class="co-mini"><label>Advice Given</label><button class="choice-cycle" data-field="app${n}_co_advice" data-options="Yes,No,N/A" data-current="N/A" onclick="cycleCP12Choice(this)">N/A</button></div>
+      </div>
     </div>
-    <div class="field-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
-      <div class="field-group"><label>Appliance Type</label><input type="text" id="ga${n}-type" value="${data.type||''}" placeholder="e.g. Boiler"></div>
-      <div class="field-group"><label>Make</label><input type="text" id="ga${n}-make" value="${data.make||''}" placeholder="Make/brand"></div>
-      <div class="field-group"><label>Model</label><input type="text" id="ga${n}-model" value="${data.model||''}"></div>
-      <div class="field-group"><label>GC Number</label><input type="text" id="ga${n}-gc" value="${data.gc||''}"></div>
-      <div class="field-group"><label>Location</label><input type="text" id="ga${n}-loc" value="${data.location||''}" placeholder="Room"></div>
-      <div class="field-group"><label>Serial No</label><input type="text" id="ga${n}-serial" value="${data.serial||''}"></div>
-      <div class="field-group"><label>Input Kg/h</label><input type="text" id="ga${n}-kgh" value="${data.kgh||''}"></div>
-      <div class="field-group"><label>Input Btu/h</label><input type="text" id="ga${n}-btuh" value="${data.btuh||''}"></div>
-      <div class="field-group"><label>Op. Pressure</label><input type="text" id="ga${n}-op-pressure" value="${data.op_pressure||''}" placeholder="mbar"></div>
-      <div class="field-group"><label>Burner Pressure</label><input type="text" id="ga${n}-burn-pressure" value="${data.burn_pressure||''}" placeholder="mbar"></div>
-      <div class="field-group"><label>Heat Input</label><input type="text" id="ga${n}-heat" value="${data.heat_input||''}" placeholder="kW"></div>
-      <div class="field-group"><label>Flue Type</label>
-        <select id="ga${n}-flue">${GAS_FLUE_TYPES.map(f=>`<option value="${f}" ${data.flue_type===f?'selected':''}>${f}</option>`).join('')}</select>
-      </div>
-      <div class="field-group"><label>Safety Devices</label><input type="text" id="ga${n}-safety" value="${data.safety_devices||''}" placeholder="FSD, etc."></div>
-      <div class="field-group"><label>CO Test</label>
-        <select id="ga${n}-co"><option value="PASS" ${data.co_test==='PASS'?'selected':''}>Pass</option><option value="FAIL" ${data.co_test==='FAIL'?'selected':''}>Fail</option><option value="N/A" ${(data.co_test||'N/A')==='N/A'?'selected':''}>N/A</option></select>
-      </div>
-      <div class="field-group"><label>Operational Test</label>
-        <select id="ga${n}-op"><option value="PASS" ${data.op_test==='PASS'?'selected':''}>Pass</option><option value="FAIL" ${data.op_test==='FAIL'?'selected':''}>Fail</option></select>
-      </div>
-      <div class="field-group"><label>Satisfactory?</label>
-        <select id="ga${n}-sat"><option value="Yes" ${(data.satisfactory||'Yes')==='Yes'?'selected':''}>Yes</option><option value="No" ${data.satisfactory==='No'?'selected':''}>No</option></select>
-      </div>
-    </div>`;
-  container.appendChild(div);
-  if(gasAppCount>=5)document.getElementById('btn-add-gas-app').disabled=true;
+    <button class="app-row-toggle no-print" onclick="toggleCP12AppRow(${n})">— DISABLE SLOT ${n} —</button>
+  </div>`;
 }
-function removeGasAppliance(n){
-  const el=document.getElementById(`gas-app-${n}`);if(el)el.remove();
-  gasAppCount=Math.max(0,gasAppCount-1);
-  document.getElementById('btn-add-gas-app').disabled=false;
-}
-function getGasAppliances(){
-  const out=[];
-  document.querySelectorAll('[id^="gas-app-"]').forEach(div=>{
-    const n=div.id.split('-')[2];
-    const g=id=>document.getElementById(`ga${n}-${id}`)?.value||'';
-    out.push({type:g('type'),make:g('make'),model:g('model'),gc:g('gc'),location:g('loc'),serial:g('serial'),kgh:g('kgh'),btuh:g('btuh'),op_pressure:g('op-pressure'),burn_pressure:g('burn-pressure'),heat_input:g('heat'),flue_type:g('flue'),safety_devices:g('safety'),co_test:g('co'),op_test:g('op'),satisfactory:g('sat')});
-  });
-  return out;
+function toggleCP12AppRow(n){
+  const card=document.getElementById(`cp12App${n}`);if(!card)return;
+  const disabled=card.classList.toggle('is-disabled');
+  const btn=card.querySelector('.app-row-toggle');
+  if(btn)btn.textContent=disabled?`+ ENABLE SLOT ${n} +`:`— DISABLE SLOT ${n} —`;
 }
 
-// ========== GAS - DEFECTS ==========
-let gasDefectCount=0;
-function addGasDefect(data={}){
-  gasDefectCount++;const n=gasDefectCount;
-  const container=document.getElementById('gas-defects-container');
-  const div=document.createElement('div');
-  div.id=`gas-defect-${n}`;
-  div.style.cssText='display:flex;gap:10px;align-items:center;margin-bottom:8px';
-  div.innerHTML=`
-    <div style="flex:1"><input type="text" id="gd${n}-desc" value="${data.description||''}" placeholder="Defect description" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text)"></div>
-    <label style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap"><input type="checkbox" id="gd${n}-warn" ${data.warning_notice?'checked':''}> Warning Notice</label>
-    <button class="btn btn-danger btn-sm" onclick="document.getElementById('gas-defect-${n}').remove()">×</button>`;
-  container.appendChild(div);
+// ========== CP12 DATA BRIDGE ==========
+function collectCP12FormData(){
+  const toISO=uk=>{if(!uk||uk.length<10)return null;const p=uk.split('/');if(p.length<3)return null;return`${p[2]}-${p[1]}-${p[0]}`;};
+  const appliances=[];
+  for(let n=1;n<=5;n++){
+    const card=document.getElementById(`cp12App${n}`);
+    if(card&&!card.classList.contains('is-disabled')){
+      const loc=cp12Field(`app${n}_location`),type=cp12Field(`app${n}_type`);
+      if(loc||type)appliances.push({
+        location:loc,type:type,make:cp12Field(`app${n}_make`),model:cp12Field(`app${n}_model`),
+        flue_type:cp12Field(`app${n}_flue`),landlord_appliance:cp12Field(`app${n}_landlord`),
+        safe_to_use:cp12Field(`app${n}_safe`),op_pressure:cp12Field(`app${n}_op_pressure`),
+        safety_devices:cp12Field(`app${n}_safety_dev`),burner_pressure:cp12Field(`app${n}_burner_pressure`),
+        heat_input:cp12Field(`app${n}_heat_input`),flue_check:cp12Field(`app${n}_flue_check`),
+        visual_condition:cp12Field(`app${n}_visual`),serviced:cp12Field(`app${n}_serviced`),
+        co_warning:cp12Field(`app${n}_co_warn`),co_present:cp12Field(`app${n}_co_present`),
+        co_in_date:cp12Field(`app${n}_co_date`),co_test:cp12Field(`app${n}_co_test`),
+        co_advice:cp12Field(`app${n}_co_advice`)
+      });
+    }
+  }
+  const defects=[];
+  for(let i=1;i<=5;i++){const desc=cp12Field(`defect_${i}_desc`);const warn=cp12Field(`defect_${i}_warn`);if(desc)defects.push({description:desc,warning_notice:warn!=='N/A',warning_type:warn});}
+  const getSig=fieldKey=>{const c=document.querySelector(`[data-sig-field="${fieldKey}"]`);if(!c)return null;const ctx=c.getContext('2d');const id=ctx.getImageData(0,0,c.width,c.height);return Array.from(id.data).some((v,i)=>i%4!==3&&v!==0)?c.toDataURL('image/png'):null;};
+  const certDate=cp12Field('cert_date');const nextDate=cp12Field('next_check_date');
+  return{
+    cert_date:toISO(certDate)||certDate,next_check_date:toISO(nextDate)||nextDate,
+    engineer:cp12Field('issuer_name'),engineer_licence_no:cp12Field('landlord_ref'),
+    gas_safe_no:cp12Field('gas_safe_no'),business_address:cp12Field('business_address'),
+    business_phone:cp12Field('business_phone'),business_email:cp12Field('business_email'),
+    business_postcode:cp12Field('business_postcode'),
+    landlord_address:cp12Field('landlord_address'),landlord_postcode:cp12Field('landlord_postcode'),
+    install_address:cp12Field('install_address'),install_postcode:cp12Field('install_postcode'),
+    work_details:cp12Field('work_details'),remedial_action:cp12Field('remedial_action'),
+    pipework:[cp12Field('pipe_1'),cp12Field('pipe_2'),cp12Field('pipe_3'),cp12Field('pipe_4'),cp12Field('pipe_5')],
+    appliances:appliances,defects:defects,
+    sig_issued_name:cp12Field('issuer_name'),sig_issued_image:getSig('sig_issued'),
+    sig_received_name:cp12Field('recipient_name'),sig_received_image:getSig('sig_received')
+  };
 }
-function getGasDefects(){
-  const out=[];
-  document.querySelectorAll('[id^="gas-defect-"]').forEach(div=>{
-    const n=div.id.split('-')[2];
-    out.push({description:document.getElementById(`gd${n}-desc`)?.value||'',warning_notice:document.getElementById(`gd${n}-warn`)?.checked||false});
+function populateCP12Form(r){
+  const toUK=iso=>{if(!iso)return'';if(/^\d{2}\/\d{2}\/\d{4}$/.test(iso))return iso;if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}return iso;};
+  setCP12Field('cert_date',toUK(r.cert_date));setCP12Field('next_check_date',toUK(r.next_check_date));
+  setCP12Field('issuer_name',r.engineer||r.sig_issued_name||'');setCP12Field('landlord_ref',r.engineer_licence_no||'');
+  setCP12Field('gas_safe_no',r.gas_safe_no||'');setCP12Field('business_address',r.business_address||'');
+  setCP12Field('business_phone',r.business_phone||'');setCP12Field('business_email',r.business_email||'');
+  setCP12Field('business_postcode',r.business_postcode||'');
+  setCP12Field('landlord_address',r.landlord_address||'');setCP12Field('landlord_postcode',r.landlord_postcode||'');
+  setCP12Field('install_address',r.install_address||'');setCP12Field('install_postcode',r.install_postcode||'');
+  setCP12Field('work_details',r.work_details||'');setCP12Field('remedial_action',r.remedial_action||'');
+  setCP12Field('recipient_name',r.sig_received_name||'');
+  const ref=r.ref_number||r.base_ref||'';setCP12Field('cert_ref',ref);setCP12Field('cert_ref_p2',ref);
+  const pf=['pipe_1','pipe_2','pipe_3','pipe_4','pipe_5'];
+  (r.pipework||[]).forEach((v,i)=>{if(pf[i])setCP12Field(pf[i],v);});
+  (r.defects||[]).forEach((d,i)=>{if(i<5){setCP12Field(`defect_${i+1}_desc`,d.description||'');setCP12Field(`defect_${i+1}_warn`,d.warning_type||(d.warning_notice?'ID':'N/A'));}});
+  (r.appliances||[]).forEach((a,i)=>{
+    const n=i+1;if(n>5)return;
+    setCP12Field(`app${n}_location`,a.location||'');setCP12Field(`app${n}_type`,a.type||'');
+    setCP12Field(`app${n}_make`,a.make||'');setCP12Field(`app${n}_model`,a.model||'');
+    const fEl=document.querySelector(`[data-field="app${n}_flue"]`);if(fEl)fEl.value=a.flue_type||'Open Flue';
+    setCP12Field(`app${n}_landlord`,a.landlord_appliance||'Yes');setCP12Field(`app${n}_safe`,a.safe_to_use||'Yes');
+    setCP12Field(`app${n}_op_pressure`,a.op_pressure||'20 mbar');setCP12Field(`app${n}_safety_dev`,a.safety_devices||'✓');
+    setCP12Field(`app${n}_burner_pressure`,a.burner_pressure||'');setCP12Field(`app${n}_heat_input`,a.heat_input||'');
+    setCP12Field(`app${n}_flue_check`,a.flue_check||'✓');setCP12Field(`app${n}_visual`,a.visual_condition||'✓');
+    setCP12Field(`app${n}_serviced`,a.serviced||'N/A');setCP12Field(`app${n}_co_warn`,a.co_warning||'No');
+    setCP12Field(`app${n}_co_present`,a.co_present||'N/A');setCP12Field(`app${n}_co_date`,a.co_in_date||'N/A');
+    setCP12Field(`app${n}_co_test`,a.co_test||'N/A');setCP12Field(`app${n}_co_advice`,a.co_advice||'N/A');
   });
-  return out.filter(d=>d.description);
+  for(let n=(r.appliances||[]).length+1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&!c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  if(r.sig_issued_image){const c=document.querySelector('[data-sig-field="sig_issued"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_issued_image;}}
+  if(r.sig_received_image){const c=document.querySelector('[data-sig-field="sig_received"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_received_image;}}
+}
+function syncSettingsToCP12Form(){
+  const map={company_name:'company_name',gas_safe_no:'gas_safe_no',business_phone:'company_phone',business_email:'company_email',business_address:'company_address',issuer_name:'gas_default_engineer',landlord_ref:'gas_licence'};
+  Object.entries(map).forEach(([f,s])=>{const v=getSetting(s);if(v)setCP12Field(f,v);});
 }
 
-// ========== GAS - FORM ==========
+// ========== CP12 - FORM LIFECYCLE ==========
 function newGasCert(){
-  editingGasId=null;gasAppCount=0;gasDefectCount=0;
+  editingGasId=null;
   document.getElementById('gas-form-title').textContent='New CP12';
   document.getElementById('gas-form-ref').textContent='';
-  document.getElementById('btn-gas-pdf').hidden=true;
-  document.getElementById('btn-gas-email').hidden=true;
-  const today=new Date().toISOString().split('T')[0];
-  const nd=new Date();nd.setFullYear(nd.getFullYear()+1);
-  document.getElementById('gas-cert-date').value=today;
-  document.getElementById('gas-next-date').value=nd.toISOString().split('T')[0];
-  document.getElementById('gas-engineer').value=getSetting('gas_default_engineer');
-  document.getElementById('gas-licence').value=getSetting('gas_licence');
-  document.getElementById('gas-safe-no').value=getSetting('gas_safe_no');
-  document.getElementById('gas-biz-address').value=getSetting('company_address');
-  document.getElementById('gas-biz-phone').value=getSetting('company_phone');
-  document.getElementById('gas-biz-email').value=getSetting('company_email');
-  ['gas-landlord-addr','gas-landlord-pc','gas-install-addr','gas-install-pc','gas-work-details','gas-remedial'].forEach(id=>document.getElementById(id).value='');
-  initGasPipework();
-  document.getElementById('gas-app-container').innerHTML='';
-  document.getElementById('gas-defects-container').innerHTML='';
-  clearSig('gas-sig-issued-canvas');clearSig('gas-sig-received-canvas');
-  document.getElementById('gas-sig-issued-name').value='';
-  document.getElementById('gas-sig-received-name').value='';
-  addGasAppliance();
+  document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
+    if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
+    else if(el.tagName!=='INPUT'||!el.readOnly)el.value='';
+  });
+  ['pipe_1','pipe_2','pipe_3','pipe_4','pipe_5'].forEach(f=>setCP12Field(f,'✓'));
+  for(let n=1;n<=5;n++){setCP12Field(`app${n}_op_pressure`,'20 mbar');const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  const t=new Date();const dd=String(t.getDate()).padStart(2,'0');const mm=String(t.getMonth()+1).padStart(2,'0');const yyyy=t.getFullYear();
+  const today=`${dd}/${mm}/${yyyy}`;setCP12Field('cert_date',today);setCP12Field('next_check_date',oneYearMinusOneDayUK(today));
+  document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height));
+  syncSettingsToCP12Form();loadCP12Logo();
 }
 async function loadGasForm(id){
   showOverlay('Loading…');
   const{data:r,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
-  hideOverlay();
-  if(error){toast('Error loading','error');return;}
-  editingGasId=id;gasAppCount=0;gasDefectCount=0;
+  hideOverlay();if(error){toast('Error loading','error');return;}
+  editingGasId=id;
   document.getElementById('gas-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit CP12';
   document.getElementById('gas-form-ref').textContent=r.ref_number||'Draft';
-  document.getElementById('btn-gas-pdf').hidden=r.status!=='completed';
-  document.getElementById('btn-gas-email').hidden=r.status!=='completed';
-  document.getElementById('gas-cert-date').value=r.cert_date||'';
-  document.getElementById('gas-next-date').value=r.next_check_date||'';
-  document.getElementById('gas-engineer').value=r.engineer||'';
-  document.getElementById('gas-licence').value=r.engineer_licence_no||'';
-  document.getElementById('gas-safe-no').value=r.gas_safe_no||'';
-  document.getElementById('gas-biz-address').value=r.business_address||'';
-  document.getElementById('gas-biz-phone').value=r.business_phone||'';
-  document.getElementById('gas-biz-email').value=r.business_email||'';
-  document.getElementById('gas-landlord-addr').value=r.landlord_address||'';
-  document.getElementById('gas-landlord-pc').value=r.landlord_postcode||'';
-  document.getElementById('gas-install-addr').value=r.install_address||'';
-  document.getElementById('gas-install-pc').value=r.install_postcode||'';
-  document.getElementById('gas-work-details').value=r.work_details||'';
-  document.getElementById('gas-remedial').value=r.remedial_action||'';
-  document.getElementById('gas-sig-issued-name').value=r.sig_issued_name||'';
-  document.getElementById('gas-sig-received-name').value=r.sig_received_name||'';
-  initGasPipework();setPipeworkValues(r.pipework||[]);
-  document.getElementById('gas-app-container').innerHTML='';
-  (r.appliances||[]).forEach(a=>addGasAppliance(a));
-  if((r.appliances||[]).length===0)addGasAppliance();
-  document.getElementById('gas-defects-container').innerHTML='';
-  (r.defects||[]).forEach(d=>addGasDefect(d));
-  if(r.sig_issued_image)restoreSig('gas-sig-issued-canvas',r.sig_issued_image);
-  if(r.sig_received_image)restoreSig('gas-sig-received-canvas',r.sig_received_image);
-  navigate('gas-new');
+  document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
+    if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
+    else if(el.tagName!=='INPUT'||!el.readOnly)el.value='';
+  });
+  for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();
+  _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
 }
-function getGasFormData(){
-  return{
-    cert_date:document.getElementById('gas-cert-date').value,
-    next_check_date:document.getElementById('gas-next-date').value,
-    engineer:document.getElementById('gas-engineer').value,
-    engineer_licence_no:document.getElementById('gas-licence').value,
-    gas_safe_no:document.getElementById('gas-safe-no').value,
-    business_address:document.getElementById('gas-biz-address').value,
-    business_phone:document.getElementById('gas-biz-phone').value,
-    business_email:document.getElementById('gas-biz-email').value,
-    landlord_address:document.getElementById('gas-landlord-addr').value,
-    landlord_postcode:document.getElementById('gas-landlord-pc').value,
-    install_address:document.getElementById('gas-install-addr').value,
-    install_postcode:document.getElementById('gas-install-pc').value,
-    work_details:document.getElementById('gas-work-details').value,
-    remedial_action:document.getElementById('gas-remedial').value,
-    pipework:getPipeworkValues(),
-    appliances:getGasAppliances(),
-    defects:getGasDefects(),
-    sig_issued_name:document.getElementById('gas-sig-issued-name').value,
-    sig_issued_image:getCanvasDataURL('gas-sig-issued-canvas'),
-    sig_received_name:document.getElementById('gas-sig-received-name').value,
-    sig_received_image:getCanvasDataURL('gas-sig-received-canvas')
-  };
+function getGasFormData(){return collectCP12FormData();}
+
+// ========== CP12 PDF (html2canvas) ==========
+async function downloadCP12PDF(btn){
+  if(!window.html2canvas){toast('PDF library not loaded','error');return;}
+  if(btn)btn.disabled=true;showOverlay('Generating PDF…');
+  try{
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const pages=document.querySelectorAll('.cp12-form-wrap .page');
+    for(let i=0;i<pages.length;i++){
+      if(i>0)doc.addPage('a4','landscape');
+      const c=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',width:pages[i].scrollWidth,height:pages[i].scrollHeight});
+      doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
+    }
+    const ref=cp12Field('cert_ref')||'DRAFT';
+    const filename=`CP12_${ref.replace(/[^\w-]/g,'_')}.pdf`;
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(isIOS)window.open(URL.createObjectURL(new Blob([doc.output('arraybuffer')],{type:'application/pdf'})),'_blank'),toast('PDF ready — tap Share → Save to Files','info',7000);
+    else doc.save(filename),toast('PDF downloaded ✓','success');
+    if(editingGasId)await logAudit('pdf','CP12 PDF downloaded','gas',ref);
+  }catch(e){toast('PDF error: '+e.message,'error');}
+  finally{hideOverlay();if(btn)btn.disabled=false;}
 }
+
+// ========== CP12 INIT ==========
+function initCP12Form(){
+  buildCP12ApplianceCards();
+  document.querySelectorAll('.cp12-form-wrap .fast-date').forEach(el=>attachFastDateInput(el));
+  document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>initCP12SigPad(c));
+  const certEl=document.getElementById('f_cert_date');
+  if(certEl)certEl.addEventListener('change',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&!ne.value)ne.value=oneYearMinusOneDayUK(certEl.value);});
+}
+
+// ========== PIPEWORK ITEMS (kept for PDF generation from history) ==========
+const PIPEWORK_ITEMS=['Pipework installation/condition satisfactory','Adequate ventilation provided','Satisfactory flue arrangement','Safety devices operating correctly','Emergency control accessible'];
 async function saveGas(){
   const d=getGasFormData();
   if(!d.install_address){toast('Installation address required','error');return;}
@@ -1463,6 +2000,7 @@ async function completeGas(){
   document.getElementById('gas-form-title').textContent=`CP12 — ${refNum}`;
   document.getElementById('btn-gas-pdf').hidden=false;
   document.getElementById('btn-gas-email').hidden=false;
+  setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`CP12 issued: ${refNum}`,'success',5000);
   await logAudit('complete','CP12 issued','gas',refNum);
 }
@@ -1708,9 +2246,8 @@ async function init(){
   // Enter on auth fields
   ['login-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
   ['reg-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});});
-  // Init signature canvases
-  initSigCanvas('gas-sig-issued-canvas');
-  initSigCanvas('gas-sig-received-canvas');
+  // Init CP12 form (builds appliance cards, attaches date/sig handlers)
+  initCP12Form();
 }
 init();
 </script>
