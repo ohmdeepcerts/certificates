@@ -275,6 +275,15 @@ a{color:var(--accent);text-decoration:none}
       <button class="btn btn-primary btn-full" onclick="doForgot()">Send Reset Email</button>
       <div class="auth-link"><a href="#" onclick="switchAuthTab('login');return false">Back to sign in</a></div>
     </div>
+    <!-- Set New Password (after recovery link) -->
+    <div id="auth-reset" hidden>
+      <h3 style="margin-bottom:8px;font-size:16px">Set New Password</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Choose a strong password for your account.</p>
+      <div id="auth-reset-error" class="auth-error" hidden></div>
+      <div class="form-group"><label>New Password</label><input class="form-control" id="reset-pass" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
+      <div class="form-group"><label>Confirm Password</label><input class="form-control" id="reset-pass2" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+      <button class="btn btn-primary btn-full" onclick="doSetNewPassword()">Set Password &amp; Sign In</button>
+    </div>
   </div>
 </div>
 
@@ -697,6 +706,20 @@ async function doForgot(){
   const{error}=await sb.auth.resetPasswordForEmail(email);
   if(error){showAuthError(error.message);}
   else{toast('Reset email sent!','success');switchAuthTab('login');}
+}
+async function doSetNewPassword(){
+  const p=document.getElementById('reset-pass').value;
+  const p2=document.getElementById('reset-pass2').value;
+  const errEl=document.getElementById('auth-reset-error');
+  errEl.hidden=true;
+  if(p.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.hidden=false;return;}
+  if(p!==p2){errEl.textContent='Passwords do not match.';errEl.hidden=false;return;}
+  const{error}=await sb.auth.updateUser({password:p});
+  if(error){errEl.textContent=error.message;errEl.hidden=false;return;}
+  toast('Password updated! Signing you in…','success');
+  document.getElementById('auth-reset').hidden=true;
+  const{data:{session}}=await sb.auth.getSession();
+  if(session)await onLogin(session.user);
 }
 async function doLogout(){
   await sb.auth.signOut();
@@ -1670,6 +1693,14 @@ async function init(){
   const{data:{session}}=await sb.auth.getSession();
   if(session)await onLogin(session.user);
   sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      document.getElementById('auth-screen').hidden=false;
+      document.getElementById('app').classList.remove('visible');
+      document.getElementById('app').style.display='none';
+      ['auth-login','auth-register','auth-forgot'].forEach(id=>document.getElementById(id).hidden=true);
+      document.getElementById('auth-reset').hidden=false;
+      return;
+    }
     if(event==='SIGNED_IN'&&session)await onLogin(session.user);
     if(event==='SIGNED_OUT')onLogout();
   });
