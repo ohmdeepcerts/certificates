@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OHM Certificates</title>
+<title>Certificates | DeepFlow Software</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233b82f6'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='29' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='18' letter-spacing='1' fill='%23ffffff' text-anchor='middle'%3ECERTS%3C/text%3E%3Cline x1='14' y1='36' x2='50' y2='36' stroke='%23ffffff' stroke-opacity='.35' stroke-width='1'/%3E%3Ctext x='32' y='49' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='12' letter-spacing='.3' text-anchor='middle'%3E%3Ctspan fill='%23fde047'%3EDeep%3C/ctspan%3E%3Ctspan fill='%23ffffff'%3E Flow%3C/tspan%3E%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
@@ -36,19 +37,65 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
 a{color:var(--accent);text-decoration:none}
 
 /* ---- AUTH ---- */
-#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:400px}
-.auth-logo{text-align:center;margin-bottom:32px}
-.auth-logo .logo-mark{font-size:32px;font-weight:700;color:var(--accent);letter-spacing:-1px}
-.auth-logo p{color:var(--muted);font-size:13px;margin-top:4px}
-.auth-tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
-.auth-tab{background:none;border:none;color:var(--muted);padding:10px 16px;font-size:14px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.2s}
-.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+#auth-screen{position:fixed;inset:0;z-index:600;background:var(--bg);display:flex;overflow-y:auto;transition:opacity .4s;}
+#auth-screen.gone{opacity:0;pointer-events:none;}
+.auth-right{flex:1;min-width:0;background:linear-gradient(160deg,#0b1220 0%,#0f1b30 100%);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:60px;}
+.auth-right canvas{position:absolute;inset:0;width:100%;height:100%;}
+.auth-right-inner{position:relative;z-index:2;max-width:620px;}
+.df-wordmark{font-family:'JetBrains Mono',monospace;font-size:2.6rem;font-weight:700;letter-spacing:.5px;line-height:1.1;margin-bottom:10px;}
+.df-w1{color:#e2e8f0;}
+.df-w2{background:linear-gradient(90deg,#60a5fa 0%,#fbbf24 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.df-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0f172a;background:#fbf010;padding:3px 10px;border-radius:20px;margin-bottom:14px;}
+.df-tagline{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:16px;}
+.df-desc{font-family:'JetBrains Mono',monospace;font-size:.92rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:32px;max-width:480px;}
+.df-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:12px;}
+.df-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 15px;backdrop-filter:blur(2px);}
+.df-card.live{background:rgba(251,240,16,.07);border-color:rgba(251,240,16,.35);}
+@keyframes df-pulse-glow{0%,100%{filter:drop-shadow(0 0 2px currentColor);opacity:.85;}50%{filter:drop-shadow(0 0 8px currentColor);opacity:1;}}
+@keyframes df-flicker{0%,100%{transform:scale(1) rotate(0deg);opacity:.9;}25%{transform:scale(1.06) rotate(-2deg);opacity:1;}50%{transform:scale(.97) rotate(1deg);opacity:.85;}75%{transform:scale(1.03) rotate(-1deg);opacity:1;}}
+@keyframes df-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+@keyframes df-dash{to{stroke-dashoffset:-24;}}
+.df-card-ico{font-size:1.15rem;margin-bottom:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.df-card-ico svg{width:100%;height:100%;overflow:visible;}
+.ico-pulse{animation:df-pulse-glow 2.2s ease-in-out infinite;}
+.ico-flicker{animation:df-flicker 1.8s ease-in-out infinite;transform-origin:center bottom;}
+.ico-float{animation:df-float 3s ease-in-out infinite;}
+.ico-flow{stroke-dasharray:6 4;animation:df-dash 1.2s linear infinite;}
+.df-card h4{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;color:#fff;margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.df-tag{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);}
+.df-tag.live{background:#fbf010;color:#0f172a;}
+.df-card p{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.5;}
+.df-footer{margin-top:26px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.3);}
+.df-footer b{color:rgba(255,255,255,.5);}
+@media(max-width:900px){.auth-right{display:none;}}
+.auth-left{width:480px;max-width:100%;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:40px 44px;background:var(--surface);}
+.auth-wrap{width:100%;max-width:360px;}
+.auth-brand{margin-bottom:28px;}
+.auth-logo{display:flex;align-items:center;gap:13px;margin-bottom:10px;}
+.auth-icon{width:44px;height:44px;background:var(--accent);border-radius:11px;display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;}
+.auth-name{font-size:1.4rem;font-weight:700;letter-spacing:-.3px;}
+.auth-name span{color:var(--accent);}
+.auth-sub{color:var(--muted);font-size:.86rem;font-family:'JetBrains Mono',monospace;}
+.auth-welcome{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.auth-welcome-sub{color:var(--muted);font-size:.88rem;margin-bottom:26px;}
+.auth-tabs{display:flex;background:var(--surface2);border-radius:var(--radius);padding:3px;margin-bottom:22px;}
+.auth-tab{flex:1;padding:10px;text-align:center;border-radius:6px;font-size:.86rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s;font-family:'JetBrains Mono',monospace;background:none;border:none;}
+.auth-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 5px rgba(0,0,0,.15);}
+.auth-panel{display:none;}.auth-panel.on{display:block;}
+.auth-panel label{font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.auth-err{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:11px 14px;border-radius:var(--radius);font-size:.88rem;margin-bottom:14px;display:none;}
+.auth-err.on{display:block;}
+.auth-pw-wrap{position:relative;}
+.auth-pw-wrap input{padding-right:40px;}
+.auth-pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);background:none;border:none;font-size:.95rem;padding:4px;}
+.auth-forgot{display:block;text-align:right;font-size:.8rem;color:var(--accent);margin-top:-12px;margin-bottom:18px;cursor:pointer;}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:22px 0 16px;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
-.form-control{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);outline:none;transition:.2s}
+.form-control{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);outline:none;transition:.2s;box-sizing:border-box;}
 .form-control:focus{border-color:var(--accent)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);font-weight:500;border:none;transition:.2s;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);font-weight:500;border:none;transition:.2s;white-space:nowrap;cursor:pointer;}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{filter:brightness(1.1)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
@@ -58,9 +105,11 @@ a{color:var(--accent);text-decoration:none}
 .btn-success{background:var(--success);color:#fff}
 .btn-success:hover{filter:brightness(1.1)}
 .btn-sm{padding:6px 12px;font-size:13px}
-.btn-full{width:100%;justify-content:center}
+.btn-full,.btn-block{width:100%;justify-content:center}
+.btn-lg{padding:12px 16px;font-size:1rem;}
 .auth-link{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
 .auth-error{background:var(--red-dim);border:1px solid var(--error);color:var(--error);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-bottom:16px}
+@media(max-width:480px){.auth-left{padding:24px 20px;}}
 
 /* ---- APP LAYOUT ---- */
 #app{display:none;height:100vh;overflow:hidden}
@@ -515,46 +564,110 @@ a{color:var(--accent);text-decoration:none}
 <body>
 <!-- ===== AUTH SCREEN ===== -->
 <div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo"><div class="logo-mark">OHM</div><p>Certificates Platform</p></div>
-    <div id="auth-error" class="auth-error" hidden></div>
-    <!-- Login -->
-    <div id="auth-login">
-      <div class="auth-tab-bar">
-        <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+  <!-- Left dark panel: DeepFlow branding + particles -->
+  <div class="auth-right">
+    <canvas id="auth-particles"></canvas>
+    <div class="auth-right-inner">
+      <div class="df-badge">DEEPFLOW SOFTWARE</div>
+      <div class="df-wordmark"><span class="df-w1">Deep</span><span class="df-w2">Flow</span></div>
+      <div class="df-tagline">Field Certification Platform</div>
+      <p class="df-desc">Professional-grade certificates for PAT testing and gas safety records — built for contractors who care about quality.</p>
+      <div class="df-grid">
+        <div class="df-card live">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fbf010" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-pulse"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <h4>PAT Test <span class="df-tag live">LIVE</span></h4>
+          <p>Portable appliance testing with automated certificates</p>
+        </div>
+        <div class="df-card live">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fbf010" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-flicker"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 14.5c-2.5 0-4.5-2-4.5-4.5S9.5 7.5 12 7.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5z"/></svg></div>
+          <h4>Gas CP12 <span class="df-tag live">LIVE</span></h4>
+          <p>Gas safety records and landlord certificates</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-float"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <h4>EICR <span class="df-tag">SOON</span></h4>
+          <p>Electrical installation condition reports</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg></div>
+          <h4>Fire Alarm <span class="df-tag">SOON</span></h4>
+          <p>Fire safety inspection and test records</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+          <h4>Emerg. Lighting <span class="df-tag">SOON</span></h4>
+          <p>Emergency lighting test documentation</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <h4>Job Management <span class="df-tag">SOON</span></h4>
+          <p>Schedule, invoice and track all your jobs</p>
+        </div>
+      </div>
+      <div class="df-footer">DeepFlow Software &mdash; <b>deepflowsoftware.co.uk</b></div>
+    </div>
+  </div>
+  <!-- Right login card -->
+  <div class="auth-left">
+    <div class="auth-wrap">
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <div class="auth-icon"><i class="fa-solid fa-certificate"></i></div>
+          <div>
+            <div class="auth-name">DeepFlow <span>Certificates</span></div>
+            <div class="auth-sub">Part of DeepFlow Software</div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-welcome">Welcome back</div>
+      <div class="auth-welcome-sub">Sign in to your account to continue</div>
+      <div id="auth-err" class="auth-err"></div>
+      <!-- Tab bar (login / register only) -->
+      <div class="auth-tabs" id="auth-tab-bar">
+        <button class="auth-tab on" onclick="switchAuthTab('login')">Sign In</button>
         <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
       </div>
-      <div class="form-group"><label>Email</label><input class="form-control" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
-      <div class="form-group"><label>Password</label><input class="form-control" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
-      <div class="auth-link"><a href="#" onclick="switchAuthTab('forgot');return false">Forgot password?</a></div>
-    </div>
-    <!-- Register -->
-    <div id="auth-register" hidden>
-      <div class="auth-tab-bar">
-        <button class="auth-tab" onclick="switchAuthTab('login')">Sign In</button>
-        <button class="auth-tab active" onclick="switchAuthTab('register')">Register</button>
+      <!-- Login -->
+      <div id="auth-login" class="auth-panel on">
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="form-group">
+          <label>PASSWORD</label>
+          <div class="auth-pw-wrap">
+            <input class="form-control" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button class="auth-pw-eye" onclick="toggleAuthPw('login-pass',this)" type="button"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <span class="auth-forgot" onclick="switchAuthTab('forgot')">Forgot password?</span>
+        <button class="btn btn-primary btn-block btn-lg" style="margin-top:10px" onclick="doLogin()"><i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:6px"></i>Sign In</button>
       </div>
-      <div class="form-group"><label>Full Name</label><input class="form-control" id="reg-name" type="text" placeholder="Your name"></div>
-      <div class="form-group"><label>Email</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com"></div>
-      <div class="form-group"><label>Password</label><input class="form-control" id="reg-pass" type="password" placeholder="Min 8 characters"></div>
-      <button class="btn btn-primary btn-full" onclick="doRegister()">Create Account</button>
-    </div>
-    <!-- Forgot -->
-    <div id="auth-forgot" hidden>
-      <h3 style="margin-bottom:16px;font-size:16px">Reset Password</h3>
-      <div class="form-group"><label>Email</label><input class="form-control" id="forgot-email" type="email" placeholder="you@example.com"></div>
-      <button class="btn btn-primary btn-full" onclick="doForgot()">Send Reset Email</button>
-      <div class="auth-link"><a href="#" onclick="switchAuthTab('login');return false">Back to sign in</a></div>
-    </div>
-    <!-- Set New Password (after recovery link) -->
-    <div id="auth-reset" hidden>
-      <h3 style="margin-bottom:8px;font-size:16px">Set New Password</h3>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Choose a strong password for your account.</p>
-      <div id="auth-reset-error" class="auth-error" hidden></div>
-      <div class="form-group"><label>New Password</label><input class="form-control" id="reset-pass" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
-      <div class="form-group"><label>Confirm Password</label><input class="form-control" id="reset-pass2" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
-      <button class="btn btn-primary btn-full" onclick="doSetNewPassword()">Set Password &amp; Sign In</button>
+      <!-- Register -->
+      <div id="auth-register" class="auth-panel">
+        <div class="form-group"><label>FULL NAME</label><input class="form-control" id="reg-name" type="text" placeholder="Your name"></div>
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com"></div>
+        <div class="form-group">
+          <label>PASSWORD</label>
+          <div class="auth-pw-wrap">
+            <input class="form-control" id="reg-pass" type="password" placeholder="Min 8 characters">
+            <button class="auth-pw-eye" onclick="toggleAuthPw('reg-pass',this)" type="button"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doRegister()"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i>Create Account</button>
+      </div>
+      <!-- Forgot -->
+      <div id="auth-forgot" class="auth-panel">
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Enter your email address and we'll send you a link to reset your password.</p>
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="forgot-email" type="email" placeholder="you@example.com"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doForgot()">Send Reset Email</button>
+        <div class="auth-link" style="margin-top:14px"><a href="#" onclick="switchAuthTab('login');return false">← Back to sign in</a></div>
+      </div>
+      <!-- Reset password -->
+      <div id="auth-reset" class="auth-panel">
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px;">Set New Password</div>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:18px;">Choose a strong password for your account.</p>
+        <div class="form-group"><label>NEW PASSWORD</label><input class="form-control" id="reset-pass" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
+        <div class="form-group"><label>CONFIRM PASSWORD</label><input class="form-control" id="reset-pass2" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doSetNewPassword()">Set Password &amp; Sign In</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1410,15 +1523,19 @@ let patReports = [], gasReports = [], appSettings = {};
 
 // ========== AUTH ==========
 function switchAuthTab(tab) {
-  document.querySelectorAll('#auth-screen .auth-tab').forEach(t=>t.classList.remove('active'));
-  ['auth-login','auth-register','auth-forgot'].forEach(id=>document.getElementById(id).hidden=true);
+  document.querySelectorAll('#auth-screen .auth-tabs .auth-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#auth-screen .auth-panel').forEach(p=>p.classList.remove('on'));
   clearAuthError();
-  if(tab==='login'){document.getElementById('auth-login').hidden=false;document.querySelectorAll('#auth-login .auth-tab')[0].classList.add('active');}
-  else if(tab==='register'){document.getElementById('auth-register').hidden=false;}
-  else{document.getElementById('auth-forgot').hidden=false;}
+  const tabBar=document.getElementById('auth-tab-bar');
+  if(tabBar) tabBar.style.display=(tab==='forgot'||tab==='reset')?'none':'flex';
+  if(tab==='login'){document.getElementById('auth-login').classList.add('on');document.querySelectorAll('#auth-screen .auth-tabs .auth-tab')[0].classList.add('on');}
+  else if(tab==='register'){document.getElementById('auth-register').classList.add('on');document.querySelectorAll('#auth-screen .auth-tabs .auth-tab')[1].classList.add('on');}
+  else if(tab==='forgot'){document.getElementById('auth-forgot').classList.add('on');}
+  else if(tab==='reset'){document.getElementById('auth-reset').classList.add('on');}
 }
-function clearAuthError(){const e=document.getElementById('auth-error');e.hidden=true;e.textContent='';}
-function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.hidden=false;}
+function toggleAuthPw(inputId,btn){const inp=document.getElementById(inputId);if(!inp)return;const show=inp.type==='password';inp.type=show?'text':'password';btn.querySelector('i').className=show?'fa-solid fa-eye-slash':'fa-solid fa-eye';}
+function clearAuthError(){const e=document.getElementById('auth-err');if(e){e.classList.remove('on');e.textContent='';}}
+function showAuthError(msg){const e=document.getElementById('auth-err');if(e){e.textContent=msg;e.classList.add('on');}}
 
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
@@ -1451,14 +1568,11 @@ async function doForgot(){
 async function doSetNewPassword(){
   const p=document.getElementById('reset-pass').value;
   const p2=document.getElementById('reset-pass2').value;
-  const errEl=document.getElementById('auth-reset-error');
-  errEl.hidden=true;
-  if(p.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.hidden=false;return;}
-  if(p!==p2){errEl.textContent='Passwords do not match.';errEl.hidden=false;return;}
+  if(p.length<8){showAuthError('Password must be at least 8 characters.');return;}
+  if(p!==p2){showAuthError('Passwords do not match.');return;}
   const{error}=await sb.auth.updateUser({password:p});
-  if(error){errEl.textContent=error.message;errEl.hidden=false;return;}
+  if(error){showAuthError(error.message);return;}
   toast('Password updated! Signing you in…','success');
-  document.getElementById('auth-reset').hidden=true;
   const{data:{session}}=await sb.auth.getSession();
   if(session)await onLogin(session.user);
 }
@@ -1468,7 +1582,7 @@ async function doLogout(){
 
 async function onLogin(user){
   currentUser=user;
-  document.getElementById('auth-screen').hidden=true;
+  document.getElementById('auth-screen').classList.add('gone');
   document.getElementById('app').classList.add('visible');
   document.getElementById('app').style.display='flex';
   // Load profile
@@ -1488,7 +1602,7 @@ function onLogout(){
   currentUser=null; currentProfile=null;
   document.getElementById('app').classList.remove('visible');
   document.getElementById('app').style.display='none';
-  document.getElementById('auth-screen').hidden=false;
+  document.getElementById('auth-screen').classList.remove('gone');
   clearAuthError();
 }
 
@@ -3104,17 +3218,45 @@ function parseGasDate(s){
   return new Date(s);
 }
 
+// ========== AUTH PARTICLES ==========
+function initAuthParticles(){
+  const canvas=document.getElementById('auth-particles');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  const N=60,MAX_DIST=130;
+  function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;particles=[];for(let i=0;i<N;i++)particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.8+.8});}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<particles.length;i++){
+      const a=particles[i];
+      a.x+=a.vx;a.y+=a.vy;
+      if(a.x<0||a.x>W)a.vx*=-1;
+      if(a.y<0||a.y>H)a.vy*=-1;
+      ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);ctx.fillStyle='rgba(96,165,250,.55)';ctx.fill();
+      for(let j=i+1;j<particles.length;j++){
+        const b=particles[j];
+        const dx=a.x-b.x,dy=a.y-b.y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<MAX_DIST){const alpha=(1-dist/MAX_DIST)*.25;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(96,165,250,${alpha})`;ctx.lineWidth=.8;ctx.stroke();}
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();draw();
+  window.addEventListener('resize',resize);
+}
+
 // ========== INIT ==========
 async function init(){
+  initAuthParticles();
   const{data:{session}}=await sb.auth.getSession();
   if(session)await onLogin(session.user);
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      document.getElementById('auth-screen').hidden=false;
+      document.getElementById('auth-screen').classList.remove('gone');
       document.getElementById('app').classList.remove('visible');
       document.getElementById('app').style.display='none';
-      ['auth-login','auth-register','auth-forgot'].forEach(id=>document.getElementById(id).hidden=true);
-      document.getElementById('auth-reset').hidden=false;
+      switchAuthTab('reset');
       return;
     }
     if(event==='SIGNED_IN'&&session)await onLogin(session.user);
