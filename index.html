@@ -1097,13 +1097,19 @@ a{color:var(--accent);text-decoration:none}
       <div class="settings-pane active" id="pane-company">
         <div class="form-section">
           <div class="form-section-title">Company Information</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details appear on every PAT &amp; Gas certificate</strong> — company name, address, phone, email and website print in the certificate header and footer.
+          </div>
           <div class="field-grid">
-            <div class="field-group"><label>Company Name</label><input type="text" id="s-company-name" placeholder="Your company or trading name"></div>
-            <div class="field-group"><label>Phone</label><input type="tel" id="s-company-phone"></div>
-            <div class="field-group"><label>Email</label><input type="email" id="s-company-email"></div>
-            <div class="field-group" style="grid-column:1/-1"><label>Address</label><input type="text" id="s-company-address" placeholder="Full address"></div>
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-company-name" placeholder="OHM Electrical Engineering Ltd"></div>
+            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-company-sub" placeholder="Optional subtitle"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-company-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-company-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-company-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
             <div class="field-group"><label>Website</label><input type="url" id="s-company-website" placeholder="https://"></div>
-            <div class="field-group"><label>Registered No / VAT</label><input type="text" id="s-company-regno"></div>
+            <div class="field-group"><label>VAT Number</label><input type="text" id="s-company-vat" placeholder="GB 123 4567 89"></div>
+            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-company-regno" placeholder="12345678"></div>
+            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-company-insurance" placeholder="Optional"></div>
           </div>
         </div>
       </div>
@@ -1574,11 +1580,14 @@ async function sendTestEmail(){
 function loadSettingsUI(){
   // Company
   document.getElementById('s-company-name').value=getSetting('company_name');
+  document.getElementById('s-company-sub').value=getSetting('company_sub','');
   document.getElementById('s-company-phone').value=getSetting('company_phone');
   document.getElementById('s-company-email').value=getSetting('company_email');
   document.getElementById('s-company-address').value=getSetting('company_address');
   document.getElementById('s-company-website').value=getSetting('company_website');
+  document.getElementById('s-company-vat').value=getSetting('company_vat','');
   document.getElementById('s-company-regno').value=getSetting('company_regno');
+  document.getElementById('s-company-insurance').value=getSetting('company_insurance','');
   // Email
   document.getElementById('s-email-method').value=getSetting('email_method','script');
   toggleEmailMethod();
@@ -1620,11 +1629,14 @@ async function saveSettings(){
   showOverlay('Saving…');
   const pairs=[
     ['company_name',document.getElementById('s-company-name').value],
+    ['company_sub',document.getElementById('s-company-sub').value],
     ['company_phone',document.getElementById('s-company-phone').value],
     ['company_email',document.getElementById('s-company-email').value],
     ['company_address',document.getElementById('s-company-address').value],
     ['company_website',document.getElementById('s-company-website').value],
+    ['company_vat',document.getElementById('s-company-vat').value],
     ['company_regno',document.getElementById('s-company-regno').value],
+    ['company_insurance',document.getElementById('s-company-insurance').value],
     ['email_method',document.getElementById('s-email-method').value],
     ['email_script_url',document.getElementById('s-script-url').value],
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
