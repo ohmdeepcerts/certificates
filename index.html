@@ -658,7 +658,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="form-section">
         <div class="form-section-title">Report Details</div>
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
-          <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Auto on Complete" oninput="doPatPreview()"></div>
+          <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
           <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
           <div class="field-group"><label>Test Date *</label><input type="date" id="pat-date" onchange="applyPatHeaderDate(this.value)"></div>
           <div class="field-group"><label>Engineer *</label><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()"></div>
@@ -1765,6 +1765,35 @@ function patWrapTxt(text,maxCh){
   if(line)out.push(line);return out.join('\n');
 }
 
+// ─── Smart Ref ───────────────────────────────────────
+let patCurrentBaseRef='';
+function patIncStr(s){const m=s.match(/^(.*?)(\d+)$/);return m?m[1]+String(parseInt(m[2],10)+1).padStart(m[2].length,'0'):s+'-1';}
+function patAddressRefPart(addr){
+  if(!addr)return'';
+  let lines=addr.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)lines=addr.split(',').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length)return'';
+  const startsWithDigit=l=>/^\d/.test(l);
+  let businessName='',streetLine;
+  if(startsWithDigit(lines[0])){streetLine=lines[0];}
+  else{businessName=lines[0];streetLine=lines.slice(1).find(startsWithDigit)||lines[1]||'';}
+  const m=(streetLine||'').match(/^(\d+\w*)\s+(\S+)\s*(\S+)?/);
+  const streetPart=m?[m[1],m[2],m[3]].filter(Boolean).join(' '):(streetLine||'').split(/\s+/).slice(0,3).join(' ');
+  return businessName?businessName+' '+streetPart:streetPart;
+}
+function updatePatRef(){
+  const el=patGe('pat-ref');
+  if(!el||el.dataset.manual==='true')return;
+  const base=patCurrentBaseRef;
+  if(!base)return;
+  const addr=(patGv('pat-addr')||'').trim();
+  const short=patAddressRefPart(addr);
+  const numbered=base+'0'+String(patApps.length);
+  el.value=short?numbered+' / '+short:numbered;
+  doPatPreview();
+}
+// ─────────────────────────────────────────────────────
+
 function addPATRow(data=null){
   let nextId='';
   if(!data&&patApps.length){
@@ -1785,6 +1814,7 @@ function addPATRow(data=null){
   };
   patApps.push(a);
   renderPATRows({focusDesc:patApps.length-1});
+  updatePatRef();
   doPatPreview();
 }
 
@@ -1813,11 +1843,14 @@ function patUpd(i,f,v){if(patApps[i])patApps[i][f]=v;doPatPreview();updatePatSid
 function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));renderPATRows();doPatPreview();}
 function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));renderPATRows();doPatPreview();}
 function applyPatHeaderDate(v){if(!v||!patApps.length)return;patApps.forEach(a=>{a.date=v;a.nextTest=patCalcNext(v,parseInt(a.retestPeriod));});renderPATRows();doPatPreview();}
-function delPATRow(i){patApps.splice(i,1);renderPATRows();doPatPreview();}
+function delPATRow(i){patApps.splice(i,1);renderPATRows();updatePatRef();doPatPreview();}
 function clearPATForm(){if(!confirm('Clear all form data?'))return;newPAT();}
 
 function populatePATForm(r){
-  patGe('pat-ref').value=r.ref_number||'';
+  patCurrentBaseRef=r.base_ref||(r.ref_number||'').split(' / ')[0].replace(/0\d+$/,'').trim();
+  const refEl=patGe('pat-ref');
+  refEl.value=r.ref_number||'';
+  refEl.dataset.manual='true';
   patGe('pat-status').value=r.status||'draft';
   patGe('pat-date').value=r.test_date||'';
   patGe('pat-eng').value=r.engineer||'';
@@ -1843,6 +1876,7 @@ function populatePATForm(r){
 function getPATFormData(){
   return{
     ref_number:patGv('pat-ref'),
+    base_ref:patCurrentBaseRef||patGv('pat-ref').split(' / ')[0].replace(/0\d+$/,'').trim(),
     status:patGv('pat-status'),
     test_date:patGv('pat-date'),
     engineer:patGv('pat-eng'),
@@ -1855,7 +1889,7 @@ function getPATFormData(){
   };
 }
 
-function newPAT(){
+async function newPAT(){
   editingPATId=null;patApps=[];
   patGe('pat-form-title').textContent='New PAT Test';
   patGe('pat-form-ref').textContent='Test Date applies to all rows · Ctrl+S = Draft';
@@ -1871,6 +1905,15 @@ function newPAT(){
   patGe('pat-landlord').value='';patGe('pat-agency').value='';
   patGe('pat-addr').value='';patGe('pat-phone').value='';patGe('pat-email').value='';
   patGe('pat-app-body').innerHTML='';
+  // Auto-assign base ref
+  patCurrentBaseRef='';
+  const refEl=patGe('pat-ref');
+  if(refEl)refEl.dataset.manual='false';
+  try{
+    const prefix=getSetting('pat_prefix','OHM');
+    const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'pat'});
+    if(serial){patCurrentBaseRef=prefix+String(serial).padStart(4,'0');}
+  }catch(e){}
   addPATRow();addPATRow();
   _syncAutoCapBtn();
 }
@@ -1915,13 +1958,13 @@ async function savePAT(){
 async function completePAT(){
   const d=getPATFormData();
   if(!d.property_address||!d.test_date){toast('Address and date required','error');return;}
+  // Ensure ref is current before saving
+  if(patGe('pat-ref').dataset.manual!=='true')updatePatRef();
   await savePAT();
   if(!editingPATId){toast('Save failed','error');return;}
   showOverlay('Issuing certificate…');
-  const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'pat'});
-  const prefix=getSetting('pat_prefix','OHM');
-  const refNum=`${prefix}-PAT-${String(serial).padStart(4,'0')}`;
-  const{error}=await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingPATId);
+  const refNum=patGv('pat-ref')||d.ref_number;
+  const{error}=await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:patCurrentBaseRef||refNum,completed_at:new Date().toISOString()}).eq('id',editingPATId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
   patGe('pat-ref').value=refNum;
@@ -2056,7 +2099,7 @@ function doPatPreview(){
   const addr=(patGv('pat-addr')||'').trim(),eng=patGv('pat-eng')||'—';
   const isDraft=patGv('pat-status')==='draft';
   const hc=getSetting('pat_hdr_color','#1e3a5f'),htc=getSetting('pat_hdr_text','#ffffff'),rowBg=getSetting('pat_row_color','#f8fafc');
-  const coName=getSetting('pat_co_name','OHM Electrical Engineering Ltd');
+  const coName=getSetting('pat_co_name',getSetting('company_name','Your Company Name'));
   const coPhone=getSetting('pat_co_phone',''),coEmail=getSetting('pat_co_email','');
   const coAddr=getSetting('pat_co_address',''),coWeb=getSetting('pat_co_website','');
   const coVat=getSetting('pat_co_vat',''),coReg=getSetting('pat_co_regno','');
@@ -2180,11 +2223,11 @@ function toggleAutoCap(){
   toast('Auto-capitalize '+(autoCapEnabled?'on':'off'),'info',1800);
 }
 function capitalizeAddress(el){
-  if(!autoCapEnabled){doPatPreview();return;}
+  if(!autoCapEnabled){updatePatRef();doPatPreview();return;}
   const pos=el.selectionStart,posEnd=el.selectionEnd;
   el.value=el.value.split('\n').map(line=>line.replace(/(?<![a-zA-Z'])[a-z]/g,c=>c.toUpperCase())).join('\n');
   el.setSelectionRange(pos,posEnd);
-  doPatPreview();updatePatSidePanel();
+  updatePatRef();doPatPreview();updatePatSidePanel();
 }
 function liveCapitalize(el){
   if(!autoCapEnabled)return;
