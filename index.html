@@ -481,7 +481,7 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .p2-head-cell{min-width:0;display:flex;align-items:center;justify-content:center;padding:3px 2px;color:#fff;font-size:6.1pt;line-height:1.08;font-weight:800;text-align:center;border-right:1px solid rgba(255,255,255,.32);overflow:hidden;word-break:break-word}
 .cp12-form-wrap .p2-head-cell:last-child{border-right:0}
 .cp12-form-wrap .p2-head-cell.important{background:rgba(255,255,255,.08)}
-.cp12-form-wrap .appliance-cards{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:repeat(5,auto);align-content:space-between}
+.cp12-form-wrap .appliance-cards{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:repeat(5,auto);align-content:start;gap:4px}
 .cp12-form-wrap .appliance-card{display:grid;grid-template-rows:36px auto;row-gap:0}
 .cp12-form-wrap .appliance-main-shell{min-height:0;background:#fff;border:2px solid #1e3a5f;border-radius:6px 6px 0 0;border-bottom:1px dashed #cbd5e1;overflow:hidden}
 .cp12-form-wrap .appliance-co-row{display:flex;align-items:center;gap:10px;background:#fffbeb;border:2px solid #1e3a5f;border-top:none;border-radius:0 0 6px 6px;padding:4px 8px;flex-wrap:wrap}
@@ -1351,7 +1351,8 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-gas-co-sub" placeholder="Optional subtitle"></div>
             <div class="field-group"><label>Phone</label><input type="tel" id="s-gas-co-phone" placeholder="07700 900000"></div>
             <div class="field-group"><label>Email</label><input type="email" id="s-gas-co-email" placeholder="info@yourcompany.co.uk"></div>
-            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County" style="height:56px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-gas-co-postcode" placeholder="SW1A 1AA"></div>
             <div class="field-group"><label>Website</label><input type="url" id="s-gas-co-website" placeholder="https://"></div>
             <div class="field-group"><label>VAT Number</label><input type="text" id="s-gas-co-vat" placeholder="GB 123 4567 89"></div>
             <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-gas-co-regno" placeholder="12345678"></div>
@@ -1727,6 +1728,7 @@ function loadSettingsUI(){
   document.getElementById('s-gas-co-phone').value=getSetting('gas_co_phone','');
   document.getElementById('s-gas-co-email').value=getSetting('gas_co_email','');
   document.getElementById('s-gas-co-address').value=getSetting('gas_co_address','');
+  document.getElementById('s-gas-co-postcode').value=getSetting('gas_co_postcode','');
   document.getElementById('s-gas-co-website').value=getSetting('gas_co_website','');
   document.getElementById('s-gas-co-vat').value=getSetting('gas_co_vat','');
   document.getElementById('s-gas-co-regno').value=getSetting('gas_co_regno','');
@@ -1785,6 +1787,7 @@ async function saveSettings(){
     ['gas_co_phone',document.getElementById('s-gas-co-phone').value],
     ['gas_co_email',document.getElementById('s-gas-co-email').value],
     ['gas_co_address',document.getElementById('s-gas-co-address').value],
+    ['gas_co_postcode',document.getElementById('s-gas-co-postcode').value],
     ['gas_co_website',document.getElementById('s-gas-co-website').value],
     ['gas_co_vat',document.getElementById('s-gas-co-vat').value],
     ['gas_co_regno',document.getElementById('s-gas-co-regno').value],
@@ -2873,7 +2876,7 @@ function populateCP12Form(r){
   if(r.sig_received_image){const c=document.querySelector('[data-sig-field="sig_received"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_received_image;}}
 }
 function syncSettingsToCP12Form(){
-  const map={company_name:'company_name',gas_safe_no:'gas_safe_no',business_phone:'company_phone',business_email:'company_email',business_address:'company_address',issuer_name:'gas_default_engineer',landlord_ref:'gas_licence'};
+  const map={company_name:'gas_co_name',gas_safe_no:'gas_safe_no',business_phone:'gas_co_phone',business_email:'gas_co_email',business_address:'gas_co_address',business_postcode:'gas_co_postcode',issuer_name:'gas_default_engineer',landlord_ref:'gas_licence'};
   Object.entries(map).forEach(([f,s])=>{const v=getSetting(s);if(v)setCP12Field(f,v);});
 }
 
