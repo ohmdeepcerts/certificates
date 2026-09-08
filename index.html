@@ -1011,14 +1011,16 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="settings-pane" id="pane-email">
         <div class="form-section">
-          <div class="form-section-title">Email Method</div>
-          <div class="field-grid">
-            <div class="field-group" style="grid-column:1/-1">
-              <label>Active Method</label>
-              <select id="s-email-method" onchange="toggleEmailMethod()">
-                <option value="script">Google Apps Script</option>
-                <option value="brevo">Brevo / Sendinblue</option>
-              </select>
+          <div class="form-section-title">Choose Email Method</div>
+          <input type="hidden" id="s-email-method" value="script">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+            <div id="method-btn-script" onclick="setEmailMethod('script')" style="border:2px solid var(--accent);border-radius:8px;padding:16px;cursor:pointer;background:var(--accent);color:#fff">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📧 Google Apps Script</div>
+              <div style="font-size:12px;opacity:.85">Send via your Google account script URL</div>
+            </div>
+            <div id="method-btn-brevo" onclick="setEmailMethod('brevo')" style="border:2px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;background:var(--surface2);color:var(--text)">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">✉️ Brevo</div>
+              <div style="font-size:12px;opacity:.7">Send via Brevo transactional email API</div>
             </div>
           </div>
         </div>
@@ -1334,8 +1336,24 @@ async function upsertSetting(key,value){
   await sb.from('app_config').upsert({key,value,updated_at:new Date().toISOString()},{onConflict:'key'});
   appSettings[key]=value;
 }
+function setEmailMethod(m){
+  document.getElementById('s-email-method').value=m;
+  toggleEmailMethod();
+}
 function toggleEmailMethod(){
   const m=document.getElementById('s-email-method').value;
+  // Update card styles
+  const btnScript=document.getElementById('method-btn-script');
+  const btnBrevo=document.getElementById('method-btn-brevo');
+  if(btnScript&&btnBrevo){
+    if(m==='brevo'){
+      btnBrevo.style.cssText='border:2px solid var(--accent);border-radius:8px;padding:16px;cursor:pointer;background:var(--accent);color:#fff';
+      btnScript.style.cssText='border:2px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;background:var(--surface2);color:var(--text)';
+    } else {
+      btnScript.style.cssText='border:2px solid var(--accent);border-radius:8px;padding:16px;cursor:pointer;background:var(--accent);color:#fff';
+      btnBrevo.style.cssText='border:2px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;background:var(--surface2);color:var(--text)';
+    }
+  }
   document.getElementById('email-section-script').style.display=m==='script'?'':'none';
   document.getElementById('email-section-brevo').style.display=m==='brevo'?'':'none';
 }
