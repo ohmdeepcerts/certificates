@@ -148,6 +148,7 @@ a{color:var(--accent);text-decoration:none}
 .badge-done{background:var(--green-dim);color:var(--success)}
 .badge-overdue{background:var(--red-dim);color:var(--error)}
 .badge-due{background:var(--warn-dim);color:var(--warn)}
+.badge-urgent{background:#fde68a;color:#92400e;font-weight:700}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-state .empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
 .empty-state p{font-size:14px}
@@ -534,13 +535,15 @@ a{color:var(--accent);text-decoration:none}
         <div class="nav-section-label">PAT Testing</div>
         <div class="nav-item" data-view="pat-new" onclick="navigate('pat-new')"><span class="nav-icon">✚</span>New PAT Test</div>
         <div class="nav-item" data-view="pat-history" onclick="navigate('pat-history')"><span class="nav-icon">≡</span>PAT History</div>
-        <div class="nav-item" data-view="pat-renewals" onclick="navigate('pat-renewals')"><span class="nav-icon">⏰</span>Renewals <span id="pat-renewal-badge" class="nav-badge" hidden>0</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Gas Safety</div>
         <div class="nav-item" data-view="gas-new" onclick="navigate('gas-new')"><span class="nav-icon">✚</span>New CP12</div>
         <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">≡</span>CP12 History</div>
-        <div class="nav-item" data-view="gas-renewals" onclick="navigate('gas-renewals')"><span class="nav-icon">⏰</span>Gas Renewals <span id="gas-renewal-badge" class="nav-badge" hidden>0</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Compliance</div>
+        <div class="nav-item" data-view="compliance" onclick="navigate('compliance')"><span class="nav-icon">⚠</span>Renewals &amp; Expiry <span id="compliance-badge" class="nav-badge" hidden>0</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Coming Soon</div>
@@ -678,10 +681,35 @@ a{color:var(--accent);text-decoration:none}
       <div class="cert-list" id="pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>Loading…</p></div></div>
     </div>
 
-    <!-- PAT RENEWALS -->
-    <div class="view" id="view-pat-renewals">
-      <div class="view-header"><div><div class="view-title">PAT Renewals</div><div class="view-subtitle">Appliances approaching test date</div></div></div>
-      <div class="cert-list" id="pat-renewals-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
+    <!-- COMPLIANCE -->
+    <div class="view" id="view-compliance">
+      <div class="view-header">
+        <div><div class="view-title">Compliance</div><div class="view-subtitle" id="comp-subtitle">PAT &amp; Gas renewals in one place</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadCompliance()">↻ Refresh</button>
+      </div>
+      <div class="list-controls" style="flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <input class="search-input" id="comp-search" placeholder="Search address, ref, appliance…" oninput="filterCompliance()" style="min-width:200px;flex:1">
+        <select id="comp-type" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Types</option>
+          <option value="pat">PAT Only</option>
+          <option value="gas">Gas CP12 Only</option>
+        </select>
+        <select id="comp-urgency" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="60">Due in 60 days</option>
+          <option value="overdue">Overdue only</option>
+          <option value="7">Due this week</option>
+          <option value="30">Due this month</option>
+          <option value="all">All upcoming</option>
+        </select>
+        <select id="comp-sort" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="date-asc">Soonest first</option>
+          <option value="date-desc">Latest first</option>
+          <option value="address">Address A–Z</option>
+          <option value="type">Type</option>
+        </select>
+      </div>
+      <div id="comp-summary" style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap"></div>
+      <div class="cert-list" id="comp-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
     </div>
 
     <!-- GAS NEW/EDIT -->
@@ -955,12 +983,6 @@ a{color:var(--accent);text-decoration:none}
         </select>
       </div>
       <div class="cert-list" id="gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>Loading…</p></div></div>
-    </div>
-
-    <!-- GAS RENEWALS -->
-    <div class="view" id="view-gas-renewals">
-      <div class="view-header"><div><div class="view-title">Gas Renewals</div><div class="view-subtitle">Properties needing annual gas safety check</div></div></div>
-      <div class="cert-list" id="gas-renewals-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
     </div>
 
     <!-- SETTINGS -->
@@ -1254,10 +1276,9 @@ function navigate(view){
   if(view==='dashboard')loadDashboard();
   else if(view==='pat-history')loadPATHistory();
   else if(view==='pat-new'){if(!editingPATId)newPAT();else doPatPreview();}
-  else if(view==='pat-renewals')loadPATRenewals();
+  else if(view==='compliance')loadCompliance();
   else if(view==='gas-history')loadGasHistory();
   else if(view==='gas-new'){if(!_gasCertLoading)newGasCert();}
-  else if(view==='gas-renewals')loadGasRenewals();
   else if(view==='settings')loadSettingsUI();
   else if(view==='audit')loadAuditLog();
 }
@@ -1384,11 +1405,9 @@ async function loadDashboard(){
   document.getElementById('stat-gas-total').textContent=gasTotal;
   document.getElementById('stat-gas-complete').textContent=gasDone;
   document.getElementById('stat-gas-due').textContent=gasDue;
-  // Update badges
-  const patBadge=document.getElementById('pat-renewal-badge');
-  patBadge.textContent=patDue;patBadge.hidden=patDue===0;
-  const gasBadge=document.getElementById('gas-renewal-badge');
-  gasBadge.textContent=gasDue;gasBadge.hidden=gasDue===0;
+  // Update unified compliance badge
+  const compBadge=document.getElementById('compliance-badge');
+  if(compBadge){const tot=patDue+gasDue;compBadge.textContent=tot;compBadge.hidden=tot===0;}
   // Recent lists
   const recentPat=(pats||[]).slice(-5).reverse();
   const recentGas=(gases||[]).slice(-5).reverse();
@@ -1624,31 +1643,71 @@ async function deletePAT(id){
 }
 
 // ========== PAT - RENEWALS ==========
-async function loadPATRenewals(){
-  const{data}=await sb.from('pat_reports').select('id,ref_number,property_address,appliances,engineer').eq('status','completed');
-  const today=new Date();const in60=new Date(today);in60.setDate(in60.getDate()+60);
-  const due=[];
-  (data||[]).forEach(r=>{
+let _compAll=[];
+async function loadCompliance(){
+  const el=document.getElementById('comp-list');
+  if(el)el.innerHTML='<div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div>';
+  const today=new Date();
+  const items=[];
+  const[{data:pats},{data:gases}]=await Promise.all([
+    sb.from('pat_reports').select('id,ref_number,property_address,appliances,engineer').eq('status','completed'),
+    sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer,cert_date').eq('status','completed')
+  ]);
+  (pats||[]).forEach(r=>{
     (r.appliances||[]).forEach(a=>{
-      const nextDate=a.nextTest||a.next_test;
-      if(nextDate){const d=new Date(nextDate);if(d<=in60){due.push({...r,appliance:a,due_date:d});}}
+      const nd=a.nextTest||a.next_test;if(!nd)return;
+      const d=new Date(nd);
+      items.push({type:'pat',id:r.id,ref:r.ref_number||'—',address:r.property_address||'—',engineer:r.engineer||'—',label:a.description||'Appliance',assetId:a.assetId||a.asset_id||'',due:d,overdue:d<today,daysLeft:Math.round((d-today)/86400000)});
     });
   });
-  due.sort((a,b)=>a.due_date-b.due_date);
-  const el=document.getElementById('pat-renewals-list');
-  if(!due.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><p>No renewals due in the next 60 days</p></div>';return;}
-  el.innerHTML=due.map(r=>{
-    const dStr=r.due_date.toLocaleDateString('en-GB');const overdue=r.due_date<today;
-    return`<div class="cert-row">
-      <div class="cert-row-info">
-        <div style="display:flex;gap:8px;align-items:center"><span class="cert-ref">${r.ref_number||'—'}</span><span class="badge badge-${overdue?'overdue':'due'}">${overdue?'OVERDUE':'Due '+dStr}</span></div>
-        <div class="cert-address">${r.property_address}</div>
-        <div class="cert-meta">${r.appliance.description||'Appliance'} · Asset: ${r.appliance.assetId||r.appliance.asset_id||'—'}</div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="startRenewalPAT('${r.id}')">Renew</button></div>`;
+  (gases||[]).forEach(r=>{
+    if(!r.next_check_date)return;
+    const d=parseGasDate(r.next_check_date);if(!d)return;
+    items.push({type:'gas',id:r.id,ref:r.ref_number||'—',address:r.install_address||'—',engineer:r.engineer||'—',label:'Annual Gas Safety Check',assetId:'',certDate:r.cert_date||'',due:d,overdue:d<today,daysLeft:Math.round((d-today)/86400000)});
+  });
+  _compAll=items;
+  const compBadge=document.getElementById('compliance-badge');
+  if(compBadge){const tot=items.filter(i=>i.daysLeft<=60).length;compBadge.textContent=tot;compBadge.hidden=tot===0;}
+  filterCompliance();
+}
+function filterCompliance(){
+  const search=(document.getElementById('comp-search')?.value||'').toLowerCase().trim();
+  const type=document.getElementById('comp-type')?.value||'';
+  const urgency=document.getElementById('comp-urgency')?.value||'60';
+  const sort=document.getElementById('comp-sort')?.value||'date-asc';
+  const today=new Date();
+  let items=[..._compAll];
+  if(urgency==='overdue')items=items.filter(i=>i.overdue);
+  else if(urgency==='7')items=items.filter(i=>i.daysLeft<=7);
+  else if(urgency==='30')items=items.filter(i=>i.daysLeft<=30);
+  else if(urgency==='60')items=items.filter(i=>i.daysLeft<=60);
+  if(type)items=items.filter(i=>i.type===type);
+  if(search)items=items.filter(i=>i.address.toLowerCase().includes(search)||i.ref.toLowerCase().includes(search)||i.label.toLowerCase().includes(search)||i.assetId.toLowerCase().includes(search)||i.engineer.toLowerCase().includes(search));
+  if(sort==='date-asc')items.sort((a,b)=>a.due-b.due);
+  else if(sort==='date-desc')items.sort((a,b)=>b.due-a.due);
+  else if(sort==='address')items.sort((a,b)=>a.address.localeCompare(b.address));
+  else if(sort==='type')items.sort((a,b)=>a.type.localeCompare(b.type)||a.due-b.due);
+  const overdue=items.filter(i=>i.overdue).length;
+  const thisWeek=items.filter(i=>!i.overdue&&i.daysLeft<=7).length;
+  const thisMonth=items.filter(i=>!i.overdue&&i.daysLeft>7&&i.daysLeft<=30).length;
+  const sub=document.getElementById('comp-subtitle');
+  if(sub)sub.textContent=`${_compAll.length} total items across PAT and Gas · ${_compAll.filter(i=>i.overdue).length} overdue`;
+  const summary=document.getElementById('comp-summary');
+  if(summary&&items.length){
+    summary.innerHTML=`<span style="color:var(--error);font-weight:600">⚠ ${overdue} overdue</span><span style="color:#92400e;font-weight:600">⏰ ${thisWeek} this week</span><span style="color:var(--muted)">📅 ${thisMonth} this month</span><span style="color:var(--muted);margin-left:auto">${items.length} shown</span>`;
+  }else if(summary){summary.innerHTML='';}
+  const el=document.getElementById('comp-list');if(!el)return;
+  if(!items.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><p>Nothing due for the selected filters</p></div>';return;}
+  el.innerHTML=items.map(i=>{
+    const dStr=i.due.toLocaleDateString('en-GB');
+    const urgClass=i.overdue?'overdue':i.daysLeft<=7?'urgent':'due';
+    const urgLabel=i.overdue?`OVERDUE ${Math.abs(i.daysLeft)}d ago`:i.daysLeft===0?'TODAY':i.daysLeft===1?'Tomorrow':'Due '+dStr;
+    const typeBadge=i.type==='pat'?`<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">📋 PAT</span>`:`<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">🔥 Gas CP12</span>`;
+    const meta=i.type==='pat'?`${i.label}${i.assetId?' · Asset: '+i.assetId:''}`:i.certDate?`Last cert: ${i.certDate}`:'Annual Gas Safety Check';
+    const action=i.type==='pat'?`<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>`:`<button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New CP12</button>`;
+    return`<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${typeBadge}<span class="cert-ref">${i.ref}</span><span class="badge badge-${urgClass}">${urgLabel}</span></div><div class="cert-address">${i.address}</div><div class="cert-meta">${meta} · Engineer: ${i.engineer}</div></div>${action}</div>`;
   }).join('');
 }
-function startRenewalPAT(sourceId){navigate('pat-new');}
 
 // ========== PAT - PREVIEW & PDF ==========
 function doPatPreview(){
@@ -2191,14 +2250,6 @@ async function deleteGas(id){
     await sb.from('gas_certs').delete().eq('id',id);
     toast('Deleted','warn');loadGasHistory();
   });
-}
-async function loadGasRenewals(){
-  const{data}=await sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer').eq('status','completed');
-  const today=new Date();const in60=new Date(today);in60.setDate(in60.getDate()+60);
-  const due=(data||[]).filter(r=>{if(!r.next_check_date)return false;const d=parseGasDate(r.next_check_date);return d&&d<=in60;}).sort((a,b)=>parseGasDate(a.next_check_date)-parseGasDate(b.next_check_date));
-  const el=document.getElementById('gas-renewals-list');
-  if(!due.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><p>No gas renewals due in the next 60 days</p></div>';return;}
-  el.innerHTML=due.map(r=>{const d=parseGasDate(r.next_check_date);const ov=d<today;return`<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px"><span class="cert-ref">${r.ref_number||'—'}</span><span class="badge badge-${ov?'overdue':'due'}">${ov?'OVERDUE':'Due '+d.toLocaleDateString('en-GB')}</span></div><div class="cert-address">${r.install_address||'—'}</div><div class="cert-meta">${r.engineer||'—'}</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New CP12</button></div>`;}).join('');
 }
 
 // ========== GAS - PDF (jsPDF vector) ==========
