@@ -1358,7 +1358,7 @@ function toggleEmailMethod(){
   document.getElementById('email-section-brevo').style.display=m==='brevo'?'':'none';
 }
 async function sendTestEmail(){
-  const to=document.getElementById('s-test-email').value.trim();
+  const to=document.getElementById('s-test-email').value.trim().toLowerCase();
   if(!to){toast('Enter a test email address','warn');return;}
   const method=document.getElementById('s-email-method').value;
   if(method==='brevo'){
@@ -1920,7 +1920,9 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
   if(!apiKey){toast('Brevo API key not set — go to Settings → Email','error');return false;}
   const fromEmail=getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
   const fromName=getSetting('email_from_name')||getSetting('company_name','OHM Electrical Engineering Ltd');
-  const payload={sender:{name:fromName,email:fromEmail},to:[{email:to,name:toName||to}],subject,htmlContent};
+  const toClean=(to||'').trim().toLowerCase();
+  if(!toClean||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toClean)){toast('Invalid email address: '+to,'error');return false;}
+  const payload={sender:{name:fromName,email:fromEmail},to:[{email:toClean,name:toName||toClean}],subject,htmlContent};
   if(pdfBase64&&pdfFilename)payload.attachment=[{content:pdfBase64,name:pdfFilename}];
   const res=await fetch('https://api.brevo.com/v3/smtp/email',{
     method:'POST',
