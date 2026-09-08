@@ -1357,8 +1357,7 @@ async function sendTestEmail(){
       });
       const body=await res.json().catch(()=>({}));
       if(!res.ok){throw new Error(body.message||`HTTP ${res.status}`);}
-      if(body.messageId){toast('Sent ✓ messageId: '+body.messageId,'success',8000);}
-      else{toast('Response: '+JSON.stringify(body),'warn',8000);}
+      toast('Test email sent ✓ — check inbox &amp; spam for '+to,'success',6000);
     }catch(e){toast('Failed: '+e.message,'error',7000);}
     finally{hideOverlay();}
   } else {
