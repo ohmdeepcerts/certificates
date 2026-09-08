@@ -1787,8 +1787,8 @@ async function generatePATPDF(){
   if(!d.property_address){toast('Add a property address first','warn');return;}
   generatePATPDFFromData(d);
 }
-async function generatePATPDFFromData(r){
-  showOverlay('Generating PDF…');
+async function generatePATPDFFromData(r,{returnB64=false}={}){
+  showOverlay(returnB64?'Generating PDF for email…':'Generating PDF…');
   if(r.id&&r.id!==editingPATId){editingPATId=r.id;populatePATForm(r);}
   doPatPreview();
   await new Promise(res=>setTimeout(res,400));
@@ -1822,6 +1822,7 @@ async function generatePATPDFFromData(r){
     document.body.removeChild(shell);
 
     const ref=(r.ref_number||r.id||'PAT').toString().replace(/[^\w-]/g,'_');
+    if(returnB64){hideOverlay();return doc.output('datauristring').split(',')[1];}
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(isIOS){
       const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
@@ -1844,6 +1845,23 @@ function printPATCertificate(){
   },300);
 }
 
+// ========== EMAIL HELPER ==========
+async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilename){
+  const apiKey=getSetting('brevo_api_key');
+  if(!apiKey){toast('Brevo API key not set — go to Settings → Email','error');return false;}
+  const fromEmail=getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
+  const fromName=getSetting('email_from_name')||getSetting('company_name','OHM Electrical Engineering Ltd');
+  const payload={sender:{name:fromName,email:fromEmail},to:[{email:to,name:toName||to}],subject,htmlContent};
+  if(pdfBase64&&pdfFilename)payload.attachment=[{content:pdfBase64,name:pdfFilename}];
+  const res=await fetch('https://api.brevo.com/v3/smtp/email',{
+    method:'POST',
+    headers:{'accept':'application/json','api-key':apiKey,'content-type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
+  return true;
+}
+
 // ========== PAT - EMAIL ==========
 async function emailPAT(){
   if(!editingPATId){toast('No report loaded','warn');return;}
@@ -1859,10 +1877,39 @@ async function emailPAT(){
       await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:r.email_address,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
       toast('Email sent ✓','success');
       await logAudit('email','PAT emailed','pat',r.ref_number);
-    } catch(e){toast('Email failed','error');}
+    }catch(e){toast('Email failed','error');}
     finally{hideOverlay();}
   } else {
-    toast('Generate the PDF manually and attach to email','info',5000);
+    try{
+      const b64=await generatePATPDFFromData(r,{returnB64:true});
+      const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+      const co=getSetting('company_name','OHM Electrical Engineering Ltd');
+      const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
+          <h2 style="margin:0">${co}</h2>
+          <p style="margin:4px 0 0;font-size:13px">PAT Test Certificate</p>
+        </div>
+        <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
+          <p>Dear Customer,</p>
+          <p>Please find attached your PAT Test Certificate.</p>
+          <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px">${r.ref_number||'—'}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold">Property Address</td><td style="padding:8px 12px">${r.property_address||'—'}</td></tr>
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Test Date</td><td style="padding:8px 12px">${r.test_date||'—'}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Next Test Due</td><td style="padding:8px 12px;font-weight:bold;color:#b45309">${r.next_test_date||'—'}</td></tr>
+          </table>
+          <p style="font-size:13px;color:#555">Please keep this certificate in a safe place. Contact us if you have any questions.</p>
+          <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
+        </div>
+        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('company_phone','')} &nbsp;·&nbsp; ${getSetting('company_email','')} &nbsp;·&nbsp; ${getSetting('company_address','')}</p>
+      </div>`;
+      showOverlay('Sending email…');
+      await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName);
+      toast('Email sent ✓','success');
+      await logAudit('email','PAT emailed via Brevo','pat',r.ref_number);
+    }catch(e){toast('Email failed: '+e.message,'error');}
+    finally{hideOverlay();}
   }
 }
 </script>
@@ -2259,8 +2306,8 @@ async function generateGasPDF(){
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(r)generateGasPDFFromData(r);
 }
-async function generateGasPDFFromData(r){
-  showOverlay('Generating PDF…');
+async function generateGasPDFFromData(r,{returnB64=false}={}){
+  showOverlay(returnB64?'Generating PDF for email…':'Generating PDF…');
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,M=14,TW=W-M*2;
@@ -2366,6 +2413,7 @@ async function generateGasPDFFromData(r){
   doc.setFontSize(8);doc.setTextColor(100,100,100);
   doc.text(`${co.name||'OHM'} · Gas Safe Reg: ${r.gas_safe_no||getSetting('gas_safe_no','N/A')} · Cert: ${r.ref_number||'DRAFT'}`,W/2,y,{align:'center'});
   const filename=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  if(returnB64){hideOverlay();return doc.output('datauristring').split(',')[1];}
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   if(isIOS){const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});window.open(URL.createObjectURL(blob),'_blank');toast('PDF ready — tap Share → Save to Files','info',7000);}
   else{doc.save(filename);toast('PDF downloaded ✓','success');}
@@ -2377,14 +2425,48 @@ async function emailGas(){
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(!r){toast('Not found','error');return;}
   const method=getSetting('email_method','script');
-  const scriptUrl=getSetting('email_script_url');
   const toEmail=r.business_email||getSetting('company_email');
-  if(method==='script'&&scriptUrl&&toEmail){
+  if(!toEmail){toast('No email address on this certificate','warn');return;}
+  if(method==='script'){
+    const scriptUrl=getSetting('email_script_url');
+    if(!scriptUrl){toast('Google Apps Script URL not set in Settings','error');return;}
     showOverlay('Sending…');
     try{await fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({to:toEmail,subject:`Gas Safety Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.install_address,type:'gas'})});}
     catch(e){}finally{hideOverlay();}
     toast('Email sent ✓','success');await logAudit('email','CP12 emailed','gas',r.ref_number);
-  } else {toast('Generate PDF and send manually','info',5000);}
+  } else {
+    try{
+      const b64=await generateGasPDFFromData(r,{returnB64:true});
+      const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+      const co=getSetting('company_name','OHM Electrical Engineering Ltd');
+      const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
+          <h2 style="margin:0">${co}</h2>
+          <p style="margin:4px 0 0;font-size:13px">Landlord Gas Safety Record (CP12)</p>
+        </div>
+        <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
+          <p>Dear Landlord / Property Owner,</p>
+          <p>Please find attached your Gas Safety Certificate (CP12).</p>
+          <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px">${r.ref_number||'—'}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold">Installation Address</td><td style="padding:8px 12px">${r.install_address||'—'}${r.install_postcode?' '+r.install_postcode:''}</td></tr>
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Certificate Date</td><td style="padding:8px 12px">${r.cert_date||'—'}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Gas Safe Reg No</td><td style="padding:8px 12px">${r.gas_safe_no||getSetting('gas_safe_no','—')}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold">Next Check Due</td><td style="padding:8px 12px;font-weight:bold;color:#dc2626">${r.next_check_date||'—'}</td></tr>
+          </table>
+          <p style="font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 14px">⚠ By law, landlords must have gas appliances checked annually. Please keep this certificate safe and provide a copy to your tenant within 28 days.</p>
+          <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
+        </div>
+        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('company_phone','')} &nbsp;·&nbsp; ${getSetting('company_email','')} &nbsp;·&nbsp; ${getSetting('company_address','')}</p>
+      </div>`;
+      showOverlay('Sending email…');
+      await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName);
+      toast('Email sent ✓','success');
+      await logAudit('email','CP12 emailed via Brevo','gas',r.ref_number);
+    }catch(e){toast('Email failed: '+e.message,'error');}
+    finally{hideOverlay();}
+  }
 }
 
 // ========== SIGNATURE CANVAS ==========
