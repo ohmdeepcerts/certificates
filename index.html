@@ -1087,31 +1087,11 @@ a{color:var(--accent);text-decoration:none}
     <div class="view" id="view-settings">
       <div class="view-header"><div><div class="view-title">Settings</div><div class="view-subtitle">Company &amp; application configuration</div></div><button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button></div>
       <div class="settings-tabs">
-        <button class="settings-tab active" onclick="switchSettingsTab('company')">Company</button>
+        <button class="settings-tab active" onclick="switchSettingsTab('pat')">PAT</button>
+        <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas CP12</button>
         <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
-        <button class="settings-tab" onclick="switchSettingsTab('pat')">PAT Defaults</button>
-        <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas Defaults</button>
         <button class="settings-tab" onclick="switchSettingsTab('profile')">My Profile</button>
         <button class="settings-tab" onclick="switchSettingsTab('backend')">⚙ Backend</button>
-      </div>
-      <div class="settings-pane active" id="pane-company">
-        <div class="form-section">
-          <div class="form-section-title">Company Information</div>
-          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
-            <strong>These details appear on every PAT &amp; Gas certificate</strong> — company name, address, phone, email and website print in the certificate header and footer.
-          </div>
-          <div class="field-grid">
-            <div class="field-group"><label>Company Name</label><input type="text" id="s-company-name" placeholder="OHM Electrical Engineering Ltd"></div>
-            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-company-sub" placeholder="Optional subtitle"></div>
-            <div class="field-group"><label>Phone</label><input type="tel" id="s-company-phone" placeholder="07700 900000"></div>
-            <div class="field-group"><label>Email</label><input type="email" id="s-company-email" placeholder="info@yourcompany.co.uk"></div>
-            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-company-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
-            <div class="field-group"><label>Website</label><input type="url" id="s-company-website" placeholder="https://"></div>
-            <div class="field-group"><label>VAT Number</label><input type="text" id="s-company-vat" placeholder="GB 123 4567 89"></div>
-            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-company-regno" placeholder="12345678"></div>
-            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-company-insurance" placeholder="Optional"></div>
-          </div>
-        </div>
       </div>
       <div class="settings-pane" id="pane-email">
         <div class="form-section">
@@ -1152,7 +1132,24 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
       </div>
-      <div class="settings-pane" id="pane-pat">
+      <div class="settings-pane active" id="pane-pat">
+        <div class="form-section">
+          <div class="form-section-title">Company Information — PAT</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details print on every PAT certificate</strong> — header name, footer contact and VAT / Reg numbers.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-pat-co-name" placeholder="OHM Electrical Engineering Ltd"></div>
+            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-pat-co-sub" placeholder="Optional subtitle"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-pat-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-pat-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-pat-co-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-pat-co-website" placeholder="https://"></div>
+            <div class="field-group"><label>VAT Number</label><input type="text" id="s-pat-co-vat" placeholder="GB 123 4567 89"></div>
+            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-pat-co-regno" placeholder="12345678"></div>
+            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-pat-co-insurance" placeholder="Optional"></div>
+          </div>
+        </div>
         <div class="form-section">
           <div class="form-section-title">PAT Test Defaults</div>
           <div class="field-grid">
@@ -1226,6 +1223,23 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
       <div class="settings-pane" id="pane-gas">
+        <div class="form-section">
+          <div class="form-section-title">Company Information — Gas CP12</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details print on every Gas CP12 certificate</strong> — header name, footer contact and VAT / Reg numbers.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-gas-co-name" placeholder="OHM Gas Services Ltd"></div>
+            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-gas-co-sub" placeholder="Optional subtitle"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-gas-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-gas-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-gas-co-website" placeholder="https://"></div>
+            <div class="field-group"><label>VAT Number</label><input type="text" id="s-gas-co-vat" placeholder="GB 123 4567 89"></div>
+            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-gas-co-regno" placeholder="12345678"></div>
+            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-gas-co-insurance" placeholder="Optional"></div>
+          </div>
+        </div>
         <div class="form-section">
           <div class="form-section-title">Gas Certificate Defaults</div>
           <div class="field-grid">
@@ -1578,16 +1592,26 @@ async function sendTestEmail(){
   }
 }
 function loadSettingsUI(){
-  // Company
-  document.getElementById('s-company-name').value=getSetting('company_name');
-  document.getElementById('s-company-sub').value=getSetting('company_sub','');
-  document.getElementById('s-company-phone').value=getSetting('company_phone');
-  document.getElementById('s-company-email').value=getSetting('company_email');
-  document.getElementById('s-company-address').value=getSetting('company_address');
-  document.getElementById('s-company-website').value=getSetting('company_website');
-  document.getElementById('s-company-vat').value=getSetting('company_vat','');
-  document.getElementById('s-company-regno').value=getSetting('company_regno');
-  document.getElementById('s-company-insurance').value=getSetting('company_insurance','');
+  // PAT company
+  document.getElementById('s-pat-co-name').value=getSetting('pat_co_name','');
+  document.getElementById('s-pat-co-sub').value=getSetting('pat_co_sub','');
+  document.getElementById('s-pat-co-phone').value=getSetting('pat_co_phone','');
+  document.getElementById('s-pat-co-email').value=getSetting('pat_co_email','');
+  document.getElementById('s-pat-co-address').value=getSetting('pat_co_address','');
+  document.getElementById('s-pat-co-website').value=getSetting('pat_co_website','');
+  document.getElementById('s-pat-co-vat').value=getSetting('pat_co_vat','');
+  document.getElementById('s-pat-co-regno').value=getSetting('pat_co_regno','');
+  document.getElementById('s-pat-co-insurance').value=getSetting('pat_co_insurance','');
+  // Gas company
+  document.getElementById('s-gas-co-name').value=getSetting('gas_co_name','');
+  document.getElementById('s-gas-co-sub').value=getSetting('gas_co_sub','');
+  document.getElementById('s-gas-co-phone').value=getSetting('gas_co_phone','');
+  document.getElementById('s-gas-co-email').value=getSetting('gas_co_email','');
+  document.getElementById('s-gas-co-address').value=getSetting('gas_co_address','');
+  document.getElementById('s-gas-co-website').value=getSetting('gas_co_website','');
+  document.getElementById('s-gas-co-vat').value=getSetting('gas_co_vat','');
+  document.getElementById('s-gas-co-regno').value=getSetting('gas_co_regno','');
+  document.getElementById('s-gas-co-insurance').value=getSetting('gas_co_insurance','');
   // Email
   document.getElementById('s-email-method').value=getSetting('email_method','script');
   toggleEmailMethod();
@@ -1628,15 +1652,24 @@ function loadSettingsUI(){
 async function saveSettings(){
   showOverlay('Saving…');
   const pairs=[
-    ['company_name',document.getElementById('s-company-name').value],
-    ['company_sub',document.getElementById('s-company-sub').value],
-    ['company_phone',document.getElementById('s-company-phone').value],
-    ['company_email',document.getElementById('s-company-email').value],
-    ['company_address',document.getElementById('s-company-address').value],
-    ['company_website',document.getElementById('s-company-website').value],
-    ['company_vat',document.getElementById('s-company-vat').value],
-    ['company_regno',document.getElementById('s-company-regno').value],
-    ['company_insurance',document.getElementById('s-company-insurance').value],
+    ['pat_co_name',document.getElementById('s-pat-co-name').value],
+    ['pat_co_sub',document.getElementById('s-pat-co-sub').value],
+    ['pat_co_phone',document.getElementById('s-pat-co-phone').value],
+    ['pat_co_email',document.getElementById('s-pat-co-email').value],
+    ['pat_co_address',document.getElementById('s-pat-co-address').value],
+    ['pat_co_website',document.getElementById('s-pat-co-website').value],
+    ['pat_co_vat',document.getElementById('s-pat-co-vat').value],
+    ['pat_co_regno',document.getElementById('s-pat-co-regno').value],
+    ['pat_co_insurance',document.getElementById('s-pat-co-insurance').value],
+    ['gas_co_name',document.getElementById('s-gas-co-name').value],
+    ['gas_co_sub',document.getElementById('s-gas-co-sub').value],
+    ['gas_co_phone',document.getElementById('s-gas-co-phone').value],
+    ['gas_co_email',document.getElementById('s-gas-co-email').value],
+    ['gas_co_address',document.getElementById('s-gas-co-address').value],
+    ['gas_co_website',document.getElementById('s-gas-co-website').value],
+    ['gas_co_vat',document.getElementById('s-gas-co-vat').value],
+    ['gas_co_regno',document.getElementById('s-gas-co-regno').value],
+    ['gas_co_insurance',document.getElementById('s-gas-co-insurance').value],
     ['email_method',document.getElementById('s-email-method').value],
     ['email_script_url',document.getElementById('s-script-url').value],
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
@@ -2023,10 +2056,10 @@ function doPatPreview(){
   const addr=(patGv('pat-addr')||'').trim(),eng=patGv('pat-eng')||'—';
   const isDraft=patGv('pat-status')==='draft';
   const hc=getSetting('pat_hdr_color','#1e3a5f'),htc=getSetting('pat_hdr_text','#ffffff'),rowBg=getSetting('pat_row_color','#f8fafc');
-  const coName=getSetting('company_name','OHM Electrical Engineering Ltd');
-  const coPhone=getSetting('company_phone',''),coEmail=getSetting('company_email','');
-  const coAddr=getSetting('company_address',''),coWeb=getSetting('company_website','');
-  const coVat=getSetting('company_vat',''),coReg=getSetting('company_regno','');
+  const coName=getSetting('pat_co_name','OHM Electrical Engineering Ltd');
+  const coPhone=getSetting('pat_co_phone',''),coEmail=getSetting('pat_co_email','');
+  const coAddr=getSetting('pat_co_address',''),coWeb=getSetting('pat_co_website','');
+  const coVat=getSetting('pat_co_vat',''),coReg=getSetting('pat_co_regno','');
   const certTitle=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
   const regText=getSetting('pat_reg_text','Electricity at Work Regulations 1989');
   const cop=getSetting('pat_cop','IET Code of Practice (5th Edition)');
@@ -2359,7 +2392,7 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
   const apiKey=getSetting('brevo_api_key');
   if(!apiKey){toast('Brevo API key not set — go to Settings → Email','error');return false;}
   const fromEmail=getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
-  const fromName=getSetting('email_from_name')||getSetting('company_name','OHM Electrical Engineering Ltd');
+  const fromName=getSetting('email_from_name')||getSetting('pat_co_name',getSetting('gas_co_name','OHM Electrical Engineering Ltd'));
   const toClean=(to||'').trim().toLowerCase().replace(/\s+/g,'');
   if(!toClean||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toClean)){toast('Invalid email: "'+to+'"','error');return false;}
   const fromEmailClean=(fromEmail||'').trim().toLowerCase();
@@ -2403,7 +2436,7 @@ async function emailPAT(){
     try{
       const b64=await generatePATPDFFromData(r,{returnB64:true});
       const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-      const co=getSetting('company_name','OHM Electrical Engineering Ltd');
+      const co=getSetting('pat_co_name','OHM Electrical Engineering Ltd');
       const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
         <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
           <h2 style="margin:0">${co}</h2>
@@ -2422,7 +2455,7 @@ async function emailPAT(){
           <p style="font-size:13px;color:#555">Please keep this certificate in a safe place. Contact us if you have any questions.</p>
           <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
         </div>
-        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('company_phone','')} &nbsp;·&nbsp; ${getSetting('company_email','')} &nbsp;·&nbsp; ${getSetting('company_address','')}</p>
+        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('pat_co_phone','')} &nbsp;·&nbsp; ${getSetting('pat_co_email','')} &nbsp;·&nbsp; ${getSetting('pat_co_address','')}</p>
       </div>`;
       showOverlay('Sending email…');
       await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName);
@@ -2831,7 +2864,7 @@ async function generateGasPDFFromData(r,{returnB64=false}={}){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,M=14,TW=W-M*2;
-  const co={name:getSetting('company_name','OHM'),phone:getSetting('company_phone'),email:getSetting('company_email'),address:getSetting('company_address')};
+  const co={name:getSetting('gas_co_name','OHM'),phone:getSetting('gas_co_phone',''),email:getSetting('gas_co_email',''),address:getSetting('gas_co_address','')};
   // Helper fns
   const row=(y,label,val,lw=50)=>{doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text(label,M,y);doc.setFont(undefined,'normal');doc.text(String(val||'—'),M+lw,y);};
   const box=(x,y,w,h,fill)=>{if(fill){doc.setFillColor(fill);doc.rect(x,y,w,h,'F');}else{doc.rect(x,y,w,h);}};
@@ -2945,7 +2978,7 @@ async function emailGas(){
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(!r){toast('Not found','error');return;}
   const method=getSetting('email_method','script');
-  const toEmail=r.business_email||getSetting('company_email');
+  const toEmail=r.business_email||getSetting('gas_co_email');
   if(!toEmail){toast('No email address on this certificate','warn');return;}
   if(method==='script'){
     const scriptUrl=getSetting('email_script_url');
@@ -2958,7 +2991,7 @@ async function emailGas(){
     try{
       const b64=await generateGasPDFFromData(r,{returnB64:true});
       const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-      const co=getSetting('company_name','OHM Electrical Engineering Ltd');
+      const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
       const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
         <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
           <h2 style="margin:0">${co}</h2>
@@ -2978,7 +3011,7 @@ async function emailGas(){
           <p style="font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 14px">⚠ By law, landlords must have gas appliances checked annually. Please keep this certificate safe and provide a copy to your tenant within 28 days.</p>
           <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
         </div>
-        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('company_phone','')} &nbsp;·&nbsp; ${getSetting('company_email','')} &nbsp;·&nbsp; ${getSetting('company_address','')}</p>
+        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
       </div>`;
       showOverlay('Sending email…');
       await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName);
