@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
   --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
@@ -242,6 +243,53 @@ a{color:var(--accent);text-decoration:none}
 .pat-ts{width:100%;border:none;background:transparent;font-size:12px;color:var(--text);padding:2px 0;cursor:pointer}
 .cert-badge-pass{background:#dcfce7;color:#16a34a;border:1px solid #16a34a}
 .cert-badge-fail{background:#fee2e2;color:#dc2626;border:1px solid #dc2626}
+
+/* ---- PAT SIDE PANEL ---- */
+.pat-two-col{display:flex;gap:0;align-items:flex-start}
+#pat-main-col{flex:1;min-width:0}
+#pat-side-col{width:258px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;align-self:flex-start}
+@media(max-width:1050px){#pat-side-col{display:none}}
+.sw-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.sw-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.sw-kv{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
+.sw-kv:last-child{border-bottom:none}
+.sw-k{color:var(--muted)}
+.sw-v{font-weight:700;color:var(--text)}
+.sw-v.green{color:var(--success)}
+.sw-v.red{color:var(--error)}
+.sw-cert-status{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;font-size:.82rem;font-weight:600;margin-bottom:10px}
+.sw-cert-status.complete{background:var(--green-dim);color:var(--success);border:1px solid rgba(63,185,80,.3)}
+.sw-cert-status.draft{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(210,153,34,.3)}
+.sw-cert-status.empty{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.sw-field-status{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}
+.sw-field{padding:4px 6px;border-radius:4px;font-size:.66rem;font-weight:600;display:flex;align-items:center;gap:3px}
+.sw-field.done{background:var(--green-dim);color:var(--success)}
+.sw-field.miss{background:var(--red-dim);color:var(--error)}
+.sw-pages-dots{display:flex;gap:4px;flex-wrap:wrap;padding:4px 0}
+.sw-pdot{width:26px;height:20px;border-radius:3px;background:var(--border);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sw-pdot.full{background:var(--accent-dim);color:var(--accent)}
+
+/* ---- AUTO-CAP TOGGLE BUTTON ---- */
+.autocap-btn{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:4px}
+.autocap-btn.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.autocap-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---- SCAN MODAL ---- */
+.scan-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.scan-modal-backdrop.show{display:flex}
+.scan-modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.scan-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.scan-modal-title{font-size:16px;font-weight:700}
+.scan-drop-area{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:.15s;margin-bottom:12px}
+.scan-drop-area:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.scan-results-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px}
+.scan-results-item input[type=checkbox]{margin-top:4px;flex-shrink:0}
+
+/* ---- LOGO UPLOAD PREVIEW ---- */
+.lprev{width:120px;height:70px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:6px}
+.lprev img{max-width:100%;max-height:100%;object-fit:contain}
+.ldrop{border:2px dashed var(--border);border-radius:6px;padding:8px 12px;text-align:center;cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:6px;transition:.15s}
+.ldrop:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 <style>
 /* ===== CP12 FORM STYLES (GAS CERT template) ===== */
@@ -603,6 +651,9 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
 
+      <div class="pat-two-col">
+      <div id="pat-main-col">
+
       <!-- Report Details -->
       <div class="form-section">
         <div class="form-section-title">Report Details</div>
@@ -620,7 +671,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
           <div class="field-group"><label>Landlord Name</label><input type="text" id="pat-landlord" oninput="doPatPreview()"></div>
           <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"></div>
-          <div class="field-group" style="grid-column:1/-1"><label>Property Address *</label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="doPatPreview()"></textarea></div>
+          <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea></div>
           <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
           <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
         </div>
@@ -632,7 +683,8 @@ a{color:var(--accent);text-decoration:none}
           <div class="form-section-title" style="margin:0">Appliances</div>
           <div style="display:flex;gap:8px;align-items:center">
             <span id="pat-app-sum" style="font-size:12px;color:var(--muted)"></span>
-            <button class="btn btn-secondary btn-sm" onclick="addPATRow()">+ Add Row</button>
+            <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+            <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
           </div>
         </div>
         <div class="appliance-table-wrap">
@@ -667,6 +719,52 @@ a{color:var(--accent);text-decoration:none}
         </div>
         <div class="pat-cert-scroll" id="pat-cert-pages"></div>
       </div>
+
+      </div><!-- /pat-main-col -->
+
+      <!-- RIGHT SIDE PANEL: Live Stats -->
+      <div id="pat-side-col">
+        <div class="sw-title">Cert Status</div>
+        <div id="sw-status" class="sw-cert-status empty"><span id="sw-status-dot">◯</span>&nbsp;<span id="sw-status-lbl">No data yet</span></div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Property</div>
+          <div id="sw-prop-addr" style="font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:3px">—</div>
+          <div id="sw-prop-client" style="font-size:.74rem;color:var(--muted)">—</div>
+        </div>
+
+        <div class="sw-card">
+          <div style="text-align:center;padding:6px 0 2px">
+            <div id="sw-app-count" style="font-size:2rem;font-weight:800;letter-spacing:-1px;line-height:1">0</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Appliances</div>
+          </div>
+          <svg width="64" height="64" viewBox="0 0 64 64" style="display:block;margin:8px auto;transform:rotate(-90deg)">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"/>
+            <circle id="sw-ring-pass" cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="7" stroke-dasharray="163.4" stroke-dashoffset="163.4" stroke-linecap="round"/>
+          </svg>
+          <div class="sw-kv"><span class="sw-k">✅ Pass</span><span id="sw-pass-count" class="sw-v green">0</span></div>
+          <div class="sw-kv"><span class="sw-k">❌ Fail</span><span id="sw-fail-count" class="sw-v red">0</span></div>
+          <div class="sw-kv"><span class="sw-k">Pass rate</span><span id="sw-rate" class="sw-v">—</span></div>
+        </div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Pages</div>
+          <div id="sw-pages-dots" class="sw-pages-dots"></div>
+        </div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Required Fields</div>
+          <div id="sw-fields" class="sw-field-status"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+          <button class="btn btn-secondary btn-sm" onclick="addPATRow()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-plus"></i> Add appliance row</button>
+          <button class="btn btn-sm" onclick="openScanModal()" style="justify-content:flex-start;width:100%;background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+          <button class="btn btn-secondary btn-sm" onclick="generatePATPDF()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+        </div>
+      </div><!-- /pat-side-col -->
+
+      </div><!-- /pat-two-col -->
     </div>
 
     <!-- PAT HISTORY -->
@@ -1057,6 +1155,49 @@ a{color:var(--accent);text-decoration:none}
               <select id="s-pat-period"><option value="12">1 Year (12 months)</option><option value="24">2 Years</option><option value="6">6 Months</option><option value="3">3 Months</option></select>
             </div>
             <div class="field-group"><label>Default Engineer</label><input type="text" id="s-pat-engineer" placeholder="Default engineer name"></div>
+            <div class="field-group"><label>Default Instrument</label><input type="text" id="s-pat-instrument" placeholder="e.g. Seaward Apollo 500"></div>
+            <div class="field-group"><label>Default Result</label><select id="s-pat-result"><option value="Pass">Pass</option><option value="Fail">Fail</option></select></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Branding — Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Company Logo</label>
+              <div class="lprev" id="pr-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo_data','pr-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo_data','pr-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Scheme Logo</label>
+              <div class="lprev" id="pr-pat1"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-pat1').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-pat1" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo2_data','pr-pat1')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo2_data','pr-pat1')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-sig').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_sig_data','pr-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_sig_data','pr-sig')">✕ Clear</button>
+            </div>
+          </div>
+          <div class="form-section-title" style="font-size:12px;margin-top:4px">Certificate Colours</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Header Background</label><input type="color" id="s-pat-hdr-color" value="#1e3a5f"></div>
+            <div class="field-group"><label>Header Text Colour</label><input type="color" id="s-pat-hdr-text" value="#ffffff"></div>
+            <div class="field-group"><label>Alt Row Colour</label><input type="color" id="s-pat-row-color" value="#f8fafc"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Handwriting Scan</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:12px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            Add a free Gemini API key for the best scan accuracy. If left blank, scans fall back to a free public OCR service automatically.
+          </div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Gemini API Key (free)</label><input type="password" id="s-gemini-key" placeholder="AIzaSy…"><div style="font-size:11px;color:var(--muted);margin-top:4px">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div></div>
           </div>
         </div>
       </div>
@@ -1170,6 +1311,36 @@ a{color:var(--accent);text-decoration:none}
 </div>
 
 <!-- TOAST CONTAINER -->
+<!-- Scan Handwriting Modal -->
+<div class="scan-modal-backdrop" id="scan-modal" style="display:none">
+  <div class="scan-modal">
+    <div class="scan-modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="scan-modal-title" style="font-weight:700;font-size:15px"><i class="fa-solid fa-camera"></i> Scan Handwriting</div>
+      <button onclick="closeScanModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <div class="scan-drop-area" id="scan-drop-area" onclick="document.getElementById('scan-file-input').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();handleScanFile({files:event.dataTransfer.files})">
+      📷 Click or drag a photo of your handwritten PAT log sheet
+    </div>
+    <input type="file" id="scan-file-input" accept="image/*" style="display:none" onchange="handleScanFile(this)">
+    <div id="scan-preview" style="margin-top:8px;text-align:center"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+      <span id="scan-status" style="font-size:.8rem;color:var(--muted);flex:1"></span>
+      <button class="btn btn-primary btn-sm" id="scan-go-btn" onclick="runScan()" disabled>
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Scan Handwriting
+      </button>
+    </div>
+    <div id="scan-results-wrap" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <strong>Detected Appliances</strong>
+        <span id="scan-count" style="color:var(--muted);font-size:13px"></span>
+      </div>
+      <div id="scan-results-list" style="max-height:240px;overflow-y:auto"></div>
+      <button class="btn btn-success btn-sm" style="margin-top:10px;width:100%" onclick="addPatScanResults()">
+        <i class="fa-solid fa-check"></i> Add Selected to Form
+      </button>
+    </div>
+  </div>
+</div>
 <div id="toast-container"></div>
 
 <!-- LOADING OVERLAY -->
@@ -1401,6 +1572,15 @@ function loadSettingsUI(){
   document.getElementById('s-pat-prefix').value=getSetting('pat_prefix','OHM');
   document.getElementById('s-pat-period').value=getSetting('pat_period','12');
   document.getElementById('s-pat-engineer').value=getSetting('pat_default_engineer');
+  document.getElementById('s-pat-instrument').value=getSetting('pat_default_instrument','');
+  document.getElementById('s-pat-result').value=getSetting('pat_default_result','Pass');
+  document.getElementById('s-pat-hdr-color').value=getSetting('pat_hdr_color','#1e3a5f');
+  document.getElementById('s-pat-hdr-text').value=getSetting('pat_hdr_text','#ffffff');
+  document.getElementById('s-pat-row-color').value=getSetting('pat_row_color','#f8fafc');
+  document.getElementById('s-gemini-key').value=getSetting('gemini_key','');
+  // Logos
+  const logoFields=[['pat_logo_data','pr-logo'],['pat_logo2_data','pr-pat1'],['pat_sig_data','pr-sig']];
+  logoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
   // Gas
   document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
   document.getElementById('s-gas-safe-no').value=getSetting('gas_safe_no');
@@ -1429,6 +1609,12 @@ async function saveSettings(){
     ['pat_prefix',document.getElementById('s-pat-prefix').value||'OHM'],
     ['pat_period',document.getElementById('s-pat-period').value],
     ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
+    ['pat_default_instrument',document.getElementById('s-pat-instrument').value],
+    ['pat_default_result',document.getElementById('s-pat-result').value],
+    ['pat_hdr_color',document.getElementById('s-pat-hdr-color').value],
+    ['pat_hdr_text',document.getElementById('s-pat-hdr-text').value],
+    ['pat_row_color',document.getElementById('s-pat-row-color').value],
+    ['gemini_key',document.getElementById('s-gemini-key').value],
     ['gas_prefix',document.getElementById('s-gas-prefix').value||'OHM'],
     ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
     ['gas_licence',document.getElementById('s-gas-licence').value],
@@ -1534,7 +1720,7 @@ function renderPATRows(opts={}){
     const tr=document.createElement('tr');
     tr.innerHTML=
       `<td><input class="pat-ti" id="pat-a${i}" value="${patEsc(a.assetId)}" onchange="patUpd(${i},'assetId',this.value)" placeholder="A001"></td>`
-      +`<td><textarea class="pat-ti" id="pat-d${i}" style="height:30px;min-height:30px;resize:vertical;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)">${patEsc(a.description)}</textarea></td>`
+      +`<td><textarea class="pat-ti" id="pat-d${i}" style="height:30px;min-height:30px;resize:vertical;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this)">${patEsc(a.description)}</textarea></td>`
       +`<td><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
       +`<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
       +`<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3','6','12','24','48'].map(n=>`<option value="${n} Months"${a.retestPeriod===n+' Months'?' selected':''}>${n}m</option>`).join('')}</select></td>`
@@ -1548,7 +1734,7 @@ function renderPATRows(opts={}){
   if(sum){const p=patApps.filter(a=>a.result==='Pass').length,f=patApps.filter(a=>a.result==='Fail').length,t=patApps.length;sum.textContent=t+' item'+(t!==1?'s':'')+' · '+p+' Pass / '+f+' Fail';}
 }
 
-function patUpd(i,f,v){if(patApps[i])patApps[i][f]=v;doPatPreview();}
+function patUpd(i,f,v){if(patApps[i])patApps[i][f]=v;doPatPreview();updatePatSidePanel();}
 function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));renderPATRows();doPatPreview();}
 function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));renderPATRows();doPatPreview();}
 function applyPatHeaderDate(v){if(!v||!patApps.length)return;patApps.forEach(a=>{a.date=v;a.nextTest=patCalcNext(v,parseInt(a.retestPeriod));});renderPATRows();doPatPreview();}
@@ -1611,6 +1797,13 @@ function newPAT(){
   patGe('pat-addr').value='';patGe('pat-phone').value='';patGe('pat-email').value='';
   patGe('pat-app-body').innerHTML='';
   addPATRow();addPATRow();
+  _syncAutoCapBtn();
+}
+function _syncAutoCapBtn(){
+  const btn=document.getElementById('autocap-btn');
+  if(!btn)return;
+  btn.innerHTML=autoCapEnabled?'<i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On':'<i class="fa-solid fa-toggle-off"></i> Auto-Capitalize: Off';
+  btn.classList.toggle('on',autoCapEnabled);
 }
 async function loadPATForm(id){
   showOverlay('Loading…');
@@ -1627,6 +1820,7 @@ async function loadPATForm(id){
   patGe('btn-pat-complete2').disabled=isDone;
   populatePATForm(r);
   navigate('pat-new');
+  _syncAutoCapBtn();
 }
 async function savePAT(){
   const d=getPATFormData();
@@ -1845,6 +2039,198 @@ function doPatPreview(){
       +`<div class="a4-foot"><div class="a4-fcontact">${coPhone?`<span>📞 ${patEsc(coPhone)}</span>`:''}${coEmail?`<span>✉ ${patEsc(coEmail)}</span>`:''}${coWeb?`<span>🌐 ${patEsc(coWeb)}</span>`:''}${coVat?`<span>VAT: ${patEsc(coVat)}</span>`:''}${coReg?`<span>Reg: ${patEsc(coReg)}</span>`:''}</div>`
       +`<div>Page ${pi+1} of ${pages.length}</div></div></div>`;
   });
+  updatePatSidePanel();
+}
+
+// ========== PAT SIDE PANEL ==========
+function updatePatSidePanel(){
+  const addr=(patGv('pat-addr')||'').trim();
+  const status=patGv('pat-status')||'draft';
+  const ref=patGv('pat-ref')||'';
+  const eng=patGv('pat-eng')||'';
+  const total=patApps.length;
+  const passes=patApps.filter(a=>a.result==='Pass').length;
+  const fails=patApps.filter(a=>a.result==='Fail').length;
+  const rate=total>0?Math.round(passes/total*100):0;
+  // Status card
+  const sc=document.getElementById('sw-cert-status');
+  if(sc){sc.className='sw-cert-status '+(status==='completed'?'complete':'draft');sc.textContent=status==='completed'?'✅ Complete':'📝 Draft';}
+  // Address
+  const sa=document.getElementById('sw-prop-addr');if(sa)sa.textContent=addr||'—';
+  // Counts
+  const ct=document.getElementById('sw-app-count');if(ct)ct.textContent=total;
+  const cp=document.getElementById('sw-pass-count');if(cp)cp.textContent=passes;
+  const cf=document.getElementById('sw-fail-count');if(cf)cf.textContent=fails;
+  const cr=document.getElementById('sw-rate');if(cr)cr.textContent=rate+'%';
+  // Ring
+  const ring=document.getElementById('sw-ring-pass');
+  if(ring){const offset=282-(282*(rate/100));ring.style.strokeDashoffset=offset;}
+  // Pages dots
+  const pagesEl=document.getElementById('sw-pages-dots');
+  if(pagesEl){
+    const pages=document.querySelectorAll('#pat-cert-pages .a4').length||1;
+    pagesEl.innerHTML='';
+    for(let i=0;i<pages;i++){const d=document.createElement('div');d.className='sw-pdot '+(i===0?'active':'');pagesEl.appendChild(d);}
+  }
+  // Required fields checklist
+  const fields=[
+    {id:'sw-f-date',label:'Test Date',ok:!!(patGv('pat-date'))},
+    {id:'sw-f-eng',label:'Engineer',ok:!!eng},
+    {id:'sw-f-addr',label:'Property Address',ok:!!addr},
+    {id:'sw-f-apps',label:'Appliances (≥1)',ok:total>0},
+  ];
+  const sw=document.getElementById('sw-fields');
+  if(sw)sw.innerHTML=fields.map(f=>`<div class="sw-field ${f.ok?'done':'miss'}"><i class="fa-solid fa-${f.ok?'circle-check':'circle-xmark'}"></i> ${f.label}</div>`).join('');
+}
+
+// ========== PAT AUTOCAP ==========
+let autoCapEnabled=(localStorage.getItem('ohm_autocap')!=='off');
+function toggleAutoCap(){
+  autoCapEnabled=!autoCapEnabled;
+  localStorage.setItem('ohm_autocap',autoCapEnabled?'on':'off');
+  const btn=document.getElementById('autocap-btn');
+  if(btn){btn.innerHTML=autoCapEnabled?'<i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On':'<i class="fa-solid fa-toggle-off"></i> Auto-Capitalize: Off';btn.classList.toggle('on',autoCapEnabled);}
+  toast('Auto-capitalize '+(autoCapEnabled?'on':'off'),'info',1800);
+}
+function capitalizeAddress(el){
+  if(!autoCapEnabled){doPatPreview();return;}
+  const pos=el.selectionStart,posEnd=el.selectionEnd;
+  el.value=el.value.split('\n').map(line=>line.replace(/(?<![a-zA-Z'])[a-z]/g,c=>c.toUpperCase())).join('\n');
+  el.setSelectionRange(pos,posEnd);
+  doPatPreview();updatePatSidePanel();
+}
+function liveCapitalize(el){
+  if(!autoCapEnabled)return;
+  const pos=el.selectionStart,posEnd=el.selectionEnd;
+  el.value=el.value.replace(/(?<![a-zA-Z'])[a-z]/g,c=>c.toUpperCase());
+  el.setSelectionRange(pos,posEnd);
+}
+
+// ========== PAT SCAN MODAL ==========
+let _scanImgData=null;
+function openScanModal(){
+  _scanImgData=null;
+  const modal=document.getElementById('scan-modal');
+  if(modal){modal.style.display='flex';document.getElementById('scan-preview').innerHTML='';document.getElementById('scan-status').textContent='';document.getElementById('scan-go-btn').disabled=true;document.getElementById('scan-results-wrap').style.display='none';}
+}
+function closeScanModal(){
+  const modal=document.getElementById('scan-modal');if(modal)modal.style.display='none';
+}
+function handleScanFile(input){
+  const file=input.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _scanImgData=e.target.result;
+    document.getElementById('scan-preview').innerHTML=`<img src="${_scanImgData}" style="max-width:100%;max-height:160px;border-radius:6px;margin-top:6px">`;
+    document.getElementById('scan-go-btn').disabled=false;
+    document.getElementById('scan-status').textContent='Image ready — click Scan Handwriting';
+  };
+  reader.readAsDataURL(file);
+}
+async function runScan(){
+  if(!_scanImgData){toast('Choose a photo first','warn');return;}
+  const btn=document.getElementById('scan-go-btn');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Reading…';
+  const b64=_scanImgData.split(',')[1];
+  let items=null;
+  const geminiKey=getSetting('gemini_key','');
+  if(geminiKey){
+    try{items=await scanWithGemini(b64,geminiKey);}catch(e){console.warn('Gemini scan failed',e);}
+  }
+  if(!items||!items.length){
+    document.getElementById('scan-status').textContent='Trying OCR fallback…';
+    try{items=await scanWithOCRSpace(b64);}catch(e){toast('Scan failed: '+e.message,'error');}
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> Scan Handwriting';
+  renderScanResults(items||[]);
+}
+async function scanWithGemini(b64,apiKey){
+  const prompt='You are reading a handwritten PAT (Portable Appliance Test) log sheet. Extract every row and return ONLY a raw JSON array like: [{"assetId":"A001","description":"Kettle"},{"assetId":"A002","description":"Toaster"}]. No markdown, no explanation, just the JSON array.';
+  const models=['gemini-2.5-flash-lite','gemini-2.5-flash'];
+  for(const model of models){
+    try{
+      const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:prompt},{inlineData:{mimeType:'image/jpeg',data:b64}}]}]})
+      });
+      if(!resp.ok)continue;
+      const j=await resp.json();
+      const text=j.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      const match=text.match(/\[[\s\S]*\]/);
+      if(match){const arr=JSON.parse(match[0]);if(Array.isArray(arr)&&arr.length)return arr;}
+    }catch(e){console.warn(model,e);}
+  }
+  return null;
+}
+async function scanWithOCRSpace(b64){
+  const fd=new FormData();
+  fd.append('base64Image','data:image/jpeg;base64,'+b64);
+  fd.append('apikey','helloworld');fd.append('OCREngine','3');fd.append('language','eng');
+  const resp=await fetch('https://api.ocr.space/parse/image',{method:'POST',body:fd});
+  const j=await resp.json();
+  const text=(j.ParsedResults?.[0]?.ParsedText||'').trim();
+  if(!text)return[];
+  return text.split('\n').filter(l=>l.trim()).map((l,i)=>{
+    const parts=l.trim().split(/\s+/);
+    const assetId=parts[0]||`S${i+1}`;
+    const description=spellCorrectAppliance(parts.slice(1).join(' '))||l.trim();
+    return{assetId,description};
+  });
+}
+const APPLIANCE_DICT=['Kettle','Toaster','Microwave','Fridge','Freezer','Washing Machine','Tumble Dryer','Dishwasher','Television','TV','Monitor','Computer','Laptop','Printer','Scanner','Iron','Hair Dryer','Vacuum Cleaner','Hoover','Coffee Machine','Kettle','Extension Lead','Power Strip','Lamp','Desk Lamp','Fan','Heater','Electric Blanket','Drill','Saw','Grinder','Electric Screwdriver'];
+function levenshtein(a,b){const m=a.length,n=b.length;const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
+function spellCorrectAppliance(desc){
+  if(!desc)return desc;
+  const words=desc.split(' ');
+  return words.map(w=>{if(w.length<3)return w;let best=w,bestScore=2;APPLIANCE_DICT.forEach(d=>{const score=levenshtein(w.toLowerCase(),d.toLowerCase());if(score<bestScore){bestScore=score;best=d;}});return best;}).join(' ');
+}
+function renderScanResults(items){
+  const wrap=document.getElementById('scan-results-wrap');
+  const list=document.getElementById('scan-results-list');
+  const count=document.getElementById('scan-count');
+  if(!items.length){toast('No appliances detected','warn');wrap.style.display='none';return;}
+  count.textContent=items.length+' found';
+  list.innerHTML=items.map((it,i)=>`<div class="scan-results-item"><input type="checkbox" id="sck${i}" checked style="margin-right:8px"><label for="sck${i}" style="flex:1;cursor:pointer"><strong>${it.assetId||''}</strong> — ${it.description||''}</label></div>`).join('');
+  wrap.style.display='block';
+  document.getElementById('scan-status').textContent='Review and add to form';
+  // store for addPatScanResults
+  wrap._items=items;
+}
+function addPatScanResults(){
+  const wrap=document.getElementById('scan-results-wrap');
+  const items=wrap._items||[];
+  const defaultInstrument=getSetting('pat_default_instrument','');
+  const defaultResult=getSetting('pat_default_result','Pass');
+  const defaultPeriod=getSetting('pat_period','12');
+  const today=new Date().toISOString().split('T')[0];
+  items.forEach((it,i)=>{
+    const cb=document.getElementById(`sck${i}`);
+    if(!cb||!cb.checked)return;
+    patApps.push({assetId:it.assetId||'',description:it.description||'',testInstrument:defaultInstrument,date:today,retestPeriod:defaultPeriod,nextTest:patCalcNext(today,parseInt(defaultPeriod)),result:defaultResult,notes:''});
+  });
+  renderPATRows();doPatPreview();closeScanModal();
+  toast(items.filter((_,i)=>{const cb=document.getElementById(`sck${i}`);return cb&&cb.checked;}).length+' appliances added','success');
+}
+
+// ========== LOGO UPLOAD ==========
+async function uploadLogo(input,key,previewId){
+  const file=input.files?.[0];if(!file)return;
+  if(file.size>500000){toast('Image too large (max 500KB)','warn');return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const b64=e.target.result;
+    await upsertSetting(key,b64);
+    const el=document.getElementById(previewId);
+    if(el)el.innerHTML=`<img src="${b64}" style="max-height:70px;object-fit:contain">`;
+    toast('Image saved ✓','success');
+  };
+  reader.readAsDataURL(file);
+}
+async function clearLogo(key,previewId){
+  await upsertSetting(key,'');
+  const el=document.getElementById(previewId);
+  if(el)el.innerHTML='<span style="font-size:12px;color:var(--muted)">No Image</span>';
+  toast('Cleared','info');
 }
 
 async function openPATPDF(id){
