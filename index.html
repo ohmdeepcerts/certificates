@@ -972,6 +972,7 @@ a{color:var(--accent);text-decoration:none}
         <button class="settings-tab" onclick="switchSettingsTab('pat')">PAT Defaults</button>
         <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas Defaults</button>
         <button class="settings-tab" onclick="switchSettingsTab('profile')">My Profile</button>
+        <button class="settings-tab" onclick="switchSettingsTab('backend')">⚙ Backend</button>
       </div>
       <div class="settings-pane active" id="pane-company">
         <div class="form-section">
@@ -1038,6 +1039,82 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
     </div>
+
+      <div class="settings-pane" id="pane-backend">
+        <div class="form-section">
+          <div class="form-section-title">Where Your Data Is Saved</div>
+          <div style="display:grid;gap:12px">
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">📋 PAT Reports → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">pat_reports</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: ref number, test date, engineer, landlord, address, phone, email, status, appliances (JSON array with Asset ID / Description / Instrument / Period / Result)</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">🔥 CP12 Gas Certificates → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">gas_certs</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: all CP12 form fields (installer/landlord addresses, engineer details, pipework checks, defects, appliance cards, signatures as base64, status)</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">⚙ App Settings → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">app_settings</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: company name, phone, email, address, email method, PAT/Gas defaults — saved per user. Brevo API key stored here (never in source code).</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">📝 Auto-save → Browser (localStorage)</div>
+              <div style="font-size:12px;color:var(--muted)">While you fill in a form, CP12 data is auto-saved to your browser every 4 seconds (<code style="font-size:11px">cp12_autosave_v1</code>) and PAT data every 15 seconds (<code style="font-size:11px">pat_autosave</code>). This survives page refresh but is local to this browser only — not synced to the cloud until you click Save.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">App & Database Links</div>
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Live App (GitHub Pages)</div>
+                <div style="font-size:11px;color:var(--muted)">ohmdeepcerts.github.io/certificates</div>
+              </div>
+              <a href="https://ohmdeepcerts.github.io/certificates" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Source Code (GitHub)</div>
+                <div style="font-size:11px;color:var(--muted)">github.com/ohmdeepcerts/certificates</div>
+              </div>
+              <a href="https://github.com/ohmdeepcerts/certificates" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase Dashboard</div>
+                <div style="font-size:11px;color:var(--muted)">Project ID: iihnfgmsfshrgrhargxz</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase Auth (Users)</div>
+                <div style="font-size:11px;color:var(--muted)">Manage logins, reset passwords</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/auth/users" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase API Keys</div>
+                <div style="font-size:11px;color:var(--muted)">anon key, service role key, JWT secret</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/settings/api" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
     <!-- AUDIT -->
     <div class="view" id="view-audit">
