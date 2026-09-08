@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
@@ -218,22 +218,22 @@ a{color:var(--accent);text-decoration:none}
 .pat-cert-scroll{overflow-x:auto;overflow-y:visible;background:#d1d5db;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:120px}
 .a4{background:#fff;width:794px;min-height:1123px;padding:20px 24px;box-sizing:border-box;color:#000;font-size:.7rem;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .a4-topbar{display:flex;justify-content:space-between;background:#f1f5f9;border:1px solid #e2e8f0;padding:4px 10px;font-size:.72rem;font-weight:600;margin-bottom:6px;border-radius:3px}
-.a4-hdr{display:flex;gap:12px;align-items:center;margin-bottom:8px}
-.a4-logo{min-width:80px;max-width:140px;display:flex;align-items:center;justify-content:center}
-.a4-logo img{max-height:60px;max-width:130px;object-fit:contain}
-.a4-coname{font-size:20px;font-weight:900;line-height:1.1}
-.a4-cotype{font-size:.75rem;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.04em}
+.a4-hdr{display:flex;gap:14px;align-items:center;border-bottom:3px solid #1e3a5f;padding-bottom:11px;margin-bottom:12px}
+.a4-logo{width:180px;height:60px;display:flex;align-items:center;flex-shrink:0}
+.a4-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.a4-coname{font-size:20px;font-weight:900;line-height:1.1;font-family:'DM Sans',Arial,sans-serif}
+.a4-cotype{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;margin-top:3px}
 .a4-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
 .a4-box{border:1px solid #cbd5e1;border-radius:4px;padding:8px 10px;background:rgba(248,250,252,.8)}
 .a4-key{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:2px}
 .a4-val{font-size:.75rem;color:#1e293b;white-space:pre-line;font-weight:500}
 .a4t{width:100%;border-collapse:collapse}
-.a4t th{padding:5px 4px;text-align:left;font-size:.68rem;border:1px solid #cbd5e1;font-weight:600}
-.a4t td{border:1px solid #e2e8f0;padding:4px;font-size:.72rem;vertical-align:middle}
-.cbadge{display:inline-block;padding:2px 7px;border-radius:3px;font-weight:700;font-size:.65rem}
-.cbadge.pass{background:#dcfce7;color:#15803d}
-.cbadge.fail{background:#fee2e2;color:#dc2626}
-.a4-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px;border-top:1px solid #e2e8f0;font-size:.62rem;color:#64748b}
+.a4t th{padding:5px 4px;text-align:left;font-size:.68rem;border:1px solid #cbd5e1;font-weight:600;font-family:'DM Sans',Arial,sans-serif}
+.a4t td{border:1px solid #e2e8f0;padding:4px;font-size:.72rem;vertical-align:middle;font-family:'DM Sans',Arial,sans-serif}
+.cbadge{display:inline-block;padding:2px 8px;border-radius:10px;font-weight:700;font-size:.68rem}
+.cbadge.pass{background:#d1fae5;color:#065f46}
+.cbadge.fail{background:#fee2e2;color:#991b1b}
+.a4-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px;border-top:1px solid #e2e8f0;font-size:.7rem;color:#64748b}
 .a4-flogos{display:flex;gap:8px;align-items:center}
 .a4-flogo img{max-height:28px;max-width:70px;object-fit:contain}
 .a4-fcontact{display:flex;gap:10px;flex-wrap:wrap}
@@ -1177,6 +1177,13 @@ a{color:var(--accent);text-decoration:none}
               <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo2_data','pr-pat1')">✕ Clear</button>
             </div>
             <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Scheme Logo 2</label>
+              <div class="lprev" id="pr-pat2"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-pat2').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-pat2" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo3_data','pr-pat2')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo3_data','pr-pat2')">✕ Clear</button>
+            </div>
+            <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
               <div class="lprev" id="pr-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
               <div class="ldrop" onclick="document.getElementById('f-sig').click()"><i class="fa-solid fa-upload"></i> Upload</div>
@@ -1198,6 +1205,17 @@ a{color:var(--accent);text-decoration:none}
           </div>
           <div class="field-grid">
             <div class="field-group" style="grid-column:1/-1"><label>Gemini API Key (free)</label><input type="password" id="s-gemini-key" placeholder="AIzaSy…"><div style="font-size:11px;color:var(--muted);margin-top:4px">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">📄 Certificate Content</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Certificate Title</label><input type="text" id="s-pat-cert-title" placeholder="PORTABLE APPLIANCE TEST REPORT"></div>
+            <div class="field-group"><label>Signature Label</label><input type="text" id="s-pat-sig-label" placeholder="Authorised Signature"></div>
+            <div class="field-group"><label>Accreditation Number</label><input type="text" id="s-pat-accred" placeholder="e.g. NAPIT 12345"></div>
+            <div class="field-group"><label>Governing Regulation</label><input type="text" id="s-pat-reg-text" placeholder="Electricity at Work Regulations 1989"></div>
+            <div class="field-group"><label>Code of Practice</label><input type="text" id="s-pat-cop" placeholder="IET Code of Practice (5th Edition)"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Footer / Compliance Notes</label><textarea id="s-pat-cert-notes" placeholder="Any compliance notes shown in the certificate header…" style="height:60px;resize:vertical"></textarea></div>
           </div>
         </div>
       </div>
@@ -1578,8 +1596,14 @@ function loadSettingsUI(){
   document.getElementById('s-pat-hdr-text').value=getSetting('pat_hdr_text','#ffffff');
   document.getElementById('s-pat-row-color').value=getSetting('pat_row_color','#f8fafc');
   document.getElementById('s-gemini-key').value=getSetting('gemini_key','');
+  document.getElementById('s-pat-cert-title').value=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
+  document.getElementById('s-pat-sig-label').value=getSetting('pat_sig_label','Authorised Signature');
+  document.getElementById('s-pat-accred').value=getSetting('pat_accred','');
+  document.getElementById('s-pat-reg-text').value=getSetting('pat_reg_text','Electricity at Work Regulations 1989');
+  document.getElementById('s-pat-cop').value=getSetting('pat_cop','IET Code of Practice (5th Edition)');
+  document.getElementById('s-pat-cert-notes').value=getSetting('pat_cert_notes','');
   // Logos
-  const logoFields=[['pat_logo_data','pr-logo'],['pat_logo2_data','pr-pat1'],['pat_sig_data','pr-sig']];
+  const logoFields=[['pat_logo_data','pr-logo'],['pat_logo2_data','pr-pat1'],['pat_logo3_data','pr-pat2'],['pat_sig_data','pr-sig']];
   logoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
   // Gas
   document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
@@ -1615,6 +1639,12 @@ async function saveSettings(){
     ['pat_hdr_text',document.getElementById('s-pat-hdr-text').value],
     ['pat_row_color',document.getElementById('s-pat-row-color').value],
     ['gemini_key',document.getElementById('s-gemini-key').value],
+    ['pat_cert_title',document.getElementById('s-pat-cert-title').value||'PORTABLE APPLIANCE TEST REPORT'],
+    ['pat_sig_label',document.getElementById('s-pat-sig-label').value||'Authorised Signature'],
+    ['pat_accred',document.getElementById('s-pat-accred').value],
+    ['pat_reg_text',document.getElementById('s-pat-reg-text').value],
+    ['pat_cop',document.getElementById('s-pat-cop').value],
+    ['pat_cert_notes',document.getElementById('s-pat-cert-notes').value],
     ['gas_prefix',document.getElementById('s-gas-prefix').value||'OHM'],
     ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
     ['gas_licence',document.getElementById('s-gas-licence').value],
@@ -1985,12 +2015,20 @@ function doPatPreview(){
   const coPhone=getSetting('company_phone',''),coEmail=getSetting('company_email','');
   const coAddr=getSetting('company_address',''),coWeb=getSetting('company_website','');
   const coVat=getSetting('company_vat',''),coReg=getSetting('company_regno','');
-  const certTitle='PORTABLE APPLIANCE TEST REPORT';
+  const certTitle=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
+  const regText=getSetting('pat_reg_text','Electricity at Work Regulations 1989');
+  const cop=getSetting('pat_cop','IET Code of Practice (5th Edition)');
+  const certNotes=getSetting('pat_cert_notes','');
+  const sigLabel=getSetting('pat_sig_label','Authorised Signature');
   const coLogo=getSetting('pat_logo_data','');
-  const logoHTML=coLogo?`<img src="${coLogo}" style="max-height:60px;max-width:130px;object-fit:contain" alt="">`:
-    `<div style="font-size:16px;font-weight:900;color:${hc}">${patEsc(coName)}</div>`;
+  const schLogo1=getSetting('pat_logo2_data','');
+  const schLogo2=getSetting('pat_logo3_data','');
+  const logoHTML=coLogo?`<img src="${coLogo}" alt="">`:
+    `<div style="font-size:18px;font-weight:900;color:${hc};font-family:DM Sans,Arial,sans-serif">${patEsc(coName)}</div>`;
+  const pat1=schLogo1?`<div class="a4-flogo"><img src="${schLogo1}"></div>`:'';
+  const pat2=schLogo2?`<div class="a4-flogo"><img src="${schLogo2}"></div>`:'';
   const sigData=getSetting('pat_sig_data','');
-  const sigHTML=sigData?`<img src="${sigData}" style="width:100%;max-height:28px;object-fit:contain;object-position:left">`:'________________';
+  const sigHTML=sigData?`<img src="${sigData}" style="width:100%;max-height:30px;object-fit:contain;object-position:left center;display:block">`:'________________';
   const rp1=14,rpn=24;
   const pages=[];let pageItems=[],pNum=1,rowsUsed=0;
   patApps.forEach(app=>{
@@ -2009,35 +2047,39 @@ function doPatPreview(){
       if(addr)cb+=`<div style="margin-top:5px"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div>`;
       if(!cb)cb='<span style="color:#94a3b8">—</span>';
       hdr=`<div class="a4-topbar"><div><strong>Date:</strong> ${testDate}</div><div><strong>Ref:</strong> ${patEsc(ref)||'—'}</div></div>`
-        +`<div class="a4-hdr"><div class="a4-logo">${logoHTML}</div>`
-        +`<div><div class="a4-coname" style="color:${hc}">${patEsc(coName)}</div>`
-        +`<div class="a4-cotype" style="color:${hc}">${certTitle}</div></div></div>`
+        +`<div class="a4-hdr" style="border-bottom-color:${hc}"><div class="a4-logo">${logoHTML}</div>`
+        +`<div><div class="a4-coname" style="color:${hc};font-size:20px;font-family:DM Sans,Arial,sans-serif">${patEsc(coName)}</div>`
+        +`<div class="a4-cotype" style="color:${hc}">${patEsc(certTitle)}</div></div></div>`
         +`<div class="a4-meta"><div class="a4-box">${cb}</div>`
         +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
         +`<div class="a4-val" style="font-weight:700;margin-bottom:2px">${patEsc(coName)}</div>`
         +`<div style="font-size:.7rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
         +`<div style="display:flex;gap:6px;margin-top:2px">`
-        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;padding:4px 8px">`
+        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:4px 8px">`
         +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">Engineer</div>`
         +`<div style="font-size:.74rem;font-weight:600;color:#1e293b">${patEsc(eng)}</div>`
         +`</div>`
-        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;padding:4px 8px;min-height:36px;display:flex;flex-direction:column;justify-content:center">`
-        +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">Authorised Signature</div>`
+        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:4px 8px;min-height:36px;display:flex;flex-direction:column;justify-content:center">`
+        +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">${patEsc(sigLabel.replace(/:\s*$/,''))}</div>`
         +`<div>${sigHTML}</div>`
-        +`</div></div></div></div>`;
+        +`</div></div></div></div>`
+        +(certNotes?`<div style="margin-top:6px;padding:5px 9px;background:#fefce8;border:1px solid #fde68a;border-radius:4px;font-size:.68rem;color:#78350f;line-height:1.4">${patEsc(certNotes)}</div>`:'')
+        +(regText?`<div style="margin-top:4px;font-size:.62rem;color:#64748b;line-height:1.4">${patEsc(regText)}${cop?` · ${patEsc(cop)}`:''}</div>`:'');
     }
     const empty=pg.cap-(pg.items.reduce((s,a)=>s+a._c,0));
-    let rows=pg.items.map((app,i)=>`<tr style="background:${i%2===0?rowBg:''}"><td style="height:${app._c*26}px;vertical-align:middle">${patEsc(app.assetId)}</td><td style="height:${app._c*26}px;vertical-align:middle;white-space:pre-wrap;word-break:break-word">${patEsc(app._d)}</td><td>${patEsc(app.testInstrument)}</td><td>${patFd(app.date)}</td><td>${patEsc(app.retestPeriod)}</td><td>${patFd(app.nextTest)}</td><td><span class="cbadge ${app.result==='Pass'?'pass':'fail'}">${patEsc(app.result)}</span></td></tr>`).join('');
+    let rows=pg.items.map((app,i)=>`<tr style="background:${i%2===0?rowBg:''}"><td style="height:${app._c*28}px;vertical-align:middle">${patEsc(app.assetId)}</td><td style="height:${app._c*28}px;vertical-align:middle;white-space:pre-wrap;word-break:break-word">${patEsc(app._d)}</td><td>${patEsc(app.testInstrument)}</td><td>${patFd(app.date)}</td><td>${patEsc(app.retestPeriod)}</td><td>${patFd(app.nextTest)}</td><td><span class="cbadge ${app.result==='Pass'?'pass':'fail'}">${patEsc(app.result)}</span></td></tr>`).join('');
     for(let i=0;i<empty;i++)rows+=`<tr style="background:${(pg.items.length+i)%2===0?rowBg:''}"><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
     const wmDiv=isDraft?`<div style="opacity:.06;pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;font-weight:900;color:#1e3a5f;white-space:nowrap;user-select:none">DRAFT</div>`:'';
-    wrap.innerHTML+=`<div class="a4">${wmDiv}${hdr}<div style="flex-grow:1"><table class="a4t"><thead><tr>`
-      +`<th style="background:${hc};color:${htc};width:70px">Asset ID</th><th style="background:${hc};color:${htc}">Description</th>`
-      +`<th style="background:${hc};color:${htc};width:85px">Instrument</th><th style="background:${hc};color:${htc};width:78px">Test Date</th>`
-      +`<th style="background:${hc};color:${htc};width:60px">Period</th><th style="background:${hc};color:${htc};width:78px">Next Due</th>`
-      +`<th style="background:${hc};color:${htc};width:52px">Result</th>`
+    const accred=getSetting('pat_accred','');
+    wrap.innerHTML+=`<div class="a4">${wmDiv}${hdr}<div style="flex-grow:1"><table class="a4t" style="font-family:DM Sans,Arial,sans-serif"><thead><tr>`
+      +`<th style="background:${hc};color:${htc};width:70px;font-family:DM Sans,Arial,sans-serif">Asset ID</th><th style="background:${hc};color:${htc};font-family:DM Sans,Arial,sans-serif">Description</th>`
+      +`<th style="background:${hc};color:${htc};width:85px;font-family:DM Sans,Arial,sans-serif">Instrument</th><th style="background:${hc};color:${htc};width:78px;font-family:DM Sans,Arial,sans-serif">Test Date</th>`
+      +`<th style="background:${hc};color:${htc};width:60px;font-family:DM Sans,Arial,sans-serif">Period</th><th style="background:${hc};color:${htc};width:78px;font-family:DM Sans,Arial,sans-serif">Next Due</th>`
+      +`<th style="background:${hc};color:${htc};width:52px;font-family:DM Sans,Arial,sans-serif">Result</th>`
       +`</tr></thead><tbody>${rows}</tbody></table></div>`
-      +`<div class="a4-foot"><div class="a4-fcontact">${coPhone?`<span>📞 ${patEsc(coPhone)}</span>`:''}${coEmail?`<span>✉ ${patEsc(coEmail)}</span>`:''}${coWeb?`<span>🌐 ${patEsc(coWeb)}</span>`:''}${coVat?`<span>VAT: ${patEsc(coVat)}</span>`:''}${coReg?`<span>Reg: ${patEsc(coReg)}</span>`:''}</div>`
-      +`<div>Page ${pi+1} of ${pages.length}</div></div></div>`;
+      +`<div class="a4-foot"><div class="a4-flogos">${pat1}${pat2}</div>`
+      +`<div class="a4-fcontact">${coPhone?`<span>📞 ${patEsc(coPhone)}</span>`:''}${coEmail?`<span>✉ ${patEsc(coEmail)}</span>`:''}${coWeb?`<span>🌐 ${patEsc(coWeb)}</span>`:''}${coVat?`<span>VAT: ${patEsc(coVat)}</span>`:''}${coReg?`<span>Reg: ${patEsc(coReg)}</span>`:''}</div>`
+      +`<div style="text-align:right"><div>Page ${pi+1} of ${pages.length}</div>${accred?`<div style="font-size:.6rem;color:#64748b;margin-top:1px">${patEsc(accred)}</div>`:''}</div></div></div>`;
   });
   updatePatSidePanel();
 }
