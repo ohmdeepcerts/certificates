@@ -239,6 +239,35 @@ a{color:var(--accent);text-decoration:none}
 .pat-ti{width:100%;border:none;background:transparent;font-size:12px;color:var(--text);padding:2px 4px}
 .pat-ti:focus{outline:1px solid var(--accent);border-radius:2px}
 .pat-ts{width:100%;border:none;background:transparent;font-size:12px;color:var(--text);padding:2px 0;cursor:pointer}
+/* PAT direct-edit certificate layout */
+.pat-wrap{background:#e5e7eb;padding:24px;overflow-x:auto}
+.pat-page{background:#fff;width:794px;min-height:1123px;margin:0 auto;padding:20px 24px;box-sizing:border-box;box-shadow:0 2px 12px rgba(0,0,0,.15);color:#000;font-size:.72rem;display:flex;flex-direction:column;gap:12px}
+.pat-cert-hdr{display:flex;gap:14px;align-items:center;border-bottom:2px solid #1e3a5f;padding-bottom:10px}
+.pat-logo-zone{min-width:84px;width:120px;height:60px;display:flex;align-items:center;justify-content:center;border:1px dashed #cbd5e1;border-radius:4px;cursor:pointer;flex-shrink:0;overflow:hidden}
+.pat-logo-ph{font-size:9px;color:#94a3b8;text-align:center;line-height:1.4}
+.pat-cert-hdr-main{flex:1;display:flex;flex-direction:column;gap:6px}
+.pat-cert-topbar{display:flex;gap:14px;align-items:center}
+.pat-cert-topitem{display:flex;flex-direction:column;gap:2px}
+.pat-cert-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.pat-cert-inp{border:none;border-bottom:1px solid #cbd5e1;font-size:11px;padding:2px 4px;color:#1e293b;background:transparent;min-width:90px}
+.pat-cert-inp:focus{outline:1px solid #3b82f6;border-radius:2px}
+.pat-cert-titlerow{display:flex;align-items:baseline;gap:14px}
+.pat-co-inp{border:none;font-size:18px;font-weight:900;color:#1e3a5f;background:transparent;flex:1;min-width:0;padding:0}
+.pat-co-inp::placeholder{color:#cbd5e1}
+.pat-co-inp:focus{outline:1px solid #3b82f6;border-radius:2px}
+.pat-cert-subtitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;white-space:nowrap}
+.pat-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pat-ibox{border:1px solid #cbd5e1;border-radius:4px;overflow:hidden}
+.pat-ibox-hdr{background:#1e3a5f;color:#fff;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px}
+.pat-ibox-body{padding:8px 10px}
+.pat-irow{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.pat-ilbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;min-width:72px;flex-shrink:0}
+.pat-iinp{flex:1;border:none;border-bottom:1px solid #e2e8f0;font-size:11px;padding:2px 3px;color:#1e293b;background:transparent;resize:none;font-family:inherit}
+.pat-iinp:focus{outline:1px solid #3b82f6;border-radius:2px}
+.pat-cert-table{width:100%;border-collapse:collapse}
+.pat-cert-table thead th{background:#1e3a5f;color:#fff;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:5px 4px;text-align:left;border:1px solid #1e3a5f}
+.pat-cert-table td{border:1px solid #e2e8f0;padding:1px 2px;vertical-align:middle}
+.pat-cert-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px;border-top:1px solid #e2e8f0;font-size:9px;color:#64748b}
 .cert-badge-pass{background:#dcfce7;color:#16a34a;border:1px solid #16a34a}
 .cert-badge-fail{background:#fee2e2;color:#dc2626;border:1px solid #dc2626}
 </style>
@@ -438,16 +467,25 @@ a{color:var(--accent);text-decoration:none}
 /* History toast */
 #cp12Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9998;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 #cp12Toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Print: show only CP12 pages */
+/* Print: show CP12 and PAT pages */
 @media print{
-  @page{size:A4 landscape;margin:0}
+  @page{margin:0}
+  @page cp12-land{size:A4 landscape;margin:0}
+  @page pat-port{size:A4 portrait;margin:0}
   body{background:#fff}
-  #sidebar,#auth-screen,.view-header,.view:not(#view-gas-new){display:none!important}
+  #sidebar,#auth-screen,.view-header,.view:not(#view-gas-new):not(#view-pat-new){display:none!important}
   #app{display:block!important;height:auto!important;overflow:visible!important}
   #content-area{overflow:visible!important;display:block!important}
   #view-gas-new{display:block!important;padding:0!important}
   #view-gas-new .view-header{display:none!important}
-  .cp12-form-wrap .page{width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;margin:0!important;padding:10mm 12mm!important;box-shadow:none!important;overflow:hidden!important;break-after:page}
+  #view-pat-new{display:block!important;padding:0!important}
+  #view-pat-new .view-header{display:none!important}
+  #view-pat-new .no-print{display:none!important}
+  .pat-wrap{background:#fff!important;padding:0!important}
+  .pat-page{page:pat-port;width:210mm!important;min-height:297mm!important;box-shadow:none!important;margin:0!important;padding:10mm 12mm!important;box-sizing:border-box!important}
+  .pat-cert-inp::placeholder,.pat-iinp::placeholder,.pat-co-inp::placeholder{color:transparent!important}
+  .pat-cert-inp,.pat-iinp,.pat-co-inp{color:#000!important;-webkit-text-fill-color:#000!important}
+  .cp12-form-wrap .page{page:cp12-land;width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;margin:0!important;padding:10mm 12mm!important;box-shadow:none!important;overflow:hidden!important;break-after:page}
   .cp12-form-wrap .page:last-child{page-break-after:auto;break-after:auto}
   .cp12-form-wrap .no-print,.no-print{display:none!important}
   .cp12-form-wrap .inline-history-section{display:none!important}
@@ -587,82 +625,125 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- PAT NEW/EDIT -->
     <div class="view" id="view-pat-new">
-      <div class="view-header">
-        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref">Test Date applies to all rows · Ctrl+S = Draft</div></div>
+      <!-- Action bar -->
+      <div class="view-header no-print">
+        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref">Edit directly on the certificate below · Ctrl+S saves draft</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="navigate('pat-history')">← Back</button>
           <button class="btn btn-secondary btn-sm" onclick="clearPATForm()">🗑 Clear</button>
           <button class="btn btn-secondary btn-sm" id="btn-pat-pdf" onclick="generatePATPDF()">⬇ PDF</button>
-          <button class="btn btn-secondary btn-sm" id="btn-pat-print" onclick="printPATCertificate()">🖨 Print</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-print" onclick="window.print()">🖨 Print</button>
           <button class="btn btn-secondary btn-sm" id="btn-pat-email" onclick="emailPAT()" hidden>✉ Email</button>
           <button class="btn btn-success btn-sm" id="btn-pat-complete" onclick="completePAT()">✓ Complete</button>
           <button class="btn btn-primary btn-sm" id="btn-pat-save" onclick="savePAT()">💾 Draft</button>
         </div>
       </div>
+      <input type="hidden" id="pat-status" value="draft">
 
-      <!-- Report Details -->
-      <div class="form-section">
-        <div class="form-section-title">Report Details</div>
-        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
-          <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Auto on Complete" oninput="doPatPreview()"></div>
-          <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
-          <div class="field-group"><label>Test Date *</label><input type="date" id="pat-date" onchange="applyPatHeaderDate(this.value)"></div>
-          <div class="field-group"><label>Engineer *</label><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()"></div>
-        </div>
-      </div>
+      <!-- PAT Certificate — directly editable, like CP12 -->
+      <div class="pat-wrap" id="patWrap">
+        <div class="pat-page" id="pat-page-1">
 
-      <!-- Property & Client -->
-      <div class="form-section">
-        <div class="form-section-title">Property &amp; Client</div>
-        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
-          <div class="field-group"><label>Landlord Name</label><input type="text" id="pat-landlord" oninput="doPatPreview()"></div>
-          <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"></div>
-          <div class="field-group" style="grid-column:1/-1"><label>Property Address *</label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="doPatPreview()"></textarea></div>
-          <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
-          <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
-        </div>
-      </div>
+          <!-- HEADER -->
+          <div class="pat-cert-hdr">
+            <div class="pat-logo-zone" id="patLogoZone" onclick="document.getElementById('patLogoInput').click()" title="Click to upload logo">
+              <img id="pat-logo-img" src="" alt="" style="max-height:56px;max-width:116px;object-fit:contain;display:none">
+              <div class="pat-logo-ph" id="patLogoPh">Click to<br>add logo</div>
+              <input type="file" id="patLogoInput" accept="image/*" hidden onchange="handlePATLogoUpload(event)">
+            </div>
+            <div class="pat-cert-hdr-main">
+              <div class="pat-cert-topbar">
+                <div class="pat-cert-topitem">
+                  <span class="pat-cert-lbl">Test Date</span>
+                  <input type="date" id="pat-date" class="pat-cert-inp" onchange="applyPatHeaderDate(this.value);doPatPreview()">
+                </div>
+                <div class="pat-cert-topitem">
+                  <span class="pat-cert-lbl">Certificate Ref</span>
+                  <input type="text" id="pat-ref" class="pat-cert-inp" placeholder="Auto on Complete" style="min-width:130px">
+                </div>
+                <div class="pat-cert-topitem">
+                  <span class="pat-cert-lbl">Engineer</span>
+                  <input type="text" id="pat-eng" class="pat-cert-inp" placeholder="Engineer name" style="min-width:150px">
+                </div>
+              </div>
+              <div class="pat-cert-titlerow">
+                <input type="text" id="pat-company-inp" class="pat-co-inp" placeholder="Your Company Name Ltd">
+                <div class="pat-cert-subtitle">PORTABLE APPLIANCE TEST REPORT</div>
+              </div>
+            </div>
+          </div>
 
-      <!-- Appliances -->
-      <div class="form-section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div class="form-section-title" style="margin:0">Appliances</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span id="pat-app-sum" style="font-size:12px;color:var(--muted)"></span>
-            <button class="btn btn-secondary btn-sm" onclick="addPATRow()">+ Add Row</button>
+          <!-- INFO GRID -->
+          <div class="pat-info-grid">
+            <div class="pat-ibox">
+              <div class="pat-ibox-hdr">Property / Client</div>
+              <div class="pat-ibox-body">
+                <div class="pat-irow"><span class="pat-ilbl">Landlord</span><input type="text" id="pat-landlord" class="pat-iinp" placeholder="Landlord name"></div>
+                <div class="pat-irow"><span class="pat-ilbl">Agency / Client</span><input type="text" id="pat-agency" class="pat-iinp" placeholder="Agency or client"></div>
+                <div class="pat-irow" style="align-items:flex-start"><span class="pat-ilbl" style="padding-top:3px">Address</span><textarea id="pat-addr" class="pat-iinp" rows="3" placeholder="Property address&#10;Postcode" style="min-height:46px"></textarea></div>
+                <div class="pat-irow"><span class="pat-ilbl">Phone</span><input type="tel" id="pat-phone" class="pat-iinp" placeholder="Phone"></div>
+                <div class="pat-irow"><span class="pat-ilbl">Email</span><input type="email" id="pat-email" class="pat-iinp" placeholder="Email"></div>
+              </div>
+            </div>
+            <div class="pat-ibox">
+              <div class="pat-ibox-hdr">Testing Company</div>
+              <div class="pat-ibox-body">
+                <div id="pat-co-name-disp" style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:6px"></div>
+                <div class="pat-irow" style="align-items:flex-start">
+                  <span class="pat-ilbl" style="padding-top:4px">Signature</span>
+                  <div>
+                    <canvas id="pat-sig-canvas" width="220" height="64" style="cursor:pointer;border-bottom:1px solid #cbd5e1;display:block;touch-action:none" onclick="openPATSigModal()" title="Tap to sign"></canvas>
+                    <button type="button" class="no-print" style="font-size:9px;background:none;border:1px solid #e2e8f0;border-radius:3px;padding:1px 6px;cursor:pointer;color:#64748b;margin-top:3px" onclick="clearPATSig()">Clear</button>
+                  </div>
+                </div>
+                <div id="pat-co-addr-disp" style="margin-top:6px;font-size:10px;color:#64748b;white-space:pre-line"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- APPLIANCES TABLE — inline on the certificate -->
+          <div>
+            <div class="no-print" style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span id="pat-app-sum" style="font-size:11px;color:var(--muted)"></span>
+            </div>
+            <table class="pat-cert-table" id="pat-app-table">
+              <thead>
+                <tr>
+                  <th style="width:80px">Asset #</th>
+                  <th>Description</th>
+                  <th style="width:100px">Instrument</th>
+                  <th style="width:100px">Test Date</th>
+                  <th style="width:68px">Period</th>
+                  <th style="width:88px">Next Due</th>
+                  <th style="width:68px">Result</th>
+                  <th class="no-print" style="width:28px"></th>
+                </tr>
+              </thead>
+              <tbody id="pat-app-body"></tbody>
+            </table>
+            <button class="btn btn-secondary btn-sm no-print" style="margin-top:8px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
+          </div>
+
+          <!-- FOOTER -->
+          <div class="pat-cert-foot">
+            <div id="pat-foot-contact" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+            <div>Page 1</div>
+          </div>
+
+        </div><!-- end pat-page -->
+      </div><!-- end pat-wrap -->
+
+      <!-- Signature modal -->
+      <div id="pat-sig-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center">
+        <div style="background:var(--surface);padding:24px;border-radius:var(--radius);min-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px">Engineer Signature</div>
+          <canvas id="pat-sig-modal-canvas" width="380" height="120" style="border:1px solid var(--border);border-radius:4px;cursor:crosshair;touch-action:none;background:#fff;display:block"></canvas>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-primary btn-sm" onclick="savePATSig()">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearPATSigModal()">Clear</button>
+            <button class="btn btn-secondary btn-sm" onclick="closePATSigModal()">Cancel</button>
           </div>
         </div>
-        <div class="appliance-table-wrap">
-          <table class="appliance-table" id="pat-app-table">
-            <thead><tr>
-              <th style="min-width:80px">Asset #</th>
-              <th>Description</th>
-              <th style="min-width:95px">Instrument</th>
-              <th style="width:118px">Date</th>
-              <th style="width:75px">Period</th>
-              <th style="width:100px">Next Due</th>
-              <th style="width:68px">Result</th>
-              <th style="width:28px"></th>
-            </tr></thead>
-            <tbody id="pat-app-body"></tbody>
-          </table>
-        </div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
-      </div>
-
-      <div class="form-actions">
-        <button class="btn btn-primary" onclick="savePAT()">💾 Save Draft</button>
-        <button class="btn btn-success" id="btn-pat-complete2" onclick="completePAT()">✓ Complete &amp; Issue</button>
-        <button class="btn btn-secondary" onclick="navigate('pat-history')">Cancel</button>
-      </div>
-
-      <!-- Live Certificate Preview -->
-      <div style="margin-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          <span>Live Certificate Preview</span>
-          <span style="font-size:11px">Use ⬇ PDF above for exact A4 output</span>
-        </div>
-        <div class="pat-cert-scroll" id="pat-cert-pages"></div>
       </div>
     </div>
 
@@ -1509,11 +1590,10 @@ function getPATFormData(){
 function newPAT(){
   editingPATId=null;patApps=[];
   patGe('pat-form-title').textContent='New PAT Test';
-  patGe('pat-form-ref').textContent='Test Date applies to all rows · Ctrl+S = Draft';
+  patGe('pat-form-ref').textContent='Edit directly on the certificate below · Ctrl+S saves draft';
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=true;
   patGe('btn-pat-complete').disabled=false;
-  patGe('btn-pat-complete2').disabled=false;
   const today=new Date().toISOString().split('T')[0];
   patGe('pat-ref').value='';
   patGe('pat-status').value='draft';
@@ -1521,9 +1601,47 @@ function newPAT(){
   patGe('pat-eng').value=getSetting('pat_default_engineer','');
   patGe('pat-landlord').value='';patGe('pat-agency').value='';
   patGe('pat-addr').value='';patGe('pat-phone').value='';patGe('pat-email').value='';
+  const ci=patGe('pat-company-inp');if(ci)ci.value=getSetting('company_name','');
+  clearPATSig();
   patGe('pat-app-body').innerHTML='';
+  doPatPreview();
   addPATRow();addPATRow();
 }
+// PAT logo
+function handlePATLogoUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=patGe('pat-logo-img');const ph=patGe('patLogoPh');
+    img.src=ev.target.result;img.style.display='block';if(ph)ph.style.display='none';
+  };r.readAsDataURL(f);
+}
+// PAT signature
+let _patSigDraw=false,_patSigCtx=null,_patSigPoints=[];
+function openPATSigModal(){
+  const m=patGe('pat-sig-modal');m.style.display='flex';
+  const c=patGe('pat-sig-modal-canvas');_patSigCtx=c.getContext('2d');
+  _patSigCtx.clearRect(0,0,c.width,c.height);_patSigPoints=[];_patSigDraw=false;
+  c.onmousedown=ev=>{_patSigDraw=true;const pos=patSigPos(c,ev);_patSigCtx.beginPath();_patSigCtx.moveTo(pos.x,pos.y);};
+  c.onmousemove=ev=>{if(!_patSigDraw)return;const pos=patSigPos(c,ev);_patSigCtx.lineTo(pos.x,pos.y);_patSigCtx.stroke();};
+  c.onmouseup=()=>{_patSigDraw=false;};
+  c.ontouchstart=ev=>{ev.preventDefault();_patSigDraw=true;const pos=patSigPos(c,ev.touches[0]);_patSigCtx.beginPath();_patSigCtx.moveTo(pos.x,pos.y);};
+  c.ontouchmove=ev=>{ev.preventDefault();if(!_patSigDraw)return;const pos=patSigPos(c,ev.touches[0]);_patSigCtx.lineTo(pos.x,pos.y);_patSigCtx.stroke();};
+  c.ontouchend=()=>{_patSigDraw=false;};
+  _patSigCtx.strokeStyle='#1e293b';_patSigCtx.lineWidth=2;_patSigCtx.lineCap='round';_patSigCtx.lineJoin='round';
+}
+function patSigPos(c,ev){const r=c.getBoundingClientRect();return{x:(ev.clientX-r.left)*(c.width/r.width),y:(ev.clientY-r.top)*(c.height/r.height)};}
+function clearPATSigModal(){if(_patSigCtx){const c=patGe('pat-sig-modal-canvas');_patSigCtx.clearRect(0,0,c.width,c.height);}}
+function closePATSigModal(){patGe('pat-sig-modal').style.display='none';}
+function savePATSig(){
+  const mc=patGe('pat-sig-modal-canvas');
+  const dc=patGe('pat-sig-canvas');
+  const dctx=dc.getContext('2d');
+  dctx.clearRect(0,0,dc.width,dc.height);
+  dctx.drawImage(mc,0,0,dc.width,dc.height);
+  closePATSigModal();
+}
+function clearPATSig(){const dc=patGe('pat-sig-canvas');if(dc){dc.getContext('2d').clearRect(0,0,dc.width,dc.height);}}
 async function loadPATForm(id){
   showOverlay('Loading…');
   const{data:r,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
@@ -1536,7 +1654,6 @@ async function loadPATForm(id){
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=!isDone;
   patGe('btn-pat-complete').disabled=isDone;
-  patGe('btn-pat-complete2').disabled=isDone;
   populatePATForm(r);
   navigate('pat-new');
 }
@@ -1573,7 +1690,6 @@ async function completePAT(){
   patGe('pat-form-title').textContent=`PAT — ${refNum}`;
   patGe('btn-pat-email').hidden=false;
   patGe('btn-pat-complete').disabled=true;
-  patGe('btn-pat-complete2').disabled=true;
   doPatPreview();
   toast(`Certificate issued: ${refNum}`,'success',5000);
   await logAudit('complete','PAT issued','pat',refNum);
@@ -1652,71 +1768,19 @@ function startRenewalPAT(sourceId){navigate('pat-new');}
 
 // ========== PAT - PREVIEW & PDF ==========
 function doPatPreview(){
-  const wrap=patGe('pat-cert-pages');if(!wrap)return;
-  wrap.innerHTML='';
-  const ref=patGv('pat-ref'),testDate=patFd(patGv('pat-date'));
-  const landlord=(patGv('pat-landlord')||'').trim(),client=(patGv('pat-agency')||'').trim();
-  const addr=(patGv('pat-addr')||'').trim(),eng=patGv('pat-eng')||'—';
-  const isDraft=patGv('pat-status')==='draft';
-  const hc=getSetting('pat_hdr_color','#1e3a5f'),htc=getSetting('pat_hdr_text','#ffffff'),rowBg=getSetting('pat_row_color','#f8fafc');
-  const coName=getSetting('company_name','OHM Electrical Engineering Ltd');
+  // Certificate IS the form — just update live stats and company info
+  const pass=patApps.filter(a=>a.result==='Pass').length;
+  const fail=patApps.filter(a=>a.result==='Fail').length;
+  const sum=patGe('pat-app-sum');
+  if(sum)sum.textContent=patApps.length?`${patApps.length} item${patApps.length!==1?'s':''} · ${pass} Pass / ${fail} Fail`:'';
+  const coName=getSetting('company_name','');
   const coPhone=getSetting('company_phone',''),coEmail=getSetting('company_email','');
   const coAddr=getSetting('company_address',''),coWeb=getSetting('company_website','');
-  const coVat=getSetting('company_vat',''),coReg=getSetting('company_regno','');
-  const certTitle='PORTABLE APPLIANCE TEST REPORT';
-  const coLogo=getSetting('pat_logo_data','');
-  const logoHTML=coLogo?`<img src="${coLogo}" style="max-height:60px;max-width:130px;object-fit:contain" alt="">`:
-    `<div style="font-size:16px;font-weight:900;color:${hc}">${patEsc(coName)}</div>`;
-  const sigData=getSetting('pat_sig_data','');
-  const sigHTML=sigData?`<img src="${sigData}" style="width:100%;max-height:28px;object-fit:contain;object-position:left">`:'________________';
-  const rp1=14,rpn=24;
-  const pages=[];let pageItems=[],pNum=1,rowsUsed=0;
-  patApps.forEach(app=>{
-    const desc=patWrapTxt(app.description,17);const lines=desc.split('\n').length;const cost=Math.max(1,lines);
-    const cap=pNum===1?rp1:rpn;
-    if(rowsUsed+cost>cap&&pageItems.length){pages.push({items:pageItems,cap,n:pNum});pageItems=[];pNum++;rowsUsed=0;}
-    pageItems.push({...app,_d:desc,_c:cost});rowsUsed+=cost;
-  });
-  pages.push({items:pageItems,cap:pNum===1?rp1:rpn,n:pNum});
-  pages.forEach((pg,pi)=>{
-    let hdr='';
-    if(pi===0){
-      let cb='';
-      if(landlord)cb+=`<div><div class="a4-key">Landlord</div><div class="a4-val">${patEsc(landlord)}</div></div>`;
-      if(client)cb+=`<div style="margin-top:5px"><div class="a4-key">Client</div><div class="a4-val">${patEsc(client)}</div></div>`;
-      if(addr)cb+=`<div style="margin-top:5px"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div>`;
-      if(!cb)cb='<span style="color:#94a3b8">—</span>';
-      hdr=`<div class="a4-topbar"><div><strong>Date:</strong> ${testDate}</div><div><strong>Ref:</strong> ${patEsc(ref)||'—'}</div></div>`
-        +`<div class="a4-hdr"><div class="a4-logo">${logoHTML}</div>`
-        +`<div><div class="a4-coname" style="color:${hc}">${patEsc(coName)}</div>`
-        +`<div class="a4-cotype" style="color:${hc}">${certTitle}</div></div></div>`
-        +`<div class="a4-meta"><div class="a4-box">${cb}</div>`
-        +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
-        +`<div class="a4-val" style="font-weight:700;margin-bottom:2px">${patEsc(coName)}</div>`
-        +`<div style="font-size:.7rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
-        +`<div style="display:flex;gap:6px;margin-top:2px">`
-        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;padding:4px 8px">`
-        +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">Engineer</div>`
-        +`<div style="font-size:.74rem;font-weight:600;color:#1e293b">${patEsc(eng)}</div>`
-        +`</div>`
-        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;padding:4px 8px;min-height:36px;display:flex;flex-direction:column;justify-content:center">`
-        +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">Authorised Signature</div>`
-        +`<div>${sigHTML}</div>`
-        +`</div></div></div></div>`;
-    }
-    const empty=pg.cap-(pg.items.reduce((s,a)=>s+a._c,0));
-    let rows=pg.items.map((app,i)=>`<tr style="background:${i%2===0?rowBg:''}"><td style="height:${app._c*26}px;vertical-align:middle">${patEsc(app.assetId)}</td><td style="height:${app._c*26}px;vertical-align:middle;white-space:pre-wrap;word-break:break-word">${patEsc(app._d)}</td><td>${patEsc(app.testInstrument)}</td><td>${patFd(app.date)}</td><td>${patEsc(app.retestPeriod)}</td><td>${patFd(app.nextTest)}</td><td><span class="cbadge ${app.result==='Pass'?'pass':'fail'}">${patEsc(app.result)}</span></td></tr>`).join('');
-    for(let i=0;i<empty;i++)rows+=`<tr style="background:${(pg.items.length+i)%2===0?rowBg:''}"><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
-    const wmDiv=isDraft?`<div style="opacity:.06;pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;font-weight:900;color:#1e3a5f;white-space:nowrap;user-select:none">DRAFT</div>`:'';
-    wrap.innerHTML+=`<div class="a4">${wmDiv}${hdr}<div style="flex-grow:1"><table class="a4t"><thead><tr>`
-      +`<th style="background:${hc};color:${htc};width:70px">Asset ID</th><th style="background:${hc};color:${htc}">Description</th>`
-      +`<th style="background:${hc};color:${htc};width:85px">Instrument</th><th style="background:${hc};color:${htc};width:78px">Test Date</th>`
-      +`<th style="background:${hc};color:${htc};width:60px">Period</th><th style="background:${hc};color:${htc};width:78px">Next Due</th>`
-      +`<th style="background:${hc};color:${htc};width:52px">Result</th>`
-      +`</tr></thead><tbody>${rows}</tbody></table></div>`
-      +`<div class="a4-foot"><div class="a4-fcontact">${coPhone?`<span>📞 ${patEsc(coPhone)}</span>`:''}${coEmail?`<span>✉ ${patEsc(coEmail)}</span>`:''}${coWeb?`<span>🌐 ${patEsc(coWeb)}</span>`:''}${coVat?`<span>VAT: ${patEsc(coVat)}</span>`:''}${coReg?`<span>Reg: ${patEsc(coReg)}</span>`:''}</div>`
-      +`<div>Page ${pi+1} of ${pages.length}</div></div></div>`;
-  });
+  const nd=patGe('pat-co-name-disp');if(nd)nd.textContent=coName;
+  const ad=patGe('pat-co-addr-disp');if(ad)ad.textContent=coAddr||'';
+  const fc=patGe('pat-foot-contact');
+  if(fc){let ft='';if(coPhone)ft+=`<span>📞 ${patEsc(coPhone)}</span>`;if(coEmail)ft+=`<span>✉ ${patEsc(coEmail)}</span>`;if(coWeb)ft+=`<span>🌐 ${patEsc(coWeb)}</span>`;fc.innerHTML=ft;}
+  const ci=patGe('pat-company-inp');if(ci&&!ci.value)ci.value=coName;
 }
 
 async function openPATPDF(id){
@@ -1730,20 +1794,16 @@ async function generatePATPDF(){
 }
 async function generatePATPDFFromData(r){
   showOverlay('Generating PDF…');
-  if(r.id&&r.id!==editingPATId){editingPATId=r.id;populatePATForm(r);}
-  else if(!editingPATId&&r.property_address){/* use live form data already in patApps */}
+  if(r.id&&r.id!==editingPATId){editingPATId=r.id;navigate('pat-new');populatePATForm(r);await new Promise(res=>setTimeout(res,400));}
   doPatPreview();
-  await new Promise(res=>setTimeout(res,300));
+  await new Promise(res=>setTimeout(res,200));
   try{
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const pages=document.querySelectorAll('#pat-cert-pages .a4');
-    if(!pages.length){hideOverlay();toast('No certificate to export','warn');return;}
-    for(let i=0;i<pages.length;i++){
-      if(i>0)doc.addPage('a4','portrait');
-      const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',width:794,height:pages[i].scrollHeight});
-      doc.addImage(canvas.toDataURL('image/jpeg',.92),'JPEG',0,0,210,297);
-    }
+    const page=document.getElementById('pat-page-1');
+    if(!page){hideOverlay();toast('No certificate to export','warn');return;}
+    const canvas=await html2canvas(page,{scale:2,useCORS:true,backgroundColor:'#ffffff',width:794,height:page.scrollHeight,ignoreElements:el=>el.classList.contains('no-print')});
+    doc.addImage(canvas.toDataURL('image/jpeg',.92),'JPEG',0,0,210,297);
     const ref=(r.ref_number||r.id||'PAT').toString().replace(/[^\w-]/g,'_');
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(isIOS){
@@ -1757,15 +1817,7 @@ async function generatePATPDFFromData(r){
   } catch(e){toast('PDF error: '+e.message,'error');}
   finally{hideOverlay();}
 }
-function printPATCertificate(){
-  doPatPreview();
-  setTimeout(()=>{
-    const src=document.getElementById('pat-cert-pages');
-    const target=document.getElementById('print-target');
-    if(target){target.innerHTML='';src.querySelectorAll('.a4').forEach(p=>target.appendChild(p.cloneNode(true)));}
-    window.print();
-  },300);
-}
+function printPATCertificate(){window.print();}
 
 // ========== PAT - EMAIL ==========
 async function emailPAT(){
