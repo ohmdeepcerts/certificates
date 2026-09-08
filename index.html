@@ -1013,16 +1013,36 @@ a{color:var(--accent);text-decoration:none}
         <div class="form-section">
           <div class="form-section-title">Email Method</div>
           <div class="field-grid">
-            <div class="field-group"><label>Method</label>
-              <select id="s-email-method">
+            <div class="field-group" style="grid-column:1/-1">
+              <label>Active Method</label>
+              <select id="s-email-method" onchange="toggleEmailMethod()">
                 <option value="script">Google Apps Script</option>
                 <option value="brevo">Brevo / Sendinblue</option>
               </select>
             </div>
-            <div class="field-group" style="grid-column:1/-1"><label>Google Apps Script URL</label><input type="url" id="s-script-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+          </div>
+        </div>
+        <div class="form-section" id="email-section-script">
+          <div class="form-section-title" style="color:var(--muted)">Google Apps Script Settings</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Script URL</label><input type="url" id="s-script-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+          </div>
+        </div>
+        <div class="form-section" id="email-section-brevo">
+          <div class="form-section-title" style="color:var(--muted)">Brevo Settings</div>
+          <div class="field-grid">
             <div class="field-group" style="grid-column:1/-1"><label>Brevo API Key</label><input type="password" id="s-brevo-key" placeholder="xkeysib-…"></div>
-            <div class="field-group"><label>From Email (sender)</label><input type="email" id="s-from-email" placeholder="info@yourcompany.com"></div>
-            <div class="field-group"><label>From Name</label><input type="text" id="s-from-name" placeholder="OHM Electrical"></div>
+            <div class="field-group"><label>From Email</label><input type="email" id="s-from-email" placeholder="Compliance@ohmelectricals.co.uk"></div>
+            <div class="field-group"><label>From Name</label><input type="text" id="s-from-name" placeholder="OHM Electrical Engineering Ltd"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title" style="color:var(--muted)">Test Email</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Send Test To</label><input type="email" id="s-test-email" placeholder="your@email.com"></div>
+            <div class="field-group" style="display:flex;align-items:flex-end">
+              <button class="btn btn-secondary" onclick="sendTestEmail()" style="width:100%">Send Test Email</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1314,6 +1334,35 @@ async function upsertSetting(key,value){
   await sb.from('app_config').upsert({key,value,updated_at:new Date().toISOString()},{onConflict:'key'});
   appSettings[key]=value;
 }
+function toggleEmailMethod(){
+  const m=document.getElementById('s-email-method').value;
+  document.getElementById('email-section-script').style.display=m==='script'?'':'none';
+  document.getElementById('email-section-brevo').style.display=m==='brevo'?'':'none';
+}
+async function sendTestEmail(){
+  const to=document.getElementById('s-test-email').value.trim();
+  if(!to){toast('Enter a test email address','warn');return;}
+  const method=document.getElementById('s-email-method').value;
+  if(method==='brevo'){
+    const apiKey=document.getElementById('s-brevo-key').value.trim()||getSetting('brevo_api_key');
+    if(!apiKey){toast('Enter your Brevo API key first','error');return;}
+    const fromEmail=document.getElementById('s-from-email').value.trim()||getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
+    const fromName=document.getElementById('s-from-name').value.trim()||getSetting('email_from_name')||getSetting('company_name','OHM Electrical Engineering Ltd');
+    showOverlay('Sending test email…');
+    try{
+      const res=await fetch('https://api.brevo.com/v3/smtp/email',{
+        method:'POST',
+        headers:{'accept':'application/json','api-key':apiKey,'content-type':'application/json'},
+        body:JSON.stringify({sender:{name:fromName,email:fromEmail},to:[{email:to}],subject:'Test — OHM Certificates Email System',htmlContent:`<div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto"><div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0"><h2 style="margin:0">OHM ELECTRICAL ENGINEERING LTD</h2><p style="margin:4px 0 0;font-size:13px">Certificate Email System</p></div><div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px"><p style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:12px 16px;color:#15803d;font-weight:bold">✓ Brevo email integration is working. PAT and CP12 certificates will arrive with PDF attachments.</p><p style="color:#555">Sent from: <strong>${fromEmail}</strong></p></div></div>`})
+      });
+      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
+      toast('Test email sent ✓ — check '+to,'success',6000);
+    }catch(e){toast('Failed: '+e.message,'error',7000);}
+    finally{hideOverlay();}
+  } else {
+    toast('Test only available for Brevo — switch method to Brevo first','warn',4000);
+  }
+}
 function loadSettingsUI(){
   // Company
   document.getElementById('s-company-name').value=getSetting('company_name');
@@ -1324,6 +1373,7 @@ function loadSettingsUI(){
   document.getElementById('s-company-regno').value=getSetting('company_regno');
   // Email
   document.getElementById('s-email-method').value=getSetting('email_method','script');
+  toggleEmailMethod();
   document.getElementById('s-script-url').value=getSetting('email_script_url');
   document.getElementById('s-brevo-key').value=getSetting('brevo_api_key');
   document.getElementById('s-from-email').value=getSetting('email_from');
