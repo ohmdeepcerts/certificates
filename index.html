@@ -2876,8 +2876,18 @@ function populateCP12Form(r){
   if(r.sig_received_image){const c=document.querySelector('[data-sig-field="sig_received"]');if(c){const img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0,c.width,c.height);img.src=r.sig_received_image;}}
 }
 function syncSettingsToCP12Form(){
-  const map={company_name:'gas_co_name',gas_safe_no:'gas_safe_no',business_phone:'gas_co_phone',business_email:'gas_co_email',business_address:'gas_co_address',business_postcode:'gas_co_postcode',issuer_name:'gas_default_engineer',landlord_ref:'gas_licence'};
-  Object.entries(map).forEach(([f,s])=>{const v=getSetting(s);if(v)setCP12Field(f,v);});
+  // gas_co_* are the new per-type keys; fall back to old shared keys for users who haven't re-saved
+  const vals={
+    company_name: getSetting('gas_co_name', getSetting('company_name','')),
+    gas_safe_no:  getSetting('gas_safe_no',''),
+    business_phone: getSetting('gas_co_phone', getSetting('company_phone','')),
+    business_email: getSetting('gas_co_email', getSetting('company_email','')),
+    business_address: getSetting('gas_co_address', getSetting('company_address','')),
+    business_postcode: getSetting('gas_co_postcode',''),
+    issuer_name: getSetting('gas_default_engineer',''),
+    landlord_ref: getSetting('gas_licence','')
+  };
+  Object.entries(vals).forEach(([f,v])=>{if(v)setCP12Field(f,v);});
 }
 
 // ========== CP12 - FORM LIFECYCLE ==========
