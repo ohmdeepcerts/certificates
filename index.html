@@ -1342,30 +1342,39 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="settings-pane" id="pane-gas">
         <div class="form-section">
-          <div class="form-section-title">Company Information — Gas CP12</div>
+          <div class="form-section-title">Gas CP12 Settings</div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
-            <strong>These details print on every Gas CP12 certificate</strong> — header name, footer contact and VAT / Reg numbers.
+            <strong>These details auto-fill every new Gas CP12 certificate</strong> — company header, engineer box, and footer contact.
           </div>
           <div class="field-grid">
-            <div class="field-group"><label>Company Name</label><input type="text" id="s-gas-co-name" placeholder="OHM Gas Services Ltd"></div>
-            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-gas-co-sub" placeholder="Optional subtitle"></div>
+            <div class="field-group"><label>Trading Title</label><input type="text" id="s-gas-co-name" placeholder="OHM Gas Services Ltd"></div>
+            <div class="field-group"><label>Engineer Name</label><input type="text" id="s-gas-engineer" placeholder="Full name — autofills Name box"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County" style="height:52px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-gas-co-postcode" placeholder="SW1A 1AA"></div>
             <div class="field-group"><label>Phone</label><input type="tel" id="s-gas-co-phone" placeholder="07700 900000"></div>
             <div class="field-group"><label>Email</label><input type="email" id="s-gas-co-email" placeholder="info@yourcompany.co.uk"></div>
-            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County" style="height:56px;resize:vertical"></textarea></div>
-            <div class="field-group"><label>Postcode</label><input type="text" id="s-gas-co-postcode" placeholder="SW1A 1AA"></div>
-            <div class="field-group"><label>Website</label><input type="url" id="s-gas-co-website" placeholder="https://"></div>
-            <div class="field-group"><label>VAT Number</label><input type="text" id="s-gas-co-vat" placeholder="GB 123 4567 89"></div>
-            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-gas-co-regno" placeholder="12345678"></div>
-            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-gas-co-insurance" placeholder="Optional"></div>
+            <div class="field-group"><label>Gas Safe Reg No.</label><input type="text" id="s-gas-safe-no" placeholder="Gas Safe registration number"></div>
+            <div class="field-group"><label>Engineer Licence No.</label><input type="text" id="s-gas-licence" placeholder="ACS or licence number"></div>
+            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-gas-prefix" placeholder="OHM" maxlength="10"></div>
           </div>
         </div>
         <div class="form-section">
-          <div class="form-section-title">Gas Certificate Defaults</div>
-          <div class="field-grid">
-            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-gas-prefix" placeholder="OHM" maxlength="10"></div>
-            <div class="field-group"><label>Gas Safe Reg No</label><input type="text" id="s-gas-safe-no"></div>
-            <div class="field-group"><label>Engineer Licence No</label><input type="text" id="s-gas-licence"></div>
-            <div class="field-group"><label>Default Engineer</label><input type="text" id="s-gas-engineer"></div>
+          <div class="form-section-title">Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Gas Safe Logo</label>
+              <div class="lprev" id="pr-gas-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-gas-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-gas-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'gas_logo_data','pr-gas-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('gas_logo_data','pr-gas-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-gas-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-gas-sig').click()"><i class="fa-solid fa-upload"></i> Upload Signature</div>
+              <input type="file" id="f-gas-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'gas_engg_sig_data','pr-gas-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('gas_engg_sig_data','pr-gas-sig')">✕ Clear</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1724,15 +1733,17 @@ function loadSettingsUI(){
   document.getElementById('s-pat-co-insurance').value=getSetting('pat_co_insurance','');
   // Gas company
   document.getElementById('s-gas-co-name').value=getSetting('gas_co_name','');
-  document.getElementById('s-gas-co-sub').value=getSetting('gas_co_sub','');
-  document.getElementById('s-gas-co-phone').value=getSetting('gas_co_phone','');
-  document.getElementById('s-gas-co-email').value=getSetting('gas_co_email','');
+  document.getElementById('s-gas-engineer').value=getSetting('gas_default_engineer','');
   document.getElementById('s-gas-co-address').value=getSetting('gas_co_address','');
   document.getElementById('s-gas-co-postcode').value=getSetting('gas_co_postcode','');
-  document.getElementById('s-gas-co-website').value=getSetting('gas_co_website','');
-  document.getElementById('s-gas-co-vat').value=getSetting('gas_co_vat','');
-  document.getElementById('s-gas-co-regno').value=getSetting('gas_co_regno','');
-  document.getElementById('s-gas-co-insurance').value=getSetting('gas_co_insurance','');
+  document.getElementById('s-gas-co-phone').value=getSetting('gas_co_phone','');
+  document.getElementById('s-gas-co-email').value=getSetting('gas_co_email','');
+  document.getElementById('s-gas-safe-no').value=getSetting('gas_safe_no','');
+  document.getElementById('s-gas-licence').value=getSetting('gas_licence','');
+  document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
+  // Gas logos/sig previews
+  const gasLogoFields=[['gas_logo_data','pr-gas-logo'],['gas_engg_sig_data','pr-gas-sig']];
+  gasLogoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
   // Email
   document.getElementById('s-email-method').value=getSetting('email_method','script');
   toggleEmailMethod();
@@ -1759,11 +1770,6 @@ function loadSettingsUI(){
   // Logos
   const logoFields=[['pat_logo_data','pr-logo'],['pat_logo2_data','pr-pat1'],['pat_logo3_data','pr-pat2'],['pat_sig_data','pr-sig']];
   logoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
-  // Gas
-  document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
-  document.getElementById('s-gas-safe-no').value=getSetting('gas_safe_no');
-  document.getElementById('s-gas-licence').value=getSetting('gas_licence');
-  document.getElementById('s-gas-engineer').value=getSetting('gas_default_engineer');
   // Profile
   document.getElementById('s-profile-name').value=currentProfile?.full_name||'';
   document.getElementById('s-profile-email').value=currentProfile?.email||currentUser?.email||'';
@@ -1783,15 +1789,14 @@ async function saveSettings(){
     ['pat_co_regno',document.getElementById('s-pat-co-regno').value],
     ['pat_co_insurance',document.getElementById('s-pat-co-insurance').value],
     ['gas_co_name',document.getElementById('s-gas-co-name').value],
-    ['gas_co_sub',document.getElementById('s-gas-co-sub').value],
-    ['gas_co_phone',document.getElementById('s-gas-co-phone').value],
-    ['gas_co_email',document.getElementById('s-gas-co-email').value],
+    ['gas_default_engineer',document.getElementById('s-gas-engineer').value],
     ['gas_co_address',document.getElementById('s-gas-co-address').value],
     ['gas_co_postcode',document.getElementById('s-gas-co-postcode').value],
-    ['gas_co_website',document.getElementById('s-gas-co-website').value],
-    ['gas_co_vat',document.getElementById('s-gas-co-vat').value],
-    ['gas_co_regno',document.getElementById('s-gas-co-regno').value],
-    ['gas_co_insurance',document.getElementById('s-gas-co-insurance').value],
+    ['gas_co_phone',document.getElementById('s-gas-co-phone').value],
+    ['gas_co_email',document.getElementById('s-gas-co-email').value],
+    ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
+    ['gas_licence',document.getElementById('s-gas-licence').value],
+    ['gas_prefix',document.getElementById('s-gas-prefix').value],
     ['email_method',document.getElementById('s-email-method').value],
     ['email_script_url',document.getElementById('s-script-url').value],
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
@@ -1812,10 +1817,6 @@ async function saveSettings(){
     ['pat_reg_text',document.getElementById('s-pat-reg-text').value],
     ['pat_cop',document.getElementById('s-pat-cop').value],
     ['pat_cert_notes',document.getElementById('s-pat-cert-notes').value],
-    ['gas_prefix',document.getElementById('s-gas-prefix').value||'OHM'],
-    ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
-    ['gas_licence',document.getElementById('s-gas-licence').value],
-    ['gas_default_engineer',document.getElementById('s-gas-engineer').value],
   ];
   for(const[k,v]of pairs)await upsertSetting(k,v);
   // Save profile
@@ -2888,6 +2889,12 @@ function syncSettingsToCP12Form(){
     landlord_ref: getSetting('gas_licence','')
   };
   Object.entries(vals).forEach(([f,v])=>{if(v)setCP12Field(f,v);});
+  // Pre-load engineer signature into sig_issued canvas (only on new forms)
+  const sigData=getSetting('gas_engg_sig_data','');
+  if(sigData){const c=document.querySelector('[data-sig-field="sig_issued"]');if(c){const img=new Image();img.onload=()=>{c.getContext('2d').clearRect(0,0,c.width,c.height);c.getContext('2d').drawImage(img,0,0,c.width,c.height);};img.src=sigData;}}
+  // Pre-load Gas Safe logo
+  const logoData=getSetting('gas_logo_data','');
+  if(logoData)applyCP12Logo(logoData);
 }
 
 // ========== CP12 - FORM LIFECYCLE ==========
@@ -2905,6 +2912,10 @@ function newGasCert(){
   const t=new Date();const dd=String(t.getDate()).padStart(2,'0');const mm=String(t.getMonth()+1).padStart(2,'0');const yyyy=t.getFullYear();
   const today=`${dd}/${mm}/${yyyy}`;setCP12Field('cert_date',today);setCP12Field('next_check_date',oneYearMinusOneDayUK(today));
   document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height));
+  // Prefill N/A defaults
+  for(let i=1;i<=5;i++){setCP12Field(`defect_warn_${i}`,'N/A');}
+  setCP12Field('remedial_action','N/A');
+  setCP12Field('work_details','N/A');
   syncSettingsToCP12Form();loadCP12Logo();
 }
 async function loadGasForm(id){
