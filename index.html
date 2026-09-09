@@ -728,6 +728,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="nav-section-label">System</div>
         <div class="nav-item" data-view="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</div>
         <div class="nav-item" id="audit-nav" data-view="audit" onclick="navigate('audit')" style="display:none"><span class="nav-icon">📄</span>Audit Log</div>
+        <div class="nav-item" id="staff-nav" data-view="staff" onclick="navigate('staff')" style="display:none"><span class="nav-icon">👥</span>Staff</div>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -1497,6 +1498,59 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
 
+        <div class="form-section" style="margin-top:16px" id="staff-sql-section">
+          <div class="form-section-title">👥 Staff Setup — One-Time SQL Migration</div>
+          <div style="background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.6">
+            Run this once in your <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/sql/new" target="_blank" style="color:var(--accent)">Supabase SQL Editor</a> to enable Staff Management.
+            It adds <code>role</code> and <code>is_active</code> columns, sets up admin permissions, and makes <strong>mandeepdynamics@gmail.com</strong> an admin.
+            Safe to run multiple times (all steps are idempotent).
+          </div>
+          <div style="position:relative">
+            <pre id="staff-sql-block" style="background:var(--surface3,var(--surface2));border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:11px;overflow-x:auto;white-space:pre;line-height:1.55;color:var(--text);margin:0">-- Step 1: Add columns if they don't exist
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'engineer';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+
+-- Step 2: Make mandeepdynamics@gmail.com an admin
+UPDATE public.profiles SET role = 'admin'
+  WHERE email = 'mandeepdynamics@gmail.com';
+
+-- Step 3: Drop old restrictive policies and add admin-read-all policy
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admin read all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admin update profiles" ON public.profiles;
+
+CREATE POLICY "Users can read own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Admin read all profiles" ON public.profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admin update profiles" ON public.profiles
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Step 4: Allow admins to insert new profiles (for add-staff flow)
+DROP POLICY IF EXISTS "Admin insert profiles" ON public.profiles;
+CREATE POLICY "Admin insert profiles" ON public.profiles
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );</pre>
+            <button class="btn btn-secondary btn-sm" onclick="copyStaffSQL()" style="position:absolute;top:10px;right:10px;font-size:11px" id="copy-sql-btn">📋 Copy</button>
+          </div>
+        </div>
+
         <div class="form-section" style="margin-top:16px">
           <div class="form-section-title">App & Database Links</div>
           <div style="display:grid;gap:8px">
@@ -1546,6 +1600,20 @@ a{color:var(--accent);text-decoration:none}
       <div id="audit-list"><div class="empty-state"><div class="empty-icon">📄</div><p>Loading…</p></div></div>
     </div>
 
+    <!-- STAFF -->
+    <div class="view" id="view-staff">
+      <div class="view-header">
+        <div><div class="view-title">Staff Management</div><div class="view-subtitle">Manage team members, roles and access</div></div>
+        <button class="btn btn-primary btn-sm" onclick="showAddStaffModal()">+ Add Staff Member</button>
+      </div>
+      <div id="staff-setup-notice" hidden style="background:var(--warn-dim);border:1px solid var(--warn);border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:13px">
+        <strong style="color:var(--warn)">⚠ One-time setup required.</strong> Run the SQL migration in
+        <a href="#" onclick="navigate('settings');setTimeout(()=>switchSettingsTab('backend'),300);return false" style="color:var(--accent)">Settings → Backend → Staff Setup</a>
+        to enable staff management, then refresh the page.
+      </div>
+      <div id="staff-list"><div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div></div>
+    </div>
+
   </main>
 </div>
 
@@ -1584,6 +1652,41 @@ a{color:var(--accent);text-decoration:none}
 
 <!-- LOADING OVERLAY -->
 <div id="loading-overlay"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
+
+<!-- ADD STAFF MODAL -->
+<div class="modal-backdrop hidden" id="add-staff-modal" style="z-index:200">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">👤 Add Staff Member</div>
+      <button class="modal-close" onclick="hideAddStaffModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-group label" style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Full Name</label>
+      <input class="form-control" type="text" id="add-staff-name" placeholder="e.g. John Smith" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Email Address</label>
+      <input class="form-control" type="email" id="add-staff-email" placeholder="john@company.co.uk" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Role</label>
+      <select class="form-control" id="add-staff-role">
+        <option value="engineer">Engineer</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Temporary Password</label>
+      <input class="form-control" type="text" id="add-staff-pw" placeholder="Min 6 characters — share with staff member" autocomplete="off">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Staff member can change their password from My Profile in Settings after logging in.</div>
+    </div>
+    <div id="add-staff-error" style="color:var(--danger,#ef4444);font-size:13px;margin-top:8px;min-height:18px"></div>
+    <div class="modal-footer" style="gap:8px">
+      <button class="btn btn-secondary" onclick="hideAddStaffModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doAddStaff()">Create Account</button>
+    </div>
+  </div>
+</div>
 
 <!-- SETTINGS UNSAVED MODAL -->
 <div class="modal-backdrop hidden" id="settings-leave-modal" style="z-index:200">
@@ -1697,7 +1800,7 @@ async function onLogin(user){
   document.getElementById('user-name-display').textContent=name;
   document.getElementById('user-role-display').textContent=currentProfile.role||'engineer';
   document.getElementById('user-avatar').textContent=(name[0]||'U').toUpperCase();
-  if(currentProfile.role==='admin'){document.getElementById('audit-nav').style.display='flex';}
+  if(currentProfile.role==='admin'){document.getElementById('audit-nav').style.display='flex';document.getElementById('staff-nav').style.display='flex';}
   // Load settings then navigate
   await loadAppSettings();
   navigate('dashboard');
@@ -1740,9 +1843,119 @@ function _doNavigate(view){
   else if(view==='gas-new'){if(!_gasCertLoading)newGasCert();}
   else if(view==='settings')loadSettingsUI();
   else if(view==='audit')loadAuditLog();
+  else if(view==='staff')loadStaff();
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('active');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active');}
+
+// ========== STAFF MANAGEMENT ==========
+function showAddStaffModal(){
+  document.getElementById('add-staff-name').value='';
+  document.getElementById('add-staff-email').value='';
+  document.getElementById('add-staff-role').value='engineer';
+  document.getElementById('add-staff-pw').value='';
+  document.getElementById('add-staff-error').textContent='';
+  document.getElementById('add-staff-modal').classList.remove('hidden');
+}
+function hideAddStaffModal(){document.getElementById('add-staff-modal').classList.add('hidden');}
+
+async function loadStaff(){
+  const el=document.getElementById('staff-list');
+  el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div>';
+  const{data,error}=await sb.from('profiles').select('*').order('full_name');
+  const notice=document.getElementById('staff-setup-notice');
+  if(error||!data||data.length===0){
+    notice&&(notice.hidden=false);
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>No staff found. Run the SQL setup first.</p></div>';
+    return;
+  }
+  // If only 1 row (just the current user) and role column missing, show setup notice
+  if(data.length===1&&data[0].role===undefined){
+    notice&&(notice.hidden=false);
+  }else{
+    notice&&(notice.hidden=true);
+  }
+  renderStaffList(data);
+}
+
+function renderStaffList(staff){
+  const el=document.getElementById('staff-list');
+  if(!staff||!staff.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>No staff members found.</p></div>';return;}
+  el.innerHTML=`
+    <div style="display:grid;gap:10px">
+      ${staff.map(s=>{
+        const isMe=s.id===currentUser?.id;
+        const active=s.is_active!==false;
+        const role=s.role||'engineer';
+        const name=s.full_name||s.email||'Unknown';
+        const initials=(name[0]||'?').toUpperCase();
+        return `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">${initials}</div>
+          <div style="flex:1;min-width:140px">
+            <div style="font-weight:600;font-size:14px">${name}${isMe?' <span style="font-size:11px;color:var(--muted)">(you)</span>':''}</div>
+            <div style="font-size:12px;color:var(--muted)">${s.email||''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <select class="form-input" style="font-size:12px;padding:4px 8px;width:auto" onchange="setStaffRole('${s.id}',this.value)" ${isMe?'disabled':''}>
+              <option value="engineer" ${role==='engineer'?'selected':''}>Engineer</option>
+              <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
+            </select>
+            ${isMe?'<span style="font-size:11px;color:var(--muted);padding:4px 8px">Active</span>':`<button class="btn btn-sm ${active?'btn-secondary':'btn-primary'}" onclick="toggleStaffActive('${s.id}',${active})">${active?'Deactivate':'Activate'}</button>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function doAddStaff(){
+  const name=document.getElementById('add-staff-name').value.trim();
+  const email=document.getElementById('add-staff-email').value.trim().toLowerCase();
+  const role=document.getElementById('add-staff-role').value;
+  const pw=document.getElementById('add-staff-pw').value;
+  const errEl=document.getElementById('add-staff-error');
+  errEl.textContent='';
+  if(!name||!email||!pw){errEl.textContent='All fields are required.';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Invalid email address.';return;}
+  if(pw.length<8){errEl.textContent='Password must be at least 8 characters.';return;}
+  const btn=document.querySelector('#add-staff-modal .btn-primary');
+  btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const{data:signUpData,error:signUpErr}=await sb.auth.signUp({email,password:pw,options:{data:{full_name:name}}});
+    if(signUpErr)throw new Error(signUpErr.message);
+    const uid=signUpData?.user?.id;
+    if(!uid)throw new Error('Account created but no user ID returned. Check Supabase Auth for the new user.');
+    const{error:profileErr}=await sb.from('profiles').upsert({id:uid,email,full_name:name,role,is_active:true},{onConflict:'id'});
+    if(profileErr)throw new Error('Auth account created but profile save failed: '+profileErr.message);
+    hideAddStaffModal();
+    toast(`${name} added successfully!`,'success');
+    loadStaff();
+  }catch(e){
+    errEl.textContent=e.message;
+  }finally{
+    btn.disabled=false;btn.textContent='Create Account';
+  }
+}
+
+async function setStaffRole(userId,role){
+  const{error}=await sb.from('profiles').update({role}).eq('id',userId);
+  if(error){toast('Failed to update role: '+error.message,'error');loadStaff();return;}
+  toast('Role updated','success');
+}
+
+async function toggleStaffActive(userId,currentlyActive){
+  const{error}=await sb.from('profiles').update({is_active:!currentlyActive}).eq('id',userId);
+  if(error){toast('Failed to update status: '+error.message,'error');loadStaff();return;}
+  toast(currentlyActive?'Staff member deactivated':'Staff member activated','success');
+  loadStaff();
+}
+function copyStaffSQL(){
+  const sql=document.getElementById('staff-sql-block').textContent;
+  navigator.clipboard.writeText(sql).then(()=>{
+    const btn=document.getElementById('copy-sql-btn');
+    btn.textContent='✓ Copied!';btn.style.background='var(--success,#22c55e)';btn.style.color='#fff';
+    setTimeout(()=>{btn.textContent='📋 Copy';btn.style.background='';btn.style.color='';},2000);
+  }).catch(()=>toast('Copy failed — select the SQL manually','error'));
+}
 
 // ========== OVERLAYS & TOAST ==========
 function showOverlay(msg){document.getElementById('overlay-msg').textContent=msg||'Loading…';document.getElementById('loading-overlay').classList.add('active');}
