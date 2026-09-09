@@ -1173,6 +1173,9 @@ a{color:var(--accent);text-decoration:none}
           <div class="appliance-cards" id="applianceCards">
             <!-- Built by buildCP12ApplianceCards() -->
           </div>
+          <div class="no-print" style="margin-top:8px">
+            <button type="button" id="btn-add-appliance" onclick="addNextApplianceRow()" style="border:2px dashed #1e3a5f;background:transparent;color:#1e3a5f;font-weight:700;font-size:8pt;padding:5px 16px;border-radius:6px;cursor:pointer;width:100%">+ Add Appliance</button>
+          </div>
         </div><!-- end page2 -->
 
       </div><!-- end cp12-form-wrap -->
@@ -2798,6 +2801,19 @@ function toggleCP12AppRow(n){
   const disabled=card.classList.toggle('is-disabled');
   const btn=card.querySelector('.app-row-toggle');
   if(btn)btn.textContent=disabled?`+ ENABLE SLOT ${n} +`:`— not in use`;
+  updateAddApplianceBtn();
+}
+function addNextApplianceRow(){
+  for(let n=1;n<=5;n++){
+    const c=document.getElementById(`cp12App${n}`);
+    if(c&&c.classList.contains('is-disabled')){toggleCP12AppRow(n);return;}
+  }
+}
+function updateAddApplianceBtn(){
+  const btn=document.getElementById('btn-add-appliance');if(!btn)return;
+  let hasDisabled=false;
+  for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled')){hasDisabled=true;break;}}
+  btn.hidden=!hasDisabled;
 }
 
 // ========== CP12 DATA BRIDGE ==========
@@ -2913,7 +2929,15 @@ function newGasCert(){
   });
   ['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'].forEach(f=>setCP12Field(f,'✓'));
   refreshChoiceGroups();
-  for(let n=1;n<=5;n++){setCP12Field(`app${n}_op_pressure`,'20 mbar');const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  // Start with only row 1 active; disable rows 2-5
+  for(let n=1;n<=5;n++){
+    setCP12Field(`app${n}_op_pressure`,'20 mbar');
+    const c=document.getElementById(`cp12App${n}`);
+    if(!c)continue;
+    if(n===1){if(c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+    else{if(!c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
+  }
+  updateAddApplianceBtn();
   const t=new Date();const dd=String(t.getDate()).padStart(2,'0');const mm=String(t.getMonth()+1).padStart(2,'0');const yyyy=t.getFullYear();
   const today=`${dd}/${mm}/${yyyy}`;setCP12Field('cert_date',today);setCP12Field('next_check_date',oneYearMinusOneDayUK(today));
   document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height));
@@ -2935,7 +2959,7 @@ async function loadGasForm(id){
     else if(el.tagName!=='INPUT'||!el.readOnly)el.value='';
   });
   for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
-  populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();
+  populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();updateAddApplianceBtn();
   _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
 }
 function getGasFormData(){return collectCP12FormData();}
