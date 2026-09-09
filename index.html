@@ -3015,7 +3015,7 @@ function newGasCert(){
   document.getElementById('gas-form-ref').textContent='';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
-    else if(el.tagName!=='INPUT'||!el.readOnly)el.value='';
+    else el.value='';
   });
   ['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'].forEach(f=>setCP12Field(f,'✓'));
   refreshChoiceGroups();
@@ -3097,6 +3097,19 @@ function initCP12Form(){
   if(certEl)certEl.addEventListener('input',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&certEl.value.length===10)ne.value=oneYearMinusOneDayUK(certEl.value);});
   // Auto-save every 4 seconds
   setInterval(function(){try{localStorage.setItem('cp12_autosave_v1',JSON.stringify(collectCP12FormData()));}catch(e){}},4000);
+  // Live reference number preview — updates cert_ref as address/postcode typed
+  function _refreshGasRef(){
+    const addr=cp12Field('install_address');
+    const pc=cp12Field('install_postcode');
+    if(!addr)return;
+    const ref=buildCertRef(addr+(pc?' '+pc:''),pc);
+    setCP12Field('cert_ref',ref);
+    setCP12Field('cert_ref_p2',ref);
+  }
+  const _addrEl=document.querySelector('[data-field="install_address"]');
+  const _pcEl=document.querySelector('[data-field="install_postcode"]');
+  if(_addrEl)_addrEl.addEventListener('input',_refreshGasRef);
+  if(_pcEl)_pcEl.addEventListener('input',_refreshGasRef);
   // Boiler autofill: when type contains "boiler", fill flue type, flue flow check, combustion reading
   for(let n=1;n<=5;n++){
     (function(row){
