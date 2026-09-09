@@ -1215,6 +1215,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="settings-tabs">
         <button class="settings-tab active" onclick="switchSettingsTab('pat')">PAT</button>
         <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas CP12</button>
+        <button class="settings-tab" onclick="switchSettingsTab('ref')">🔢 Reference</button>
         <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
         <button class="settings-tab" onclick="switchSettingsTab('profile')">My Profile</button>
         <button class="settings-tab" onclick="switchSettingsTab('backend')">⚙ Backend</button>
@@ -1279,7 +1280,6 @@ a{color:var(--accent);text-decoration:none}
         <div class="form-section">
           <div class="form-section-title">PAT Test Defaults</div>
           <div class="field-grid">
-            <div class="field-group"><label>Reference Base <small style="color:var(--muted);font-weight:400">(used for all cert types)</small></label><input type="text" id="s-ref-base" placeholder="OHM655" maxlength="12"></div>
             <div class="field-group"><label>Default Retest Period</label>
               <select id="s-pat-period"><option value="12">1 Year (12 months)</option><option value="24">2 Years</option><option value="6">6 Months</option><option value="3">3 Months</option></select>
             </div>
@@ -1363,7 +1363,6 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Email</label><input type="email" id="s-gas-co-email" placeholder="info@yourcompany.co.uk"></div>
             <div class="field-group"><label>Gas Safe Reg No.</label><input type="text" id="s-gas-safe-no" placeholder="Gas Safe registration number"></div>
             <div class="field-group"><label>Engineer Licence No.</label><input type="text" id="s-gas-licence" placeholder="ACS or licence number"></div>
-            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-gas-prefix" placeholder="OHM" maxlength="10"></div>
           </div>
         </div>
         <div class="form-section">
@@ -1383,6 +1382,58 @@ a{color:var(--accent);text-decoration:none}
               <input type="file" id="f-gas-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'gas_engg_sig_data','pr-gas-sig')">
               <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('gas_engg_sig_data','pr-gas-sig')">✕ Clear</button>
             </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-ref">
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Number System</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            One reference system for all certificate types — PAT and Gas CP12 share the same base and format.
+          </div>
+          <div class="field-grid">
+            <div class="field-group">
+              <label>Reference Base <small style="color:var(--muted);font-weight:400">(e.g. OHM655 or your initials+code)</small></label>
+              <input type="text" id="s-ref-base" placeholder="OHM655" maxlength="12" oninput="updateRefPreview()">
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Format Preview</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Your reference numbers will look like:</div>
+            <div id="ref-preview-line" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.02em;color:var(--text)">OHM6559/1 MARINA POINT</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7">
+              <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[BASE]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[MONTH]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[POSTCODE SCORE]</span>
+              / <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[DOOR + STREET]</span><br>
+              <span style="margin-top:6px;display:inline-block">Example: Base <strong>OHM655</strong> + Month <strong>9</strong> + IG1 1JP score <strong>44</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM655944/1 MARINA POINT</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Certificates Issued</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--accent)" id="ref-count-pat">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">PAT Reports</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--accent)" id="ref-count-gas">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Gas CP12</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--text)" id="ref-count-total">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Total Issued</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)" id="ref-count-note">Counts load when you open this tab.</div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Recent References Issued</div>
+          <div id="ref-recent-list" style="font-size:13px;line-height:1.9">
+            <div style="color:var(--muted);font-size:12px">Opens when you switch to this tab.</div>
           </div>
         </div>
       </div>
@@ -1748,7 +1799,6 @@ function loadSettingsUI(){
   document.getElementById('s-gas-co-email').value=getSetting('gas_co_email','');
   document.getElementById('s-gas-safe-no').value=getSetting('gas_safe_no','');
   document.getElementById('s-gas-licence').value=getSetting('gas_licence','');
-  document.getElementById('s-gas-prefix').value=getSetting('gas_prefix','OHM');
   // Gas logos/sig previews
   const gasLogoFields=[['gas_logo_data','pr-gas-logo'],['gas_engg_sig_data','pr-gas-sig']];
   gasLogoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
@@ -1804,7 +1854,6 @@ async function saveSettings(){
     ['gas_co_email',document.getElementById('s-gas-co-email').value],
     ['gas_safe_no',document.getElementById('s-gas-safe-no').value],
     ['gas_licence',document.getElementById('s-gas-licence').value],
-    ['gas_prefix',document.getElementById('s-gas-prefix').value],
     ['email_method',document.getElementById('s-email-method').value],
     ['email_script_url',document.getElementById('s-script-url').value],
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
@@ -1838,6 +1887,48 @@ function switchSettingsTab(tab){
   document.querySelectorAll('.settings-pane').forEach(p=>p.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById(`pane-${tab}`).classList.add('active');
+  if(tab==='ref'){updateRefPreview();loadRefStats();}
+}
+function updateRefPreview(){
+  const base=(document.getElementById('s-ref-base')||{value:'OHM655'}).value||'OHM655';
+  const month=String(new Date().getMonth()+1);
+  const el=document.getElementById('ref-preview-line');
+  if(el)el.textContent=`${base}${month}44/1 MARINA POINT`;
+}
+async function loadRefStats(){
+  if(!sb||!currentUser)return;
+  const note=document.getElementById('ref-count-note');
+  if(note)note.textContent='Loading…';
+  try{
+    const[{count:patCount},{count:gasCount}]=await Promise.all([
+      sb.from('pat_reports').select('id',{count:'exact',head:true}),
+      sb.from('gas_certs').select('id',{count:'exact',head:true})
+    ]);
+    const p=patCount||0,g=gasCount||0;
+    const cp=document.getElementById('ref-count-pat');
+    const cg=document.getElementById('ref-count-gas');
+    const ct=document.getElementById('ref-count-total');
+    if(cp)cp.textContent=p;
+    if(cg)cg.textContent=g;
+    if(ct)ct.textContent=p+g;
+    if(note)note.textContent='Total certificates ever issued under this account.';
+    // Load recent refs
+    const[{data:recentPat},{data:recentGas}]=await Promise.all([
+      sb.from('pat_reports').select('ref_number,created_at').order('created_at',{ascending:false}).limit(5),
+      sb.from('gas_certs').select('ref_number,created_at').order('created_at',{ascending:false}).limit(5)
+    ]);
+    const allRecent=[...(recentPat||[]).map(r=>({ref:r.ref_number,type:'PAT',ts:r.created_at})),...(recentGas||[]).map(r=>({ref:r.ref_number,type:'Gas',ts:r.created_at}))]
+      .filter(r=>r.ref).sort((a,b)=>new Date(b.ts)-new Date(a.ts)).slice(0,8);
+    const listEl=document.getElementById('ref-recent-list');
+    if(listEl){
+      if(!allRecent.length){listEl.innerHTML='<div style="color:var(--muted);font-size:12px">No certificates issued yet.</div>';return;}
+      listEl.innerHTML=allRecent.map(r=>{
+        const d=new Date(r.ts);
+        const ds=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
+        return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:monospace;font-weight:600;flex:1;color:var(--text)">${r.ref||'—'}</span><span style="font-size:11px;background:var(--accent-dim);color:var(--accent);padding:2px 6px;border-radius:4px;white-space:nowrap">${r.type}</span><span style="font-size:11px;color:var(--muted);white-space:nowrap">${ds}</span></div>`;
+      }).join('');
+    }
+  }catch(e){if(note)note.textContent='Could not load counts.';}
 }
 
 // ========== DASHBOARD ==========
