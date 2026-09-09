@@ -1325,6 +1325,7 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Header Background</label><input type="color" id="s-pat-hdr-color" value="#1e3a5f"></div>
             <div class="field-group"><label>Header Text Colour</label><input type="color" id="s-pat-hdr-text" value="#ffffff"></div>
             <div class="field-group"><label>Alt Row Colour</label><input type="color" id="s-pat-row-color" value="#f8fafc"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Company Name Size <span id="s-pat-coname-size-v" style="font-weight:700;color:var(--accent);margin-left:4px">26px</span></label><input type="range" id="s-pat-coname-size" min="14" max="48" value="26" style="width:100%;margin-top:4px" oninput="document.getElementById('s-pat-coname-size-v').textContent=this.value+'px';doPatPreview()"></div>
           </div>
         </div>
         <div class="form-section">
@@ -1818,6 +1819,7 @@ function loadSettingsUI(){
   document.getElementById('s-pat-hdr-color').value=getSetting('pat_hdr_color','#1e3a5f');
   document.getElementById('s-pat-hdr-text').value=getSetting('pat_hdr_text','#ffffff');
   document.getElementById('s-pat-row-color').value=getSetting('pat_row_color','#f8fafc');
+  const _csz=getSetting('pat_coname_size','26');document.getElementById('s-pat-coname-size').value=_csz;document.getElementById('s-pat-coname-size-v').textContent=_csz+'px';
   document.getElementById('s-gemini-key').value=getSetting('gemini_key','');
   document.getElementById('s-pat-cert-title').value=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
   document.getElementById('s-pat-sig-label').value=getSetting('pat_sig_label','Authorised Signature');
@@ -1867,6 +1869,7 @@ async function saveSettings(){
     ['pat_hdr_color',document.getElementById('s-pat-hdr-color').value],
     ['pat_hdr_text',document.getElementById('s-pat-hdr-text').value],
     ['pat_row_color',document.getElementById('s-pat-row-color').value],
+    ['pat_coname_size',document.getElementById('s-pat-coname-size').value],
     ['gemini_key',document.getElementById('s-gemini-key').value],
     ['pat_cert_title',document.getElementById('s-pat-cert-title').value||'PORTABLE APPLIANCE TEST REPORT'],
     ['pat_sig_label',document.getElementById('s-pat-sig-label').value||'Authorised Signature'],
@@ -2378,7 +2381,7 @@ function doPatPreview(){
       if(!cb)cb='<span style="color:#94a3b8">—</span>';
       hdr=`<div class="a4-topbar"><div><strong>Date:</strong> ${testDate}</div><div><strong>Ref:</strong> ${patEsc(ref)||'—'}</div></div>`
         +`<div class="a4-hdr" style="border-bottom-color:${hc}"><div class="a4-logo">${logoHTML}</div>`
-        +`<div><div class="a4-coname" style="color:${hc};font-size:20px;font-family:DM Sans,Arial,sans-serif">${patEsc(coName)}</div>`
+        +`<div style="flex:1"><div class="a4-coname" style="color:${hc};font-size:${(()=>{const el=document.getElementById('s-pat-coname-size');return el?el.value:getSetting('pat_coname_size','26');})()}px;font-family:DM Sans,Arial,sans-serif">${patEsc(coName)}</div>`
         +`<div class="a4-cotype" style="color:${hc}">${patEsc(certTitle)}</div></div></div>`
         +`<div class="a4-meta"><div class="a4-box">${cb}</div>`
         +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
