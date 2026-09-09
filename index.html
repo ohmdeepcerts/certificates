@@ -2108,7 +2108,7 @@ function getPATFormData(){
     engineer:patGv('pat-eng'),
     landlord_name:patGv('pat-landlord'),
     agency_name:patGv('pat-agency'),
-    property_address:patGv('pat-addr'),
+    property_address:((patGv('pat-addr')||'').trim()+(patGv('pat-postcode')?'\n'+(patGv('pat-postcode')||'').trim():'')),
     phone_number:patGv('pat-phone'),
     email_address:patGv('pat-email'),
     appliances:JSON.parse(JSON.stringify(patApps))
@@ -2320,7 +2320,8 @@ function doPatPreview(){
   wrap.innerHTML='';
   const ref=patGv('pat-ref'),testDate=patFd(patGv('pat-date'));
   const landlord=(patGv('pat-landlord')||'').trim(),client=(patGv('pat-agency')||'').trim();
-  const addr=(patGv('pat-addr')||'').trim(),eng=patGv('pat-eng')||'—';
+  const pc=(patGv('pat-postcode')||'').trim();
+  const addr=((patGv('pat-addr')||'').trim()+(pc?'\n'+pc:'')),eng=patGv('pat-eng')||'—';
   const isDraft=patGv('pat-status')==='draft';
   const hc=getSetting('pat_hdr_color','#1e3a5f'),htc=getSetting('pat_hdr_text','#ffffff'),rowBg=getSetting('pat_row_color','#f8fafc');
   const coName=getSetting('pat_co_name',getSetting('company_name','Your Company Name'));
