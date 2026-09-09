@@ -1279,7 +1279,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="form-section">
           <div class="form-section-title">PAT Test Defaults</div>
           <div class="field-grid">
-            <div class="field-group"><label>Reference Prefix</label><input type="text" id="s-pat-prefix" placeholder="OHM" maxlength="10"></div>
+            <div class="field-group"><label>Reference Base <small style="color:var(--muted);font-weight:400">(used for all cert types)</small></label><input type="text" id="s-ref-base" placeholder="OHM655" maxlength="12"></div>
             <div class="field-group"><label>Default Retest Period</label>
               <select id="s-pat-period"><option value="12">1 Year (12 months)</option><option value="24">2 Years</option><option value="6">6 Months</option><option value="3">3 Months</option></select>
             </div>
@@ -1760,7 +1760,7 @@ function loadSettingsUI(){
   document.getElementById('s-from-email').value=getSetting('email_from');
   document.getElementById('s-from-name').value=getSetting('email_from_name');
   // PAT
-  document.getElementById('s-pat-prefix').value=getSetting('pat_prefix','OHM');
+  document.getElementById('s-ref-base').value=getSetting('ref_base','OHM');
   document.getElementById('s-pat-period').value=getSetting('pat_period','12');
   document.getElementById('s-pat-engineer').value=getSetting('pat_default_engineer');
   document.getElementById('s-pat-instrument').value=getSetting('pat_default_instrument','');
@@ -1810,7 +1810,7 @@ async function saveSettings(){
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
     ['email_from',document.getElementById('s-from-email').value],
     ['email_from_name',document.getElementById('s-from-name').value],
-    ['pat_prefix',document.getElementById('s-pat-prefix').value||'OHM'],
+    ['ref_base',document.getElementById('s-ref-base').value||'OHM'],
     ['pat_period',document.getElementById('s-pat-period').value],
     ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
     ['pat_default_instrument',document.getElementById('s-pat-instrument').value],
@@ -1898,29 +1898,32 @@ function patWrapTxt(text,maxCh){
 
 // ─── Smart Ref ───────────────────────────────────────
 let patCurrentBaseRef='';
-function patIncStr(s){const m=s.match(/^(.*?)(\d+)$/);return m?m[1]+String(parseInt(m[2],10)+1).padStart(m[2].length,'0'):s+'-1';}
-function patAddressRefPart(addr){
-  if(!addr)return'';
-  let lines=addr.split('\n').map(l=>l.trim()).filter(Boolean);
-  if(lines.length<2)lines=addr.split(',').map(l=>l.trim()).filter(Boolean);
-  if(!lines.length)return'';
-  const startsWithDigit=l=>/^\d/.test(l);
-  let businessName='',streetLine;
-  if(startsWithDigit(lines[0])){streetLine=lines[0];}
-  else{businessName=lines[0];streetLine=lines.slice(1).find(startsWithDigit)||lines[1]||'';}
-  const m=(streetLine||'').match(/^(\d+\w*)\s+(\S+)\s*(\S+)?/);
-  const streetPart=m?[m[1],m[2],m[3]].filter(Boolean).join(' '):(streetLine||'').split(/\s+/).slice(0,3).join(' ');
-  return businessName?businessName+' '+streetPart:streetPart;
+function _pcScore(pc){let s=0;for(const ch of(pc||'').replace(/\s/g,'').toUpperCase()){if(ch>='A'&&ch<='Z')s+=ch.charCodeAt(0)-64;else if(ch>='0'&&ch<='9')s+=parseInt(ch);}return s;}
+function _extractPC(addr){const m=(addr||'').match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})\b/i);return m?m[1].replace(/\s/g,'').toUpperCase():'';}
+function _refAddrPart(addr){
+  // Strip UK postcode and clean
+  let a=(addr||'').replace(/\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b/gi,'').replace(/,?\s*$/,'').replace(/\s+/g,' ').trim().toUpperCase();
+  const tokens=a.split(/[\s,]+/).filter(Boolean);
+  if(!tokens.length)return'';
+  if(/^\d/.test(tokens[0])){return tokens.slice(0,3).join(' ');}// door + 2 words
+  const doorIdx=tokens.findIndex(t=>/^\d/.test(t));
+  if(doorIdx===-1)return tokens.slice(0,3).join(' ');
+  return tokens.slice(0,doorIdx+3).join(' ');// business name + door + 2 words
+}
+function buildCertRef(fullAddress,postcode){
+  const base=getSetting('ref_base','OHM');
+  const month=String(new Date().getMonth()+1);
+  const pc=postcode||_extractPC(fullAddress);
+  const score=_pcScore(pc);
+  const addrPart=_refAddrPart(fullAddress);
+  return`${base}${month}${score}/${addrPart}`;
 }
 function updatePatRef(){
   const el=patGe('pat-ref');
   if(!el||el.dataset.manual==='true')return;
-  const base=patCurrentBaseRef;
-  if(!base)return;
   const addr=(patGv('pat-addr')||'').trim();
-  const short=patAddressRefPart(addr);
-  const numbered=base+'0'+String(patApps.length);
-  el.value=short?numbered+' / '+short:numbered;
+  if(!addr)return;
+  el.value=buildCertRef(addr,'');
   doPatPreview();
 }
 // ─────────────────────────────────────────────────────
@@ -2039,12 +2042,7 @@ async function newPAT(){
   // Auto-assign base ref
   patCurrentBaseRef='';
   const refEl=patGe('pat-ref');
-  if(refEl)refEl.dataset.manual='false';
-  try{
-    const prefix=getSetting('pat_prefix','OHM');
-    const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'pat'});
-    if(serial){patCurrentBaseRef=prefix+String(serial).padStart(4,'0');}
-  }catch(e){}
+  if(refEl){refEl.dataset.manual='false';refEl.value='';}
   addPATRow();addPATRow();
   _syncAutoCapBtn();
 }
@@ -2089,8 +2087,11 @@ async function savePAT(){
 async function completePAT(){
   const d=getPATFormData();
   if(!d.property_address||!d.test_date){toast('Address and date required','error');return;}
-  // Ensure ref is current before saving
-  if(patGe('pat-ref').dataset.manual!=='true')updatePatRef();
+  // Generate ref from address at issue time
+  if(patGe('pat-ref').dataset.manual!=='true'){
+    const r=buildCertRef(d.property_address,'');
+    patGe('pat-ref').value=r;patCurrentBaseRef=r;
+  }
   await savePAT();
   if(!editingPATId){toast('Save failed','error');return;}
   showOverlay('Issuing certificate…');
@@ -3044,9 +3045,7 @@ async function completeGas(){
   await saveGas();
   if(!editingGasId){toast('Save failed','error');return;}
   showOverlay('Issuing certificate…');
-  const{data:serial}=await sb.rpc('next_ref_serial',{p_cert_type:'gas'});
-  const prefix=getSetting('gas_prefix','OHM');
-  const refNum=`${prefix}-CP12-${String(serial).padStart(4,'0')}`;
+  const refNum=buildCertRef((d.install_address||'')+(d.install_postcode?' '+d.install_postcode:''),d.install_postcode);
   const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingGasId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
