@@ -2377,18 +2377,20 @@ function doPatPreview(){
       let partiesHtml='';
       if(landlord)partiesHtml+=`<div><div class="a4-key">Landlord</div><div class="a4-val">${patEsc(landlord)}${landlordAddr?'<br><span style="font-weight:400;font-size:0.9em">'+patEsc(landlordAddr).replace(/\n/g,'<br>')+'</span>':''}</div></div>`;
       if(client)partiesHtml+=`<div style="margin-top:5px"><div class="a4-key">Client</div><div class="a4-val">${patEsc(client)}${clientAddr?'<br><span style="font-weight:400;font-size:0.9em">'+patEsc(clientAddr).replace(/\n/g,'<br>')+'</span>':''}</div></div>`;
+      let leftColHtml='';
       if(hasPartyAddr&&partiesHtml&&addr){
-        cb+=`<div style="display:flex;gap:14px;align-items:flex-start"><div style="flex:1">${partiesHtml}</div><div style="flex:1"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div></div>`;
+        leftColHtml=`<div style="display:flex;gap:8px;align-items:stretch"><div class="a4-box" style="flex:1">${partiesHtml}</div><div class="a4-box" style="flex:1"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div></div>`;
       }else{
         cb+=partiesHtml;
-        if(addr)cb+=(partiesHtml?'<div style="margin-top:5px">':'<div>')+`<div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div>`;
+        if(addr)cb+=(cb?'<div style="margin-top:5px">':'<div>')+`<div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${patEsc(addr)}</div></div>`;
+        if(!cb)cb='<span style="color:#94a3b8">—</span>';
+        leftColHtml=`<div class="a4-box">${cb}</div>`;
       }
-      if(!cb)cb='<span style="color:#94a3b8">—</span>';
       hdr=`<div class="a4-topbar"><div><strong>Date:</strong> ${testDate}</div><div><strong>Ref:</strong> ${patEsc(ref)||'—'}</div></div>`
         +`<div class="a4-hdr" style="border-bottom-color:${hc}"><div class="a4-logo">${logoHTML}</div>`
         +`<div style="flex:1"><div class="a4-coname" style="color:${hc};font-size:${getSetting('pat_coname_size','26')}px;font-family:DM Sans,Arial,sans-serif">${patEsc(coName)}</div>`
         +`<div class="a4-cotype" style="color:${hc};font-size:${getSetting('pat_cotype_size','11')}px">${patEsc(certTitle)}</div></div></div>`
-        +`<div class="a4-meta"><div class="a4-box">${cb}</div>`
+        +`<div class="a4-meta">${leftColHtml}`
         +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
         +`<div class="a4-val" style="font-weight:700;margin-bottom:2px">${patEsc(coName)}</div>`
         +`<div style="font-size:.7rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
