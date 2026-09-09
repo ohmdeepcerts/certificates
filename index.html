@@ -635,7 +635,7 @@ a{color:var(--accent);text-decoration:none}
       <!-- Tab bar (login / register only) -->
       <div class="auth-tabs" id="auth-tab-bar">
         <button class="auth-tab on" onclick="switchAuthTab('login')">Sign In</button>
-        <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">Request Access</button>
       </div>
       <!-- Login -->
       <div id="auth-login" class="auth-panel on">
@@ -650,18 +650,13 @@ a{color:var(--accent);text-decoration:none}
         <span class="auth-forgot" onclick="switchAuthTab('forgot')">Forgot password?</span>
         <button class="btn btn-primary btn-block btn-lg" style="margin-top:10px" onclick="doLogin()"><i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:6px"></i>Sign In</button>
       </div>
-      <!-- Register -->
+      <!-- Request Access -->
       <div id="auth-register" class="auth-panel">
-        <div class="form-group"><label>FULL NAME</label><input class="form-control" id="reg-name" type="text" placeholder="Your name"></div>
-        <div class="form-group"><label>EMAIL</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com"></div>
-        <div class="form-group">
-          <label>PASSWORD</label>
-          <div class="auth-pw-wrap">
-            <input class="form-control" id="reg-pass" type="password" placeholder="Min 8 characters">
-            <button class="auth-pw-eye" onclick="toggleAuthPw('reg-pass',this)" type="button"><i class="fa-solid fa-eye"></i></button>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-block btn-lg" onclick="doRegister()"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i>Create Account</button>
+        <p style="font-size:.84rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">You cannot create an account directly. Submit a request and an admin will review it and add you to the system.</p>
+        <div class="form-group"><label>FULL NAME</label><input class="form-control" id="reg-name" type="text" placeholder="Your full name" autocomplete="name"></div>
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="form-group"><label>MESSAGE <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input class="form-control" id="reg-msg" type="text" placeholder="e.g. I'm a new engineer joining the team"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doRequestAccess()"><i class="fa-solid fa-paper-plane" style="margin-right:6px"></i>Send Access Request</button>
       </div>
       <!-- Forgot -->
       <div id="auth-forgot" class="auth-panel">
@@ -1546,6 +1541,36 @@ CREATE POLICY "Admin insert profiles" ON public.profiles
       SELECT 1 FROM public.profiles
       WHERE id = auth.uid() AND role = 'admin'
     )
+  );
+
+-- Step 5: Add must_change_password column (first-time login enforcement)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+
+-- Step 6: Create staff_requests table (anyone can submit, only admins can read/update)
+CREATE TABLE IF NOT EXISTS public.staff_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.staff_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can submit request" ON public.staff_requests;
+CREATE POLICY "Anyone can submit request" ON public.staff_requests
+  FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin read requests" ON public.staff_requests;
+CREATE POLICY "Admin read requests" ON public.staff_requests
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+DROP POLICY IF EXISTS "Admin update requests" ON public.staff_requests;
+CREATE POLICY "Admin update requests" ON public.staff_requests
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );</pre>
             <button class="btn btn-secondary btn-sm" onclick="copyStaffSQL()" style="position:absolute;top:10px;right:10px;font-size:11px" id="copy-sql-btn">📋 Copy</button>
           </div>
@@ -1610,6 +1635,10 @@ CREATE POLICY "Admin insert profiles" ON public.profiles
         <strong style="color:var(--warn)">⚠ One-time setup required.</strong> Run the SQL migration in
         <a href="#" onclick="navigate('settings');setTimeout(()=>switchSettingsTab('backend'),300);return false" style="color:var(--accent)">Settings → Backend → Staff Setup</a>
         to enable staff management, then refresh the page.
+      </div>
+      <div id="pending-requests-section" hidden style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">⏳ Pending Access Requests</div>
+        <div id="pending-requests-list"></div>
       </div>
       <div id="staff-list"><div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div></div>
     </div>
@@ -1688,6 +1717,22 @@ CREATE POLICY "Admin insert profiles" ON public.profiles
   </div>
 </div>
 
+<!-- FORCE CHANGE PASSWORD MODAL (first-time login) -->
+<div class="modal-backdrop hidden" id="force-pw-modal" style="z-index:700;background:rgba(0,0,0,0.85)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px"><span>🔐</span> Set Your Password</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Welcome! For your security, you must set a personal password before continuing. You will use this password for all future logins.</p>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--muted)">NEW PASSWORD</label><input class="form-control" id="force-pw-new" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--muted)">CONFIRM PASSWORD</label><input class="form-control" id="force-pw-confirm" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+    <div id="force-pw-error" style="color:var(--danger,#ef4444);font-size:13px;margin-bottom:10px;min-height:18px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:100%;font-size:15px" onclick="doForceChangePassword()">Set Password &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
 <!-- SETTINGS UNSAVED MODAL -->
 <div class="modal-backdrop hidden" id="settings-leave-modal" style="z-index:200">
   <div class="modal" style="max-width:400px">
@@ -1753,17 +1798,24 @@ async function doLogin(){
   hideOverlay();
   if(error){showAuthError(error.message);}
 }
-async function doRegister(){
+async function doRequestAccess(){
   const name=document.getElementById('reg-name').value.trim();
-  const email=document.getElementById('reg-email').value.trim();
-  const pass=document.getElementById('reg-pass').value;
-  if(!name||!email||!pass){showAuthError('All fields required.');return;}
-  if(pass.length<8){showAuthError('Password must be at least 8 characters.');return;}
-  showOverlay('Creating account…');
-  const{error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  const msg=document.getElementById('reg-msg')?.value.trim()||'';
+  if(!name||!email){showAuthError('Name and email are required.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showAuthError('Enter a valid email address.');return;}
+  showOverlay('Sending request…');
+  const{error}=await sb.from('staff_requests').insert({full_name:name,email,message:msg||null,status:'pending'});
   hideOverlay();
-  if(error){showAuthError(error.message);}
-  else{toast('Account created! Check email to confirm then sign in.','success',6000);switchAuthTab('login');}
+  if(error){showAuthError('Could not send request: '+error.message);}
+  else{
+    document.getElementById('reg-name').value='';
+    document.getElementById('reg-email').value='';
+    if(document.getElementById('reg-msg'))document.getElementById('reg-msg').value='';
+    clearAuthError();
+    switchAuthTab('login');
+    toast('Access request sent! An admin will review it and set up your account.','success',7000);
+  }
 }
 async function doForgot(){
   const email=document.getElementById('forgot-email').value.trim();
@@ -1803,6 +1855,13 @@ async function onLogin(user){
   if(currentProfile.role==='admin'){document.getElementById('audit-nav').style.display='flex';document.getElementById('staff-nav').style.display='flex';}
   // Load settings then navigate
   await loadAppSettings();
+  if(currentProfile.must_change_password){
+    document.getElementById('force-pw-error').textContent='';
+    document.getElementById('force-pw-new').value='';
+    document.getElementById('force-pw-confirm').value='';
+    document.getElementById('force-pw-modal').classList.remove('hidden');
+    return;
+  }
   navigate('dashboard');
 }
 function onLogout(){
@@ -1857,25 +1916,47 @@ function showAddStaffModal(){
   document.getElementById('add-staff-error').textContent='';
   document.getElementById('add-staff-modal').classList.remove('hidden');
 }
-function hideAddStaffModal(){document.getElementById('add-staff-modal').classList.add('hidden');}
+function hideAddStaffModal(){const m=document.getElementById('add-staff-modal');m.classList.add('hidden');delete m.dataset.requestId;}
 
 async function loadStaff(){
   const el=document.getElementById('staff-list');
   el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div>';
-  const{data,error}=await sb.from('profiles').select('*').order('full_name');
+  const[profilesRes,requestsRes]=await Promise.all([
+    sb.from('profiles').select('*').order('full_name'),
+    sb.from('staff_requests').select('*').eq('status','pending').order('created_at')
+  ]);
   const notice=document.getElementById('staff-setup-notice');
-  if(error||!data||data.length===0){
+  if(profilesRes.error||!profilesRes.data||profilesRes.data.length===0){
     notice&&(notice.hidden=false);
     el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>No staff found. Run the SQL setup first.</p></div>';
     return;
   }
-  // If only 1 row (just the current user) and role column missing, show setup notice
-  if(data.length===1&&data[0].role===undefined){
+  if(profilesRes.data.length===1&&profilesRes.data[0].role===undefined){
     notice&&(notice.hidden=false);
   }else{
     notice&&(notice.hidden=true);
   }
-  renderStaffList(data);
+  // Render pending requests
+  const section=document.getElementById('pending-requests-section');
+  const list=document.getElementById('pending-requests-list');
+  const reqs=requestsRes.data||[];
+  if(reqs.length&&section&&list){
+    section.hidden=false;
+    list.innerHTML=reqs.map(r=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:var(--radius);flex-wrap:wrap;margin-bottom:8px">
+        <div style="flex:1;min-width:160px">
+          <div style="font-weight:600;font-size:13px">${r.full_name}</div>
+          <div style="font-size:12px;color:var(--muted)">${r.email}</div>
+          ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${r.message}"</div>`:''}
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${(r.full_name||'').replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${r.email}')">✓ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${(r.full_name||'').replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')">✕ Reject</button>
+        </div>
+      </div>`).join('');
+  }else if(section){section.hidden=true;}
+  renderStaffList(profilesRes.data);
 }
 
 function renderStaffList(staff){
@@ -1924,10 +2005,13 @@ async function doAddStaff(){
     if(signUpErr)throw new Error(signUpErr.message);
     const uid=signUpData?.user?.id;
     if(!uid)throw new Error('Account created but no user ID returned. Check Supabase Auth for the new user.');
-    const{error:profileErr}=await sb.from('profiles').upsert({id:uid,email,full_name:name,role,is_active:true},{onConflict:'id'});
+    const{error:profileErr}=await sb.from('profiles').upsert({id:uid,email,full_name:name,role,is_active:true,must_change_password:true},{onConflict:'id'});
     if(profileErr)throw new Error('Auth account created but profile save failed: '+profileErr.message);
+    // If this was an approval, mark the request as approved
+    const reqId=document.getElementById('add-staff-modal').dataset.requestId;
+    if(reqId){await sb.from('staff_requests').update({status:'approved'}).eq('id',reqId);delete document.getElementById('add-staff-modal').dataset.requestId;}
     hideAddStaffModal();
-    toast(`${name} added successfully!`,'success');
+    toast(`${name} added! They must set a new password on first login.`,'success',5000);
     loadStaff();
   }catch(e){
     errEl.textContent=e.message;
@@ -1948,6 +2032,71 @@ async function toggleStaffActive(userId,currentlyActive){
   toast(currentlyActive?'Staff member deactivated':'Staff member activated','success');
   loadStaff();
 }
+async function doForceChangePassword(){
+  const pw=document.getElementById('force-pw-new').value;
+  const pw2=document.getElementById('force-pw-confirm').value;
+  const errEl=document.getElementById('force-pw-error');
+  errEl.textContent='';
+  if(pw.length<8){errEl.textContent='Password must be at least 8 characters.';return;}
+  if(pw!==pw2){errEl.textContent='Passwords do not match.';return;}
+  const btn=document.querySelector('#force-pw-modal .btn-primary');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const{error:pwErr}=await sb.auth.updateUser({password:pw});
+    if(pwErr)throw new Error(pwErr.message);
+    await sb.from('profiles').update({must_change_password:false}).eq('id',currentUser.id);
+    currentProfile.must_change_password=false;
+    document.getElementById('force-pw-modal').classList.add('hidden');
+    toast('Password set! Welcome.','success');
+    navigate('dashboard');
+  }catch(e){
+    errEl.textContent=e.message;
+  }finally{
+    btn.disabled=false;btn.textContent='Set Password & Continue →';
+  }
+}
+
+async function loadPendingRequests(){
+  const section=document.getElementById('pending-requests-section');
+  const list=document.getElementById('pending-requests-list');
+  const{data,error}=await sb.from('staff_requests').select('*').eq('status','pending').order('created_at');
+  if(error||!data||!data.length){section&&(section.hidden=true);return;}
+  section&&(section.hidden=false);
+  list.innerHTML=data.map(r=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:var(--radius);flex-wrap:wrap;margin-bottom:8px">
+      <div style="flex:1;min-width:160px">
+        <div style="font-weight:600;font-size:13px">${r.full_name}</div>
+        <div style="font-size:12px;color:var(--muted)">${r.email}</div>
+        ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${r.message}"</div>`:''}
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${r.full_name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${r.email}')">✓ Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${r.full_name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')">✕ Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveRequest(requestId,name,email){
+  // Pre-fill Add Staff modal with requester's details
+  document.getElementById('add-staff-name').value=name;
+  document.getElementById('add-staff-email').value=email;
+  document.getElementById('add-staff-role').value='engineer';
+  document.getElementById('add-staff-pw').value='';
+  document.getElementById('add-staff-error').textContent='';
+  // Tag the modal with the request ID so doAddStaff can mark it approved
+  document.getElementById('add-staff-modal').dataset.requestId=requestId;
+  document.getElementById('add-staff-modal').classList.remove('hidden');
+}
+
+async function rejectRequest(requestId,name){
+  confirm2('Reject Request',`Reject access request from ${name}?`,async()=>{
+    await sb.from('staff_requests').update({status:'rejected'}).eq('id',requestId);
+    toast(`Request from ${name} rejected.`,'info');
+    loadPendingRequests();
+  });
+}
+
 function copyStaffSQL(){
   const sql=document.getElementById('staff-sql-block').textContent;
   navigator.clipboard.writeText(sql).then(()=>{
@@ -3869,7 +4018,7 @@ async function init(){
   });
   // Enter on auth fields
   ['login-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
-  ['reg-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});});
+  ['reg-msg'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doRequestAccess();});});
   // Ctrl+S = save PAT draft
   document.addEventListener('keydown',e=>{
     if(e.ctrlKey&&e.code==='KeyS'&&currentView==='pat-new'){e.preventDefault();savePAT();}
