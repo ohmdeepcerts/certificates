@@ -2051,7 +2051,7 @@ function renderPATRows(opts={}){
     const tr=document.createElement('tr');
     tr.innerHTML=
       `<td><input class="pat-ti" id="pat-a${i}" value="${patEsc(a.assetId)}" onchange="patUpd(${i},'assetId',this.value)" placeholder="A001"></td>`
-      +`<td><textarea class="pat-ti" id="pat-d${i}" style="height:30px;min-height:30px;resize:vertical;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this)">${patEsc(a.description)}</textarea></td>`
+      +`<td><textarea class="pat-ti" id="pat-d${i}" style="height:30px;min-height:30px;resize:vertical;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this)" onkeydown="patDTab(event,${i})">${patEsc(a.description)}</textarea></td>`
       +`<td><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
       +`<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
       +`<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3','6','12','24','48'].map(n=>`<option value="${n} Months"${a.retestPeriod===n+' Months'?' selected':''}>${n}m</option>`).join('')}</select></td>`
@@ -2066,6 +2066,7 @@ function renderPATRows(opts={}){
 }
 
 function patUpd(i,f,v){if(patApps[i])patApps[i][f]=v;doPatPreview();updatePatSidePanel();}
+function patDTab(e,i){if(e.key!=='Tab'||e.shiftKey)return;e.preventDefault();patUpd(i,'description',e.target.value);if(i===patApps.length-1)addPATRow();setTimeout(()=>{const d=patGe('pat-d'+(i+1));if(d)d.focus();},30);}
 function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));renderPATRows();doPatPreview();}
 function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));renderPATRows();doPatPreview();}
 function applyPatHeaderDate(v){if(!v||!patApps.length)return;patApps.forEach(a=>{a.date=v;a.nextTest=patCalcNext(v,parseInt(a.retestPeriod));});renderPATRows();doPatPreview();}
