@@ -274,8 +274,8 @@ a{color:var(--accent);text-decoration:none}
 .a4-cotype{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;margin-top:3px}
 .a4-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
 .a4-box{border:1px solid #cbd5e1;border-radius:4px;padding:8px 10px;background:rgba(248,250,252,.8)}
-.a4-key{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:2px}
-.a4-val{font-size:.75rem;color:#1e293b;white-space:pre-line;font-weight:500}
+.a4-key{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+.a4-val{font-size:.85rem;color:#1e293b;white-space:pre-line;font-weight:500}
 .a4t{width:100%;border-collapse:collapse}
 .a4t th{padding:5px 4px;text-align:left;font-size:.68rem;border:1px solid #cbd5e1;font-weight:600;font-family:'DM Sans',Arial,sans-serif}
 .a4t td{border:1px solid #e2e8f0;padding:4px;font-size:.72rem;vertical-align:middle;font-family:'DM Sans',Arial,sans-serif}
@@ -2414,11 +2414,11 @@ function doPatPreview(){
         +`<div class="a4-meta">${leftColHtml}`
         +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
         +`<div class="a4-val" style="font-weight:700;margin-bottom:2px">${patEsc(coName)}</div>`
-        +`<div style="font-size:.7rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
+        +`<div style="font-size:.78rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
         +`<div style="display:flex;gap:6px;margin-top:2px">`
-        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:4px 8px">`
-        +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">Engineer</div>`
-        +`<div style="font-size:.74rem;font-weight:600;color:#1e293b">${patEsc(eng)}</div>`
+        +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:6px 8px;display:flex;flex-direction:column;justify-content:center;align-items:center">`
+        +`<div style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:3px">Engineer</div>`
+        +`<div style="font-size:.9rem;font-weight:700;color:#1e293b;text-align:center">${patEsc(eng)}</div>`
         +`</div>`
         +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:4px 8px;min-height:36px;display:flex;flex-direction:column;justify-content:center">`
         +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:2px">${patEsc(sigLabel.replace(/:\s*$/,''))}</div>`
@@ -2428,7 +2428,7 @@ function doPatPreview(){
         +(regText?`<div style="margin-top:4px;font-size:.62rem;color:#64748b;line-height:1.4">${patEsc(regText)}${cop?` · ${patEsc(cop)}`:''}</div>`:'');
     }
     const empty=pg.cap-(pg.items.reduce((s,a)=>s+a._c,0));
-    let rows=pg.items.map((app,i)=>`<tr style="background:${i%2===0?rowBg:''}"><td style="height:${app._c*28}px;vertical-align:middle">${patEsc(app.assetId)}</td><td style="height:${app._c*28}px;vertical-align:middle;white-space:pre-wrap;word-break:break-word">${patEsc(app._d)}</td><td>${patEsc(app.testInstrument)}</td><td>${patFd(app.date)}</td><td>${patEsc(app.retestPeriod)}</td><td>${patFd(app.nextTest)}</td><td><span class="cbadge ${app.result==='Pass'?'pass':'fail'}">${patEsc(app.result)}</span></td></tr>`).join('');
+    let rows=pg.items.map((app,i)=>`<tr style="background:${i%2===0?rowBg:''}"><td style="height:${app._c*28}px;vertical-align:middle">${patEsc(app.assetId)}</td><td style="height:${app._c*28}px;vertical-align:middle;white-space:pre-wrap;word-break:break-word">${patEsc(app._d)}${app.assetId?` <span style="color:#94a3b8;font-size:.65rem;font-weight:400">(${patEsc(app.assetId)})</span>`:''}</td><td>${patEsc(app.testInstrument)}</td><td>${patFd(app.date)}</td><td>${patEsc(app.retestPeriod)}</td><td>${patFd(app.nextTest)}</td><td><span class="cbadge ${app.result==='Pass'?'pass':'fail'}">${patEsc(app.result)}</span></td></tr>`).join('');
     for(let i=0;i<empty;i++)rows+=`<tr style="background:${(pg.items.length+i)%2===0?rowBg:''}"><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
     const wmDiv=isDraft?`<div style="opacity:.06;pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;font-weight:900;color:#1e3a5f;white-space:nowrap;user-select:none">DRAFT</div>`:'';
     const accred=getSetting('pat_accred','');
