@@ -1260,6 +1260,16 @@ a{color:var(--accent);text-decoration:none}
             </div>
           </div>
         </div>
+        <div class="form-section">
+          <div class="form-section-title">✉ Email Defaults</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            These apply to <strong>all certificate types</strong> — PAT, Gas CP12 and any future certificates. The <strong>Fallback Email</strong> is used when no client email is on the record. The <strong>BCC Email</strong> is always blind-copied on every send.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Fallback Client Email</label><input type="email" id="s-fallback-email" placeholder="fallback@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Used when a certificate has no client email set</div></div>
+            <div class="field-group"><label>BCC Email</label><input type="email" id="s-bcc-email" placeholder="bcc@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Silently copied on every certificate email — all types</div></div>
+          </div>
+        </div>
       </div>
       <div class="settings-pane active" id="pane-pat">
         <div class="form-section">
@@ -1349,16 +1359,6 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Governing Regulation</label><input type="text" id="s-pat-reg-text" placeholder="Electricity at Work Regulations 1989"></div>
             <div class="field-group"><label>Code of Practice</label><input type="text" id="s-pat-cop" placeholder="IET Code of Practice (5th Edition)"></div>
             <div class="field-group" style="grid-column:1/-1"><label>Footer / Compliance Notes</label><textarea id="s-pat-cert-notes" placeholder="Any compliance notes shown in the certificate header…" style="height:60px;resize:vertical"></textarea></div>
-          </div>
-        </div>
-        <div class="form-section">
-          <div class="form-section-title">✉ Email Defaults</div>
-          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
-            When emailing a certificate, if no client email is on the record the <strong>Fallback Email</strong> is used instead. The <strong>BCC Email</strong> is always blind-copied on every send.
-          </div>
-          <div class="field-grid">
-            <div class="field-group"><label>Fallback Client Email</label><input type="email" id="s-pat-fallback-email" placeholder="fallback@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Used when cert has no client email set</div></div>
-            <div class="field-group"><label>BCC Email</label><input type="email" id="s-pat-bcc-email" placeholder="bcc@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Always silently copied on every certificate email</div></div>
           </div>
         </div>
       </div>
@@ -1825,6 +1825,8 @@ function loadSettingsUI(){
   document.getElementById('s-brevo-key').value=getSetting('brevo_api_key');
   document.getElementById('s-from-email').value=getSetting('email_from');
   document.getElementById('s-from-name').value=getSetting('email_from_name');
+  document.getElementById('s-fallback-email').value=getSetting('email_fallback','');
+  document.getElementById('s-bcc-email').value=getSetting('email_bcc','');
   // PAT
   document.getElementById('s-ref-base').value=getSetting('ref_base','OHM');
   document.getElementById('s-pat-period').value=getSetting('pat_period','12');
@@ -1836,8 +1838,6 @@ function loadSettingsUI(){
   document.getElementById('s-pat-row-color').value=getSetting('pat_row_color','#f8fafc');
   const _csz=getSetting('pat_coname_size','26');document.getElementById('s-pat-coname-size').value=_csz;document.getElementById('s-pat-coname-size-v').textContent=_csz+'px';
   const _ctsz=getSetting('pat_cotype_size','11');document.getElementById('s-pat-cotype-size').value=_ctsz;document.getElementById('s-pat-cotype-size-v').textContent=_ctsz+'px';
-  document.getElementById('s-pat-fallback-email').value=getSetting('pat_fallback_email','');
-  document.getElementById('s-pat-bcc-email').value=getSetting('pat_bcc_email','');
   document.getElementById('s-gemini-key').value=getSetting('gemini_key','');
   document.getElementById('s-pat-cert-title').value=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
   document.getElementById('s-pat-sig-label').value=getSetting('pat_sig_label','Authorised Signature');
@@ -1879,6 +1879,8 @@ async function saveSettings(){
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
     ['email_from',document.getElementById('s-from-email').value],
     ['email_from_name',document.getElementById('s-from-name').value],
+    ['email_fallback',document.getElementById('s-fallback-email').value],
+    ['email_bcc',document.getElementById('s-bcc-email').value],
     ['ref_base',document.getElementById('s-ref-base').value||'OHM'],
     ['pat_period',document.getElementById('s-pat-period').value],
     ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
@@ -1896,8 +1898,6 @@ async function saveSettings(){
     ['pat_reg_text',document.getElementById('s-pat-reg-text').value],
     ['pat_cop',document.getElementById('s-pat-cop').value],
     ['pat_cert_notes',document.getElementById('s-pat-cert-notes').value],
-    ['pat_fallback_email',document.getElementById('s-pat-fallback-email').value],
-    ['pat_bcc_email',document.getElementById('s-pat-bcc-email').value],
   ];
   for(const[k,v]of pairs)await upsertSetting(k,v);
   // Save profile
@@ -2808,7 +2808,7 @@ async function emailPAT(){
         <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('pat_co_phone','')} &nbsp;·&nbsp; ${getSetting('pat_co_email','')} &nbsp;·&nbsp; ${getSetting('pat_co_address','')}</p>
       </div>`;
       showOverlay('Sending email…');
-      await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName);
+      await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,getSetting('email_bcc',''));
       toast('Email sent ✓','success');
       await logAudit('email','PAT emailed via Brevo','pat',r.ref_number);
     }catch(e){toast('Email failed: '+e.message,'error');}
@@ -2825,9 +2825,9 @@ async function emailPATFromList(id){
     if(error||!data){toast('Could not load certificate','error');hideOverlay();return;}
     r=data;
   }catch(e){toast('Error: '+e.message,'error');hideOverlay();return;}
-  const toEmail=(r.email_address||'').trim()||getSetting('pat_fallback_email','');
-  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → PAT → Email Defaults','warn');hideOverlay();return;}
-  const bcc=getSetting('pat_bcc_email','');
+  const toEmail=(r.email_address||'').trim()||getSetting('email_fallback','');
+  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
+  const bcc=getSetting('email_bcc','');
   const co=getSetting('pat_co_name',getSetting('company_name','OHM Electrical Engineering Ltd'));
   const coPhone=getSetting('pat_co_phone','');
   const coEmail=getSetting('pat_co_email','');
@@ -3495,8 +3495,8 @@ async function emailGas(){
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(!r){toast('Not found','error');return;}
   const method=getSetting('email_method','script');
-  const toEmail=r.business_email||getSetting('gas_co_email');
-  if(!toEmail){toast('No email address on this certificate','warn');return;}
+  const toEmail=r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
+  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → Email','warn');return;}
   if(method==='script'){
     const scriptUrl=getSetting('email_script_url');
     if(!scriptUrl){toast('Google Apps Script URL not set in Settings','error');return;}
@@ -3531,7 +3531,8 @@ async function emailGas(){
         <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
       </div>`;
       showOverlay('Sending email…');
-      await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName);
+      const _gasBcc=getSetting('email_bcc','');
+      await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName,_gasBcc);
       toast('Email sent ✓','success');
       await logAudit('email','CP12 emailed via Brevo','gas',r.ref_number);
     }catch(e){toast('Email failed: '+e.message,'error');}
