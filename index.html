@@ -507,9 +507,8 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .co-mini{flex:0 0 auto;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:4px;border-left:1px solid #e2e8f0;padding:2px 8px}
 .cp12-form-wrap .co-mini label{min-width:0;flex-shrink:1;color:#64748b;font-size:5.8pt;font-weight:700;white-space:normal;line-height:1.2;text-align:center}
 .cp12-form-wrap .co-mini .choice-cycle{flex-shrink:0;min-width:26px;height:16px;font-size:6.5pt;line-height:14px;padding:0 3px}
-.cp12-form-wrap .app-row-toggle{width:100%;height:11px;min-height:11px;flex-shrink:0;border:0;border-top:1px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:9px;font-weight:700;line-height:11px;cursor:pointer;padding:0;font-family:inherit;display:block;text-align:center;letter-spacing:.5px}
-.cp12-form-wrap .app-row-toggle:hover{background:#fef2f2;color:#dc2626;border-color:#fca5a5}
-.cp12-form-wrap .appliance-card.is-disabled .app-row-toggle{background:#f8fafc;color:#94a3b8;border-color:#cbd5e1}
+.cp12-form-wrap .number-cell:hover{background:#fef2f2!important}
+.cp12-form-wrap .appliance-card.is-disabled .number-cell:hover{background:#f0fdf4!important}
 .cp12-form-wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell){opacity:0;pointer-events:none}
 .cp12-form-wrap .appliance-card.is-disabled .co-hanger{display:none}
 .cp12-form-wrap .appliance-card.is-disabled .appliance-main-shell{border-radius:6px;border:1px solid #e2e8f0!important;background:#f8fafc;opacity:.55}
@@ -2772,7 +2771,7 @@ function _cc(field,opts){return`<div class="appliance-value-cell choice-cell"><d
 function buildSingleCP12ApplianceCard(n){
   return`<div class="appliance-card" id="cp12App${n}" data-appliance-row="${n}">
     <div class="appliance-main-shell"><div class="appliance-value-row">
-      <div class="appliance-value-cell number-cell"><div style="display:flex;flex-direction:column;width:100%;height:100%"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="flex:1;width:100%"><button type="button" class="app-row-toggle no-print" onclick="toggleCP12AppRow(${n})">— not in use</button></div></div>
+      <div class="appliance-value-cell number-cell no-print-toggle" onclick="toggleCP12AppRow(${n})" title="Tap to disable this appliance" style="cursor:pointer"><input class="appliance-number-input" value="${n}" readonly tabindex="-1" style="pointer-events:none;width:100%"></div>
       <div class="appliance-value-cell location"><textarea data-field="app${n}_location" placeholder="Location" rows="1"></textarea></div>
       <div class="appliance-value-cell type"><textarea data-field="app${n}_type" placeholder="Type" rows="1"></textarea></div>
       <div class="appliance-value-cell make"><textarea data-field="app${n}_make" placeholder="Manufacturer" rows="1"></textarea></div>
@@ -2799,9 +2798,7 @@ function buildSingleCP12ApplianceCard(n){
 }
 function toggleCP12AppRow(n){
   const card=document.getElementById(`cp12App${n}`);if(!card)return;
-  const disabled=card.classList.toggle('is-disabled');
-  const btn=card.querySelector('.app-row-toggle');
-  if(btn)btn.textContent=disabled?`+ ENABLE SLOT ${n} +`:`— not in use`;
+  card.classList.toggle('is-disabled');
   updateAddApplianceBtn();
 }
 function addNextApplianceRow(){
