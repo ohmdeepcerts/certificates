@@ -2248,25 +2248,43 @@ async function loadPATHistory(){
   patReports=data||[];
   renderPATList(patReports);
 }
+function _patExpiryPill(r){
+  if(r.status!=='completed')return '';
+  const dates=(r.appliances||[]).map(a=>a.nextTest||a.next_test||'').filter(Boolean).sort();
+  if(!dates.length)return '';
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.ceil((new Date(dates[0])-today)/(864e5));
+  let bg,col;
+  if(days<0){bg='#fef2f2';col='#991b1b';}
+  else if(days<=30){bg='#fee2e2';col='#b91c1c';}
+  else if(days<=90){bg='#fef3c7';col='#92400e';}
+  else{bg='#d1fae5';col='#065f46';}
+  const lbl=days<0?`${Math.abs(days)}d overdue`:`${days}d`;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 9px;border-radius:99px;font-size:.65rem;font-weight:700;background:${bg};color:${col};border:1px solid currentColor;white-space:nowrap">${lbl}</span>`;
+}
 function renderPATList(reports){
   const el=document.getElementById('pat-list');
   if(!reports.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests found</p></div>';return;}
-  el.innerHTML=reports.map(r=>`
-    <div class="cert-row">
+  el.innerHTML=reports.map(r=>{
+    const isDraft=r.status!=='completed';
+    const rowStyle=isDraft?'style="background:rgba(239,68,68,0.05);border-left:3px solid #ef4444"':'';
+    return `<div class="cert-row" ${rowStyle}>
       <div class="cert-row-info">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="cert-ref">${r.ref_number||'DRAFT'}</span>
-          <span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span>
+          <span class="badge badge-${isDraft?'draft':'done'}">${isDraft?'📝 Draft':'✅ Completed'}</span>
+          ${_patExpiryPill(r)}
         </div>
         <div class="cert-address">${r.property_address||'No address'}</div>
         <div class="cert-meta">${r.test_date||'No date'} · ${(r.appliances||[]).length} appliance(s) · ${r.engineer||'—'}</div>
       </div>
       <div class="cert-row-actions">
         <button class="btn btn-secondary btn-sm" onclick="loadPATForm('${r.id}')">Edit</button>
-        ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="openPATPDF('${r.id}')">PDF</button>`:''}
+        ${!isDraft?`<button class="btn btn-secondary btn-sm" onclick="openPATPDF('${r.id}')">PDF</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deletePAT('${r.id}')">×</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function filterPATList(){
   const q=document.getElementById('pat-search').value.toLowerCase();
