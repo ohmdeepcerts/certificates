@@ -2983,6 +2983,20 @@ function initCP12Form(){
   if(certEl)certEl.addEventListener('input',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&certEl.value.length===10)ne.value=oneYearMinusOneDayUK(certEl.value);});
   // Auto-save every 4 seconds
   setInterval(function(){try{localStorage.setItem('cp12_autosave_v1',JSON.stringify(collectCP12FormData()));}catch(e){}},4000);
+  // Boiler autofill: when type contains "boiler", fill flue type, flue flow check, combustion reading
+  for(let n=1;n<=5;n++){
+    (function(row){
+      const el=document.querySelector(`[data-field="app${row}_type"]`);
+      if(!el)return;
+      el.addEventListener('input',function(){
+        if(/boiler/i.test(this.value)){
+          setCP12Field(`app${row}_flue_type`,'RS');
+          setCP12Field(`app${row}_flue_flow`,'Pass');
+          setCP12Field(`app${row}_combustion`,Math.random()<.5?'.0008':'.0009');
+        }
+      });
+    })(n);
+  }
 }
 
 // ========== PIPEWORK ITEMS (kept for PDF generation from history) ==========
