@@ -794,7 +794,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
           <div class="field-group"><label>Landlord Name</label><input type="text" id="pat-landlord" oninput="doPatPreview()"></div>
           <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"></div>
-          <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode</label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:var(--muted)">Auto-detected · edit if wrong</span></div></div>
+          <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode</label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"></div></div>
           <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
           <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
         </div>
@@ -2083,7 +2083,6 @@ function populatePATForm(r){
   patGe('pat-landlord').value=r.landlord_name||'';
   patGe('pat-agency').value=r.agency_name||'';
   patGe('pat-addr').value=r.property_address||'';
-  patGe('pat-postcode').value=_extractPC(r.property_address||'')||'';
   patGe('pat-phone').value=r.phone_number||'';
   patGe('pat-email').value=r.email_address||'';
   patApps=(r.appliances||[]).map(a=>({
@@ -2448,14 +2447,10 @@ function toggleAutoCap(){
   toast('Auto-capitalize '+(autoCapEnabled?'on':'off'),'info',1800);
 }
 function capitalizeAddress(el){
-  if(!autoCapEnabled){
-    const pcEl=patGe('pat-postcode');if(pcEl){const pc=_extractPC(el.value);if(pc)pcEl.value=pc;}
-    updatePatRef();doPatPreview();return;
-  }
+  if(!autoCapEnabled){updatePatRef();doPatPreview();return;}
   const pos=el.selectionStart,posEnd=el.selectionEnd;
   el.value=el.value.split('\n').map(line=>line.replace(/(?<![a-zA-Z'])[a-z]/g,c=>c.toUpperCase())).join('\n');
   el.setSelectionRange(pos,posEnd);
-  const pcEl=patGe('pat-postcode');if(pcEl){const pc=_extractPC(el.value);if(pc)pcEl.value=pc;}
   updatePatRef();doPatPreview();updatePatSidePanel();
 }
 function liveCapitalize(el){
