@@ -2913,7 +2913,7 @@ function newGasCert(){
   const today=`${dd}/${mm}/${yyyy}`;setCP12Field('cert_date',today);setCP12Field('next_check_date',oneYearMinusOneDayUK(today));
   document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height));
   // Prefill N/A defaults
-  for(let i=1;i<=5;i++){setCP12Field(`defect_warn_${i}`,'N/A');}
+  for(let i=1;i<=5;i++){setCP12Field(`defect_${i}`,'N/A');setCP12Field(`defect_warn_${i}`,'N/A');}
   setCP12Field('remedial_action','N/A');
   setCP12Field('work_details','N/A');
   syncSettingsToCP12Form();loadCP12Logo();
