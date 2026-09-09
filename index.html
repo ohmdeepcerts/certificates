@@ -774,6 +774,8 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
 
+      <div id="pat-edit-banner" hidden style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:8px">✏️ EDITING — you are updating an existing certificate. Changes will overwrite the saved record.</div>
+
       <div class="pat-two-col">
       <div id="pat-main-col">
 
@@ -2093,7 +2095,10 @@ function populatePATForm(r){
   patGe('pat-landlord-addr').value=r.landlord_address||'';
   patGe('pat-agency').value=r.agency_name||'';
   patGe('pat-agency-addr').value=r.agency_address||'';
-  patGe('pat-addr').value=r.property_address||'';
+  const _fa=(r.property_address||'').trim(),_fl=_fa.split('\n');
+  const _ukPc=/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
+  if(_fl.length>1&&_ukPc.test(_fl[_fl.length-1].trim())){patGe('pat-postcode').value=_fl[_fl.length-1].trim().toUpperCase();patGe('pat-addr').value=_fl.slice(0,-1).join('\n');}
+  else{patGe('pat-addr').value=_fa;patGe('pat-postcode').value='';}
   patGe('pat-phone').value=r.phone_number||'';
   patGe('pat-email').value=r.email_address||'';
   patApps=(r.appliances||[]).map(a=>({
@@ -2130,6 +2135,7 @@ function getPATFormData(){
 
 async function newPAT(){
   editingPATId=null;patApps=[];
+  patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
   patGe('pat-form-ref').textContent='Test Date applies to all rows · Ctrl+S = Draft';
   patGe('btn-pat-pdf').hidden=false;
@@ -2166,6 +2172,7 @@ async function loadPATForm(id){
   editingPATId=id;
   patGe('pat-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit PAT Test';
   patGe('pat-form-ref').textContent=r.ref_number||'Draft';
+  patGe('pat-edit-banner').hidden=false;
   const isDone=r.status==='completed';
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=!isDone;
