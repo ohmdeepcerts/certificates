@@ -1585,6 +1585,19 @@ a{color:var(--accent);text-decoration:none}
 <!-- LOADING OVERLAY -->
 <div id="loading-overlay"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
 
+<!-- SETTINGS UNSAVED MODAL -->
+<div class="modal-backdrop hidden" id="settings-leave-modal" style="z-index:200">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title" style="display:flex;align-items:center;gap:8px"><span style="font-size:1.2rem">⚠️</span> Unsaved Changes</div></div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">You have unsaved changes in Settings.<br>What would you like to do?</p>
+    <div class="modal-footer" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="flex:1" onclick="saveAndNavigate()">💾 Save &amp; Continue</button>
+      <button class="btn btn-danger" style="flex:1" onclick="leaveWithoutSaving()">Leave without saving</button>
+      <button class="btn btn-secondary" style="width:100%" onclick="closeSettingsLeaveModal()">← Stay in Settings</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="modal-backdrop hidden" id="confirm-modal">
   <div class="modal">
@@ -1608,6 +1621,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // ========== STATE ==========
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
+let _settingsDirty = false, _pendingNav = null;
 let editingPATId = null, editingGasId = null, _gasCertLoading = false;
 let patReports = [], gasReports = [], appSettings = {};
 
@@ -1696,8 +1710,18 @@ function onLogout(){
   clearAuthError();
 }
 
+// ========== SETTINGS LEAVE GUARD ==========
+function showSettingsLeaveModal(){document.getElementById('settings-leave-modal').classList.remove('hidden');}
+function closeSettingsLeaveModal(){document.getElementById('settings-leave-modal').classList.add('hidden');_pendingNav=null;}
+async function saveAndNavigate(){await saveSettings();_settingsDirty=false;const v=_pendingNav;_pendingNav=null;closeSettingsLeaveModal();_doNavigate(v);}
+function leaveWithoutSaving(){_settingsDirty=false;const v=_pendingNav;_pendingNav=null;closeSettingsLeaveModal();_doNavigate(v);}
+
 // ========== NAVIGATION ==========
 function navigate(view){
+  if(currentView==='settings'&&_settingsDirty&&view!=='settings'){_pendingNav=view;showSettingsLeaveModal();return;}
+  _doNavigate(view);
+}
+function _doNavigate(view){
   currentView=view;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const navEl=document.querySelector(`.nav-item[data-view="${view}"]`);
@@ -1796,6 +1820,12 @@ async function sendTestEmail(){
   }
 }
 function loadSettingsUI(){
+  _settingsDirty=false;
+  if(!window._settingsListenerBound){
+    const sv=document.getElementById('view-settings');
+    if(sv){sv.addEventListener('input',()=>{_settingsDirty=true;},true);sv.addEventListener('change',()=>{_settingsDirty=true;},true);}
+    window._settingsListenerBound=true;
+  }
   // PAT company
   document.getElementById('s-pat-co-name').value=getSetting('pat_co_name','');
   document.getElementById('s-pat-co-sub').value=getSetting('pat_co_sub','');
@@ -1905,6 +1935,7 @@ async function saveSettings(){
   await sb.from('profiles').update(profileUpdate).eq('id',currentUser.id);
   Object.assign(currentProfile,profileUpdate);
   hideOverlay();toast('Settings saved ✓','success');
+  _settingsDirty=false;
 }
 function switchSettingsTab(tab){
   document.querySelectorAll('.settings-tab').forEach(t=>t.classList.remove('active'));
