@@ -2942,11 +2942,22 @@ async function downloadCP12PDF(btn){
   try{
     const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const pages=document.querySelectorAll('.cp12-form-wrap .page');
+    // A4 landscape at 96dpi: 297mm × 210mm → 1123px × 794px
+    const PX_W=1123,PX_H=794;
+    const shell=document.createElement('div');
+    shell.style.cssText='position:fixed;left:-9999px;top:0;width:'+PX_W+'px;z-index:-1;background:#fff;pointer-events:none';
+    document.body.appendChild(shell);
     for(let i=0;i<pages.length;i++){
       if(i>0)doc.addPage('a4','landscape');
-      const c=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:'#ffffff',width:pages[i].scrollWidth,height:pages[i].scrollHeight});
-      doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
+      const clone=pages[i].cloneNode(true);
+      clone.style.cssText='width:'+PX_W+'px;height:'+PX_H+'px;min-height:'+PX_H+'px;max-height:'+PX_H+'px;padding:10mm 12mm;box-sizing:border-box;background:#fff;color:#000;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:hidden';
+      shell.innerHTML='';shell.appendChild(clone);
+      await new Promise(res=>setTimeout(res,80));
+      const c=await html2canvas(clone,{scale:2,useCORS:true,backgroundColor:'#ffffff',width:PX_W,windowWidth:PX_W,scrollX:0,scrollY:0,logging:false});
+      const imgH=(c.height/c.width)*297;
+      doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,imgH);
     }
+    document.body.removeChild(shell);
     const ref=cp12Field('cert_ref')||'DRAFT';
     const filename=`CP12_${ref.replace(/[^\w-]/g,'_')}.pdf`;
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -3297,7 +3308,7 @@ async function init(){
       switchAuthTab('reset');
       return;
     }
-    if(event==='SIGNED_IN'&&session)await onLogin(session.user);
+    if(event==='SIGNED_IN'&&session&&!currentUser)await onLogin(session.user);
     if(event==='SIGNED_OUT')onLogout();
   });
   // Enter on auth fields
