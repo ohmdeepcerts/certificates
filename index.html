@@ -3170,9 +3170,20 @@ function printPATCertificate(){
 }
 function printGasCertificate(){
   if(!cp12RequireAppliance())return;
+  const wrap=document.getElementById('cp12Wrap');
+  if(!wrap){document.body.classList.add('gas-printing');window.print();document.body.classList.remove('gas-printing');return;}
+  // Swap live form content with a static frozen clone so the browser prints
+  // exactly what the engineer sees — no interactive widgets, no placeholder text.
+  const liveHTML=wrap.innerHTML;
+  const frag=document.createDocumentFragment();
+  ['page1','page2'].forEach(srcId=>{const f=freezeGasPage(srcId);if(f){f.id=srcId;frag.appendChild(f);}});
+  wrap.innerHTML='';
+  wrap.appendChild(frag);
   document.body.classList.add('gas-printing');
   window.print();
   document.body.classList.remove('gas-printing');
+  wrap.innerHTML=liveHTML;
+  refreshChoiceGroups();
 }
 
 // ========== EMAIL HELPER ==========
@@ -3596,6 +3607,9 @@ function populateCP12Form(r){
     setCP12Field(`app${n}_combustion`,a.combustion||'N/A');
     setCP12Field(`app${n}_serviced`,a.serviced||'No');
     setCP12Field(`app${n}_safe_to_use`,a.safe_to_use||'Yes');
+    setCP12Field(`app${n}_co_fitted`,a.co_alarm_fitted||'No');
+    setCP12Field(`app${n}_co_in_date`,a.co_alarm_in_date||'N/A');
+    setCP12Field(`app${n}_co_test`,a.co_alarm_test||'N/A');
   });
   for(let n=(r.appliances||[]).length+1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&!c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
   refreshChoiceGroups();
@@ -3685,31 +3699,30 @@ function cp12RequireAppliance(){
   return false;
 }
 
-// ========== CP12 PDF ==========
-async function downloadCP12PDF(btn){
-  if(!cp12RequireAppliance())return;
-  if(!window.html2canvas){toast('PDF library not loaded','error');return;}
-  if(btn)btn.disabled=true;showOverlay('Generating PDF…');
+// ========== CP12 PDF — single renderer used by download, email, history ==========
+// Produces a jsPDF doc from the live #page1/#page2 form.
+// One renderer everywhere: no second template can diverge from what the engineer sees.
+async function buildCP12PdfDoc(){
+  if(!window.html2canvas||!window.jspdf)throw new Error('PDF libraries not loaded');
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const shell=document.createElement('div');
+  shell.className='cp12-form-wrap';
+  shell.style.cssText='position:fixed;top:-3000px;left:0;width:1123px;background:#fff;overflow:visible;pointer-events:none;z-index:99999';
+  document.body.appendChild(shell);
   try{
-    const{jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-    // Shell acts as the cp12-form-wrap so ALL CSS selectors (#page1, #page2) apply to clones
-    const shell=document.createElement('div');
-    shell.className='cp12-form-wrap';
-    // Position above viewport so html2canvas sees full element without x-clipping
-    shell.style.cssText='position:fixed;top:-3000px;left:0;width:1123px;background:#fff;overflow:visible;pointer-events:none;z-index:99999';
-    document.body.appendChild(shell);
     for(const[i,srcId]of['page1','page2'].entries()){
       if(i>0)doc.addPage('a4','landscape');
       const frozen=freezeGasPage(srcId);
       if(!frozen)continue;
-      frozen.id=srcId; // restore original id so .cp12-form-wrap #page1 CSS rules apply
+      frozen.id=srcId;
       frozen.style.cssText='margin:0!important;box-shadow:none!important;overflow:visible!important;';
       shell.innerHTML='';shell.appendChild(frozen);
-      await new Promise(res=>setTimeout(res,250)); // let CSS apply before reading computed styles
-      // html2canvas doesn't reliably render <input> text (wrong scroll pos, font metrics, overflow).
-      // Replace every input/textarea with a plain div carrying the same computed styles + value.
-      frozen.querySelectorAll('input,textarea').forEach(el=>{
+      await new Promise(res=>setTimeout(res,250));
+      // html2canvas renders <input> text unreliably — replace with plain divs.
+      // Explicitly skip hidden inputs: they have no visual presence and replacing them
+      // creates invisible elements that can shift layout.
+      frozen.querySelectorAll('input:not([type="hidden"]),textarea').forEach(el=>{
         const cs=window.getComputedStyle(el);
         const div=document.createElement('div');
         div.textContent=el.value||'';
@@ -3739,7 +3752,21 @@ async function downloadCP12PDF(btn){
       const c=await html2canvas(frozen,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
       doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
     }
-    document.body.removeChild(shell);
+  }finally{
+    if(shell.parentNode)document.body.removeChild(shell);
+  }
+  return doc;
+}
+async function buildCP12PdfBase64(){
+  const doc=await buildCP12PdfDoc();
+  return doc.output('datauristring').split(',')[1];
+}
+async function downloadCP12PDF(btn){
+  if(!cp12RequireAppliance())return;
+  if(!window.html2canvas){toast('PDF library not loaded','error');return;}
+  if(btn)btn.disabled=true;showOverlay('Generating PDF…');
+  try{
+    const doc=await buildCP12PdfDoc();
     const ref=cp12Field('cert_ref')||'DRAFT';
     const filename=`CP12_${ref.replace(/[^\w-]/g,'_')}.pdf`;
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -3944,127 +3971,8 @@ async function deleteGas(id){
   });
 }
 
-// ========== GAS - PDF (jsPDF vector) ==========
+// ========== GAS - HISTORY ==========
 async function openGasPDF(id){await loadGasForm(id);await downloadCP12PDF(null);}
-async function generateGasPDF(){
-  if(!editingGasId){toast('Save first','warn');return;}
-  const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
-  if(r)generateGasPDFFromData(r);
-}
-async function generateGasPDFFromData(r,{returnB64=false}={}){
-  showOverlay(returnB64?'Generating PDF for email…':'Generating PDF…');
-  const{jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,M=14,TW=W-M*2;
-  const co={name:getSetting('gas_co_name','OHM'),phone:getSetting('gas_co_phone',''),email:getSetting('gas_co_email',''),address:getSetting('gas_co_address','')};
-  // Helper fns
-  const row=(y,label,val,lw=50)=>{doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text(label,M,y);doc.setFont(undefined,'normal');doc.text(String(val||'—'),M+lw,y);};
-  const box=(x,y,w,h,fill)=>{if(fill){doc.setFillColor(fill);doc.rect(x,y,w,h,'F');}else{doc.rect(x,y,w,h);}};
-  // — PAGE 1 HEADER —
-  doc.setFillColor(26,58,107);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont(undefined,'bold');
-  doc.text('LANDLORD GAS SAFETY RECORD',M,10);
-  doc.setFontSize(9);doc.setFont(undefined,'normal');
-  doc.text('(CP12 Gas Safety Certificate)',M,16);
-  doc.setFontSize(9);doc.text(`${co.name}  ${co.phone||''}  ${co.email||''}`,W-M,10,{align:'right'});
-  doc.text(`Cert: ${r.ref_number||'DRAFT'}  Issued: ${r.cert_date||'—'}  Next: ${r.next_check_date||'—'}`,W-M,16,{align:'right'});
-  doc.setTextColor(0,0,0);
-  let y=28;
-  // — ENGINEER —
-  doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
-  doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text('ENGINEER DETAILS',M+2,y+4);y+=8;
-  row(y,'Engineer:',r.engineer,55);row(y,'Licence No:',r.engineer_licence_no,100);y+=5;
-  row(y,'Gas Safe Reg:',r.gas_safe_no,55);row(y,'Business:',r.business_address,100);y+=5;
-  row(y,'Phone:',r.business_phone,55);row(y,'Email:',r.business_email,100);y+=8;
-  // — ADDRESSES —
-  doc.setFillColor(240,242,245);doc.rect(M,y,TW/2-2,6,'F');doc.rect(M+TW/2+2,y,TW/2-2,6,'F');
-  doc.setFont(undefined,'bold');
-  doc.text('LANDLORD / OWNER ADDRESS',M+2,y+4);
-  doc.text('INSTALLATION ADDRESS',M+TW/2+4,y+4);
-  y+=7;doc.setFont(undefined,'normal');doc.setFontSize(8);
-  const landlordLines=doc.splitTextToSize((r.landlord_address||'—')+'\n'+(r.landlord_postcode||''),TW/2-4);
-  const installLines=doc.splitTextToSize((r.install_address||'—')+'\n'+(r.install_postcode||''),TW/2-4);
-  doc.text(landlordLines,M+2,y);doc.text(installLines,M+TW/2+4,y);
-  y+=Math.max(landlordLines.length,installLines.length)*4+6;
-  // — WORK DETAILS —
-  if(r.work_details){
-    doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
-    doc.setFont(undefined,'bold');doc.text('WORK CARRIED OUT',M+2,y+4);y+=7;
-    doc.setFont(undefined,'normal');
-    const wLines=doc.splitTextToSize(r.work_details,TW-4);doc.text(wLines,M+2,y);y+=wLines.length*4+6;
-  }
-  // — PIPEWORK CHECKS —
-  doc.setFillColor(26,58,107);doc.rect(M,y,TW,6,'F');
-  doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('PIPEWORK / VENTILATION CHECKS',M+2,y+4);
-  doc.setTextColor(0,0,0);y+=7;
-  (r.pipework||[]).forEach((val,i)=>{
-    if(i%2===0)doc.setFillColor(248,248,248);else doc.setFillColor(255,255,255);
-    doc.rect(M,y-3,TW,5,'F');
-    doc.setFont(undefined,'normal');doc.setFontSize(8);
-    doc.text(PIPEWORK_ITEMS[i]||'',M+2,y);
-    const col=val==='SAT'?[22,163,74]:val==='UNSAT'?[220,38,38]:[100,100,100];
-    doc.setTextColor(...col);doc.setFont(undefined,'bold');doc.text(val,W-M-2,y,{align:'right'});
-    doc.setTextColor(0,0,0);y+=5;
-  });
-  y+=4;
-  // — APPLIANCES TABLE —
-  doc.setFillColor(26,58,107);doc.rect(M,y,TW,6,'F');
-  doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('GAS APPLIANCES',M+2,y+4);
-  doc.setTextColor(0,0,0);y+=7;
-  const appCols=[['Type',22],['Make',20],['Model',20],['Location',20],['Op.Press',16],['Flue',18],['CO Test',14],['Op Test',14],['SAT?',14]];
-  let cx=M;appCols.forEach(([h,w])=>{doc.setFillColor(230,235,245);doc.rect(cx,y,w,5,'F');doc.setFontSize(7);doc.setFont(undefined,'bold');doc.text(h,cx+1,y+3.5);cx+=w;});y+=6;
-  (r.appliances||[]).forEach((a,i)=>{
-    if(i%2===0)doc.setFillColor(252,252,252);else doc.setFillColor(255,255,255);
-    doc.rect(M,y,TW,5,'F');
-    cx=M;const appVals=[a.type,a.make,a.model,a.location,a.op_pressure,a.flue_type,a.co_test,a.op_test,a.satisfactory];
-    appCols.forEach(([,w],j)=>{doc.setFontSize(7);doc.setFont(undefined,'normal');doc.text(String(appVals[j]||'').substring(0,14),cx+1,y+3.5);cx+=w;});y+=5;
-  });
-  y+=6;
-  // — DEFECTS — (check if need new page)
-  if(y>240){doc.addPage();y=20;}
-  if((r.defects||[]).length){
-    doc.setFillColor(220,38,38);doc.rect(M,y,TW,6,'F');
-    doc.setTextColor(255,255,255);doc.setFont(undefined,'bold');doc.text('DEFECTS / WARNING NOTICES',M+2,y+4);
-    doc.setTextColor(0,0,0);y+=7;
-    (r.defects||[]).forEach((d,i)=>{
-      doc.setFont(undefined,'normal');doc.setFontSize(8);
-      const dLines=doc.splitTextToSize((i+1)+'. '+d.description,TW-30);
-      doc.text(dLines,M+2,y);
-      if(d.warning_notice){doc.setTextColor(220,38,38);doc.setFont(undefined,'bold');doc.text('⚠ WARNING NOTICE ISSUED',W-M-2,y,{align:'right'});doc.setTextColor(0,0,0);}
-      y+=dLines.length*4+2;
-    });
-    y+=4;
-  }
-  if(r.remedial_action){
-    doc.setFont(undefined,'bold');doc.setFontSize(8);doc.text('Remedial Action:',M,y);y+=5;
-    doc.setFont(undefined,'normal');const rLines=doc.splitTextToSize(r.remedial_action,TW-4);doc.text(rLines,M+2,y);y+=rLines.length*4+8;
-  }
-  // — SIGNATURES —
-  if(y>230){doc.addPage();y=20;}
-  doc.setFillColor(240,242,245);doc.rect(M,y,TW,6,'F');
-  doc.setFont(undefined,'bold');doc.text('DECLARATIONS & SIGNATURES',M+2,y+4);y+=8;
-  doc.setFont(undefined,'normal');doc.setFontSize(8);
-  doc.text('I confirm that the appliances listed have been inspected and tested in accordance with BS 7671 and Gas Safety (Installation and Use) Regulations.',M,y,{maxWidth:TW});y+=10;
-  // Signature boxes
-  const sigW=TW/2-5;
-  doc.rect(M,y,sigW,28);doc.rect(M+sigW+10,y,sigW,28);
-  doc.setFont(undefined,'bold');doc.text('Issued By (Engineer)',M+2,y+5);doc.text('Received By (Tenant/Owner)',M+sigW+12,y+5);
-  doc.setFont(undefined,'normal');
-  doc.text('Name: '+(r.sig_issued_name||''),M+2,y+10);doc.text('Name: '+(r.sig_received_name||''),M+sigW+12,y+10);
-  // Render signatures as images if available
-  try{if(r.sig_issued_image&&r.sig_issued_image.startsWith('data:')){doc.addImage(r.sig_issued_image,'PNG',M+2,y+12,sigW-4,14);}}catch(e){}
-  try{if(r.sig_received_image&&r.sig_received_image.startsWith('data:')){doc.addImage(r.sig_received_image,'PNG',M+sigW+12,y+12,sigW-4,14);}}catch(e){}
-  doc.text('Signature: ____________________',M+2,y+24);doc.text('Signature: ____________________',M+sigW+12,y+24);y+=34;
-  doc.setFontSize(8);doc.setTextColor(100,100,100);
-  doc.text(`${co.name||'OHM'} · Gas Safe Reg: ${r.gas_safe_no||getSetting('gas_safe_no','N/A')} · Cert: ${r.ref_number||'DRAFT'}`,W/2,y,{align:'center'});
-  const filename=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-  if(returnB64){hideOverlay();return doc.output('datauristring').split(',')[1];}
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  if(isIOS){const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});window.open(URL.createObjectURL(blob),'_blank');toast('PDF ready — tap Share → Save to Files','info',7000);}
-  else{doc.save(filename);toast('PDF downloaded ✓','success');}
-  await logAppEvent('PDF_DOWNLOADED','gas',r.id,r.ref_number||'');
-  hideOverlay();
-}
 async function emailGas(){
   if(!editingGasId){toast('No certificate loaded','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
@@ -4097,9 +4005,10 @@ async function emailGas(){
     </div>
     <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
   </div>`;
-  showOverlay('Sending email…');
+  showOverlay('Generating PDF for email…');
   try{
-    const b64=await generateGasPDFFromData(r,{returnB64:true});
+    const b64=await buildCP12PdfBase64();
+    showOverlay('Sending email…');
     const bcc=getSetting('email_bcc','');
     const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
     // Store send record (non-blocking — don't fail the email if this fails)
