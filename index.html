@@ -574,24 +574,34 @@ a{color:var(--accent);text-decoration:none}
   body.pat-printing #app,body.pat-printing #auth-screen,body.pat-printing .modal-backdrop{display:none!important}
   body.pat-printing .view{display:none!important}
   body.pat-printing #print-target{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;z-index:9999}
-  /* Gas CP12 print (body.gas-printing) */
-  body.gas-printing #app,body.gas-printing #auth-screen,body.gas-printing .modal-backdrop{display:none!important}
-  body.gas-printing .view{display:none!important}
-  body.gas-printing #print-target{display:block!important;position:static!important;width:100%;background:#fff}
-  body.gas-printing #print-target .cp12-form-wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;width:100%;overflow:visible}
-  .cp12-form-wrap .page:last-child{page-break-after:auto;break-after:auto}
-  .cp12-form-wrap .no-print,.no-print{display:none!important}
-  .cp12-form-wrap .inline-history-section{display:none!important}
-  .cp12-form-wrap .sig-clear-btn{display:none!important}
-  .cp12-form-wrap .copy-address-btn{display:none!important}
-  .cp12-form-wrap input::placeholder,.cp12-form-wrap textarea::placeholder{color:transparent!important}
-  .cp12-form-wrap input,.cp12-form-wrap textarea,.cp12-form-wrap select{color:#000!important}
-  .cp12-form-wrap #page1 .attention-box .next-check-date{color:#dc2626!important;-webkit-text-fill-color:#dc2626!important}
-  .cp12-form-wrap #page1 .title-box .company-input{color:#fff!important;-webkit-text-fill-color:#fff!important}
-  .cp12-form-wrap .choice-cycle{border:0!important;background:transparent!important;color:#111827!important;min-width:0!important;width:auto!important;height:20px!important;padding:0 2px!important;font-size:9pt!important;font-weight:700!important;cursor:default!important}
-  .cp12-form-wrap .co-hanger{display:none!important}
-  .cp12-form-wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) *{visibility:hidden!important}
-  .cp12-form-wrap .appliance-card.is-disabled .appliance-co-item{display:none!important}
+  /* Gas CP12 print — print #cp12Wrap directly, no clone */
+  body.gas-printing .mobile-header,
+  body.gas-printing .sidebar-overlay,
+  body.gas-printing #sidebar,
+  body.gas-printing #auth-screen,
+  body.gas-printing .modal-backdrop,
+  body.gas-printing #print-target{display:none!important}
+  body.gas-printing #app{display:block!important;padding:0!important;margin:0!important}
+  body.gas-printing #content-area{display:block!important;margin-left:0!important;padding:0!important}
+  body.gas-printing #content-area>.view:not(#view-gas-new){display:none!important}
+  body.gas-printing #view-gas-new{display:block!important;padding:0!important;margin:0!important}
+  body.gas-printing #view-gas-new>*:not(#cp12Wrap){display:none!important}
+  body.gas-printing #cp12Wrap{display:block!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  body.gas-printing #cp12Wrap *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  body.gas-printing #cp12Wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
+  body.gas-printing #cp12Wrap #page2{break-after:auto!important;page-break-after:auto!important}
+  body.gas-printing #cp12Wrap .no-print{display:none!important}
+  body.gas-printing #cp12Wrap .inline-history-section{display:none!important}
+  body.gas-printing #cp12Wrap .sig-clear-btn{display:none!important}
+  body.gas-printing #cp12Wrap .copy-address-btn{display:none!important}
+  body.gas-printing #cp12Wrap input::placeholder,body.gas-printing #cp12Wrap textarea::placeholder{color:transparent!important}
+  body.gas-printing #cp12Wrap input,body.gas-printing #cp12Wrap textarea,body.gas-printing #cp12Wrap select{color:#000!important}
+  body.gas-printing #cp12Wrap #page1 .attention-box .next-check-date{color:#dc2626!important;-webkit-text-fill-color:#dc2626!important}
+  body.gas-printing #cp12Wrap #page1 .title-box .company-input{color:#fff!important;-webkit-text-fill-color:#fff!important}
+  body.gas-printing #cp12Wrap .choice-cycle{border:0!important;background:transparent!important;color:#111827!important;min-width:0!important;width:auto!important;height:20px!important;padding:0 2px!important;font-size:9pt!important;font-weight:700!important;cursor:default!important}
+  body.gas-printing #cp12Wrap .co-hanger{display:none!important}
+  body.gas-printing #cp12Wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) *{visibility:hidden!important}
+  body.gas-printing #cp12Wrap .appliance-card.is-disabled .appliance-co-item{display:none!important}
 }
 </style>
 </head>
@@ -3160,14 +3170,6 @@ function printPATCertificate(){
 }
 function printGasCertificate(){
   if(!cp12RequireAppliance())return;
-  const target=document.getElementById('print-target');
-  if(!target)return;
-  target.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.className='cp12-form-wrap';
-  wrap.style.pointerEvents='none';
-  ['page1','page2'].forEach(id=>{const p=freezeGasPage(id);if(p)wrap.appendChild(p);});
-  target.appendChild(wrap);
   document.body.classList.add('gas-printing');
   window.print();
   document.body.classList.remove('gas-printing');
