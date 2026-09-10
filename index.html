@@ -3813,6 +3813,9 @@ function initCP12Form(){
           setCP12Field(`app${row}_flue_type`,'RS');
           setCP12Field(`app${row}_flue_flow`,'Pass');
           setCP12Field(`app${row}_combustion`,Math.random()<.5?'.0008':'.0009');
+        } else if(/hob|cooker/i.test(this.value)){
+          setCP12Field(`app${row}_flue_type`,'FL');
+          setCP12Field(`app${row}_combustion`,'N/A');
         }
       });
     })(n);
