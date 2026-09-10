@@ -3696,17 +3696,19 @@ async function downloadCP12PDF(btn){
     // Shell acts as the cp12-form-wrap so ALL CSS selectors (#page1, #page2) apply to clones
     const shell=document.createElement('div');
     shell.className='cp12-form-wrap';
-    shell.style.cssText='position:fixed;top:0;left:-1200px;width:1123px;background:#fff;overflow:visible;pointer-events:none;z-index:99999';
+    // Position above viewport so html2canvas sees full element without x-clipping
+    shell.style.cssText='position:fixed;top:-3000px;left:0;width:1123px;background:#fff;overflow:visible;pointer-events:none;z-index:99999';
     document.body.appendChild(shell);
     for(const[i,srcId]of['page1','page2'].entries()){
       if(i>0)doc.addPage('a4','landscape');
       const frozen=freezeGasPage(srcId);
       if(!frozen)continue;
       frozen.id=srcId; // restore original id so .cp12-form-wrap #page1 CSS rules apply
-      frozen.style.margin='0';frozen.style.boxShadow='none';
+      frozen.style.cssText='margin:0!important;box-shadow:none!important;max-height:none!important;overflow:visible!important;';
       shell.innerHTML='';shell.appendChild(frozen);
-      await new Promise(res=>setTimeout(res,200));
-      const c=await html2canvas(frozen,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',windowWidth:1123,scrollX:0,scrollY:0,logging:false});
+      await new Promise(res=>setTimeout(res,250));
+      const w=frozen.offsetWidth||1123,h=frozen.offsetHeight||794;
+      const c=await html2canvas(frozen,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
       doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
     }
     document.body.removeChild(shell);
@@ -3761,12 +3763,15 @@ function freezeGasPage(srcId){
     c.parentNode.replaceChild(rep,c);
   });
   // Remove screen-only / interactive elements
-  clone.querySelectorAll('.no-print').forEach(el=>el.remove());
+  clone.querySelectorAll('.no-print,.co-hanger,.copy-address-btn,.sig-clear-btn,.inline-history-section,.fast-date-drum').forEach(el=>el.remove());
   clone.querySelectorAll('input[type="file"]').forEach(el=>el.remove());
   clone.querySelectorAll('button:not(.choice-cycle)').forEach(el=>el.remove());
   clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
-  // Freeze remaining interactives
-  clone.querySelectorAll('input,textarea').forEach(el=>{el.readOnly=true;el.style.pointerEvents='none';el.style.cursor='default';});
+  // Freeze remaining interactives + clear placeholders (prevent placeholder text in PDF)
+  clone.querySelectorAll('input,textarea').forEach(el=>{
+    el.readOnly=true;el.style.pointerEvents='none';el.style.cursor='default';
+    el.removeAttribute('placeholder');
+  });
   clone.querySelectorAll('.choice-cycle').forEach(btn=>{btn.style.pointerEvents='none';btn.style.cursor='default';});
   clone.id='preview_'+srcId;
   return clone;
