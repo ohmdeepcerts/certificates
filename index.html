@@ -1769,7 +1769,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // ========== STATE ==========
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
-let _settingsDirty = false, _pendingNav = null;
+let _settingsDirty = false, _pendingNav = null, _inPasswordRecovery = false;
 let editingPATId = null, editingGasId = null, _gasCertLoading = false;
 let patReports = [], gasReports = [], appSettings = {};
 
@@ -1831,6 +1831,7 @@ async function doSetNewPassword(){
   if(p!==p2){showAuthError('Passwords do not match.');return;}
   const{error}=await sb.auth.updateUser({password:p});
   if(error){showAuthError(error.message);return;}
+  _inPasswordRecovery=false;
   toast('Password updated! Signing you in…','success');
   const{data:{session}}=await sb.auth.getSession();
   if(session)await onLogin(session.user);
@@ -4007,14 +4008,15 @@ async function init(){
   if(session)await onLogin(session.user);
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(event==='PASSWORD_RECOVERY'){
+      _inPasswordRecovery=true;
       document.getElementById('auth-screen').classList.remove('gone');
       document.getElementById('app').classList.remove('visible');
       document.getElementById('app').style.display='none';
       switchAuthTab('reset');
       return;
     }
-    if(event==='SIGNED_IN'&&session&&!currentUser)await onLogin(session.user);
-    if(event==='SIGNED_OUT')onLogout();
+    if(event==='SIGNED_IN'&&session&&!currentUser&&!_inPasswordRecovery)await onLogin(session.user);
+    if(event==='SIGNED_OUT'){_inPasswordRecovery=false;onLogout();}
   });
   // Enter on auth fields
   ['login-pass'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});});
