@@ -3139,6 +3139,7 @@ function printPATCertificate(){
   },400);
 }
 function printGasCertificate(){
+  if(!cp12RequireAppliance())return;
   doGasPreview();
   setTimeout(()=>{
     const src=document.getElementById('gas-cert-pages');
@@ -3635,8 +3636,25 @@ async function loadGasForm(id){
 }
 function getGasFormData(){return collectCP12FormData();}
 
+// ========== CP12 VALIDATION ==========
+function cp12HasAppliance(){
+  for(let n=1;n<=5;n++){
+    const card=document.getElementById(`cp12App${n}`);
+    if(card&&!card.classList.contains('is-disabled')&&(cp12Field(`app${n}_location`)||cp12Field(`app${n}_type`)))return true;
+  }
+  return false;
+}
+function cp12RequireAppliance(){
+  if(cp12HasAppliance())return true;
+  toast('Please fill in at least one appliance before continuing.','error',5000);
+  const appEl=document.getElementById('applianceCards');
+  if(appEl)appEl.scrollIntoView({behavior:'smooth',block:'center'});
+  return false;
+}
+
 // ========== CP12 PDF (html2canvas on clean preview) ==========
 async function downloadCP12PDF(btn){
+  if(!cp12RequireAppliance())return;
   if(!window.html2canvas){toast('PDF library not loaded','error');return;}
   if(btn)btn.disabled=true;showOverlay('Generating PDF…');
   try{
@@ -3773,6 +3791,7 @@ async function saveGas(){
   else{toast('Saved ✓','success');await logAudit('save','Gas draft saved','gas',d.install_address);}
 }
 async function completeGas(){
+  if(!cp12RequireAppliance())return;
   const d=getGasFormData();
   if(!d.install_address||!d.cert_date){toast('Address and date required','error');return;}
   await saveGas();
