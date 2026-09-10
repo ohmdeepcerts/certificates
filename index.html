@@ -3784,7 +3784,7 @@ function doGasPreview(){
 function initCP12Form(){
   buildCP12ApplianceCards();
   refreshChoiceGroups();
-  document.querySelectorAll('.cp12-form-wrap .fast-date').forEach(el=>attachFastDateInput(el));
+  document.querySelectorAll('#cp12Wrap .fast-date').forEach(el=>attachFastDateInput(el));
   document.querySelectorAll('#cp12Wrap .sig-canvas').forEach(c=>initCP12SigPad(c));
   const certEl=document.getElementById('f_cert_date');
   if(certEl)certEl.addEventListener('input',()=>{const ne=document.querySelector('[data-field="next_check_date"]');if(ne&&certEl.value.length===10)ne.value=oneYearMinusOneDayUK(certEl.value);});
