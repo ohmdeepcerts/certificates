@@ -558,7 +558,7 @@ a{color:var(--accent);text-decoration:none}
   body.gas-printing #app,body.gas-printing #auth-screen,body.gas-printing .modal-backdrop{display:none!important}
   body.gas-printing .view{display:none!important}
   body.gas-printing #print-target{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;z-index:9999}
-  body.gas-printing #print-target .a4-land{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
+  body.gas-printing #print-target .cp12-form-wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
   .cp12-form-wrap .page:last-child{page-break-after:auto;break-after:auto}
   .cp12-form-wrap .no-print,.no-print{display:none!important}
   .cp12-form-wrap .inline-history-section{display:none!important}
@@ -3139,15 +3139,17 @@ function printPATCertificate(){
 }
 function printGasCertificate(){
   if(!cp12RequireAppliance())return;
-  doGasPreview();
-  setTimeout(()=>{
-    const src=document.getElementById('gas-cert-pages');
-    const target=document.getElementById('print-target');
-    if(src&&target){target.innerHTML='';src.querySelectorAll('.a4-land').forEach(p=>target.appendChild(p.cloneNode(true)));}
-    document.body.classList.add('gas-printing');
-    window.print();
-    document.body.classList.remove('gas-printing');
-  },400);
+  const target=document.getElementById('print-target');
+  if(!target)return;
+  target.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.className='cp12-form-wrap';
+  wrap.style.pointerEvents='none';
+  ['page1','page2'].forEach(id=>{const p=freezeGasPage(id);if(p)wrap.appendChild(p);});
+  target.appendChild(wrap);
+  document.body.classList.add('gas-printing');
+  window.print();
+  document.body.classList.remove('gas-printing');
 }
 
 // ========== EMAIL HELPER ==========
@@ -3651,27 +3653,29 @@ function cp12RequireAppliance(){
   return false;
 }
 
-// ========== CP12 PDF (html2canvas on clean preview) ==========
+// ========== CP12 PDF (html2canvas on frozen form clone) ==========
 async function downloadCP12PDF(btn){
   if(!cp12RequireAppliance())return;
   if(!window.html2canvas){toast('PDF library not loaded','error');return;}
   if(btn)btn.disabled=true;showOverlay('Generating PDF…');
   try{
-    doGasPreview();
-    await new Promise(res=>setTimeout(res,200));
-    const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-    const pages=document.querySelectorAll('#gas-cert-pages .a4-land');
-    const PX_W=1123,PX_H=794;
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const shell=document.createElement('div');
-    shell.style.cssText='position:fixed;left:-9999px;top:0;width:'+PX_W+'px;z-index:-1;background:#fff;pointer-events:none';
+    shell.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;pointer-events:none;overflow:hidden';
     document.body.appendChild(shell);
-    for(let i=0;i<pages.length;i++){
+    for(const[i,srcId]of['page1','page2'].entries()){
       if(i>0)doc.addPage('a4','landscape');
-      const clone=pages[i].cloneNode(true);
-      clone.style.cssText='width:'+PX_W+'px;height:'+PX_H+'px;min-height:'+PX_H+'px;max-height:'+PX_H+'px;padding:12px 16px;box-sizing:border-box;background:#fff;color:#000;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:hidden;font-family:Arial,Helvetica,sans-serif';
-      shell.innerHTML='';shell.appendChild(clone);
-      await new Promise(res=>setTimeout(res,80));
-      const c=await html2canvas(clone,{scale:2,useCORS:true,backgroundColor:'#ffffff',width:PX_W,windowWidth:PX_W,scrollX:0,scrollY:0,logging:false});
+      const wrap=document.createElement('div');
+      wrap.className='cp12-form-wrap';
+      wrap.style.cssText='width:1123px;height:794px;overflow:hidden;pointer-events:none;font-family:Arial,Helvetica,sans-serif;';
+      const frozen=freezeGasPage(srcId);
+      if(!frozen)continue;
+      frozen.style.cssText='width:1123px!important;height:794px!important;min-height:794px!important;max-height:794px!important;margin:0!important;box-shadow:none!important;box-sizing:border-box;overflow:hidden;';
+      wrap.appendChild(frozen);
+      shell.innerHTML='';shell.appendChild(wrap);
+      await new Promise(res=>setTimeout(res,150));
+      const c=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:'#ffffff',width:1123,height:794,windowWidth:1123,scrollX:0,scrollY:0,logging:false});
       doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
     }
     document.body.removeChild(shell);
@@ -3686,44 +3690,65 @@ async function downloadCP12PDF(btn){
 }
 
 // ========== CP12 LIVE PREVIEW ==========
+// Clones the actual form page, copies current input values in, strips interactivity.
+// This guarantees the preview/PDF always matches the form visually.
+function freezeGasPage(srcId){
+  const src=document.getElementById(srcId);
+  if(!src)return null;
+  const clone=src.cloneNode(true);
+  // Copy current .value into cloned inputs/textareas (cloneNode doesn't transfer .value)
+  clone.querySelectorAll('[data-field]').forEach(el=>{
+    const field=el.dataset.field;
+    const orig=src.querySelector(`[data-field="${field}"]`);
+    if(orig&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))el.value=orig.value;
+  });
+  // Fix logo (src attribute may be missing even if img is loaded)
+  const origLogo=document.getElementById('logoImg');
+  const cloneLogo=clone.querySelector('#logoImg');
+  if(origLogo&&cloneLogo&&origLogo.src&&origLogo.src.length>10&&!origLogo.src.endsWith('#')){
+    cloneLogo.src=origLogo.src;
+    const lz=clone.querySelector('.logo-zone');
+    if(lz)lz.classList.add('has-logo');
+    const ph=clone.querySelector('.logo-placeholder');
+    if(ph)ph.style.display='none';
+  }
+  // Signature canvases → static images (or empty box)
+  clone.querySelectorAll('canvas.sig-canvas').forEach(c=>{
+    const field=c.dataset.sigField;
+    const origC=document.querySelector(`canvas.sig-canvas[data-sig-field="${field}"]`);
+    let rep;
+    if(origC){
+      const id=origC.getContext('2d').getImageData(0,0,origC.width,origC.height);
+      if(Array.from(id.data).some((v,i)=>i%4!==3&&v!==0)){
+        rep=document.createElement('img');
+        rep.src=origC.toDataURL('image/png');
+        rep.className=c.className;
+        rep.style.cssText='max-width:100%;max-height:100%;object-fit:contain;display:block;';
+      }
+    }
+    if(!rep){rep=document.createElement('span');rep.className=c.className;rep.style.cssText=c.style.cssText;}
+    c.parentNode.replaceChild(rep,c);
+  });
+  // Remove screen-only / interactive elements
+  clone.querySelectorAll('.no-print').forEach(el=>el.remove());
+  clone.querySelectorAll('input[type="file"]').forEach(el=>el.remove());
+  clone.querySelectorAll('button:not(.choice-cycle)').forEach(el=>el.remove());
+  clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+  // Freeze remaining interactives
+  clone.querySelectorAll('input,textarea').forEach(el=>{el.readOnly=true;el.style.pointerEvents='none';el.style.cursor='default';});
+  clone.querySelectorAll('.choice-cycle').forEach(btn=>{btn.style.pointerEvents='none';btn.style.cursor='default';});
+  clone.id='preview_'+srcId;
+  return clone;
+}
 function doGasPreview(){
   const wrap=document.getElementById('gas-cert-pages');
   if(!wrap)return;
   wrap.innerHTML='';
-  const e=patEsc;
-  const enl=t=>e(t).replace(/\n/g,'<br>');
-  const f=n=>cp12Field(n)||'';
-  const navy='#1e3a5f',amber='#f59e0b';
-  const coName=getSetting('gas_co_name',getSetting('company_name','Your Company'));
-  const coPhone=f('business_phone')||getSetting('gas_co_phone','');
-  const coEmail=f('business_email')||getSetting('gas_co_email','');
-  const logoSrc=document.getElementById('logoImg')?.src;
-  const logoURL=(logoSrc&&logoSrc.startsWith('data:'))?logoSrc:(getSetting('gas_logo_data','')||'');
-  const logoHTML=logoURL?`<img src="${logoURL}" alt="" style="max-width:72px;max-height:44px;object-fit:contain">`
-    :`<div style="font-size:10pt;font-weight:900;color:${navy};line-height:1.1">${e(coName)}</div>`;
-  const getSig=key=>{const c=document.querySelector(`[data-sig-field="${key}"]`);if(!c)return null;const id=c.getContext('2d').getImageData(0,0,c.width,c.height);return Array.from(id.data).some((v,i)=>i%4!==3&&v!==0)?c.toDataURL('image/png'):null;};
-  const sigA=getSig('sig_issued'),sigB=getSig('sig_received');
-  const chk=v=>{if(!v||v==='N/A')return`<span style="color:#9ca3af;font-size:6pt">N/A</span>`;if(v==='✓')return`<span style="color:#16a34a;font-weight:700">✓</span>`;if(v==='✕')return`<span style="color:#dc2626;font-weight:700">✕</span>`;return e(v);};
-  const yn=v=>{if(!v)return`<span style="color:#9ca3af">—</span>`;if(v==='Yes'||v==='✓')return`<span style="background:#dcfce7;color:#15803d;padding:0 4px;border-radius:3px;font-size:6pt;font-weight:700">${e(v)}</span>`;if(v==='No'||v==='✕')return`<span style="background:#fee2e2;color:#dc2626;padding:0 4px;border-radius:3px;font-size:6pt;font-weight:700">${e(v)}</span>`;return`<span style="font-size:6.5pt">${e(v)}</span>`;};
-  const appliances=[];
-  for(let n=1;n<=5;n++){const card=document.getElementById(`cp12App${n}`);if(card&&!card.classList.contains('is-disabled')){const loc=f(`app${n}_location`),type=f(`app${n}_type`);if(loc||type)appliances.push({n,location:loc,type,make:f(`app${n}_make`),model:f(`app${n}_model`),flue:f(`app${n}_flue_type`),ownership:f(`app${n}_ownership`),inspected:f(`app${n}_inspected`),op_pressure:f(`app${n}_op_pressure`),safety_dev:f(`app${n}_safety_dev`),vent:f(`app${n}_vent`),visual:f(`app${n}_visual`),flue_flow:f(`app${n}_flue_flow`),combustion:f(`app${n}_combustion`),serviced:f(`app${n}_serviced`),safe_to_use:f(`app${n}_safe_to_use`),co_fitted:f(`app${n}_co_fitted`)});}}
-  const bdr='border:1px solid #d1d5db';
-  const navyHdr=`background:${navy};color:#fff;font-size:6.5pt;font-weight:700;padding:2px 6px;text-transform:uppercase;letter-spacing:.3px`;
-  const defectRows=[1,2,3,4,5].map(i=>`<tr><td style="width:14px;text-align:center;${bdr};padding:2px 3px;color:#9ca3af;font-size:6.5pt">${i}</td><td style="${bdr};padding:2px 4px;font-size:7pt;height:17px">${e(f(`defect_${i}`))}</td><td style="width:36px;text-align:center;${bdr};padding:2px 3px;font-size:8pt">${f(`defect_${i}`)?chk(f(`defect_warn_${i}`)):''}</td></tr>`).join('');
-  const pipeRows=[['Gas Tightness Test',f('pipe_gas_tight')],['Standing / Working Pressure',f('pipe_pressure')],['Gas Installation Visual Check',f('pipe_visual')],['Meter / Governor Condition',f('pipe_meter')],['Emergency Control Accessible',f('pipe_emergency')]].map(([l,v])=>`<tr><td style="${bdr};padding:2px 5px;font-size:6.5pt;height:17px">${l}</td><td style="width:40px;text-align:center;${bdr};padding:2px;font-size:8pt">${chk(v)}</td></tr>`).join('');
-  const landlordAddr=f('landlord_address')+(f('landlord_postcode')?'\n'+f('landlord_postcode'):'');
-  const installAddr=f('install_address')+(f('install_postcode')?'\n'+f('install_postcode'):'');
-  const bizAddr=f('business_address')+(f('business_postcode')?'\n'+f('business_postcode'):'');
-  const sigBox=(img,name,label)=>`<div><div style="font-size:6pt;color:#6b7280;margin-bottom:2px">${label}</div><div style="${bdr};border-radius:3px;min-height:34px;max-height:34px;overflow:hidden;display:flex;align-items:center;justify-content:center">${img?`<img src="${img}" style="max-width:100%;max-height:34px;object-fit:contain">`:` <span style="color:#9ca3af;font-size:7pt">________________</span>`}</div><div style="font-size:7pt;font-weight:600;margin-top:2px">${e(name)||'<span style="color:#9ca3af">—</span>'}</div></div>`;
-  const p1=`<div class="a4-land" style="gap:5px"><div style="display:flex;align-items:center;gap:10px;border-bottom:3px solid ${navy};padding-bottom:5px"><div style="width:72px;height:44px;display:flex;align-items:center;flex-shrink:0">${logoHTML}</div><div style="flex:1"><div style="font-size:12pt;font-weight:900;color:${navy};line-height:1.1">${e(f('company_name')||coName)}</div><div style="font-size:8pt;font-weight:700;color:#374151;margin-top:1px">Landlord / Homeowner Gas Safety Record</div><div style="font-size:6pt;color:#6b7280">Gas Safety (Installation &amp; Use) Regulations 1998</div></div><div style="text-align:right;font-size:7pt;line-height:1.75;flex-shrink:0"><div><span style="color:#6b7280">Date:</span> <strong>${e(f('cert_date'))}</strong></div><div><span style="color:#6b7280">Gas Safe Reg:</span> <strong>${e(f('gas_safe_no'))}</strong></div><div><span style="color:#6b7280">Licence No:</span> <strong>${e(f('landlord_ref'))}</strong></div><div><span style="color:#6b7280">Ref:</span> <strong>${e(f('cert_ref'))}</strong></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px"><div style="${bdr};border-radius:3px;overflow:hidden"><div style="${navyHdr}">Landlord / Customer Details</div><div style="padding:4px 6px;font-size:7.5pt;white-space:pre-line;min-height:50px">${enl(landlordAddr)||`<span style="color:#9ca3af">—</span>`}</div></div><div style="${bdr};border-radius:3px;overflow:hidden"><div style="${navyHdr}">Installation / Inspection Address</div><div style="padding:4px 6px;font-size:7.5pt;white-space:pre-line;min-height:50px">${enl(installAddr)||`<span style="color:#9ca3af">—</span>`}</div></div><div style="${bdr};border-radius:3px;overflow:hidden"><div style="${navyHdr}">Engineer / Business Details</div><div style="padding:4px 6px;font-size:7.5pt"><div style="white-space:pre-line">${enl(bizAddr)||`<span style="color:#9ca3af">—</span>`}</div>${coPhone?`<div style="margin-top:2px;font-size:7pt">Tel: ${e(coPhone)}</div>`:''}${coEmail?`<div style="font-size:7pt">Email: ${e(coEmail)}</div>`:''}</div></div></div><div style="display:grid;grid-template-columns:1.35fr 1fr;gap:5px;flex:1;min-height:0"><div style="display:flex;flex-direction:column;gap:4px;min-height:0"><div style="${bdr};border-radius:3px;overflow:hidden"><div style="${navyHdr};display:flex;justify-content:space-between"><span>Defects / Immediately Dangerous / At Risk Notices Issued</span><span>Warning Notice</span></div><table style="width:100%;border-collapse:collapse"><tbody>${defectRows}</tbody></table></div><div style="${bdr};border-radius:3px;overflow:hidden;flex:1"><div style="${navyHdr}">Remedial Action Required</div><div style="padding:4px 6px;font-size:7.5pt;min-height:32px">${enl(f('remedial_action'))||`<span style="color:#9ca3af">—</span>`}</div></div><div style="${bdr};border-radius:3px;overflow:hidden;flex:1"><div style="${navyHdr}">Work Carried Out</div><div style="padding:4px 6px;font-size:7.5pt;min-height:32px">${enl(f('work_details'))||`<span style="color:#9ca3af">—</span>`}</div></div></div><div style="display:flex;flex-direction:column;gap:4px;min-height:0"><div style="${bdr};border-radius:3px;overflow:hidden"><div style="${navyHdr};display:flex;justify-content:space-between"><span>Pipework / Installation Checks</span><span>Pass?</span></div><table style="width:100%;border-collapse:collapse"><tbody>${pipeRows}</tbody></table></div><div style="${bdr};border-radius:3px;overflow:hidden;flex:1"><div style="${navyHdr}">Signatures</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px 6px">${sigBox(sigA,f('issuer_name'),'Record issued by the engineer:')}${sigBox(sigB,f('receiver_name'),'Record received by (tenant / landlord / agent):')}</div></div><div style="border:2px solid ${amber};border-radius:3px;overflow:hidden;background:#fffbeb"><div style="background:${amber};color:#fff;font-size:6.5pt;font-weight:800;padding:2px 6px;text-transform:uppercase;letter-spacing:.4px">ATTENTION — Next Gas Safety Check Due</div><div style="padding:3px 8px;font-size:12pt;font-weight:900;color:${navy};text-align:center">${e(f('next_check_date'))||`<span style="font-size:9pt;color:#9ca3af">Not set</span>`}</div><div style="padding:0 6px 3px;font-size:6pt;color:#92400e">This certificate must be kept safe and shown to your gas engineer at the next inspection.</div></div></div></div><div style="border-top:1px solid #e5e7eb;padding-top:3px;font-size:6pt;color:#6b7280;margin-top:auto">This Gas Safety Record is issued under the Gas Safety (Installation &amp; Use) Regulations 1998. A copy must be provided to the landlord/owner and, where applicable, to the tenant within 28 days of the check or at the start of a new tenancy.</div></div>`;
-  const th=`background:${navy};color:#fff;font-size:6pt;font-weight:700;padding:3px 3px;text-align:center;border:1px solid #304a6f;white-space:normal;vertical-align:middle;line-height:1.2`;
-  const td=`font-size:6.5pt;padding:3px 3px;border:1px solid #d1d5db;text-align:center;vertical-align:middle`;
-  const tdl=`font-size:6.5pt;padding:3px 4px;border:1px solid #d1d5db;text-align:left;vertical-align:middle`;
-  const appRows=appliances.map(a=>`<tr><td style="${td}">${a.n}</td><td style="${tdl}">${e(a.location)}</td><td style="${tdl}">${e(a.type)}</td><td style="${tdl}">${e(a.make)}</td><td style="${tdl}">${e(a.model)}</td><td style="${td}">${yn(a.ownership)}</td><td style="${td}">${yn(a.inspected)}</td><td style="${td}">${e(a.flue)||'—'}</td><td style="${td}">${e(a.op_pressure)||'—'}</td><td style="${td}">${chk(a.safety_dev)}</td><td style="${td}">${chk(a.vent)}</td><td style="${td}">${chk(a.visual)}</td><td style="${td}">${chk(a.flue_flow)}</td><td style="${td}">${e(a.combustion)||'—'}</td><td style="${td}">${yn(a.serviced)}</td><td style="${td}">${yn(a.safe_to_use)}</td><td style="${td}">${e(a.co_fitted)||'—'}</td></tr>`).join('');
-  const blank=`<tr>${'<td style="'+td+';height:26px">&nbsp;</td>'.repeat(17)}</tr>`;
-  const emptyRows=Array(Math.max(0,5-appliances.length)).fill(blank).join('');
-  const p2=`<div class="a4-land"><div style="display:flex;justify-content:space-between;align-items:center;background:${navy};color:#fff;padding:4px 10px;margin-bottom:6px;border-radius:2px"><div style="font-size:10pt;font-weight:800">Appliance Inspection Details</div><div style="font-size:7.5pt">Cert Ref: ${e(f('cert_ref_p2')||f('cert_ref'))}</div></div><table style="width:100%;border-collapse:collapse;table-layout:fixed"><colgroup><col style="width:22px"><col style="width:82px"><col style="width:76px"><col style="width:68px"><col style="width:68px"><col style="width:50px"><col style="width:50px"><col style="width:64px"><col style="width:60px"><col style="width:50px"><col style="width:50px"><col style="width:58px"><col style="width:50px"><col style="width:60px"><col style="width:46px"><col style="width:54px"><col style="width:50px"></colgroup><thead><tr><th style="${th}">No.</th><th style="${th}">Location</th><th style="${th}">Type</th><th style="${th}">Make</th><th style="${th}">Model</th><th style="${th}">Landlord Owned?</th><th style="${th}">Inspected?</th><th style="${th}">Flue Type</th><th style="${th}">Op. Pressure (mbar)</th><th style="${th}">Safety Devices</th><th style="${th}">Ventilation</th><th style="${th}">Visual Cond. Flue</th><th style="${th}">Flue Flow</th><th style="${th}">Combustion</th><th style="${th}">Serviced?</th><th style="${th}">Safe to Use?</th><th style="${th}">CO Alarm</th></tr></thead><tbody>${appRows}${emptyRows}</tbody></table><div style="margin-top:auto;padding-top:5px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center"><div style="font-size:7pt;color:#6b7280">${e(f('company_name')||coName)}${getSetting('gas_safe_no','')?` &middot; Gas Safe Reg: ${getSetting('gas_safe_no','')}`:''}</div><div style="font-size:7pt;color:#6b7280">Page 2 of 2 &middot; ${e(f('cert_ref')||'DRAFT')}</div></div></div>`;
-  wrap.innerHTML=p1+p2;
+  const container=document.createElement('div');
+  container.className='cp12-form-wrap';
+  container.style.pointerEvents='none';
+  ['page1','page2'].forEach(id=>{const p=freezeGasPage(id);if(p)container.appendChild(p);});
+  wrap.appendChild(container);
 }
 
 // ========== CP12 INIT ==========
