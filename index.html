@@ -464,7 +464,7 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap #page1 .attention-box .attn-head{font-size:6.5pt;padding:4px 3px}
 .cp12-form-wrap .attention-box .attn-body{min-height:118px;padding:12px 8px;display:flex;flex-direction:column;justify-content:center;text-align:center;font-size:8.5pt;line-height:1.3;color:#333}
 .cp12-form-wrap #page1 .attention-box .attn-body{min-height:105px;padding:9px 7px;font-size:7.5pt}
-.cp12-form-wrap .attention-box .attn-body input{width:100%;height:36px;border:0;border-radius:0;text-align:center;font-family:inherit;font-size:15pt;font-weight:900;color:#dc2626;background:transparent;outline:none;margin-top:7px;padding:2px}
+.cp12-form-wrap .attention-box .attn-body input{width:100%;height:40px;border:0;border-radius:0;text-align:center;font-family:inherit;font-size:18pt;font-weight:900;color:#dc2626;background:transparent;outline:none;margin-top:7px;padding:2px}
 .cp12-form-wrap #page1 .attention-box .attn-body input{height:32px;font-size:13pt;margin-top:5px}
 .cp12-form-wrap .fast-date{font-variant-numeric:tabular-nums}
 .cp12-form-wrap .top-item .fast-date{width:108px;text-align:center;letter-spacing:.15px}
@@ -4305,6 +4305,23 @@ init();
     }
     closeDateDrum();
   };
+
+  // One item per wheel tick — prevents jitter/overshoot from native scroll
+  ['drum-col-d','drum-col-m','drum-col-y'].forEach(function(id){
+    const col=document.getElementById(id);
+    if(!col)return;
+    let _scrolling=false;
+    col.addEventListener('wheel',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(_scrolling)return;
+      _scrolling=true;
+      const dir=e.deltaY>0?1:-1;
+      const cur=Math.round(col.scrollTop/ITEM_H);
+      col.scrollTo({top:(cur+dir)*ITEM_H,behavior:'smooth'});
+      setTimeout(function(){_scrolling=false;},180);
+    },{passive:false});
+  });
 
   document.addEventListener('pointerdown',function(e){
     const picker=document.getElementById('date-drum-picker');
