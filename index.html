@@ -468,8 +468,25 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap #page1 .attention-box .attn-body input{height:32px;font-size:13pt;margin-top:5px}
 .cp12-form-wrap .fast-date{font-variant-numeric:tabular-nums}
 .cp12-form-wrap .top-item .fast-date{width:108px;text-align:center;letter-spacing:.15px}
-.cp12-form-wrap .next-check-date{cursor:text;caret-color:#dc2626;letter-spacing:.2px}
+.cp12-form-wrap .next-check-date{cursor:pointer;letter-spacing:.2px}
 .cp12-form-wrap .next-check-date::placeholder{color:#fca5a5;opacity:.75}
+/* ---- Drum Date Picker ---- */
+#date-drum-picker{position:fixed;z-index:99999;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);display:none;flex-direction:column;width:220px;overflow:hidden;touch-action:none}
+#date-drum-picker.open{display:flex}
+.drum-labels{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.drum-labels span{flex:1;text-align:center;font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px;padding:5px 0}
+.drum-wrap{display:flex;position:relative;height:160px}
+.drum-sel{position:absolute;top:50%;left:6px;right:6px;height:32px;transform:translateY(-50%);background:rgba(30,58,95,.07);border-top:1.5px solid #1e3a5f;border-bottom:1.5px solid #1e3a5f;border-radius:4px;pointer-events:none;z-index:1}
+.drum-col{flex:1;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none}
+.drum-col::-webkit-scrollbar{display:none}
+.drum-col-inner{padding:64px 0}
+.drum-item{height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#374151;scroll-snap-align:center;cursor:default;user-select:none}
+.drum-col:first-child .drum-item,.drum-col:last-child .drum-item{font-size:13px}
+.drum-divider{width:1px;background:#e5e7eb;flex-shrink:0}
+.drum-actions{display:flex;border-top:1px solid #e5e7eb}
+.drum-btn{flex:1;padding:10px;font-size:13px;font-weight:600;cursor:pointer;border:0;background:none}
+.drum-btn-cancel{color:#9ca3af}
+.drum-btn-ok{color:#1e3a5f;border-left:1px solid #e5e7eb}
 .cp12-form-wrap .page-footer{background:#fef3c7;border:2px solid #1e3a5f;border-radius:6px;color:#1e3a5f;font-size:7.5pt;text-align:center;padding:6px 12px;font-weight:500;line-height:1.4;margin-top:8px;flex-shrink:0}
 /* Page 2 */
 .cp12-form-wrap #page2{display:flex;flex-direction:column;background:#fff}
@@ -3354,6 +3371,13 @@ function attachFastDateInput(el){
     if(v.length>=5)v=v.slice(0,5)+'/'+v.slice(5);
     this.value=v.slice(0,10);
   });
+  el.addEventListener('click',function(e){
+    if(typeof openDateDrum==='function')openDateDrum(this);
+  });
+  el.addEventListener('touchend',function(e){
+    e.preventDefault();
+    if(typeof openDateDrum==='function')openDateDrum(this);
+  },{passive:false});
 }
 function oneYearMinusOneDayUK(val){
   if(!val||val.length<10)return'';
@@ -4186,6 +4210,105 @@ async function init(){
   initCP12Form();
 }
 init();
+</script>
+
+<!-- Drum Date Picker -->
+<div id="date-drum-picker">
+  <div class="drum-labels"><span>Day</span><span>Month</span><span>Year</span></div>
+  <div class="drum-wrap">
+    <div class="drum-sel"></div>
+    <div class="drum-col" id="drum-col-d"></div>
+    <div class="drum-divider"></div>
+    <div class="drum-col" id="drum-col-m"></div>
+    <div class="drum-divider"></div>
+    <div class="drum-col" id="drum-col-y"></div>
+  </div>
+  <div class="drum-actions">
+    <button class="drum-btn drum-btn-cancel" onclick="closeDateDrum()">Cancel</button>
+    <button class="drum-btn drum-btn-ok" onclick="confirmDateDrum()">Done</button>
+  </div>
+</div>
+<script>
+(function(){
+  const ITEM_H=32,PAD=64;
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let _target=null,_yearStart=0;
+
+  function buildCol(colEl,items){
+    const inner=document.createElement('div');
+    inner.className='drum-col-inner';
+    items.forEach(t=>{const d=document.createElement('div');d.className='drum-item';d.textContent=t;inner.appendChild(d);});
+    colEl.innerHTML='';colEl.appendChild(inner);
+  }
+
+  function positionPicker(picker,inputEl){
+    const r=inputEl.getBoundingClientRect();
+    const ph=picker.offsetHeight||220;
+    const pw=picker.offsetWidth||220;
+    let top=r.bottom+window.scrollY+4;
+    let left=r.left+window.scrollX;
+    if(r.bottom+ph+4>window.innerHeight)top=r.top+window.scrollY-ph-4;
+    if(left+pw>window.innerWidth)left=window.innerWidth-pw-8;
+    if(left<4)left=4;
+    picker.style.top=top+'px';picker.style.left=left+'px';
+  }
+
+  window.openDateDrum=function(inputEl){
+    _target=inputEl;
+    const val=inputEl.value||'';
+    const p=val.split('/');
+    const now=new Date();
+    const d=parseInt(p[0])||now.getDate();
+    const m=parseInt(p[1])||(now.getMonth()+1);
+    const y=parseInt(p[2])||now.getFullYear();
+    _yearStart=now.getFullYear()-2;
+    const yEnd=now.getFullYear()+12;
+
+    buildCol(document.getElementById('drum-col-d'),Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')));
+    buildCol(document.getElementById('drum-col-m'),MO);
+    buildCol(document.getElementById('drum-col-y'),Array.from({length:yEnd-_yearStart+1},(_,i)=>String(_yearStart+i)));
+
+    const picker=document.getElementById('date-drum-picker');
+    picker.classList.add('open');
+    positionPicker(picker,inputEl);
+
+    requestAnimationFrame(()=>{
+      document.getElementById('drum-col-d').scrollTop=(d-1)*ITEM_H;
+      document.getElementById('drum-col-m').scrollTop=(m-1)*ITEM_H;
+      document.getElementById('drum-col-y').scrollTop=(y-_yearStart)*ITEM_H;
+    });
+  };
+
+  window.closeDateDrum=function(){
+    document.getElementById('date-drum-picker').classList.remove('open');
+    _target=null;
+  };
+
+  window.confirmDateDrum=function(){
+    const colD=document.getElementById('drum-col-d');
+    const colM=document.getElementById('drum-col-m');
+    const colY=document.getElementById('drum-col-y');
+    const d=Math.min(Math.max(Math.round(colD.scrollTop/ITEM_H)+1,1),31);
+    const m=Math.min(Math.max(Math.round(colM.scrollTop/ITEM_H)+1,1),12);
+    const y=Math.round(colY.scrollTop/ITEM_H)+_yearStart;
+    const safeD=Math.min(d,new Date(y,m,0).getDate());
+    const val=String(safeD).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+    if(_target){
+      _target.value=val;
+      _target.dispatchEvent(new Event('input',{bubbles:true}));
+      _target.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    closeDateDrum();
+  };
+
+  document.addEventListener('pointerdown',function(e){
+    const picker=document.getElementById('date-drum-picker');
+    if(!picker.classList.contains('open'))return;
+    if(!picker.contains(e.target)&&e.target!==_target)closeDateDrum();
+  },{capture:true});
+
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDateDrum();});
+})();
 </script>
 </body>
 </html>
