@@ -545,13 +545,18 @@ a{color:var(--accent);text-decoration:none}
 /* History toast */
 #cp12Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#1e3a5f;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9998;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 #cp12Toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Print: show only CP12 pages */
+/* Print */
 @media print{
   @page{size:A4 landscape;margin:0}
   body{background:#fff}
-  #sidebar,#auth-screen,.view-header,.view:not(#view-gas-new){display:none!important}
+  /* Gas CP12 print (default — no class on body) */
+  #sidebar,#auth-screen,.view-header,.view:not(#view-gas-new),#print-target,.modal-backdrop,#loading-overlay,#toast-container{display:none!important}
   #app{display:block!important;height:auto!important;overflow:visible!important}
   #content-area{overflow:visible!important;display:block!important}
+  /* PAT print (body.pat-printing) */
+  body.pat-printing #app,body.pat-printing #auth-screen,body.pat-printing .modal-backdrop{display:none!important}
+  body.pat-printing .view{display:none!important}
+  body.pat-printing #print-target{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;z-index:9999}
   #view-gas-new{display:block!important;padding:0!important}
   #view-gas-new .view-header{display:none!important}
   .cp12-form-wrap .page{width:297mm!important;height:210mm!important;min-height:210mm!important;max-height:210mm!important;margin:0!important;padding:10mm 12mm!important;box-shadow:none!important;overflow:hidden!important;break-after:page}
@@ -1755,7 +1760,7 @@ CREATE POLICY "Admin update requests" ON public.staff_requests
   </div>
 </div>
 
-<!-- PAT print target handled by #print-target -->
+<div id="print-target" style="display:none"></div>
 <script>
 'use strict';
 // ========== CONFIG ==========
@@ -3125,9 +3130,11 @@ function printPATCertificate(){
   setTimeout(()=>{
     const src=document.getElementById('pat-cert-pages');
     const target=document.getElementById('print-target');
-    if(target){target.innerHTML='';src.querySelectorAll('.a4').forEach(p=>target.appendChild(p.cloneNode(true)));}
+    if(src&&target){target.innerHTML='';src.querySelectorAll('.a4').forEach(p=>target.appendChild(p.cloneNode(true)));}
+    document.body.classList.add('pat-printing');
     window.print();
-  },300);
+    document.body.classList.remove('pat-printing');
+  },400);
 }
 
 // ========== EMAIL HELPER ==========
