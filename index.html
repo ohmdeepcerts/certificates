@@ -3704,10 +3704,38 @@ async function downloadCP12PDF(btn){
       const frozen=freezeGasPage(srcId);
       if(!frozen)continue;
       frozen.id=srcId; // restore original id so .cp12-form-wrap #page1 CSS rules apply
-      frozen.style.cssText='margin:0!important;box-shadow:none!important;max-height:none!important;overflow:visible!important;';
+      frozen.style.cssText='margin:0!important;box-shadow:none!important;overflow:visible!important;';
       shell.innerHTML='';shell.appendChild(frozen);
-      await new Promise(res=>setTimeout(res,250));
-      const w=frozen.offsetWidth||1123,h=frozen.offsetHeight||794;
+      await new Promise(res=>setTimeout(res,250)); // let CSS apply before reading computed styles
+      // html2canvas doesn't reliably render <input> text (wrong scroll pos, font metrics, overflow).
+      // Replace every input/textarea with a plain div carrying the same computed styles + value.
+      frozen.querySelectorAll('input,textarea').forEach(el=>{
+        const cs=window.getComputedStyle(el);
+        const div=document.createElement('div');
+        div.textContent=el.value||'';
+        div.style.display='flex';
+        div.style.alignItems='center';
+        div.style.justifyContent=cs.textAlign==='center'?'center':cs.textAlign==='right'?'flex-end':'flex-start';
+        div.style.color=cs.color;
+        div.style.fontSize=cs.fontSize;
+        div.style.fontFamily=cs.fontFamily;
+        div.style.fontWeight=cs.fontWeight;
+        div.style.fontVariantNumeric=cs.fontVariantNumeric;
+        div.style.letterSpacing=cs.letterSpacing;
+        div.style.background=cs.backgroundColor==='rgba(0, 0, 0, 0)'?'transparent':cs.backgroundColor;
+        div.style.border=cs.border;
+        div.style.padding=cs.padding;
+        div.style.width=cs.width;
+        div.style.minWidth=cs.width;
+        div.style.height=cs.height;
+        div.style.boxSizing=cs.boxSizing;
+        div.style.overflow='visible';
+        div.style.whiteSpace='nowrap';
+        div.style.pointerEvents='none';
+        el.parentNode.replaceChild(div,el);
+      });
+      await new Promise(res=>setTimeout(res,50));
+      const w=1123,h=794;
       const c=await html2canvas(frozen,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
       doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,297,210);
     }
