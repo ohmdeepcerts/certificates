@@ -1004,6 +1004,10 @@ a{color:var(--accent);text-decoration:none}
                     <label>Postcode</label>
                     <input type="text" data-field="landlord_postcode" placeholder="SW1A 1AA">
                   </div>
+                  <div class="pc-line no-print" style="margin-top:4px">
+                    <label style="white-space:nowrap">Cert Email</label>
+                    <input type="email" data-field="recipient_email" placeholder="landlord@example.com" autocomplete="off" title="Email address to send this certificate to">
+                  </div>
                 </div>
               </div>
             </div>
@@ -3174,11 +3178,11 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
     headers:{'accept':'application/json','api-key':apiKey,'content-type':'application/json'},
     body:JSON.stringify(payload)
   });
+  const body=await res.json().catch(()=>({}));
   if(!res.ok){
-    const e=await res.json().catch(()=>({}));
-    throw new Error((e.message||'HTTP '+res.status)+' | to:'+toClean+' from:'+fromEmailClean);
+    throw new Error((body.message||'HTTP '+res.status)+' | to:'+toClean+' from:'+fromEmailClean);
   }
-  return true;
+  return{ok:true,messageId:body.messageId||''};
 }
 
 // ========== PAT - EMAIL ==========
@@ -3531,7 +3535,8 @@ function collectCP12FormData(){
     pipework:[cp12Field('pipe_gas_tight'),cp12Field('pipe_pressure'),cp12Field('pipe_visual'),cp12Field('pipe_meter'),cp12Field('pipe_emergency')],
     appliances:appliances,defects:defects,
     sig_issued_name:cp12Field('issuer_name'),sig_issued_image:getSig('sig_issued'),
-    sig_received_name:cp12Field('receiver_name'),sig_received_image:getSig('sig_received')
+    sig_received_name:cp12Field('receiver_name'),sig_received_image:getSig('sig_received'),
+    recipient_email:cp12Field('recipient_email')
   };
 }
 function populateCP12Form(r){
@@ -3545,6 +3550,7 @@ function populateCP12Form(r){
   setCP12Field('install_address',r.install_address||'');setCP12Field('install_postcode',r.install_postcode||'');
   setCP12Field('work_details',r.work_details||'');setCP12Field('remedial_action',r.remedial_action||'');
   setCP12Field('receiver_name',r.sig_received_name||'');
+  setCP12Field('recipient_email',r.recipient_email||'');
   const ref=r.ref_number||r.base_ref||'';setCP12Field('cert_ref',ref);setCP12Field('cert_ref_p2',ref);
   const pf=['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'];
   (r.pipework||[]).forEach((v,i)=>{if(pf[i])setCP12Field(pf[i],v);});
@@ -3998,50 +4004,51 @@ async function emailGas(){
   if(!editingGasId){toast('No certificate loaded','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(!r){toast('Not found','error');return;}
-  const method=getSetting('email_method','script');
-  const toEmail=r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
-  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → Email','warn');return;}
-  if(method==='script'){
-    const scriptUrl=getSetting('email_script_url');
-    if(!scriptUrl){toast('Google Apps Script URL not set in Settings','error');return;}
-    showOverlay('Sending…');
-    try{await fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({to:toEmail,subject:`Gas Safety Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.install_address,type:'gas'})});}
-    catch(e){}finally{hideOverlay();}
-    toast('Email sent ✓','success');await logAppEvent('EMAILED','gas',r.id,r.ref_number);
-  } else {
-    try{
-      const b64=await generateGasPDFFromData(r,{returnB64:true});
-      const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-      const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
-      const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-        <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
-          <h2 style="margin:0">${co}</h2>
-          <p style="margin:4px 0 0;font-size:13px">Landlord Gas Safety Record (CP12)</p>
-        </div>
-        <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
-          <p>Dear Landlord / Property Owner,</p>
-          <p>Please find attached your Gas Safety Certificate (CP12).</p>
-          <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px">${r.ref_number||'—'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold">Installation Address</td><td style="padding:8px 12px">${r.install_address||'—'}${r.install_postcode?' '+r.install_postcode:''}</td></tr>
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Certificate Date</td><td style="padding:8px 12px">${r.cert_date||'—'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Gas Safe Reg No</td><td style="padding:8px 12px">${r.gas_safe_no||getSetting('gas_safe_no','—')}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold">Next Check Due</td><td style="padding:8px 12px;font-weight:bold;color:#dc2626">${r.next_check_date||'—'}</td></tr>
-          </table>
-          <p style="font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 14px">⚠ By law, landlords must have gas appliances checked annually. Please keep this certificate safe and provide a copy to your tenant within 28 days.</p>
-          <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
-        </div>
-        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
-      </div>`;
-      showOverlay('Sending email…');
-      const _gasBcc=getSetting('email_bcc','');
-      await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName,_gasBcc);
-      toast('Email sent ✓','success');
-      await logAppEvent('EMAILED','gas',r.id,r.ref_number);
-    }catch(e){toast('Email failed: '+e.message,'error');}
-    finally{hideOverlay();}
-  }
+  if(!getSetting('brevo_api_key')){toast('Brevo API key not set — go to Settings → Email','error');return;}
+  const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
+  if(!toEmail){toast('No recipient email — add one in the Landlord section (Cert Email) or Settings → Email','warn');return;}
+  const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
+  const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
+  const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
+  const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+    <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
+      <h2 style="margin:0">${co}</h2>
+      <p style="margin:4px 0 0;font-size:13px">Landlord Gas Safety Record (CP12)</p>
+    </div>
+    <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
+      <p>Dear ${toName||'Landlord / Property Owner'},</p>
+      <p>Please find attached your Gas Safety Certificate (CP12).</p>
+      <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px">${r.ref_number||'—'}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Installation Address</td><td style="padding:8px 12px">${r.install_address||'—'}${r.install_postcode?' '+r.install_postcode:''}</td></tr>
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Certificate Date</td><td style="padding:8px 12px">${r.cert_date||'—'}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Gas Safe Reg No</td><td style="padding:8px 12px">${r.gas_safe_no||getSetting('gas_safe_no','—')}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Next Check Due</td><td style="padding:8px 12px;font-weight:bold;color:#dc2626">${r.next_check_date||'—'}</td></tr>
+      </table>
+      <p style="font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 14px">⚠ By law, landlords must have gas appliances checked annually. Please keep this certificate safe and provide a copy to your tenant within 28 days.</p>
+      <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
+    </div>
+    <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
+  </div>`;
+  showOverlay('Sending email…');
+  try{
+    const b64=await generateGasPDFFromData(r,{returnB64:true});
+    const bcc=getSetting('email_bcc','');
+    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
+    // Store send record (non-blocking — don't fail the email if this fails)
+    sb.from('email_sends').insert({
+      cert_id:r.id,cert_type:'gas',cert_ref:r.ref_number,
+      to_email:toEmail,to_name:toName,subject,
+      brevo_message_id:result.messageId||null,
+      status:'sent',
+      sent_by:currentUser?.id,sent_by_email:currentUser?.email
+    }).then(({error})=>{if(error)console.warn('email_sends insert:',error.message);});
+    toast('Email sent ✓ — '+toEmail,'success',5000);
+    await logAppEvent('EMAILED','gas',r.id,r.ref_number,{to:toEmail,brevo_message_id:result.messageId||null});
+  }catch(e){toast('Email failed: '+e.message,'error');}
+  finally{hideOverlay();}
 }
 
 // ========== SIGNATURE CANVAS ==========
