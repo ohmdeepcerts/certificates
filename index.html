@@ -451,7 +451,7 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .sig-field label{font-size:8pt;font-weight:700;color:#111827;white-space:nowrap;line-height:1.1;display:flex;align-items:center;gap:6px}
 .cp12-form-wrap #page1 .sig-field label{font-size:7.5pt}
 .cp12-form-wrap .sig-field:nth-child(2){grid-column:1}
-.cp12-form-wrap .sig-field:nth-child(3){grid-column:2;justify-content:center}
+.cp12-form-wrap .sig-field:nth-child(3){grid-column:2;justify-content:flex-end}
 .cp12-form-wrap .sig-field:nth-child(3) label{justify-content:center}
 .cp12-form-wrap .sig-field:nth-child(3) input{text-align:center}
 .cp12-form-wrap .sig-canvas{width:100%;height:38px;border:1px solid #d1d5db;border-radius:3px;cursor:crosshair;display:block;background:#fff;touch-action:none}
@@ -1129,7 +1129,6 @@ a{color:var(--accent);text-decoration:none}
                   <div class="sig-field">
                     <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
                     <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_issued','Engineer Signature')"></canvas>
-                    <button type="button" class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_issued')">Clear</button>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
@@ -1142,7 +1141,6 @@ a{color:var(--accent);text-decoration:none}
                   <div class="sig-field">
                     <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
                     <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_received','Recipient Signature')"></canvas>
-                    <button type="button" class="sig-clear-btn no-print" onclick="clearCP12Sig('sig_received')">Clear</button>
                   </div>
                   <div class="sig-field">
                     <label>Name (CAPITALS)</label>
