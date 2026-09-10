@@ -2760,11 +2760,11 @@ async function loadCompliance(){
     sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer,cert_date').eq('status','completed')
   ]);
   (pats||[]).forEach(r=>{
-    (r.appliances||[]).forEach(a=>{
-      const nd=a.nextTest||a.next_test;if(!nd)return;
-      const d=new Date(nd);
-      items.push({type:'pat',id:r.id,ref:r.ref_number||'—',address:r.property_address||'—',engineer:r.engineer||'—',label:a.description||'Appliance',assetId:a.assetId||a.asset_id||'',due:d,overdue:d<today,daysLeft:Math.round((d-today)/86400000)});
-    });
+    const dates=(r.appliances||[]).map(a=>{const nd=a.nextTest||a.next_test;return nd?new Date(nd):null;}).filter(Boolean);
+    if(!dates.length)return;
+    const earliest=new Date(Math.min(...dates.map(d=>d.getTime())));
+    const count=(r.appliances||[]).length;
+    items.push({type:'pat',id:r.id,ref:r.ref_number||'—',address:r.property_address||'—',engineer:r.engineer||'—',label:count+' appliance'+(count===1?'':'s'),assetId:'',due:earliest,overdue:earliest<today,daysLeft:Math.round((earliest-today)/86400000)});
   });
   (gases||[]).forEach(r=>{
     if(!r.next_check_date)return;
