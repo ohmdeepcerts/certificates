@@ -2625,7 +2625,7 @@ async function savePAT(){
   }
   hideOverlay();
   if(err){toast('Save failed: '+err.message,'error');}
-  else{toast('Saved ✓','success');await logAudit('save','PAT draft saved','pat',d.property_address);}
+  else{toast('Saved ✓','success');}
 }
 async function completePAT(){
   const d=getPATFormData();
@@ -2652,7 +2652,6 @@ async function completePAT(){
   patGe('btn-pat-complete2').disabled=true;
   doPatPreview();
   toast(`Certificate issued: ${refNum}`,'success',5000);
-  await logAudit('complete','PAT issued','pat',refNum);
 }
 
 // ========== PAT - HISTORY ==========
@@ -3123,7 +3122,7 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
     } else {
       doc.save(`PAT_${ref}.pdf`);toast('PDF downloaded ✓','success');
     }
-    await logAudit('pdf','PAT PDF downloaded','pat',r.ref_number||'');
+    await logAppEvent('PDF_DOWNLOADED','pat',editingPATId,r.ref_number||'');
   } catch(e){toast('PDF error: '+e.message,'error');}
   finally{hideOverlay();}
 }
@@ -3194,7 +3193,7 @@ async function emailPAT(){
     try{
       await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:r.email_address,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
       toast('Email sent ✓','success');
-      await logAudit('email','PAT emailed','pat',r.ref_number);
+      await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
     }catch(e){toast('Email failed','error');}
     finally{hideOverlay();}
   } else {
@@ -3225,7 +3224,7 @@ async function emailPAT(){
       showOverlay('Sending email…');
       await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,getSetting('email_bcc',''));
       toast('Email sent ✓','success');
-      await logAudit('email','PAT emailed via Brevo','pat',r.ref_number);
+      await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
     }catch(e){toast('Email failed: '+e.message,'error');}
     finally{hideOverlay();}
   }
@@ -3309,7 +3308,7 @@ async function emailPATFromList(id){
     const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
     await sendBrevoEmail(toEmail,client,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,bcc);
     toast('Email sent to '+toEmail+(bcc?' (BCC: '+bcc+')':''),'success');
-    await logAudit('email','PAT certificate emailed','pat',r.ref_number);
+    await logAppEvent('EMAILED','pat',r.id,r.ref_number);
   }catch(e){toast('Email failed: '+e.message,'error');}
   finally{hideOverlay();}
 }
@@ -3681,7 +3680,7 @@ async function downloadCP12PDF(btn){
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(isIOS)window.open(URL.createObjectURL(new Blob([doc.output('arraybuffer')],{type:'application/pdf'})),'_blank'),toast('PDF ready — tap Share → Save to Files','info',7000);
     else doc.save(filename),toast('PDF downloaded ✓','success');
-    if(editingGasId)await logAudit('pdf','CP12 PDF downloaded','gas',ref);
+    if(editingGasId)await logAppEvent('PDF_DOWNLOADED','gas',editingGasId,ref);
   }catch(e){toast('PDF error: '+e.message,'error');}
   finally{hideOverlay();if(btn)btn.disabled=false;}
 }
@@ -3788,7 +3787,7 @@ async function saveGas(){
   }
   hideOverlay();
   if(err){toast('Save failed: '+err.message,'error');}
-  else{toast('Saved ✓','success');await logAudit('save','Gas draft saved','gas',d.install_address);}
+  else{toast('Saved ✓','success');}
 }
 async function completeGas(){
   if(!cp12RequireAppliance())return;
@@ -3807,7 +3806,6 @@ async function completeGas(){
   document.getElementById('btn-gas-email').hidden=false;
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`CP12 issued: ${refNum}`,'success',5000);
-  await logAudit('complete','CP12 issued','gas',refNum);
 }
 
 // ========== GAS - HISTORY ==========
@@ -3968,7 +3966,7 @@ async function generateGasPDFFromData(r,{returnB64=false}={}){
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   if(isIOS){const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});window.open(URL.createObjectURL(blob),'_blank');toast('PDF ready — tap Share → Save to Files','info',7000);}
   else{doc.save(filename);toast('PDF downloaded ✓','success');}
-  await logAudit('pdf','CP12 PDF downloaded','gas',r.ref_number||r.id);
+  await logAppEvent('PDF_DOWNLOADED','gas',r.id,r.ref_number||'');
   hideOverlay();
 }
 async function emailGas(){
@@ -3984,7 +3982,7 @@ async function emailGas(){
     showOverlay('Sending…');
     try{await fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({to:toEmail,subject:`Gas Safety Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.install_address,type:'gas'})});}
     catch(e){}finally{hideOverlay();}
-    toast('Email sent ✓','success');await logAudit('email','CP12 emailed','gas',r.ref_number);
+    toast('Email sent ✓','success');await logAppEvent('EMAILED','gas',r.id,r.ref_number);
   } else {
     try{
       const b64=await generateGasPDFFromData(r,{returnB64:true});
@@ -4015,7 +4013,7 @@ async function emailGas(){
       const _gasBcc=getSetting('email_bcc','');
       await sendBrevoEmail(toEmail,r.landlord_address?.split('\n')[0]||'',`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`,html,b64,pdfName,_gasBcc);
       toast('Email sent ✓','success');
-      await logAudit('email','CP12 emailed via Brevo','gas',r.ref_number);
+      await logAppEvent('EMAILED','gas',r.id,r.ref_number);
     }catch(e){toast('Email failed: '+e.message,'error');}
     finally{hideOverlay();}
   }
@@ -4039,16 +4037,51 @@ function getCanvasDataURL(canvasId){const c=document.getElementById(canvasId);if
 function restoreSig(canvasId,dataUrl){if(!dataUrl)return;const canvas=document.getElementById(canvasId);if(!canvas)return;const img=new Image();img.onload=()=>canvas.getContext('2d').drawImage(img,0,0);img.src=dataUrl;}
 
 // ========== AUDIT LOG ==========
-async function logAudit(action,detail,certType='',refNumber=''){
-  try{await sb.from('audit_log').insert({user_id:currentUser?.id,user_email:currentUser?.email,action,detail,cert_type:certType,ref_number:refNumber});}catch(e){}
+async function logAppEvent(eventType,certType,certId,certRef,extra={}){
+  try{
+    const{error}=await sb.rpc('log_app_event',{
+      p_event_type:eventType,
+      p_cert_type:certType||null,
+      p_cert_id:certId||null,
+      p_cert_ref:certRef||null,
+      p_metadata:{
+        user_agent:navigator.userAgent.slice(0,200),
+        request_id:(crypto.randomUUID?.())||Math.random().toString(36).slice(2),
+        ...extra
+      }
+    });
+    if(error)console.warn('[audit]',eventType,error.message);
+  }catch(e){console.warn('[audit]',eventType,e);}
 }
 async function loadAuditLog(){
-  const{data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);
+  const{data,error}=await sb.from('audit_events').select('*').order('created_at',{ascending:false}).limit(500);
   const el=document.getElementById('audit-list');
-  if(!data||!data.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No audit entries</p></div>';return;}
+  if(error){el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠</div><p>${error.message}</p></div>`;return;}
+  if(!data||!data.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No audit entries yet</p></div>';return;}
+  const colors={CREATED:'#10b981',UPDATED_DRAFT:'#6366f1',ISSUED:'#f59e0b',SUPERSEDED:'#8b5cf6',DELETED:'#ef4444',PDF_DOWNLOADED:'#3b82f6',EMAILED:'#06b6d4'};
   el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
-    <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:8px;color:var(--muted)">Time</th><th style="text-align:left;padding:8px;color:var(--muted)">Action</th><th style="text-align:left;padding:8px;color:var(--muted)">Type</th><th style="text-align:left;padding:8px;color:var(--muted)">Detail</th><th style="text-align:left;padding:8px;color:var(--muted)">User</th></tr></thead>
-    <tbody>${data.map(e=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;color:var(--muted);white-space:nowrap;font-size:12px">${new Date(e.created_at).toLocaleString('en-GB')}</td><td style="padding:8px">${e.action||''}</td><td style="padding:8px"><span class="badge badge-${e.cert_type==='gas'?'due':'done'}">${e.cert_type||'—'}</span></td><td style="padding:8px">${e.detail||''}</td><td style="padding:8px;font-size:12px;color:var(--muted)">${e.user_email||'—'}</td></tr>`).join('')}</tbody>
+    <thead><tr style="border-bottom:2px solid var(--border)">
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Time</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Event</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Type</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Ref</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">User</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Role</th>
+      <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Source</th>
+    </tr></thead>
+    <tbody>${data.map(e=>{
+      const c=colors[e.event_type]||'#94a3b8';
+      const src=e.metadata?.source==='trigger'?'<span title="Database trigger — cannot be bypassed" style="font-size:10px;color:#10b981">⚙ trigger</span>':'<span style="font-size:10px;color:#6b7280">app</span>';
+      return`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px;color:var(--muted);white-space:nowrap;font-size:12px">${new Date(e.created_at).toLocaleString('en-GB')}</td>
+        <td style="padding:8px"><span style="background:${c}22;color:${c};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.3px">${e.event_type||'—'}</span></td>
+        <td style="padding:8px"><span class="badge badge-${e.cert_type==='gas'?'due':'done'}">${e.cert_type||'—'}</span></td>
+        <td style="padding:8px;font-weight:600;font-size:12px">${e.cert_ref||'—'}</td>
+        <td style="padding:8px;font-size:12px;color:var(--muted)">${e.user_email||'—'}</td>
+        <td style="padding:8px;font-size:11px;color:var(--muted)">${e.user_role||'—'}</td>
+        <td style="padding:8px">${src}</td>
+      </tr>`;
+    }).join('')}</tbody>
   </table>`;
 }
 
