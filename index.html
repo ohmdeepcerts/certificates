@@ -2452,7 +2452,7 @@ function buildCertRef(fullAddress,postcode){
   const pc=postcode||_extractPC(fullAddress);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(fullAddress);
-  return`${base}${month}${score}/${addrPart}`;
+  return`${base}${month}${score} / ${addrPart}`;
 }
 function updatePatRef(){
   const el=patGe('pat-ref');
@@ -4248,11 +4248,13 @@ init();
     const r=inputEl.getBoundingClientRect();
     const ph=picker.offsetHeight||220;
     const pw=picker.offsetWidth||220;
-    let top=r.bottom+window.scrollY+4;
-    let left=r.left+window.scrollX;
-    if(r.bottom+ph+4>window.innerHeight)top=r.top+window.scrollY-ph-4;
+    // position:fixed uses viewport coords — do NOT add scrollY/scrollX
+    let top=r.bottom+4;
+    let left=r.left;
+    if(r.bottom+ph+4>window.innerHeight)top=r.top-ph-4;
     if(left+pw>window.innerWidth)left=window.innerWidth-pw-8;
     if(left<4)left=4;
+    if(top<4)top=4;
     picker.style.top=top+'px';picker.style.left=left+'px';
   }
 
