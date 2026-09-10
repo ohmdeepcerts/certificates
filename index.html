@@ -577,8 +577,8 @@ a{color:var(--accent);text-decoration:none}
   /* Gas CP12 print (body.gas-printing) */
   body.gas-printing #app,body.gas-printing #auth-screen,body.gas-printing .modal-backdrop{display:none!important}
   body.gas-printing .view{display:none!important}
-  body.gas-printing #print-target{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;z-index:9999}
-  body.gas-printing #print-target .cp12-form-wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
+  body.gas-printing #print-target{display:block!important;position:static!important;width:100%;background:#fff}
+  body.gas-printing #print-target .cp12-form-wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;width:100%;overflow:visible}
   .cp12-form-wrap .page:last-child{page-break-after:auto;break-after:auto}
   .cp12-form-wrap .no-print,.no-print{display:none!important}
   .cp12-form-wrap .inline-history-section{display:none!important}
@@ -1025,7 +1025,7 @@ a{color:var(--accent);text-decoration:none}
                     <input type="text" data-field="landlord_postcode" placeholder="SW1A 1AA">
                   </div>
                   <div class="pc-line no-print">
-                    <label style="white-space:nowrap">Cert Email</label>
+                    <label style="white-space:nowrap">Email</label>
                     <input type="email" data-field="recipient_email" placeholder="landlord@example.com" autocomplete="off" title="Email address to send this certificate to">
                   </div>
                 </div>
@@ -4037,7 +4037,7 @@ async function emailGas(){
   if(!r){toast('Not found','error');return;}
   if(!getSetting('brevo_api_key')){toast('Brevo API key not set — go to Settings → Email','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
-  if(!toEmail){toast('No recipient email — add one in the Landlord section (Cert Email) or Settings → Email','warn');return;}
+  if(!toEmail){toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
   const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
   const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
