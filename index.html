@@ -3945,7 +3945,7 @@ async function deleteGas(id){
 }
 
 // ========== GAS - PDF (jsPDF vector) ==========
-async function openGasPDF(id){const{data:r}=await sb.from('gas_certs').select('*').eq('id',id).single();if(r)generateGasPDFFromData(r);}
+async function openGasPDF(id){await loadGasForm(id);await downloadCP12PDF(null);}
 async function generateGasPDF(){
   if(!editingGasId){toast('Save first','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
