@@ -353,9 +353,9 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .logo-zone.has-logo .logo-placeholder{display:none}
 .cp12-form-wrap .logo-zone input[type="file"]{display:none}
 .cp12-form-wrap .header-content{min-width:0;display:flex;flex-direction:column;background:#1e3a5f}
-.cp12-form-wrap .top-bar{display:grid;grid-template-columns:.82fr .68fr .82fr 1.78fr;background:#f59e0b;padding:3px 5px;gap:4px;align-items:center;flex-shrink:0}
+.cp12-form-wrap .top-bar{display:grid;grid-template-columns:.9fr .85fr .9fr 1.55fr;background:#f59e0b;padding:3px 5px;gap:4px;align-items:center;flex-shrink:0}
 .cp12-form-wrap .top-item{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:3px;font-size:8pt}
-.cp12-form-wrap .top-item label{background:transparent;color:#1e3a5f;font-weight:700;padding:0;font-size:7.5pt;line-height:1.05;white-space:normal;border-radius:0}
+.cp12-form-wrap .top-item label{background:transparent;color:#1e3a5f;font-weight:700;padding:0;font-size:7.5pt;line-height:1.05;white-space:nowrap;border-radius:0}
 .cp12-form-wrap .top-item.gas-number-item{gap:2px}
 .cp12-form-wrap .top-item.gas-number-item label{font-size:6.8pt;line-height:1.0}
 .cp12-form-wrap .top-item input{min-width:0;width:100%;height:18px;background:#fff;border:1px solid rgba(30,58,95,.25);border-radius:2px;padding:1px 4px;font-size:9pt;font-weight:600;color:#111827;font-family:inherit}
@@ -3134,12 +3134,14 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
       shell.innerHTML='';
       shell.appendChild(clone);
       await new Promise(res=>setTimeout(res,80));
+      const pw=clone.offsetWidth||794;
+      const ph=clone.offsetHeight||1123;
       const canvas=await html2canvas(clone,{
-        scale:2,useCORS:true,backgroundColor:'#ffffff',
-        width:794,windowWidth:794,scrollX:0,scrollY:0,logging:false
+        scale:4,useCORS:true,backgroundColor:'#ffffff',
+        width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false
       });
       const imgH=(canvas.height/canvas.width)*210;
-      doc.addImage(canvas.toDataURL('image/jpeg',.93),'JPEG',0,0,210,imgH);
+      doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,imgH);
     }
     document.body.removeChild(shell);
 
@@ -3172,18 +3174,25 @@ function printGasCertificate(){
   if(!cp12RequireAppliance())return;
   const wrap=document.getElementById('cp12Wrap');
   if(!wrap){document.body.classList.add('gas-printing');window.print();document.body.classList.remove('gas-printing');return;}
-  // Swap live form content with a static frozen clone so the browser prints
-  // exactly what the engineer sees — no interactive widgets, no placeholder text.
   const liveHTML=wrap.innerHTML;
-  const frag=document.createDocumentFragment();
-  ['page1','page2'].forEach(srcId=>{const f=freezeGasPage(srcId);if(f){f.id=srcId;frag.appendChild(f);}});
+  function restore(){
+    document.body.classList.remove('gas-printing');
+    wrap.innerHTML=liveHTML;
+    refreshChoiceGroups();
+    window.removeEventListener('afterprint',restore);
+  }
+  window.addEventListener('afterprint',restore);
   wrap.innerHTML='';
-  wrap.appendChild(frag);
+  ['page1','page2'].forEach(srcId=>{
+    const f=freezeGasPage(srcId);
+    if(f){
+      f.id=srcId;
+      f.style.display='flex'; // force visible — clone may inherit a hidden state
+      wrap.appendChild(f);
+    }
+  });
   document.body.classList.add('gas-printing');
-  window.print();
-  document.body.classList.remove('gas-printing');
-  wrap.innerHTML=liveHTML;
-  refreshChoiceGroups();
+  setTimeout(()=>window.print(),120);
 }
 
 // ========== EMAIL HELPER ==========
@@ -3751,7 +3760,7 @@ async function buildCP12PdfDoc(){
       const w=frozen.offsetWidth||1213;
       const h=frozen.offsetHeight||870;
       const c=await html2canvas(frozen,{scale:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
-      doc.addImage(c.toDataURL('image/png'),'PNG',0,0,297,210);
+      doc.addImage(c.toDataURL('image/jpeg',0.95),'JPEG',0,0,297,210);
     }
   }finally{
     if(shell.parentNode)document.body.removeChild(shell);
