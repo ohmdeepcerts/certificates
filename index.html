@@ -1984,14 +1984,14 @@ async function loadStaff(){
     list.innerHTML=reqs.map(r=>`
       <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:var(--radius);flex-wrap:wrap;margin-bottom:8px">
         <div style="flex:1;min-width:160px">
-          <div style="font-weight:600;font-size:13px">${r.full_name}</div>
-          <div style="font-size:12px;color:var(--muted)">${r.email}</div>
-          ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${r.message}"</div>`:''}
+          <div style="font-weight:600;font-size:13px">${patEsc(r.full_name)}</div>
+          <div style="font-size:12px;color:var(--muted)">${patEsc(r.email)}</div>
+          ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${patEsc(r.message)}"</div>`:''}
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${(r.full_name||'').replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${r.email}')">✓ Approve</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${(r.full_name||'').replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')">✕ Reject</button>
+          <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${patEsc(r.full_name)}','${patEsc(r.email)}')">✓ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${patEsc(r.full_name)}')">✕ Reject</button>
         </div>
       </div>`).join('');
   }else if(section){section.hidden=true;}
@@ -2104,14 +2104,14 @@ async function loadPendingRequests(){
   list.innerHTML=data.map(r=>`
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:var(--radius);flex-wrap:wrap;margin-bottom:8px">
       <div style="flex:1;min-width:160px">
-        <div style="font-weight:600;font-size:13px">${r.full_name}</div>
-        <div style="font-size:12px;color:var(--muted)">${r.email}</div>
-        ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${r.message}"</div>`:''}
+        <div style="font-weight:600;font-size:13px">${patEsc(r.full_name)}</div>
+        <div style="font-size:12px;color:var(--muted)">${patEsc(r.email)}</div>
+        ${r.message?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${patEsc(r.message)}"</div>`:''}
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${r.full_name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${r.email}')">✓ Approve</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${r.full_name.replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')">✕ Reject</button>
+        <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${patEsc(r.full_name)}','${patEsc(r.email)}')">✓ Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}','${patEsc(r.full_name)}')">✕ Reject</button>
       </div>
     </div>`).join('');
 }
@@ -3888,7 +3888,7 @@ function initCP12Form(){
         if(/boiler/i.test(this.value)){
           setCP12Field(`app${row}_flue_type`,'RS');
           setCP12Field(`app${row}_flue_flow`,'Pass');
-          setCP12Field(`app${row}_combustion`,Math.random()<.5?'.0008':'.0009');
+          // combustion reading is a measured value — engineer must enter it manually
         } else if(/hob|cooker/i.test(this.value)){
           setCP12Field(`app${row}_flue_type`,'FL');
           setCP12Field(`app${row}_combustion`,'N/A');
@@ -3909,7 +3909,7 @@ function initCP12Form(){
 const PIPEWORK_ITEMS=['Gas Tightness Test','Standing / Working Pressure Test','Gas Installation Visual Check','Meter / Governor Condition','Emergency Control Accessible'];
 async function saveGas(){
   const d=getGasFormData();
-  if(!d.install_address){toast('Installation address required','error');return;}
+  if(!d.install_address){toast('Installation address required','error');return false;}
   showOverlay('Saving…');
   let err;
   if(editingGasId){
@@ -3919,15 +3919,15 @@ async function saveGas(){
     err=e;if(c)editingGasId=c.id;
   }
   hideOverlay();
-  if(err){toast('Save failed: '+err.message,'error');}
-  else{toast('Saved ✓','success');}
+  if(err){toast('Save failed: '+err.message,'error');return false;}
+  toast('Saved ✓','success');return true;
 }
 async function completeGas(){
   if(!cp12RequireAppliance())return;
   const d=getGasFormData();
   if(!d.install_address||!d.cert_date){toast('Address and date required','error');return;}
-  await saveGas();
-  if(!editingGasId){toast('Save failed','error');return;}
+  const saved=await saveGas();
+  if(!saved){return;} // saveGas already showed the error
   showOverlay('Issuing certificate…');
   const refNum=buildCertRef((d.install_address||'')+(d.install_postcode?' '+d.install_postcode:''),d.install_postcode);
   const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingGasId);
