@@ -1718,7 +1718,17 @@ CREATE POLICY "Admin update requests" ON public.staff_requests
 <div id="toast-container"></div>
 
 <!-- LOADING OVERLAY -->
-<div id="loading-overlay"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
+<div id="loading-overlay">
+  <div id="overlay-simple" style="display:flex;flex-direction:column;align-items:center;gap:12px"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
+  <div id="overlay-progress" style="display:none;width:340px;background:#fff;border-radius:14px;padding:26px 28px;box-shadow:0 12px 40px rgba(0,0,0,.3)">
+    <div id="ovp-title" style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:3px">Sending email</div>
+    <div id="ovp-step" style="font-size:13px;color:#64748b;margin-bottom:14px">Starting…</div>
+    <div style="background:#e2e8f0;border-radius:99px;height:7px;overflow:hidden;margin-bottom:16px">
+      <div id="ovp-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#6366f1);transition:width .45s cubic-bezier(.4,0,.2,1);width:0%"></div>
+    </div>
+    <div id="ovp-steps"></div>
+  </div>
+</div>
 
 <!-- ADD STAFF MODAL -->
 <div class="modal-backdrop hidden" id="add-staff-modal" style="z-index:200">
@@ -2146,8 +2156,39 @@ function copyStaffSQL(){
 }
 
 // ========== OVERLAYS & TOAST ==========
-function showOverlay(msg){document.getElementById('overlay-msg').textContent=msg||'Loading…';document.getElementById('loading-overlay').classList.add('active');}
-function hideOverlay(){document.getElementById('loading-overlay').classList.remove('active');}
+function showOverlay(msg){
+  document.getElementById('overlay-simple').style.display='flex';
+  document.getElementById('overlay-progress').style.display='none';
+  document.getElementById('overlay-msg').textContent=msg||'Loading…';
+  document.getElementById('loading-overlay').classList.add('active');
+}
+function hideOverlay(){
+  document.getElementById('loading-overlay').classList.remove('active');
+  document.getElementById('overlay-simple').style.display='flex';
+  document.getElementById('overlay-progress').style.display='none';
+}
+// stepDefs = [{label:'Rendering PDF'},{label:'Building attachment'},{label:'Sending email'}]
+// currentIdx = 0-based index of active step
+function showEmailProgress(stepDefs,currentIdx){
+  document.getElementById('overlay-simple').style.display='none';
+  document.getElementById('overlay-progress').style.display='block';
+  document.getElementById('loading-overlay').classList.add('active');
+  document.getElementById('ovp-title').textContent='Sending certificate email';
+  document.getElementById('ovp-step').textContent=stepDefs[currentIdx]?.label||'';
+  const pct=Math.round(((currentIdx+0.5)/stepDefs.length)*100);
+  document.getElementById('ovp-bar').style.width=pct+'%';
+  document.getElementById('ovp-steps').innerHTML=stepDefs.map((s,i)=>{
+    const done=i<currentIdx,active=i===currentIdx;
+    const ic=done?'✓':active?'◉':'○';
+    const col=done?'#10b981':active?'#3b82f6':'#94a3b8';
+    return `<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:${col};font-weight:${active?'600':'400'};margin-bottom:7px"><span style="font-size:13px;width:16px;text-align:center">${ic}</span>${s.label}</div>`;
+  }).join('');
+}
+function finishEmailProgress(){
+  document.getElementById('ovp-bar').style.width='100%';
+  document.getElementById('ovp-step').textContent='Done ✓';
+  document.getElementById('ovp-steps').querySelectorAll('div').forEach(d=>{d.style.color='#10b981';d.style.fontWeight='400';d.querySelectorAll('span')[0].textContent='✓';});
+}
 function toast(msg,type='info',duration=3500){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
@@ -3272,7 +3313,8 @@ async function emailPAT(){
 
 // ========== PAT - EMAIL FROM LIST ==========
 async function emailPATFromList(id){
-  showOverlay('Loading certificate…');
+  const _emailSteps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
+  showEmailProgress(_emailSteps,0);
   let r;
   try{
     const{data,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
@@ -3344,9 +3386,13 @@ async function emailPATFromList(id){
 </td></tr></table></td></tr></table>
 </body></html>`;
   try{
+    showEmailProgress(_emailSteps,1);
     const b64=await generatePATPDFFromData(r,{returnB64:true});
     const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+    showEmailProgress(_emailSteps,2);
     await sendBrevoEmail(toEmail,client,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,bcc);
+    finishEmailProgress();
+    await new Promise(res=>setTimeout(res,600));
     toast('Email sent to '+toEmail+(bcc?' (BCC: '+bcc+')':''),'success');
     await logAppEvent('EMAILED','pat',r.id,r.ref_number);
   }catch(e){toast('Email failed: '+e.message,'error');}
@@ -4231,13 +4277,15 @@ function renderGasList(reports){
   el.innerHTML=reports.map(r=>`
     <div class="cert-row">
       <div class="cert-row-info">
-        <div style="display:flex;gap:8px;align-items:center"><span class="cert-ref">${r.ref_number||'DRAFT'}</span><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="cert-ref">${r.ref_number||'DRAFT'}</span><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status==='completed'?'✅ Completed':'📝 Draft'}</span></div>
         <div class="cert-address">${r.install_address||'No address'}</div>
-        <div class="cert-meta">${r.cert_date||'No date'} · Next: ${r.next_check_date||'—'} · ${r.engineer||'—'}</div>
+        <div class="cert-meta">${r.cert_date||'No date'} · Next check: ${r.next_check_date||'—'} · ${r.engineer||'—'}</div>
       </div>
       <div class="cert-row-actions">
+        ${_gasExpiryPill(r)}
         <button class="btn btn-secondary btn-sm" onclick="loadGasForm('${r.id}')">Edit</button>
         ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="openGasPDF('${r.id}')">PDF</button>`:''}
+        ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="emailCP12FromList('${r.id}')" title="Email certificate" style="padding:5px 9px">✉</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteGas('${r.id}')">×</button>
       </div>
     </div>`).join('');
@@ -4259,12 +4307,81 @@ async function deleteGas(id){
 }
 
 // ========== GAS - HISTORY ==========
+function _gasExpiryPill(r){
+  if(r.status!=='completed'||!r.next_check_date)return '';
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.ceil((new Date(r.next_check_date)-today)/(864e5));
+  let bg,col;
+  if(days<0){bg='#fef2f2';col='#991b1b';}
+  else if(days<=30){bg='#fee2e2';col='#b91c1c';}
+  else if(days<=90){bg='#fef3c7';col='#92400e';}
+  else{bg='#d1fae5';col='#065f46';}
+  const lbl=days<0?`${Math.abs(days)}d overdue`:`${days}d`;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 9px;border-radius:99px;font-size:.65rem;font-weight:700;background:${bg};color:${col};border:1px solid currentColor;white-space:nowrap">${lbl}</span>`;
+}
+async function emailCP12FromList(id){
+  const _steps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
+  showEmailProgress(_steps,0);
+  let r;
+  try{
+    const{data,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
+    if(error||!data){toast('Could not load certificate','error');hideOverlay();return;}
+    r=data;
+  }catch(e){toast('Error: '+e.message,'error');hideOverlay();return;}
+  const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('email_fallback','');
+  if(!toEmail){toast('No recipient email on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
+  // Load the form (navigates to gas-new) so buildCP12PdfBase64 can render it
+  await loadGasForm(id);
+  const bcc=getSetting('email_bcc','');
+  const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
+  const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
+  const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
+  const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+    <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
+      <h2 style="margin:0">${co}</h2>
+      <p style="margin:4px 0 0;font-size:13px">Landlord Gas Safety Record (CP12)</p>
+    </div>
+    <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
+      <p>Dear ${toName||'Landlord / Property Owner'},</p>
+      <p>Please find attached your Gas Safety Certificate (CP12).</p>
+      <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px">${r.ref_number||'—'}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Installation Address</td><td style="padding:8px 12px">${r.install_address||'—'}${r.install_postcode?' '+r.install_postcode:''}</td></tr>
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Certificate Date</td><td style="padding:8px 12px">${r.cert_date||'—'}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
+        <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Gas Safe Reg No</td><td style="padding:8px 12px">${r.gas_safe_no||getSetting('gas_safe_no','—')}</td></tr>
+        <tr><td style="padding:8px 12px;font-weight:bold">Next Check Due</td><td style="padding:8px 12px;font-weight:bold;color:#dc2626">${r.next_check_date||'—'}</td></tr>
+      </table>
+      <p style="font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 14px">⚠ By law, landlords must have gas appliances checked annually. Please keep this certificate safe and provide a copy to your tenant within 28 days.</p>
+      <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
+    </div>
+    <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
+  </div>`;
+  // loadGasForm hid the overlay — re-show progress before rendering
+  showEmailProgress(_steps,1);
+  try{
+    const b64=await buildCP12PdfBase64();
+    showEmailProgress(_steps,2);
+    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
+    finishEmailProgress();
+    await new Promise(res=>setTimeout(res,600));
+    sb.from('email_sends').insert({
+      cert_id:r.id,cert_type:'gas',cert_ref:r.ref_number,
+      to_email:toEmail,to_name:toName,subject,
+      brevo_message_id:result.messageId||null,status:'sent',
+      sent_by:currentUser?.id,sent_by_email:currentUser?.email
+    }).then(({error})=>{if(error)console.warn('email_sends insert:',error.message);});
+    toast('Email sent ✓ — '+toEmail,'success',5000);
+    await logAppEvent('EMAILED','gas',r.id,r.ref_number,{to:toEmail,brevo_message_id:result.messageId||null});
+  }catch(e){toast('Email failed: '+e.message,'error');}
+  finally{hideOverlay();}
+}
 async function openGasPDF(id){await loadGasForm(id);await downloadCP12PDF(null);}
 async function emailGas(){
   if(!editingGasId){toast('No certificate loaded','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
   if(!r){toast('Not found','error');return;}
-  if(!getSetting('brevo_api_key')){toast('Brevo API key not set — go to Settings → Email','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
   if(!toEmail){toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
@@ -4292,13 +4409,15 @@ async function emailGas(){
     </div>
     <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('gas_co_phone','')} &nbsp;·&nbsp; ${getSetting('gas_co_email','')} &nbsp;·&nbsp; ${getSetting('gas_co_address','')}</p>
   </div>`;
-  showOverlay('Generating PDF for email…');
+  const _gasSteps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
+  showEmailProgress(_gasSteps,1);
   try{
     const b64=await buildCP12PdfBase64();
-    showOverlay('Sending email…');
+    showEmailProgress(_gasSteps,2);
     const bcc=getSetting('email_bcc','');
     const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
-    // Store send record (non-blocking — don't fail the email if this fails)
+    finishEmailProgress();
+    await new Promise(res=>setTimeout(res,600));
     sb.from('email_sends').insert({
       cert_id:r.id,cert_type:'gas',cert_ref:r.ref_number,
       to_email:toEmail,to_name:toName,subject,
