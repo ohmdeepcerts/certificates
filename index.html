@@ -2200,19 +2200,12 @@ async function sendTestEmail(){
   if(!to){toast('Enter a test email address','warn');return;}
   const method=document.getElementById('s-email-method').value;
   if(method==='brevo'){
-    const apiKey=document.getElementById('s-brevo-key').value.trim()||getSetting('brevo_api_key');
-    if(!apiKey){toast('Enter your Brevo API key first','error');return;}
     const fromEmail=document.getElementById('s-from-email').value.trim()||getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
     const fromName=document.getElementById('s-from-name').value.trim()||getSetting('email_from_name')||getSetting('company_name','OHM Electrical Engineering Ltd');
+    const html=`<div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto"><div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0"><h2 style="margin:0">OHM ELECTRICAL ENGINEERING LTD</h2><p style="margin:4px 0 0;font-size:13px">Certificate Email System</p></div><div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px"><p style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:12px 16px;color:#15803d;font-weight:bold">&#10003; Brevo email integration is working. PAT and CP12 certificates will arrive with PDF attachments.</p><p style="color:#555">Sent from: <strong>${fromEmail}</strong></p></div></div>`;
     showOverlay('Sending test email…');
     try{
-      const res=await fetch('https://api.brevo.com/v3/smtp/email',{
-        method:'POST',
-        headers:{'accept':'application/json','api-key':apiKey,'content-type':'application/json'},
-        body:JSON.stringify({sender:{name:fromName,email:fromEmail},to:[{email:to}],subject:'Test — OHM Certificates Email System',htmlContent:`<div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto"><div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0"><h2 style="margin:0">OHM ELECTRICAL ENGINEERING LTD</h2><p style="margin:4px 0 0;font-size:13px">Certificate Email System</p></div><div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px"><p style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:12px 16px;color:#15803d;font-weight:bold">✓ Brevo email integration is working. PAT and CP12 certificates will arrive with PDF attachments.</p><p style="color:#555">Sent from: <strong>${fromEmail}</strong></p></div></div>`})
-      });
-      const body=await res.json().catch(()=>({}));
-      if(!res.ok){throw new Error(body.message||`HTTP ${res.status}`);}
+      await sendBrevoEmail(to,'Test',`Test — OHM Certificates Email System`,html,null,null,null);
       toast('Test email sent ✓ — check inbox &amp; spam for '+to,'success',6000);
     }catch(e){toast('Failed: '+e.message,'error',7000);}
     finally{hideOverlay();}
