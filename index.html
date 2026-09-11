@@ -3130,8 +3130,9 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
       const pw=clone.offsetWidth||794;
       const ph=clone.offsetHeight||1123;
       const canvas=await html2canvas(clone,{
-        scale:4,useCORS:true,backgroundColor:'#ffffff',
-        width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false
+        scale:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+        width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,
+        imageTimeout:5000
       });
       const imgH=(canvas.height/canvas.width)*210;
       doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,imgH);
