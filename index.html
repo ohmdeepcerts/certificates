@@ -568,7 +568,7 @@ a{color:var(--accent);text-decoration:none}
 #cp12Toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* Print */
 @media print{
-  @page{size:A4 landscape;margin:0}
+  @page{size:A4 portrait;margin:0}
   body{background:#fff}
   /* PAT print (body.pat-printing) */
   body.pat-printing #app,body.pat-printing #auth-screen,body.pat-printing .modal-backdrop{display:none!important}
@@ -2399,7 +2399,7 @@ async function loadDashboard(){
   // Count appliances with next test date in next 30 days
   let patDue=0;
   (pats||[]).filter(r=>r.status==='completed').forEach(r=>{
-    (r.appliances||[]).forEach(a=>{if(a.next_test){const d=new Date(a.next_test);if(d>=today&&d<=in30)patDue++;}});
+    (r.appliances||[]).forEach(a=>{const nt=a.nextTest||a.next_test;if(nt){const d=new Date(nt);if(d>=today&&d<=in30)patDue++;}});
   });
   const gasTotal=gases?.length||0;
   const gasDone=(gases||[]).filter(r=>r.status==='completed').length;
@@ -3172,33 +3172,38 @@ function printPATCertificate(){
 }
 function printGasCertificate(){
   if(!cp12RequireAppliance())return;
-  const wrap=document.getElementById('cp12Wrap');
-  if(!wrap){document.body.classList.add('gas-printing');window.print();document.body.classList.remove('gas-printing');return;}
-  const liveHTML=wrap.innerHTML;
-  function restore(){
-    document.body.classList.remove('gas-printing');
-    wrap.innerHTML=liveHTML;
-    refreshChoiceGroups();
-    window.removeEventListener('afterprint',restore);
-  }
-  window.addEventListener('afterprint',restore);
-  wrap.innerHTML='';
+  // Collect all inline styles from the main document
+  const styles=Array.from(document.querySelectorAll('style')).map(s=>s.textContent).join('\n');
+  // Freeze both pages to static HTML (canvases already converted to img by freezeGasPage)
+  const frozenParts=[];
   ['page1','page2'].forEach(srcId=>{
     const f=freezeGasPage(srcId);
-    if(f){
-      f.id=srcId;
-      f.style.display='flex'; // force visible — clone may inherit a hidden state
-      wrap.appendChild(f);
-    }
+    if(f){f.id=srcId;f.style.display='flex';frozenParts.push(f.outerHTML);}
   });
-  document.body.classList.add('gas-printing');
-  setTimeout(()=>window.print(),120);
+  if(!frozenParts.length)return;
+  // Write frozen pages into a hidden iframe — main DOM is never touched
+  const iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:0;';
+  document.body.appendChild(iframe);
+  const iDoc=iframe.contentDocument||iframe.contentWindow.document;
+  iDoc.open();
+  iDoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>${styles}</style>
+<style>@page{size:A4 landscape;margin:0;}body{margin:0;padding:0;background:#fff;}</style>
+</head><body class="gas-printing">
+<div id="cp12Wrap" class="cp12-form-wrap">${frozenParts.join('')}</div>
+</body></html>`);
+  iDoc.close();
+  function cleanup(){
+    try{iframe.contentWindow.removeEventListener('afterprint',cleanup);}catch(e){}
+    setTimeout(()=>{if(iframe.parentNode)iframe.parentNode.removeChild(iframe);},300);
+  }
+  iframe.contentWindow.addEventListener('afterprint',cleanup);
+  setTimeout(()=>iframe.contentWindow.print(),200);
 }
 
 // ========== EMAIL HELPER ==========
 async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilename,bcc){
-  const apiKey=getSetting('brevo_api_key');
-  if(!apiKey){toast('Brevo API key not set — go to Settings → Email','error');return false;}
   const fromEmail=getSetting('email_from')||'Compliance@ohmelectricals.co.uk';
   const fromName=getSetting('email_from_name')||getSetting('pat_co_name',getSetting('gas_co_name','OHM Electrical Engineering Ltd'));
   const toClean=(to||'').trim().toLowerCase().replace(/\s+/g,'');
@@ -3212,16 +3217,10 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
   };
   if(bcc){const bccClean=(bcc||'').trim().toLowerCase();if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bccClean))payload.bcc=[{email:bccClean}];}
   if(pdfBase64&&pdfFilename)payload.attachment=[{content:pdfBase64,name:pdfFilename}];
-  const res=await fetch('https://api.brevo.com/v3/smtp/email',{
-    method:'POST',
-    headers:{'accept':'application/json','api-key':apiKey,'content-type':'application/json'},
-    body:JSON.stringify(payload)
-  });
-  const body=await res.json().catch(()=>({}));
-  if(!res.ok){
-    throw new Error((body.message||'HTTP '+res.status)+' | to:'+toClean+' from:'+fromEmailClean);
-  }
-  return{ok:true,messageId:body.messageId||''};
+  const{data,error}=await sb.functions.invoke('send-email',{body:payload});
+  if(error)throw new Error(error.message||'Email function error');
+  if(data&&!data.ok)throw new Error(data.error||'Email send failed');
+  return{ok:true,messageId:(data&&data.messageId)||''};
 }
 
 // ========== PAT - EMAIL ==========
@@ -3237,7 +3236,7 @@ async function emailPAT(){
     showOverlay('Sending email…');
     try{
       await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:r.email_address,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
-      toast('Email sent ✓','success');
+      toast('Email sent (delivery unconfirmed)','info');
       await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
     }catch(e){toast('Email failed','error');}
     finally{hideOverlay();}
@@ -3688,6 +3687,7 @@ async function loadGasForm(id){
   });
   for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
   populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();updateAddApplianceBtn();
+  if(r.status==='completed') document.getElementById('btn-gas-complete').disabled=true;
   _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
 }
 function getGasFormData(){return collectCP12FormData();}
@@ -3708,63 +3708,344 @@ function cp12RequireAppliance(){
   return false;
 }
 
-// ========== CP12 PDF — single renderer used by download, email, history ==========
-// Produces a jsPDF doc from the live #page1/#page2 form.
-// One renderer everywhere: no second template can diverge from what the engineer sees.
+// ========== CP12 PDF — vector renderer using jsPDF primitives ==========
+// Draws the certificate from data — fully selectable text, sharp at any zoom.
 async function buildCP12PdfDoc(){
-  if(!window.html2canvas||!window.jspdf)throw new Error('PDF libraries not loaded');
+  if(!window.jspdf)throw new Error('jsPDF not loaded');
   const{jsPDF}=window.jspdf;
+  const d=collectCP12FormData();
+  const ref=cp12Field('cert_ref')||'';
+  const coName=cp12Field('company_name')||getSetting('gas_co_name',getSetting('company_name',''));
+
+  // --- Colors ---
+  const NAVY=[30,58,95],AMBER=[245,158,11],WHITE=[255,255,255];
+  const LGRAY=[249,250,251],DARK=[17,24,39],MED=[107,114,128];
+  const NBORDER=[30,58,95],AMBER_LIGHT=[254,243,199];
+
+  // --- Layout constants (mm) ---
+  const PL=12,PT=10,CW=273;
+  const HDR_H=22,TOPBAR_H=7,GAP=2;
+  const LOGO_W=CW*0.2,HDR_CW=CW*0.8,HDR_CX=PL+LOGO_W;
+  const INFO_Y=PT+HDR_H+GAP,INFO_H=28,INFO_GAP=2.5;
+  const INFO_CW=(CW-INFO_GAP*2)/3;
+  const MAIN_Y=INFO_Y+INFO_H+GAP;
+  const FOOTER_Y=200,FOOTER_H=8;
+  const COL_W=(CW-GAP)/2,LEFT_X=PL,RIGHT_X=PL+COL_W+GAP;
+  const DEF_H=50,REM_H=22,PIPE_H=50;
+  const HEADER_LH=5; // box header line height
+
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const shell=document.createElement('div');
-  shell.className='cp12-form-wrap';
-  shell.style.cssText='position:fixed;top:-3000px;left:0;width:1123px;background:#fff;overflow:visible;pointer-events:none;z-index:99999';
-  document.body.appendChild(shell);
-  try{
-    for(const[i,srcId]of['page1','page2'].entries()){
-      if(i>0)doc.addPage('a4','landscape');
-      const frozen=freezeGasPage(srcId);
-      if(!frozen)continue;
-      frozen.id=srcId;
-      frozen.style.cssText='margin:0!important;box-shadow:none!important;overflow:visible!important;';
-      shell.innerHTML='';shell.appendChild(frozen);
-      await new Promise(res=>setTimeout(res,250));
-      // html2canvas renders <input> text unreliably — replace with plain divs.
-      // Explicitly skip hidden inputs: they have no visual presence and replacing them
-      // creates invisible elements that can shift layout.
-      frozen.querySelectorAll('input:not([type="hidden"]),textarea').forEach(el=>{
-        const cs=window.getComputedStyle(el);
-        const div=document.createElement('div');
-        div.textContent=el.value||'';
-        div.style.display='flex';
-        div.style.alignItems='center';
-        div.style.justifyContent=cs.textAlign==='center'?'center':cs.textAlign==='right'?'flex-end':'flex-start';
-        div.style.color=cs.color;
-        div.style.fontSize=cs.fontSize;
-        div.style.fontFamily=cs.fontFamily;
-        div.style.fontWeight=cs.fontWeight;
-        div.style.fontVariantNumeric=cs.fontVariantNumeric;
-        div.style.letterSpacing=cs.letterSpacing;
-        div.style.background=cs.backgroundColor==='rgba(0, 0, 0, 0)'?'transparent':cs.backgroundColor;
-        div.style.border=cs.border;
-        div.style.padding=cs.padding;
-        div.style.width=cs.width;
-        div.style.minWidth=cs.width;
-        div.style.height=cs.height;
-        div.style.boxSizing=cs.boxSizing;
-        div.style.overflow='visible';
-        div.style.whiteSpace=el.tagName==='TEXTAREA'?'pre-wrap':'nowrap';
-        div.style.pointerEvents='none';
-        el.parentNode.replaceChild(div,el);
-      });
-      await new Promise(res=>setTimeout(res,50));
-      const w=frozen.offsetWidth||1213;
-      const h=frozen.offsetHeight||870;
-      const c=await html2canvas(frozen,{scale:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
-      doc.addImage(c.toDataURL('image/jpeg',0.95),'JPEG',0,0,297,210);
-    }
-  }finally{
-    if(shell.parentNode)document.body.removeChild(shell);
+
+  // ---- helpers ----
+  const fill=(r,g,b)=>doc.setFillColor(r,g,b);
+  const stroke=(r,g,b,lw=0.3)=>{doc.setDrawColor(r,g,b);doc.setLineWidth(lw);};
+  const rgb=(arr)=>[...arr];
+  function box(x,y,w,h,fc,sc,lw=0.3){
+    if(fc){doc.setFillColor(...fc);if(sc){doc.setDrawColor(...sc);doc.setLineWidth(lw);doc.rect(x,y,w,h,'FD');}else doc.rect(x,y,w,h,'F');}
+    else if(sc){doc.setDrawColor(...sc);doc.setLineWidth(lw);doc.rect(x,y,w,h,'S');}
   }
+  function txt(s,x,y,size,color,bold,align){
+    doc.setFont('helvetica',bold?'bold':'normal');
+    doc.setFontSize(size);doc.setTextColor(...(color||DARK));
+    doc.text(String(s||''),x,y,{align:align||'left',baseline:'middle'});
+  }
+  function wrapTxt(s,x,y,w,size,color,bold,lineH){
+    if(!s)return 0;
+    doc.setFont('helvetica',bold?'bold':'normal');
+    doc.setFontSize(size);doc.setTextColor(...(color||DARK));
+    const lh=lineH||(size*0.3528+1.2);
+    const lines=doc.splitTextToSize(String(s),w);
+    lines.forEach((l,i)=>doc.text(l,x,y+i*lh));
+    return lines.length*lh;
+  }
+  function sectionHdr(x,y,w,h,label){
+    box(x,y,w,h,NAVY);
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...WHITE);
+    doc.text(label.toUpperCase(),x+3,y+h/2,{baseline:'middle'});
+  }
+  function infoBox(x,y,w,h,title){
+    box(x,y,w,h,WHITE,NBORDER,0.4);
+    sectionHdr(x,y,w,HEADER_LH,title);
+  }
+
+  // ============================  PAGE 1  ============================
+
+  // --- Logo zone ---
+  box(PL,PT,LOGO_W,HDR_H,NAVY);
+  const logoData=getSetting('gas_logo_data','');
+  if(logoData){try{doc.addImage(logoData,'PNG',PL+2,PT+2,LOGO_W-4,HDR_H-4,'','FAST');}catch(e){}}
+  else{
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(...WHITE);
+    doc.text('GAS SAFE',PL+LOGO_W/2,PT+HDR_H/2-2,{align:'center',baseline:'middle'});
+    doc.setFontSize(6.5);doc.text('REGISTERED',PL+LOGO_W/2,PT+HDR_H/2+3.5,{align:'center',baseline:'middle'});
+  }
+
+  // --- Title box (navy part of header) ---
+  const TITLE_H=HDR_H-TOPBAR_H;
+  box(HDR_CX,PT,HDR_CW,TITLE_H,NAVY);
+  txt(coName||'Company Name',HDR_CX+5,PT+TITLE_H*0.38,16,WHITE,true);
+  txt('LANDLORD GAS SAFETY RECORD (CP12)',HDR_CX+5,PT+TITLE_H*0.77,9.5,WHITE,true);
+
+  // --- Yellow top bar ---
+  const TBAR_Y=PT+TITLE_H;
+  box(HDR_CX,TBAR_Y,HDR_CW,TOPBAR_H,AMBER);
+  const BAR_FRACS=[0.9,0.85,0.9,1.55],BAR_TOTAL=4.2;
+  const BAR_AVAIL=HDR_CW-4,BAR_GAP=1.5,BAR_UNIT=(BAR_AVAIL-BAR_GAP*3)/BAR_TOTAL;
+  const BAR_LABELS=['Inspection Date','Licence No.','Gas Safe Reg. No.','Certificate Ref.'];
+  const BAR_VALS=[d.cert_date||'',d.engineer_licence_no||'',d.gas_safe_no||'',ref];
+  let bx=HDR_CX+2;
+  BAR_FRACS.forEach((fr,i)=>{
+    const bw=fr*BAR_UNIT;
+    txt(BAR_LABELS[i],bx+1,TBAR_Y+2.2,5.8,NAVY,true);
+    box(bx,TBAR_Y+3.3,bw,3,WHITE);
+    txt(BAR_VALS[i]||'',bx+1.5,TBAR_Y+5,7,DARK,true);
+    bx+=bw+BAR_GAP;
+  });
+
+  // --- Info grid (3 boxes) ---
+  const IBOX_HDR=5,IPAD=3;
+  // Box 1: Landlord
+  const B1X=PL;
+  infoBox(B1X,INFO_Y,INFO_CW,INFO_H,'Landlord / Customer Details');
+  wrapTxt(d.landlord_address,B1X+IPAD,INFO_Y+IBOX_HDR+4,INFO_CW-6,7.5,DARK,false,3.6);
+  if(d.landlord_postcode){
+    txt('Postcode',B1X+IPAD,INFO_Y+INFO_H-5.5,5.8,MED,true);
+    txt(d.landlord_postcode,B1X+IPAD+19,INFO_Y+INFO_H-4,7.5,DARK,true);
+  }
+  // Box 2: Installation address
+  const B2X=PL+INFO_CW+INFO_GAP;
+  infoBox(B2X,INFO_Y,INFO_CW,INFO_H,'Installation / Inspection Address');
+  wrapTxt(d.install_address,B2X+IPAD,INFO_Y+IBOX_HDR+4,INFO_CW-6,7.5,DARK,false,3.6);
+  if(d.install_postcode){
+    txt('Postcode',B2X+IPAD,INFO_Y+INFO_H-5.5,5.8,MED,true);
+    txt(d.install_postcode,B2X+IPAD+19,INFO_Y+INFO_H-4,7.5,DARK,true);
+  }
+  // Box 3: Engineer/Business
+  const B3X=PL+2*(INFO_CW+INFO_GAP);
+  infoBox(B3X,INFO_Y,INFO_CW,INFO_H,'Engineer / Business Details');
+  let b3y=INFO_Y+IBOX_HDR+4;
+  b3y+=wrapTxt(d.business_address,B3X+IPAD,b3y,INFO_CW-6,7,DARK,false,3.4);
+  b3y+=1;
+  if(d.business_phone){txt('Tel',B3X+IPAD,b3y+1,5.8,MED,true);wrapTxt(d.business_phone,B3X+IPAD+9,b3y,INFO_CW-6-9,7,DARK,false,3.4);b3y+=4;}
+  if(d.business_email){txt('Email',B3X+IPAD,b3y+1,5.8,MED,true);wrapTxt(d.business_email,B3X+IPAD+11,b3y,INFO_CW-6-11,6.5,DARK,false,3.4);}
+
+  // ---- LEFT COLUMN ----
+
+  // Defects box
+  const DEF_Y=MAIN_Y;
+  box(LEFT_X,DEF_Y,COL_W,DEF_H,WHITE,NBORDER,0.4);
+  const DEF_HDR_H=6;
+  box(LEFT_X,DEF_Y,COL_W,DEF_HDR_H,NAVY);
+  doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...WHITE);
+  doc.text('DEFECTS / IMMEDIATELY DANGEROUS / AT RISK NOTICES ISSUED',LEFT_X+3,DEF_Y+DEF_HDR_H/2,{baseline:'middle'});
+  doc.text('WARNING',LEFT_X+COL_W-22,DEF_Y+DEF_HDR_H/2-1.8,{align:'center',baseline:'middle'});
+  doc.text('NOTICE',LEFT_X+COL_W-22,DEF_Y+DEF_HDR_H/2+1.8,{align:'center',baseline:'middle'});
+  doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);
+  doc.line(LEFT_X+COL_W-32,DEF_Y,LEFT_X+COL_W-32,DEF_Y+DEF_HDR_H);
+
+  const DEF_ROW_H=(DEF_H-DEF_HDR_H)/5,WARN_W=32,NUM_W=9;
+  for(let i=0;i<5;i++){
+    const ry=DEF_Y+DEF_HDR_H+i*DEF_ROW_H;
+    if(i>0){doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);doc.line(LEFT_X,ry,LEFT_X+COL_W,ry);}
+    box(LEFT_X,ry,NUM_W,DEF_ROW_H,LGRAY);
+    txt(String(i+1),LEFT_X+NUM_W/2,ry+DEF_ROW_H/2,7.5,DARK,true,'center');
+    doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);
+    doc.line(LEFT_X+NUM_W,ry,LEFT_X+NUM_W,ry+DEF_ROW_H);
+    doc.line(LEFT_X+COL_W-WARN_W,ry,LEFT_X+COL_W-WARN_W,ry+DEF_ROW_H);
+    const def=(d.defects||[])[i];
+    if(def&&def.description){
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...DARK);
+      const dl=doc.splitTextToSize(def.description,COL_W-NUM_W-WARN_W-8);
+      doc.text(dl[0]||'',LEFT_X+NUM_W+3,ry+DEF_ROW_H/2,{baseline:'middle'});
+    }
+    const warn=def?def.warning_type:'';
+    if(warn&&warn!=='N/A'){txt(warn,LEFT_X+COL_W-WARN_W/2,ry+DEF_ROW_H/2,7,DARK,true,'center');}
+    else{txt('N/A',LEFT_X+COL_W-WARN_W/2,ry+DEF_ROW_H/2,6.5,MED,false,'center');}
+  }
+
+  // Remedial Action
+  const REM_Y=DEF_Y+DEF_H+GAP;
+  infoBox(LEFT_X,REM_Y,COL_W,REM_H,'Remedial Action Required');
+  wrapTxt(d.remedial_action,LEFT_X+IPAD,REM_Y+IBOX_HDR+4,COL_W-6,7.5,DARK,false,3.8);
+
+  // Work Carried Out
+  const WORK_Y=REM_Y+REM_H+GAP;
+  const WORK_H=FOOTER_Y-WORK_Y-GAP;
+  infoBox(LEFT_X,WORK_Y,COL_W,WORK_H,'Work Carried Out');
+  wrapTxt(d.work_details,LEFT_X+IPAD,WORK_Y+IBOX_HDR+4,COL_W-6,7.5,DARK,false,3.8);
+
+  // ---- RIGHT COLUMN ----
+
+  // Pipework
+  const PIPE_Y=MAIN_Y;
+  box(RIGHT_X,PIPE_Y,COL_W,PIPE_H,WHITE,NBORDER,0.4);
+  const PIPE_HDR_H=6,PIPE_CHK_W=25;
+  box(RIGHT_X,PIPE_Y,COL_W,PIPE_HDR_H,NAVY);
+  doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...WHITE);
+  doc.text('PIPEWORK / INSTALLATION CHECKS',RIGHT_X+3,PIPE_Y+PIPE_HDR_H/2,{baseline:'middle'});
+  doc.text('Satisfactory',RIGHT_X+COL_W-PIPE_CHK_W+PIPE_CHK_W/2,PIPE_Y+PIPE_HDR_H/2-1.5,{align:'center',baseline:'middle'});
+  doc.text('/ Pass',RIGHT_X+COL_W-PIPE_CHK_W+PIPE_CHK_W/2,PIPE_Y+PIPE_HDR_H/2+1.8,{align:'center',baseline:'middle'});
+  doc.setDrawColor(255,255,255);doc.setLineWidth(0.3);
+  doc.line(RIGHT_X+COL_W-PIPE_CHK_W,PIPE_Y,RIGHT_X+COL_W-PIPE_CHK_W,PIPE_Y+PIPE_HDR_H);
+
+  const PIPE_ROWS=[
+    'Gas Tightness Test','Standing / Working Pressure Test','Gas Installation Visual Check',
+    'Meter / Governor Condition','Emergency Control Accessible'
+  ];
+  const PIPE_ROW_H=(PIPE_H-PIPE_HDR_H)/5;
+  PIPE_ROWS.forEach((label,i)=>{
+    const ry=PIPE_Y+PIPE_HDR_H+i*PIPE_ROW_H;
+    if(i>0){doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);doc.line(RIGHT_X,ry,RIGHT_X+COL_W,ry);}
+    doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);
+    doc.line(RIGHT_X+COL_W-PIPE_CHK_W,ry,RIGHT_X+COL_W-PIPE_CHK_W,ry+PIPE_ROW_H);
+    txt(label,RIGHT_X+3,ry+PIPE_ROW_H/2,7.5,DARK,false);
+    box(RIGHT_X+COL_W-PIPE_CHK_W,ry,PIPE_CHK_W,PIPE_ROW_H,LGRAY);
+    const v=(d.pipework||[])[i]||'';
+    if(v)txt(v,RIGHT_X+COL_W-PIPE_CHK_W+PIPE_CHK_W/2,ry+PIPE_ROW_H/2,9,DARK,true,'center');
+  });
+
+  // Signatures + Attention box
+  const SIG_Y=PIPE_Y+PIPE_H+GAP;
+  const SIG_H=FOOTER_Y-SIG_Y-GAP;
+  const ATTN_W=44;
+  box(RIGHT_X,SIG_Y,COL_W,SIG_H,LGRAY,NBORDER,0.4);
+
+  const SIG_BLK_W=COL_W-ATTN_W-GAP-4;
+  const SIG_BLK_H=(SIG_H-4-GAP)/2;
+  const SBLK_HDR=4.5;
+
+  function sigBlock(x,y,w,h,titleText,sigImg,nameVal){
+    box(x,y,w,h,WHITE,NBORDER,0.3);
+    box(x,y,w,SBLK_HDR,NAVY);
+    doc.setFont('helvetica','bold');doc.setFontSize(5.2);doc.setTextColor(...WHITE);
+    doc.text(titleText.toUpperCase(),x+2,y+SBLK_HDR/2,{baseline:'middle'});
+    if(sigImg){try{doc.addImage(sigImg,'PNG',x+2,y+SBLK_HDR+1,w-4,h-SBLK_HDR-8,'','FAST');}catch(e){}}
+    doc.setDrawColor(...[209,213,219]);doc.setLineWidth(0.2);
+    doc.line(x+2,y+h-5,x+w-2,y+h-5);
+    doc.setFont('helvetica','bold');doc.setFontSize(5.8);doc.setTextColor(...MED);
+    doc.text('NAME',x+2,y+h-2.5,{baseline:'middle'});
+    if(nameVal)txt((nameVal||'').toUpperCase(),x+12,y+h-2.5,6.5,DARK,true);
+  }
+  sigBlock(RIGHT_X+2,SIG_Y+2,SIG_BLK_W,SIG_BLK_H,'Record issued by the engineer:',d.sig_issued_image,d.sig_issued_name);
+  sigBlock(RIGHT_X+2,SIG_Y+SIG_BLK_H+GAP+2,SIG_BLK_W,SIG_BLK_H,'Record received by (tenant / landlord / homeowner / agent):',d.sig_received_image,d.sig_received_name);
+
+  // Attention box
+  const ATTN_X=RIGHT_X+COL_W-ATTN_W;
+  box(ATTN_X,SIG_Y+2,ATTN_W-1,SIG_H-4,WHITE,[17,17,17],0.5);
+  box(ATTN_X,SIG_Y+2,ATTN_W-1,5.5,[17,17,17]);
+  doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(...WHITE);
+  doc.text('ATTENTION',ATTN_X+(ATTN_W-1)/2,SIG_Y+4.5,{align:'center',baseline:'middle'});
+  doc.setFontSize(5);
+  doc.text('NEXT GAS SAFETY CHECK DUE',ATTN_X+(ATTN_W-1)/2,SIG_Y+8,{align:'center',baseline:'middle'});
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(220,38,38);
+  doc.text(d.next_check_date||'',ATTN_X+(ATTN_W-1)/2,SIG_Y+SIG_H/2+2,{align:'center',baseline:'middle'});
+  doc.setFont('helvetica','normal');doc.setFontSize(5);doc.setTextColor(107,87,14);
+  const attn='This certificate must be kept safe and shown to your gas engineer at the next inspection.';
+  const al=doc.splitTextToSize(attn,ATTN_W-6);
+  al.forEach((l,i)=>doc.text(l,ATTN_X+3,SIG_Y+SIG_H-10+i*3));
+
+  // Footer strip
+  box(PL,FOOTER_Y,CW,FOOTER_H,AMBER_LIGHT,NBORDER,0.4);
+  doc.setFont('helvetica','normal');doc.setFontSize(5.8);doc.setTextColor(...NAVY);
+  const footText='This Gas Safety Record is issued under the Gas Safety (Installation & Use) Regulations 1998. A copy must be provided to the landlord/owner and, where applicable, to the tenant within 28 days of the check or at the start of a new tenancy.';
+  const fl=doc.splitTextToSize(footText,CW-8);
+  fl.slice(0,2).forEach((l,i)=>doc.text(l,PL+4,FOOTER_Y+2.5+i*3,{baseline:'top'}));
+
+  // ============================  PAGE 2  ============================
+  doc.addPage('a4','landscape');
+
+  // Title bar
+  box(PL,PT,CW,9,NAVY);
+  txt('APPLIANCE INSPECTION DETAILS',PL+4,PT+4.5,10,WHITE,true);
+  txt('CERT REF:',PL+CW-55,PT+3,5.8,[219,234,254],true);
+  txt(ref,PL+CW-30,PT+4.5,7.5,WHITE,true);
+
+  // Column definitions — 16 columns matching CSS proportions
+  const APP_FRACS=[3.5,8,8,8.5,6.5,7,5,5,7.5,7,6,6,5.5,7,5,4.5];
+  const APP_TOT=APP_FRACS.reduce((a,b)=>a+b,0);
+  const APP_UNIT=CW/APP_TOT;
+  const APP_HDR_LABELS=[
+    'App\nNo.','Location','Type','Manufacturer','Model',
+    'Owned by\nLandlord?','Inspected?','Flue\nType',
+    'Op. Pressure\n(mbar)','Safety\nDevices','Ventilation\nChecks','Visual\nCondition',
+    'Flue\nFlow','Combustion\nReading','Serviced?','Safe to\nUse?'
+  ];
+  const IS_IMPORTANT=[false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true];
+
+  const APP_HDR_H=14,APP_HDR_Y=PT+11;
+  // Header background
+  box(PL,APP_HDR_Y,CW,APP_HDR_H,NAVY);
+  let ax=PL;
+  APP_FRACS.forEach((fr,i)=>{
+    const cw=fr*APP_UNIT;
+    if(IS_IMPORTANT[i]){box(ax,APP_HDR_Y,cw,APP_HDR_H,[40,70,110]);}
+    if(i>0){doc.setDrawColor(255,255,255);doc.setLineWidth(0.15);doc.line(ax,APP_HDR_Y,ax,APP_HDR_Y+APP_HDR_H);}
+    const parts=APP_HDR_LABELS[i].split('\n');
+    const lineH=3.2,totalH=parts.length*lineH;
+    doc.setFont('helvetica','bold');doc.setFontSize(5.3);doc.setTextColor(...WHITE);
+    parts.forEach((p,pi)=>doc.text(p,ax+cw/2,APP_HDR_Y+APP_HDR_H/2-totalH/2+pi*lineH+1.6,{align:'center',baseline:'middle'}));
+    ax+=cw;
+  });
+
+  // Appliance rows
+  const APPS=(d.appliances||[]).filter(a=>a&&(a.location||a.type||a.make));
+  const CO_H=7;
+  const AVAIL_H=200-APP_HDR_Y-APP_HDR_H-4;
+  const APP_ROW_H=Math.min(20,APPS.length>0?Math.floor((AVAIL_H-(APPS.length*(CO_H+2)))/APPS.length):20);
+  let ARY=APP_HDR_Y+APP_HDR_H+1;
+
+  APPS.forEach((app,ai)=>{
+    const APP_DATA=[
+      String(ai+1),app.location||'',app.type||'',app.make||'',app.model||'',
+      app.ownership||'',app.inspected||'',app.flue_type||'',
+      app.op_pressure||'',app.safety_devices||'',app.ventilation||'',app.visual_condition||'',
+      app.flue_flow||'',app.combustion||'',app.serviced||'',app.safe_to_use||''
+    ];
+    // Row background + border
+    box(PL,ARY,CW,APP_ROW_H,WHITE,NBORDER,0.4);
+    ax=PL;
+    APP_FRACS.forEach((fr,i)=>{
+      const cw=fr*APP_UNIT;
+      if(i===0){box(ax,ARY,cw,APP_ROW_H,LGRAY);}
+      if(i>0){doc.setDrawColor(...NBORDER);doc.setLineWidth(0.2);doc.line(ax,ARY,ax,ARY+APP_ROW_H);}
+      const val=APP_DATA[i]||'';
+      if(val){
+        doc.setFont('helvetica',i===0?'bold':'normal');
+        doc.setFontSize(i===0?8:7);
+        doc.setTextColor(...(i===0?NAVY:DARK));
+        const vl=doc.splitTextToSize(val,cw-3);
+        const lh=(i===0?8:7)*0.3528+1.1;
+        const th=vl.length*lh;
+        vl.forEach((s,vi)=>doc.text(s,ax+cw/2,ARY+APP_ROW_H/2-th/2+vi*lh+lh*0.5,{align:'center',baseline:'middle'}));
+      }
+      ax+=cw;
+    });
+    ARY+=APP_ROW_H;
+
+    // CO alarm hanger
+    const CO_W=CW*0.55;
+    box(PL,ARY,CO_W,CO_H,AMBER_LIGHT,NBORDER,0.4);
+    box(PL,ARY,8,CO_H,AMBER);
+    doc.setFont('helvetica','bold');doc.setFontSize(4.8);doc.setTextColor(...WHITE);
+    doc.text('CO',PL+4,ARY+CO_H/2,{align:'center',baseline:'middle'});
+    const CO_ITEMS=[['CO Alarm Fitted?',app.co_alarm_fitted||''],['In Date?',app.co_alarm_in_date||''],['Tested?',app.co_alarm_test||'']];
+    let cox=PL+10;
+    const CO_SEG=(CO_W-10)/3;
+    CO_ITEMS.forEach(([lbl,val])=>{
+      doc.setFont('helvetica','bold');doc.setFontSize(5.2);doc.setTextColor(100,116,139);
+      doc.text(lbl,cox,ARY+2.2,{baseline:'top'});
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...NAVY);
+      doc.text(String(val),cox,ARY+CO_H-1.8,{baseline:'bottom'});
+      cox+=CO_SEG;
+    });
+    ARY+=CO_H+2;
+  });
+
+  if(!APPS.length){
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...MED);
+    doc.text('No appliances recorded.',PL+CW/2,APP_HDR_Y+APP_HDR_H+15,{align:'center'});
+  }
+
   return doc;
 }
 async function buildCP12PdfBase64(){
@@ -3773,7 +4054,7 @@ async function buildCP12PdfBase64(){
 }
 async function downloadCP12PDF(btn){
   if(!cp12RequireAppliance())return;
-  if(!window.html2canvas){toast('PDF library not loaded','error');return;}
+  if(!window.jspdf){toast('PDF library not loaded','error');return;}
   if(btn)btn.disabled=true;showOverlay('Generating PDF…');
   try{
     const doc=await buildCP12PdfDoc();
