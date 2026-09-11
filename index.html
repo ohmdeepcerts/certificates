@@ -3749,7 +3749,7 @@ async function buildCP12PdfDoc(){
       });
       await new Promise(res=>setTimeout(res,50));
       const w=1123,h=794;
-      const c=await html2canvas(frozen,{scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
+      const c=await html2canvas(frozen,{scale:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:w,height:h,windowWidth:w,scrollX:0,scrollY:0,logging:false});
       doc.addImage(c.toDataURL('image/png'),'PNG',0,0,297,210);
     }
   }finally{
