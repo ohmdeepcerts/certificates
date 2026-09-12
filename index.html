@@ -4090,8 +4090,39 @@ async function buildCP12PdfDoc(){
 
   return doc;
 }
+// Captures the frozen HTML form pages with html2canvas — matches the on-screen template exactly.
+async function _buildCP12PdfFromHTML(returnB64=false){
+  if(!window.jspdf)throw new Error('PDF library not loaded');
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  // A4 landscape in pixels at 96dpi: 297mm×3.7795 ≈ 1122px, 210mm×3.7795 ≈ 794px
+  const A4W=1122,A4H=794;
+  const shell=document.createElement('div');
+  shell.style.cssText='position:fixed;left:-9999px;top:0;width:'+A4W+'px;z-index:-1;background:#fff;pointer-events:none;overflow:hidden;';
+  document.body.appendChild(shell);
+  try{
+    const pageIds=['page1','page2'];
+    for(let i=0;i<pageIds.length;i++){
+      if(i>0)doc.addPage('a4','landscape');
+      const frozen=freezeGasPage(pageIds[i]);
+      if(!frozen)continue;
+      frozen.style.cssText='width:'+A4W+'px;height:'+A4H+'px;min-height:'+A4H+'px;max-height:'+A4H+'px;margin:0;box-shadow:none;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff;';
+      shell.innerHTML='';
+      shell.appendChild(frozen);
+      await new Promise(res=>setTimeout(res,80));
+      const canvas=await html2canvas(frozen,{
+        scale:returnB64?2:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+        width:A4W,height:A4H,windowWidth:A4W,scrollX:0,scrollY:0,
+        logging:false,imageTimeout:5000
+      });
+      const imgData=returnB64?canvas.toDataURL('image/jpeg',0.85):canvas.toDataURL('image/png');
+      doc.addImage(imgData,returnB64?'JPEG':'PNG',0,0,297,210);
+    }
+  }finally{document.body.removeChild(shell);}
+  return doc;
+}
 async function buildCP12PdfBase64(){
-  const doc=await buildCP12PdfDoc();
+  const doc=await _buildCP12PdfFromHTML(true);
   return doc.output('datauristring').split(',')[1];
 }
 async function downloadCP12PDF(btn){
@@ -4099,7 +4130,7 @@ async function downloadCP12PDF(btn){
   if(!window.jspdf){toast('PDF library not loaded','error');return;}
   if(btn)btn.disabled=true;showOverlay('Generating PDF…');
   try{
-    const doc=await buildCP12PdfDoc();
+    const doc=await _buildCP12PdfFromHTML(false);
     const ref=cp12Field('cert_ref')||'DRAFT';
     const filename=`CP12_${ref.replace(/[^\w-]/g,'_')}.pdf`;
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -4117,11 +4148,18 @@ function freezeGasPage(srcId){
   const src=document.getElementById(srcId);
   if(!src)return null;
   const clone=src.cloneNode(true);
-  // Copy current .value into cloned inputs/textareas (cloneNode doesn't transfer .value)
+  // Copy current .value into cloned inputs/textareas (cloneNode doesn't transfer .value).
+  // Also sync HTML attributes so outerHTML serialisation preserves the values.
   clone.querySelectorAll('[data-field]').forEach(el=>{
     const field=el.dataset.field;
     const orig=src.querySelector(`[data-field="${field}"]`);
-    if(orig&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'))el.value=orig.value;
+    if(orig&&el.tagName==='INPUT'){
+      el.value=orig.value;
+      el.setAttribute('value',orig.value); // needed for outerHTML serialisation
+    }else if(orig&&el.tagName==='TEXTAREA'){
+      el.value=orig.value;
+      el.textContent=orig.value; // needed for outerHTML serialisation
+    }
   });
   // Fix logo (src attribute may be missing even if img is loaded)
   const origLogo=document.getElementById('logoImg');
