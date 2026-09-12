@@ -4095,39 +4095,38 @@ async function _buildCP12PdfFromHTML(returnB64=false){
   if(!window.jspdf)throw new Error('PDF library not loaded');
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  // Shell has no forced width — let the page render at its natural CSS size (width:297mm).
-  // Measuring offsetWidth after render gives us the true pixel count on this device/DPI,
-  // so html2canvas captures the layout exactly as the user sees it on screen.
   const shell=document.createElement('div');
-  shell.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;overflow:visible;';
+  shell.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;overflow:hidden;';
   document.body.appendChild(shell);
   try{
     const pageIds=['page1','page2'];
     for(let i=0;i<pageIds.length;i++){
       if(i>0)doc.addPage('a4','landscape');
+      // Measure the LIVE element first — gives the true px size the browser uses for this DPI/zoom
+      const livePage=document.getElementById(pageIds[i]);
+      if(!livePage)continue;
+      const W=livePage.offsetWidth||1122;
+      const H=livePage.offsetHeight||794;
       const frozen=freezeGasPage(pageIds[i]);
       if(!frozen)continue;
-      // Wrap in .cp12-form-wrap so all scoped CSS rules apply (they all start with .cp12-form-wrap ...)
+      // Force clone to exactly the same pixel width as the live element.
+      // Without this, 'width:297mm' in the clone's CSS class resolves differently
+      // inside an off-screen fixed container, widening textareas and breaking line-wrapping.
+      frozen.style.cssText='width:'+W+'px;height:'+H+'px;min-height:'+H+'px;max-height:'+H+'px;box-shadow:none;margin:0;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff;box-sizing:border-box;';
+      // Wrap in .cp12-form-wrap so all scoped CSS rules apply
       const wrapper=document.createElement('div');
       wrapper.className='cp12-form-wrap';
-      wrapper.style.cssText='display:inline-block;background:#fff;overflow:hidden;position:relative;';
-      // Strip shadow and margin but keep width:297mm / height:210mm from the CSS class
-      frozen.style.boxShadow='none';
-      frozen.style.margin='0';
+      wrapper.style.cssText='width:'+W+'px;height:'+H+'px;overflow:hidden;background:#fff;position:relative;';
       wrapper.appendChild(frozen);
       shell.innerHTML='';
       shell.appendChild(wrapper);
       await new Promise(res=>setTimeout(res,80));
-      // Measure actual render size — avoids DPI/zoom mismatch when width was hardcoded
-      const W=frozen.offsetWidth||1122;
-      const H=frozen.offsetHeight||794;
+      // scale:3 → ~350 DPI at A4 landscape (300 DPI target). JPEG keeps file ~1–3MB total.
       const canvas=await html2canvas(wrapper,{
-        scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+        scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
         width:W,height:H,windowWidth:W,scrollX:0,scrollY:0,
         logging:false,imageTimeout:5000
       });
-      // JPEG for both paths: ~230 DPI at scale:2, sharp for print, <500KB per page.
-      // PNG at scale:3 was 30MB+ per page (lossless, 9× canvas area) = 60MB+ PDF.
       const q=returnB64?0.82:0.90;
       doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
     }
