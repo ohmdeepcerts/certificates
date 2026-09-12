@@ -4122,12 +4122,14 @@ async function _buildCP12PdfFromHTML(returnB64=false){
       const W=frozen.offsetWidth||1122;
       const H=frozen.offsetHeight||794;
       const canvas=await html2canvas(wrapper,{
-        scale:returnB64?2:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+        scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
         width:W,height:H,windowWidth:W,scrollX:0,scrollY:0,
         logging:false,imageTimeout:5000
       });
-      const imgData=returnB64?canvas.toDataURL('image/jpeg',0.85):canvas.toDataURL('image/png');
-      doc.addImage(imgData,returnB64?'JPEG':'PNG',0,0,297,210);
+      // JPEG for both paths: ~230 DPI at scale:2, sharp for print, <500KB per page.
+      // PNG at scale:3 was 30MB+ per page (lossless, 9× canvas area) = 60MB+ PDF.
+      const q=returnB64?0.82:0.90;
+      doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
     }
   }finally{document.body.removeChild(shell);}
   return doc;
