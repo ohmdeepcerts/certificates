@@ -974,8 +974,9 @@ a{color:var(--accent);text-decoration:none}
           <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)">⬇ PDF</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="printGasCertificate()">🖨 Print</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-edit" onclick="enterGasEditMode()" hidden>✏ Edit</button>
           <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
-          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save Draft</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save</button>
         </div>
       </div>
 
@@ -3715,13 +3716,14 @@ function newGasCert(){
   setCP12Field('remedial_action','N/A');
   setCP12Field('work_details','N/A');
   syncSettingsToCP12Form();loadCP12Logo();
+  _setGasViewMode(false);
 }
 async function loadGasForm(id){
   showOverlay('Loading…');
   const{data:r,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
   hideOverlay();if(error){toast('Error loading','error');return;}
   editingGasId=id;
-  document.getElementById('gas-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit CP12';
+  document.getElementById('gas-form-title').textContent=r.ref_number?`View — ${r.ref_number}`:'View CP12';
   document.getElementById('gas-form-ref').textContent=r.ref_number||'Draft';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
@@ -3729,10 +3731,39 @@ async function loadGasForm(id){
   });
   for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
   populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();updateAddApplianceBtn();
-  if(r.status==='completed') document.getElementById('btn-gas-complete').disabled=true;
+  const btnC=document.getElementById('btn-gas-complete');
+  if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';}
+  else{btnC.disabled=false;btnC.dataset.completed='';}
   _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
+  _setGasViewMode(true);
 }
 function getGasFormData(){return collectCP12FormData();}
+function _setGasViewMode(isView){
+  const wrap=document.getElementById('cp12Wrap');
+  const btnEdit=document.getElementById('btn-gas-edit');
+  const btnSave=document.getElementById('btn-gas-save');
+  const btnComplete=document.getElementById('btn-gas-complete');
+  if(!wrap||!btnEdit||!btnSave||!btnComplete)return;
+  if(isView){
+    wrap.style.pointerEvents='none';
+    btnEdit.hidden=false;
+    btnSave.hidden=true;
+    btnComplete.hidden=true;
+  }else{
+    wrap.style.pointerEvents='';
+    btnEdit.hidden=true;
+    btnSave.hidden=false;
+    btnComplete.hidden=false;
+    // Re-disable Complete for already-completed certs
+    if(editingGasId&&document.getElementById('btn-gas-complete').dataset.completed==='1')
+      btnComplete.disabled=true;
+  }
+}
+function enterGasEditMode(){
+  _setGasViewMode(false);
+  const title=document.getElementById('gas-form-title');
+  if(title)title.textContent=title.textContent.replace(/^View/,'Edit');
+}
 
 // ========== CP12 VALIDATION ==========
 function cp12HasAppliance(){
@@ -4352,7 +4383,13 @@ async function saveGas(){
   }
   hideOverlay();
   if(err){toast('Save failed: '+err.message,'error');return false;}
-  toast('Saved ✓','success');return true;
+  toast('Saved ✓','success');
+  if(editingGasId){
+    const ref=document.getElementById('gas-form-ref').textContent||'Draft';
+    document.getElementById('gas-form-title').textContent=`View — ${ref}`;
+    _setGasViewMode(true);
+  }
+  return true;
 }
 async function completeGas(){
   if(!cp12RequireAppliance())return;
@@ -4366,11 +4403,12 @@ async function completeGas(){
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
   document.getElementById('gas-form-ref').textContent=refNum;
-  document.getElementById('gas-form-title').textContent=`CP12 — ${refNum}`;
+  document.getElementById('gas-form-title').textContent=`View — ${refNum}`;
   document.getElementById('btn-gas-pdf').hidden=false;
   document.getElementById('btn-gas-email').hidden=false;
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`CP12 issued: ${refNum}`,'success',5000);
+  _setGasViewMode(true);
 }
 
 // ========== GAS - HISTORY ==========
@@ -4392,7 +4430,7 @@ function renderGasList(reports){
       </div>
       <div class="cert-row-actions">
         ${_gasExpiryPill(r)}
-        <button class="btn btn-secondary btn-sm" onclick="loadGasForm('${r.id}')">Edit</button>
+        <button class="btn btn-primary btn-sm" onclick="loadGasForm('${r.id}')">Open</button>
         ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="openGasPDF('${r.id}')">PDF</button>`:''}
         ${r.status==='completed'?`<button class="btn btn-secondary btn-sm" onclick="emailCP12FromList('${r.id}')" title="Email certificate" style="padding:5px 9px">✉</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deleteGas('${r.id}')">×</button>
