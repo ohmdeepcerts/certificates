@@ -4090,47 +4090,106 @@ async function buildCP12PdfDoc(){
 
   return doc;
 }
-// Captures the frozen HTML form pages with html2canvas — matches the on-screen template exactly.
+// Captures the live CP12 form pages with html2canvas.
+// Uses html2canvas's onclone callback so layout matches the live page exactly —
+// avoids off-screen clone layout drift. Form controls are replaced with pixel-matched
+// divs so html2canvas renders text (including multi-line addresses) correctly.
 async function _buildCP12PdfFromHTML(returnB64=false){
   if(!window.jspdf)throw new Error('PDF library not loaded');
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const shell=document.createElement('div');
-  shell.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;pointer-events:none;overflow:hidden;';
-  document.body.appendChild(shell);
-  try{
-    const pageIds=['page1','page2'];
-    for(let i=0;i<pageIds.length;i++){
-      if(i>0)doc.addPage('a4','landscape');
-      // Measure the LIVE element first — gives the true px size the browser uses for this DPI/zoom
-      const livePage=document.getElementById(pageIds[i]);
-      if(!livePage)continue;
-      const W=livePage.offsetWidth||1122;
-      const H=livePage.offsetHeight||794;
-      const frozen=freezeGasPage(pageIds[i]);
-      if(!frozen)continue;
-      // Force clone to exactly the same pixel width as the live element.
-      // Without this, 'width:297mm' in the clone's CSS class resolves differently
-      // inside an off-screen fixed container, widening textareas and breaking line-wrapping.
-      frozen.style.cssText='width:'+W+'px;height:'+H+'px;min-height:'+H+'px;max-height:'+H+'px;box-shadow:none;margin:0;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff;box-sizing:border-box;';
-      // Wrap in .cp12-form-wrap so all scoped CSS rules apply
-      const wrapper=document.createElement('div');
-      wrapper.className='cp12-form-wrap';
-      wrapper.style.cssText='width:'+W+'px;height:'+H+'px;overflow:hidden;background:#fff;position:relative;';
-      wrapper.appendChild(frozen);
-      shell.innerHTML='';
-      shell.appendChild(wrapper);
-      await new Promise(res=>setTimeout(res,80));
-      // scale:3 → ~350 DPI at A4 landscape (300 DPI target). JPEG keeps file ~1–3MB total.
-      const canvas=await html2canvas(wrapper,{
-        scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
-        width:W,height:H,windowWidth:W,scrollX:0,scrollY:0,
-        logging:false,imageTimeout:5000
-      });
-      const q=returnB64?0.82:0.90;
-      doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
-    }
-  }finally{document.body.removeChild(shell);}
+  const pageIds=['page1','page2'];
+  for(let i=0;i<pageIds.length;i++){
+    if(i>0)doc.addPage('a4','landscape');
+    const livePage=document.getElementById(pageIds[i]);
+    if(!livePage)continue;
+    // Snapshot field data (value + pixel-accurate computed styles) from the LIVE DOM
+    // before html2canvas creates its clone, so the divs we substitute match exactly.
+    const fieldSnap={};
+    livePage.querySelectorAll('[data-field]').forEach(el=>{
+      if(el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA')return;
+      const cs=window.getComputedStyle(el);
+      const r=el.getBoundingClientRect();
+      fieldSnap[el.dataset.field]={
+        value:el.value||'',
+        isTA:el.tagName==='TEXTAREA',
+        w:r.width,h:r.height,
+        fontFamily:cs.fontFamily,fontSize:cs.fontSize,
+        fontWeight:cs.fontWeight,color:cs.color,
+        background:cs.backgroundColor,
+        ptop:cs.paddingTop,pright:cs.paddingRight,
+        pbottom:cs.paddingBottom,pleft:cs.paddingLeft,
+        lineHeight:cs.lineHeight,textAlign:cs.textAlign,
+        btop:cs.borderTop,bright:cs.borderRight,
+        bbottom:cs.borderBottom,bleft:cs.borderLeft,
+        display:cs.display,verticalAlign:cs.verticalAlign
+      };
+    });
+    // Snapshot signature canvases from live DOM before cloning
+    const sigSnap={};
+    livePage.querySelectorAll('canvas.sig-canvas').forEach(c=>{
+      const f=c.dataset.sigField;
+      const id=c.getContext('2d').getImageData(0,0,c.width,c.height);
+      const hasInk=Array.from(id.data).some((v,j)=>j%4!==3&&v!==0);
+      sigSnap[f]={dataUrl:hasInk?c.toDataURL('image/png'):null,className:c.className,style:c.style.cssText};
+    });
+    const canvas=await html2canvas(livePage,{
+      scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+      logging:false,imageTimeout:5000,
+      onclone:(clonedDoc,clonedEl)=>{
+        // 1. Remove screen-only / interactive elements
+        clonedEl.querySelectorAll(
+          '.no-print,.copy-address-btn,.sig-clear-btn,.inline-history-section,'+
+          '.fast-date-drum,input[type="file"],button:not(.choice-cycle),.co-hanger'
+        ).forEach(el=>el.remove());
+        // 2. Freeze choice-cycle buttons (keep them visible but non-interactive)
+        clonedEl.querySelectorAll('.choice-cycle').forEach(btn=>{
+          btn.style.pointerEvents='none';btn.style.cursor='default';
+        });
+        // 3. Replace signature canvases with img or empty span
+        clonedEl.querySelectorAll('canvas.sig-canvas').forEach(c=>{
+          const f=c.dataset.sigField;const s=sigSnap[f];
+          if(!s){return;}
+          let rep;
+          if(s.dataUrl){
+            rep=clonedDoc.createElement('img');rep.src=s.dataUrl;
+            rep.className=s.className;
+            rep.style.cssText='max-width:100%;max-height:100%;object-fit:contain;display:block;';
+          }else{
+            rep=clonedDoc.createElement('span');rep.className=s.className;rep.style.cssText=s.style;
+          }
+          c.parentNode.replaceChild(rep,c);
+        });
+        // 4. Replace inputs/textareas with pixel-matched divs.
+        //    html2canvas renders form controls inconsistently (truncates inputs,
+        //    ignores textarea line-wrapping). Divs with white-space:pre-wrap render perfectly.
+        clonedEl.querySelectorAll('input[data-field],textarea[data-field]').forEach(el=>{
+          const d=fieldSnap[el.dataset.field];
+          if(!d){el.style.visibility='hidden';return;}
+          const div=clonedDoc.createElement('div');
+          div.style.cssText=[
+            `font-family:${d.fontFamily}`,`font-size:${d.fontSize}`,
+            `font-weight:${d.fontWeight}`,`color:${d.color}`,
+            `background:${d.background}`,
+            `padding-top:${d.ptop}`,`padding-right:${d.pright}`,
+            `padding-bottom:${d.pbottom}`,`padding-left:${d.pleft}`,
+            `width:${d.w}px`,`height:${d.h}px`,
+            `line-height:${d.lineHeight}`,`text-align:${d.textAlign}`,
+            `border-top:${d.btop}`,`border-right:${d.bright}`,
+            `border-bottom:${d.bbottom}`,`border-left:${d.bleft}`,
+            `box-sizing:border-box`,
+            `white-space:${d.isTA?'pre-wrap':'nowrap'}`,
+            `word-wrap:break-word`,`overflow:hidden`,
+            `display:block`,`vertical-align:top`
+          ].join(';');
+          div.textContent=d.value;
+          el.parentNode.replaceChild(div,el);
+        });
+      }
+    });
+    const q=returnB64?0.82:0.90;
+    doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
+  }
   return doc;
 }
 async function buildCP12PdfBase64(){
