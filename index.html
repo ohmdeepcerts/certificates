@@ -2795,7 +2795,7 @@ async function completePAT(){
       const currentId=editingPATId;
       const{data:certRow}=await sb.from('pat_reports').select('*').eq('id',currentId).single();
       if(certRow){
-        const b64=generatePATPDFFromData(certRow,{returnB64:true});
+        const b64=await generatePATPDFFromData(certRow,{returnB64:true});
         if(b64){
           const binary=atob(b64);const u8=new Uint8Array(binary.length);
           for(let i=0;i<binary.length;i++)u8[i]=binary.charCodeAt(i);
