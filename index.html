@@ -731,7 +731,7 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="nav-section">
         <div class="nav-section-label">PAT Testing</div>
-        <div class="nav-item" data-view="pat-new" onclick="navigate('pat-new')"><span class="nav-icon">✚</span>New PAT Test</div>
+        <div class="nav-item" data-view="pat-new" onclick="startNewPAT()"><span class="nav-icon">✚</span>New PAT Test</div>
         <div class="nav-item" data-view="pat-history" onclick="navigate('pat-history')"><span class="nav-icon">≡</span>PAT History</div>
       </div>
       <div class="nav-section">
@@ -772,7 +772,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
-      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><button class="btn btn-primary btn-sm" onclick="navigate('pat-new')">+ New PAT Test</button></div>
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div>
       <div class="stat-grid" id="stat-grid">
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
@@ -922,7 +922,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- PAT HISTORY -->
     <div class="view" id="view-pat-history">
-      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('pat-new')">+ New PAT Test</button></div>
+      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div>
       <div class="list-controls">
         <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
         <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
@@ -2630,6 +2630,7 @@ function getPATFormData(){
   };
 }
 
+function startNewPAT(){editingPATId=null;navigate('pat-new');}
 async function newPAT(){
   editingPATId=null;patApps=[];
   patGe('pat-edit-banner').hidden=true;
@@ -2761,7 +2762,7 @@ function renderPATList(reports){
       </div>
       <div class="cert-row-actions">
         ${_patExpiryPill(r)}
-        <button class="btn btn-secondary btn-sm" onclick="loadPATForm('${r.id}')">Edit</button>
+        <button class="btn btn-primary btn-sm" onclick="loadPATForm('${r.id}')">Open</button>
         ${!isDraft?`<button class="btn btn-secondary btn-sm" onclick="openPATPDF('${r.id}')">PDF</button>`:''}
         ${!isDraft?`<button class="btn btn-secondary btn-sm" onclick="emailPATFromList('${r.id}')" title="Email certificate" style="padding:5px 9px">✉</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="deletePAT('${r.id}')">×</button>
