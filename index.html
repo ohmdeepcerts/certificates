@@ -2883,7 +2883,7 @@ function doPatPreview(){
   wrap.style.setProperty('--a4td',getSetting('pat_td_font','12')+'px');
   const pages=[];let pageItems=[],pNum=1,rowsUsed=0;
   patApps.forEach(app=>{
-    const desc=patWrapTxt(app.description,48);const lines=desc.split('\n').length;const cost=Math.max(1,lines);
+    const desc=patWrapTxt(app.description,44);const lines=desc.split('\n').length;const cost=Math.max(1,lines);
     const cap=pNum===1?rp1:rpn;
     if(rowsUsed+cost>cap&&pageItems.length){pages.push({items:pageItems,cap,n:pNum});pageItems=[];pNum++;rowsUsed=0;}
     pageItems.push({...app,_d:desc,_c:cost});rowsUsed+=cost;
@@ -2935,8 +2935,8 @@ function doPatPreview(){
     const accred=getSetting('pat_accred','');
     wrap.innerHTML+=`<div class="a4">${wmDiv}${hdr}<div style="flex:1 1 0;min-height:0;overflow:hidden"><table class="a4t" style="height:100%;font-family:DM Sans,Arial,sans-serif"><thead><tr>`
       +`<th style="background:${hc};color:${htc};width:70px;font-family:DM Sans,Arial,sans-serif">Asset ID</th><th style="background:${hc};color:${htc};font-family:DM Sans,Arial,sans-serif">Description</th>`
-      +`<th style="background:${hc};color:${htc};width:85px;font-family:DM Sans,Arial,sans-serif">Instrument</th><th style="background:${hc};color:${htc};width:78px;font-family:DM Sans,Arial,sans-serif">Test Date</th>`
-      +`<th style="background:${hc};color:${htc};width:60px;font-family:DM Sans,Arial,sans-serif">Period</th><th style="background:${hc};color:${htc};width:78px;font-family:DM Sans,Arial,sans-serif">Next Due</th>`
+      +`<th style="background:${hc};color:${htc};width:85px;font-family:DM Sans,Arial,sans-serif">Instrument</th><th style="background:${hc};color:${htc};width:86px;font-family:DM Sans,Arial,sans-serif">Test Date</th>`
+      +`<th style="background:${hc};color:${htc};width:70px;font-family:DM Sans,Arial,sans-serif">Period</th><th style="background:${hc};color:${htc};width:86px;font-family:DM Sans,Arial,sans-serif">Next Due</th>`
       +`<th style="background:${hc};color:${htc};width:52px;font-family:DM Sans,Arial,sans-serif">Result</th>`
       +`</tr></thead><tbody>${rows}</tbody></table></div>`
       +`<div class="a4-foot"><div class="a4-flogos">${pat1}${pat2}</div>`
