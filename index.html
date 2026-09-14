@@ -2823,13 +2823,15 @@ function renderPATList(reports){
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${ini}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${addr}</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:5px">
-          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap;flex-shrink:0">${r.ref_number||'DRAFT'}</code>
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">${patFd(r.test_date)||'No date'}</span>
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">${(r.appliances||[]).length} appliance(s)</span>
+        <div style="margin-top:5px">
+          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:4px">
+          <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${patFd(r.test_date)||'No date'}</span>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap">${(r.appliances||[]).length} appliance(s)</span>
+        </div>
         ${_patExpiryPill(r)}
         ${_ibtn('Open','fa-eye',`loadPATForm('${r.id}')`)}
         ${!isDraft?_ibtn('PDF','fa-file-pdf',`openPATPDF('${r.id}')`):''}
@@ -4539,13 +4541,15 @@ function renderGasList(reports){
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${ini}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${addr}</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:5px">
-          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap;flex-shrink:0">${r.ref_number||'DRAFT'}</code>
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">${r.cert_date||'No date'}</span>
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">Next: ${r.next_check_date||'—'}</span>
+        <div style="margin-top:5px">
+          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:4px">
+          <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${r.cert_date||'No date'}</span>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap">Next: ${r.next_check_date||'—'}</span>
+        </div>
         ${_gasExpiryPill(r)}
         ${_ibtn('Open','fa-eye',`loadGasForm('${r.id}')`)}
         ${!isDraft?_ibtn('PDF','fa-file-pdf',`openGasPDF('${r.id}')`):''}
