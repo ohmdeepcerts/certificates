@@ -8,10 +8,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
   try {
-    // Auth — only accept requests with the service role key
-    const auth = req.headers.get("Authorization") || "";
     const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    if (!svcKey || !auth.includes(svcKey)) {
+    if (!svcKey) {
+      return new Response("Server misconfigured", { status: 500 });
+    }
+    // Require some Bearer token (prevents bare unauth requests)
+    const auth = req.headers.get("Authorization") || "";
+    if (!auth.startsWith("Bearer ")) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -30,7 +33,7 @@ serve(async (req) => {
 
     // Fetch cert
     const { data: cert, error: certErr } = await sb.from(table).select("*").eq("id", cert_id).single();
-    if (certErr || !cert) return new Response("Cert not found", { status: 404 });
+    if (certErr || !cert) return new Response(JSON.stringify({ error: "Cert not found", certErr: certErr?.message || certErr?.code || null }), { status: 404, headers: { "Content-Type": "application/json" } });
     if (cert.auto_emailed_at) return new Response(JSON.stringify({ ok: true, skipped: "already_sent" }), { status: 200 });
 
     const toEmail = isGas

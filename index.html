@@ -254,11 +254,12 @@ a{color:var(--accent);text-decoration:none}
 
 @media(max-width:768px){
   :root{--sidebar:280px}
+  #app{flex-direction:column}
   #sidebar{position:fixed;left:calc(var(--sidebar)*-1);top:0;bottom:0;z-index:60;transition:.25s}
   #sidebar.open{left:0}
   .sidebar-overlay.active{display:block}
-  .mobile-header{display:flex}
-  #content-area{overflow-y:auto}
+  .mobile-header{display:flex;width:100%;flex-shrink:0}
+  #content-area{overflow-y:auto;width:100%;flex:1 1 auto}
   .view{padding:16px}
   .field-grid-3{grid-template-columns:1fr 1fr}
 }

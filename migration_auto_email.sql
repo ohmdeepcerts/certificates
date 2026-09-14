@@ -2,7 +2,7 @@
 -- OHM Certificates — Auto Background Email Migration
 -- Run in: Supabase Dashboard → SQL Editor → New Query
 -- BEFORE running: replace REPLACE_WITH_SERVICE_ROLE_KEY
--- with your actual service role key (Settings → API)
+-- with your actual service role key (Settings → API Keys → Legacy tab)
 -- =======================================================
 
 -- 1. Add columns to both tables
