@@ -2879,7 +2879,7 @@ function doPatPreview(){
   const rp1=26,rpn=34;
   const pages=[];let pageItems=[],pNum=1,rowsUsed=0;
   patApps.forEach(app=>{
-    const desc=patWrapTxt(app.description,17);const lines=desc.split('\n').length;const cost=Math.max(1,lines);
+    const desc=patWrapTxt(app.description,48);const lines=desc.split('\n').length;const cost=Math.max(1,lines);
     const cap=pNum===1?rp1:rpn;
     if(rowsUsed+cost>cap&&pageItems.length){pages.push({items:pageItems,cap,n:pNum});pageItems=[];pNum++;rowsUsed=0;}
     pageItems.push({...app,_d:desc,_c:cost});rowsUsed+=cost;
