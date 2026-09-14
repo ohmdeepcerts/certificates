@@ -2798,13 +2798,16 @@ function _patExpiryPill(r){
   if(!dates.length)return '';
   const today=new Date();today.setHours(0,0,0,0);
   const days=Math.ceil((new Date(dates[0])-today)/(864e5));
-  let bg,col;
-  if(days<0){bg='#fef2f2';col='#991b1b';}
-  else if(days<=30){bg='#fee2e2';col='#b91c1c';}
-  else if(days<=90){bg='#fef3c7';col='#92400e';}
-  else{bg='#d1fae5';col='#065f46';}
-  const lbl=days<0?`${Math.abs(days)}d overdue`:`${days}d`;
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 9px;border-radius:99px;font-size:.65rem;font-weight:700;background:${bg};color:${col};border:1px solid currentColor;white-space:nowrap">${lbl}</span>`;
+  let bg,col,bord,sub;
+  if(days<0){bg='#fee2e2';col='#dc2626';bord='#fca5a5';sub='OVERDUE';}
+  else if(days<=30){bg='#fff7ed';col='#ea580c';bord='#fed7aa';sub='DAYS';}
+  else if(days<=90){bg='#fefce8';col='#ca8a04';bord='#fef08a';sub='DAYS';}
+  else{bg='#f0fdf4';col='#16a34a';bord='#86efac';sub='DAYS';}
+  const num=Math.abs(days);
+  return `<span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;padding:6px 12px;border-radius:10px;background:${bg};border:1.5px solid ${bord};gap:1px;flex-shrink:0">
+    <span style="font-size:16px;font-weight:800;color:${col};line-height:1;letter-spacing:-.02em">${num}</span>
+    <span style="font-size:8px;font-weight:700;color:${col};opacity:.7;text-transform:uppercase;letter-spacing:.1em;line-height:1;margin-top:2px">${sub}</span>
+  </span>`;
 }
 function _addrInitials(s){const w=(s||'').replace(/^\d+\s*/,'').split(/[\s,]+/).filter(x=>x.length>1&&!/^\d+$/.test(x));return((w[0]||'')[0]||'')+((w[1]||'')[0]||(w[0]||'')[1]||'');}
 function _addrColor(s){let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))&0xffffffff;const hue=[220,155,270,35,330,180][Math.abs(h)%6];return[`hsla(${hue},60%,50%,.15)`,`hsl(${hue},55%,45%)`];}
@@ -2827,8 +2830,8 @@ function renderPATList(reports){
           <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:4px">
+      <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
           <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${patFd(r.test_date)||'No date'}</span>
           <span style="font-size:11px;color:var(--muted);white-space:nowrap">${(r.appliances||[]).length} appliance(s)</span>
         </div>
@@ -4545,8 +4548,8 @@ function renderGasList(reports){
           <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:4px">
+      <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
           <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${r.cert_date||'No date'}</span>
           <span style="font-size:11px;color:var(--muted);white-space:nowrap">Next: ${r.next_check_date||'—'}</span>
         </div>
@@ -4604,13 +4607,16 @@ function _gasExpiryPill(r){
   if(r.status!=='completed'||!r.next_check_date)return '';
   const today=new Date();today.setHours(0,0,0,0);
   const days=Math.ceil((new Date(r.next_check_date)-today)/(864e5));
-  let bg,col;
-  if(days<0){bg='#fef2f2';col='#991b1b';}
-  else if(days<=30){bg='#fee2e2';col='#b91c1c';}
-  else if(days<=90){bg='#fef3c7';col='#92400e';}
-  else{bg='#d1fae5';col='#065f46';}
-  const lbl=days<0?`${Math.abs(days)}d overdue`:`${days}d`;
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 9px;border-radius:99px;font-size:.65rem;font-weight:700;background:${bg};color:${col};border:1px solid currentColor;white-space:nowrap">${lbl}</span>`;
+  let bg,col,bord,sub;
+  if(days<0){bg='#fee2e2';col='#dc2626';bord='#fca5a5';sub='OVERDUE';}
+  else if(days<=30){bg='#fff7ed';col='#ea580c';bord='#fed7aa';sub='DAYS';}
+  else if(days<=90){bg='#fefce8';col='#ca8a04';bord='#fef08a';sub='DAYS';}
+  else{bg='#f0fdf4';col='#16a34a';bord='#86efac';sub='DAYS';}
+  const num=Math.abs(days);
+  return `<span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;padding:6px 12px;border-radius:10px;background:${bg};border:1.5px solid ${bord};gap:1px;flex-shrink:0">
+    <span style="font-size:16px;font-weight:800;color:${col};line-height:1;letter-spacing:-.02em">${num}</span>
+    <span style="font-size:8px;font-weight:700;color:${col};opacity:.7;text-transform:uppercase;letter-spacing:.1em;line-height:1;margin-top:2px">${sub}</span>
+  </span>`;
 }
 async function emailCP12FromList(id){
   const _steps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
