@@ -2455,8 +2455,8 @@ async function loadDashboard(){
   // Recent lists
   const recentPat=(pats||[]).slice(-5).reverse();
   const recentGas=(gases||[]).slice(-5).reverse();
-  document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${r.test_date||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
-  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${r.cert_date||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div>';
+  document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
+  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div>';
 }
 
 // ========== PAT - HELPERS ==========
@@ -2756,7 +2756,7 @@ function renderPATList(reports){
           <span class="badge badge-${isDraft?'draft':'done'}">${isDraft?'📝 Draft':'✅ Completed'}</span>
         </div>
         <div class="cert-address">${r.property_address||'No address'}</div>
-        <div class="cert-meta">${r.test_date||'No date'} · ${(r.appliances||[]).length} appliance(s) · ${r.engineer||'—'}</div>
+        <div class="cert-meta">${patFd(r.test_date)||'No date'} · ${(r.appliances||[]).length} appliance(s) · ${r.engineer||'—'}</div>
       </div>
       <div class="cert-row-actions">
         ${_patExpiryPill(r)}
@@ -3296,7 +3296,7 @@ async function emailPAT(){
           <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
             <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px;font-weight:700;color:#b45309">${r.ref_number||'—'}</td></tr>
             <tr><td style="padding:8px 12px;font-weight:bold">Property Address</td><td style="padding:8px 12px">${r.property_address||'—'}</td></tr>
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Test Date</td><td style="padding:8px 12px">${r.test_date||'—'}</td></tr>
+            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Test Date</td><td style="padding:8px 12px">${patFd(r.test_date)||'—'}</td></tr>
             <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
             <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Next Test Due</td><td style="padding:8px 12px;font-weight:bold;color:#b45309">${r.next_test_date||'—'}</td></tr>
           </table>
