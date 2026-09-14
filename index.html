@@ -926,6 +926,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="list-controls">
         <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
         <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
+        <button id="pat-sort-exp-btn" onclick="togglePatExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
         <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
         </select>
@@ -1238,6 +1239,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="view-header"><div><div class="view-title">CP12 History</div><div class="view-subtitle">All gas safety certificate records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New CP12</button></div>
       <div class="list-controls">
         <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
+        <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
         <select id="gas-filter" onchange="filterGasList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
         </select>
@@ -2770,12 +2772,22 @@ function renderPATList(reports){
     </div>`;
   }).join('');
 }
-let _patSortApps=0; // 0=default, 1=most first, -1=fewest first
+let _patSortApps=0,_patSortExp=0;
+function _patEarliestExp(r){const d=(r.appliances||[]).map(a=>a.nextTest||'').filter(Boolean).sort();return d[0]||'';}
 function togglePatAppSort(){
-  _patSortApps=_patSortApps===1?-1:_patSortApps===-1?0:1;
+  _patSortApps=_patSortApps===1?-1:_patSortApps===-1?0:1;_patSortExp=0;
   const btn=document.getElementById('pat-sort-apps-btn');
   if(btn)btn.textContent=_patSortApps===1?'↓ Most Apps':_patSortApps===-1?'↑ Fewest Apps':'↕ Appliances';
   if(btn)btn.style.color=_patSortApps?'var(--accent)':'';
+  document.getElementById('pat-sort-exp-btn').style.color='';document.getElementById('pat-sort-exp-btn').textContent='↕ Expiry';
+  filterPATList();
+}
+function togglePatExpSort(){
+  _patSortExp=_patSortExp===1?-1:_patSortExp===-1?0:1;_patSortApps=0;
+  const btn=document.getElementById('pat-sort-exp-btn');
+  if(btn)btn.textContent=_patSortExp===1?'↑ Soonest':_patSortExp===-1?'↓ Latest':'↕ Expiry';
+  if(btn)btn.style.color=_patSortExp?'var(--accent)':'';
+  document.getElementById('pat-sort-apps-btn').style.color='';document.getElementById('pat-sort-apps-btn').textContent='↕ Appliances';
   filterPATList();
 }
 function filterPATList(){
@@ -2787,6 +2799,7 @@ function filterPATList(){
     return matchS&&matchQ;
   });
   if(_patSortApps!==0)list=[...list].sort((a,b)=>_patSortApps*((b.appliances||[]).length-(a.appliances||[]).length));
+  if(_patSortExp!==0)list=[...list].sort((a,b)=>{const ea=_patEarliestExp(a)||'9999',eb=_patEarliestExp(b)||'9999';return _patSortExp*(ea<eb?-1:ea>eb?1:0);});
   renderPATList(list);
 }
 async function deletePAT(id){
@@ -4451,14 +4464,28 @@ function renderGasList(reports){
       </div>
     </div>`).join('');
 }
+let _gasSortExp=0;
+function toggleGasExpSort(){
+  _gasSortExp=_gasSortExp===1?-1:_gasSortExp===-1?0:1;
+  const btn=document.getElementById('gas-sort-exp-btn');
+  if(btn)btn.textContent=_gasSortExp===1?'↑ Soonest':_gasSortExp===-1?'↓ Latest':'↕ Expiry';
+  if(btn)btn.style.color=_gasSortExp?'var(--accent)':'';
+  filterGasList();
+}
 function filterGasList(){
   const q=document.getElementById('gas-search').value.toLowerCase();
   const s=document.getElementById('gas-filter').value;
-  renderGasList(gasReports.filter(r=>{
+  let list=gasReports.filter(r=>{
     const mS=!s||r.status===s;
     const mQ=!q||(r.install_address||'').toLowerCase().includes(q)||(r.ref_number||'').toLowerCase().includes(q);
     return mS&&mQ;
-  }));
+  });
+  if(_gasSortExp!==0)list=[...list].sort((a,b)=>{
+    const pa=parseGasDate(a.next_check_date),pb=parseGasDate(b.next_check_date);
+    const ea=pa?pa.toISOString().slice(0,10):'9999',eb=pb?pb.toISOString().slice(0,10):'9999';
+    return _gasSortExp*(ea<eb?-1:ea>eb?1:0);
+  });
+  renderGasList(list);
 }
 async function deleteGas(id){
   confirm2('Delete CP12','This will permanently delete this certificate.',async()=>{
