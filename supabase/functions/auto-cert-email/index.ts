@@ -147,8 +147,11 @@ function buildGasHtml(r: Record<string, unknown>, coName: string, gs: (k: string
   const addr      = esc(r.install_address);
   const landlord  = esc(r.landlord_address);
   const certRef   = esc(r.ref_number || r.id);
-  const certDate  = esc(r.cert_date);
-  const nextDate  = esc(r.next_check_date);
+  const _fmtD = (s: unknown) => { if (!s) return "—"; const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(s); };
+  const _mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
+  const _fmtE = (s: unknown) => { if (!s) return "—"; const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${_mon[parseInt(m[2],10)-1]}/${m[1]}` : String(s); };
+  const certDate  = esc(_fmtD(r.cert_date));
+  const nextDate  = esc(_fmtE(r.next_check_date));
   const coPhone   = esc(gs("gas_co_phone"));
   const coEmail   = esc(gs("gas_co_email"));
   const coAddr    = esc(gs("gas_co_address"));
