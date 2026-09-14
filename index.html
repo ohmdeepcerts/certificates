@@ -868,7 +868,7 @@ a{color:var(--accent);text-decoration:none}
               <th style="width:65px">Period</th>
               <th style="width:100px">Next Due</th>
               <th style="width:76px">Result</th>
-              <th style="width:24px"></th>
+              <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
             </tr></thead>
             <tbody id="pat-app-body"></tbody>
           </table>
@@ -2616,7 +2616,7 @@ function renderPATRows(opts={}){
       +`<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3','6','12','24','48'].map(n=>`<option value="${n} Months"${a.retestPeriod===n+' Months'?' selected':''}>${n}m</option>`).join('')}</select></td>`
       +`<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
       +`<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':'#dc2626';this.style.fontWeight='700'" style="color:${a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
-      +`<td><button type="button" onclick="delPATRow(${i})" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:4px;font-size:14px">✕</button></td>`;
+      +`<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   });
   setTimeout(()=>{document.querySelectorAll('#pat-app-body textarea').forEach(patAutoH);},0);
@@ -4705,6 +4705,9 @@ async function emailCP12FromList(id){
 async function openGasPDF(id){await loadGasForm(id);await downloadCP12PDF(null);}
 function _buildCP12EmailHtml(r){
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const fmtDate=s=>{if(!s)return'—';const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;};
+  const _mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+  const fmtDateExp=s=>{if(!s)return'—';const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${_mon[parseInt(m[2],10)-1]}/${m[1]}`:s;};
   const addrHtml=(r.install_address||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
   const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
   const coPhone=getSetting('gas_co_phone','');
@@ -4733,9 +4736,9 @@ function _buildCP12EmailHtml(r){
     <tr><td colspan="2" style="background:${navy};padding:10px 18px;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);">Certificate Reference</td><td align="right" style="font-size:14px;font-weight:700;color:#ffffff;letter-spacing:.03em;">${esc(r.ref_number||'—')}</td></tr></table></td></tr>
     ${landlordRow}
     <tr><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;width:110px;vertical-align:top">Property</td><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${addrHtml}${r.install_postcode?' '+esc(r.install_postcode):''}</td></tr>
-    <tr><td style="padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8">Certificate Date</td><td style="padding:10px 18px;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${esc(r.cert_date||'—')}</td></tr>
+    <tr><td style="padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8">Certificate Date</td><td style="padding:10px 18px;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${esc(fmtDate(r.cert_date))}</td></tr>
   </table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:16px 18px;"><table cellpadding="0" cellspacing="0"><tr><td width="46" style="vertical-align:middle;padding-right:14px;"><div style="width:42px;height:42px;background:#f59e0b;border-radius:21px;text-align:center;font-size:22px;line-height:42px;mso-line-height-rule:exactly;">&#128293;</div></td><td style="vertical-align:middle;"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b45309;margin-bottom:3px;">Next Annual Check Due</div><div style="font-size:21px;font-weight:700;color:#1e293b;line-height:1;">${esc(r.next_check_date||'—')}</div><div style="font-size:12px;color:#475569;margin-top:3px;">Gas appliances must be inspected every 12 months by law. Please book your next service before this date.</div></td></tr></table></td></tr></table>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:16px 18px;"><table cellpadding="0" cellspacing="0"><tr><td width="46" style="vertical-align:middle;padding-right:14px;"><div style="width:42px;height:42px;background:#f59e0b;border-radius:21px;text-align:center;font-size:22px;line-height:42px;mso-line-height-rule:exactly;">&#128293;</div></td><td style="vertical-align:middle;"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b45309;margin-bottom:3px;">Next Annual Check Due</div><div style="font-size:21px;font-weight:700;color:#1e293b;line-height:1;">${esc(fmtDateExp(r.next_check_date))}</div><div style="font-size:12px;color:#475569;margin-top:3px;">Gas appliances must be inspected every 12 months by law. Please book your next service before this date.</div></td></tr></table></td></tr></table>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:14px 18px;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b91c1c;margin-bottom:6px;">Landlord Legal Obligations</div><div style="font-size:13px;color:#7f1d1d;line-height:1.7;">Under the <em>Gas Safety (Installation &amp; Use) Regulations 1998</em>, landlords must:<br>&bull;&nbsp; Have all gas appliances inspected annually by a Gas Safe engineer.<br>&bull;&nbsp; Provide a copy of this certificate to existing tenants within 28 days.<br>&bull;&nbsp; Provide a copy to new tenants before move-in.</div></td></tr></table>
   <table width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #e2e8f0;border-radius:8px;background:#f8fafc;margin-bottom:22px;"><tr><td style="padding:13px 18px;"><table cellpadding="0" cellspacing="0"><tr><td style="font-size:26px;padding-right:13px;vertical-align:middle;">&#128206;</td><td><div style="font-size:13px;color:#1e293b;font-weight:500;">Certificate PDF is attached to this email</div><div style="font-size:11px;color:#475569;margin-top:2px;">Please save for your records, provide a copy to your tenant, and retain for at least two years as required by law.</div></td></tr></table></td></tr></table>
   <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 26px 0;">If you have any questions regarding this certificate, please do not hesitate to get in touch.<br><strong style="color:#1e293b;">${esc(co)}</strong><br>${contactLine}</p>
