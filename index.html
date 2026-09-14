@@ -925,6 +925,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('pat-new')">+ New PAT Test</button></div>
       <div class="list-controls">
         <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
+        <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
         <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
         </select>
@@ -2768,14 +2769,24 @@ function renderPATList(reports){
     </div>`;
   }).join('');
 }
+let _patSortApps=0; // 0=default, 1=most first, -1=fewest first
+function togglePatAppSort(){
+  _patSortApps=_patSortApps===1?-1:_patSortApps===-1?0:1;
+  const btn=document.getElementById('pat-sort-apps-btn');
+  if(btn)btn.textContent=_patSortApps===1?'↓ Most Apps':_patSortApps===-1?'↑ Fewest Apps':'↕ Appliances';
+  if(btn)btn.style.color=_patSortApps?'var(--accent)':'';
+  filterPATList();
+}
 function filterPATList(){
   const q=document.getElementById('pat-search').value.toLowerCase();
   const s=document.getElementById('pat-filter').value;
-  renderPATList(patReports.filter(r=>{
+  let list=patReports.filter(r=>{
     const matchS=!s||r.status===s;
     const matchQ=!q||(r.property_address||'').toLowerCase().includes(q)||(r.ref_number||'').toLowerCase().includes(q)||(r.landlord_name||'').toLowerCase().includes(q);
     return matchS&&matchQ;
-  }));
+  });
+  if(_patSortApps!==0)list=[...list].sort((a,b)=>_patSortApps*((b.appliances||[]).length-(a.appliances||[]).length));
+  renderPATList(list);
 }
 async function deletePAT(id){
   confirm2('Delete PAT Test','This will permanently delete this report. Are you sure?',async()=>{
