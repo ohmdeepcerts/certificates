@@ -900,8 +900,12 @@ a{color:var(--accent);text-decoration:none}
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
           <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
           <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
-          <div class="field-group"><label>Test Date *</label><input type="date" id="pat-date" onchange="applyPatHeaderDate(this.value)"></div>
           <div class="field-group"><label>Engineer *</label><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()"></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
+          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
+          <button type="button" onclick="applyPATDatesToAll()" style="flex-shrink:0;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">Apply to All Appliances →</button>
         </div>
       </div>
 
@@ -2768,7 +2772,31 @@ function patDTab(e,i){
 }
 function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));renderPATRows();doPatPreview();}
 function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));renderPATRows();doPatPreview();}
-function applyPatHeaderDate(v){if(!v||!patApps.length)return;patApps.forEach(a=>{a.date=v;a.nextTest=patCalcNext(v,parseInt(a.retestPeriod));});renderPATRows();doPatPreview();}
+function patDateChanged(v){
+  if(!v)return;
+  // Auto-fill expiry to test date + 364 days
+  const expEl=patGe('pat-expiry');
+  if(expEl&&!expEl.value){
+    const d=new Date(v);d.setDate(d.getDate()+364);
+    expEl.value=d.toISOString().split('T')[0];
+  }
+  doPatPreview();
+}
+function applyPATDatesToAll(){
+  const testDate=patGv('pat-date');
+  const expiry=patGv('pat-expiry');
+  if(!testDate&&!expiry){alert('Please set a Test Date first.');return;}
+  if(!patApps.length){alert('No appliances to apply to.');return;}
+  patApps.forEach(a=>{
+    if(testDate)a.date=testDate;
+    if(expiry)a.nextTest=expiry;
+    else if(testDate)a.nextTest=patCalcNext(testDate,parseInt(a.retestPeriod));
+  });
+  renderPATRows();doPatPreview();
+  const msg=`Applied${testDate?' test date '+patFd(testDate):''}${expiry&&testDate?' and':''}${expiry?' expiry '+patFd(expiry):''}  to ${patApps.length} appliance${patApps.length!==1?'s':''}.`;
+  toast(msg,'success',3000);
+}
+function applyPatHeaderDate(v){patDateChanged(v);}
 function delPATRow(i){patApps.splice(i,1);renderPATRows();updatePatRef();doPatPreview();}
 function clearPATForm(){if(!confirm('Clear all form data?'))return;newPAT();}
 
@@ -2779,6 +2807,9 @@ function populatePATForm(r){
   refEl.dataset.manual='true';
   patGe('pat-status').value=r.status||'draft';
   patGe('pat-date').value=r.test_date||'';
+  // Populate expiry from first appliance's nextTest if available
+  const firstNext=(r.appliances&&r.appliances[0])?r.appliances[0].nextTest||r.appliances[0].next_test:'';
+  const expEl=patGe('pat-expiry');if(expEl)expEl.value=firstNext||'';
   patGe('pat-eng').value=r.engineer||'';
   patGe('pat-landlord').value=r.landlord_name||'';
   patGe('pat-landlord-addr').value=r.landlord_address||'';
@@ -2827,15 +2858,17 @@ async function newPAT(){
   editingPATId=null;patApps=[];
   patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
-  patGe('pat-form-ref').textContent='Test Date applies to all rows · Ctrl+S = Draft';
+  patGe('pat-form-ref').textContent='Set dates then click Apply to All · Ctrl+S = Draft';
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=true;
   patGe('btn-pat-complete').disabled=false;
   patGe('btn-pat-complete2').disabled=false;
   const today=new Date().toISOString().split('T')[0];
+  const exp364=new Date();exp364.setDate(exp364.getDate()+364);
   patGe('pat-ref').value='';
   patGe('pat-status').value='draft';
   patGe('pat-date').value=today;
+  const _expEl=patGe('pat-expiry');if(_expEl)_expEl.value=exp364.toISOString().split('T')[0];
   patGe('pat-eng').value=getSetting('pat_default_engineer','');
   patGe('pat-landlord').value='';patGe('pat-agency').value='';
   patGe('pat-landlord-addr').value='';patGe('pat-agency-addr').value='';
