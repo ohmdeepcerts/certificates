@@ -1649,6 +1649,15 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
 
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">📥 Import Directory from Existing Reports</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agents, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
+          </div>
+          <button class="btn btn-primary" onclick="backfillDirFromReports(this)" id="btn-backfill-dir">⬇ Import from All Reports</button>
+          <div id="backfill-result" style="margin-top:12px;font-size:13px"></div>
+        </div>
+
         <div class="form-section" style="margin-top:16px" id="staff-sql-section">
           <div class="form-section-title">👥 Staff Setup — One-Time SQL Migration</div>
           <div style="background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.6">
@@ -5350,6 +5359,97 @@ async function _autoSaveDirAfterCert(certType,data){
       }
     }
   }catch(e){/* silent */}
+}
+
+async function backfillDirFromReports(btn){
+  if(btn){btn.disabled=true;btn.textContent='Importing…';}
+  const res=document.getElementById('backfill-result');
+  if(res)res.innerHTML='<span style="color:var(--muted)">Reading reports…</span>';
+  const counts={properties:0,landlords:0,agents:0,appliances:0};
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const now=new Date().toISOString(),uid=currentUser?.id||null;
+  try{
+    // Load all directory data fresh
+    await Promise.all(['properties','landlords','agents'].map(t=>dirLoad(t)));
+    const{data:apData}=await sb.from('appliance_templates').select('*');
+    _dir.appliances=apData||[];
+
+    // Helper: upsert property
+    async function _tryProp(addr,postcode){
+      const lines=(addr||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      const a1=lines[0]||'';const pc=(postcode||'').trim().toUpperCase();
+      if(!a1)return;
+      if((_dir.properties||[]).some(r=>norm(r.addr1)===norm(a1)&&(!pc||norm(r.postcode)===norm(pc))))return;
+      const rec={addr1:a1,addr2:lines[1]||'',town:lines[2]||'',county:lines[3]||'',postcode:pc,is_active:true,usage_count:0,created_at:now,created_by:uid};
+      const{data:c}=await sb.from('directory_properties').insert(rec).select().single();
+      if(c){if(!_dir.properties)_dir.properties=[];_dir.properties.push(c);counts.properties++;}
+    }
+    // Helper: upsert landlord
+    async function _tryLandlord(name,addr,postcode){
+      const n=(name||'').trim();if(!n)return;
+      if((_dir.landlords||[]).some(r=>norm(r.landlord_name||r.company_name)===norm(n)))return;
+      const lines=(addr||'').split(/[,\n]/).map(l=>l.trim()).filter(Boolean);
+      const rec={landlord_name:n,company_name:'',addr1:lines[0]||'',addr2:lines[1]||'',town:lines[2]||'',postcode:(postcode||'').toUpperCase(),is_active:true,usage_count:0,created_at:now,created_by:uid};
+      const{data:c}=await sb.from('directory_landlords').insert(rec).select().single();
+      if(c){if(!_dir.landlords)_dir.landlords=[];_dir.landlords.push(c);counts.landlords++;}
+    }
+    // Helper: upsert agent
+    async function _tryAgent(name,addr){
+      const n=(name||'').trim();if(!n)return;
+      if((_dir.agents||[]).some(r=>norm(r.agency_name||r.contact_name)===norm(n)))return;
+      const lines=(addr||'').split(/[,\n]/).map(l=>l.trim()).filter(Boolean);
+      const rec={agency_name:n,addr1:lines[0]||'',addr2:lines[1]||'',town:lines[2]||'',is_active:true,usage_count:0,created_at:now,created_by:uid};
+      const{data:c}=await sb.from('directory_agents').insert(rec).select().single();
+      if(c){if(!_dir.agents)_dir.agents=[];_dir.agents.push(c);counts.agents++;}
+    }
+    // Helper: upsert appliance
+    async function _tryAppliance(type,make,model){
+      if(!type)return;
+      if((_dir.appliances||[]).some(r=>norm(r.name)===norm(type)&&(!make||!r.manufacturer||norm(r.manufacturer)===norm(make))))return;
+      const rec={name:type,manufacturer:make||'',model:model||'',category:_inferAppCat(type),is_active:true,usage_count:0,created_at:now,created_by:uid};
+      const{data:c}=await sb.from('appliance_templates').insert(rec).select().single();
+      if(c){_dir.appliances.push(c);counts.appliances++;}
+    }
+
+    // --- Gas certs ---
+    if(res)res.innerHTML='<span style="color:var(--muted)">Reading CP12 certificates…</span>';
+    const{data:gasCerts}=await sb.from('gas_certs').select('install_address,install_postcode,landlord_address,landlord_postcode,appliances');
+    for(const r of gasCerts||[]){
+      await _tryProp(r.install_address,r.install_postcode);
+      if(r.landlord_address){
+        const ll=(r.landlord_address||'').split('\n').map(s=>s.trim()).filter(Boolean);
+        await _tryLandlord(ll[0],ll.slice(1).join('\n'),r.landlord_postcode);
+      }
+      for(const app of r.appliances||[]){
+        await _tryAppliance(app.type,app.make||app.manufacturer,app.model);
+      }
+    }
+
+    // --- PAT reports ---
+    if(res)res.innerHTML='<span style="color:var(--muted)">Reading PAT reports…</span>';
+    const{data:patReps}=await sb.from('pat_reports').select('property_address,landlord_name,landlord_address,agency_name,agency_address');
+    for(const r of patReps||[]){
+      // PAT property_address has postcode as last line
+      const pLines=(r.property_address||'').split('\n').map(s=>s.trim()).filter(Boolean);
+      const _ukPc=/^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
+      const lastLine=pLines[pLines.length-1]||'';
+      const hasPc=_ukPc.test(lastLine);
+      const pAddr=hasPc?pLines.slice(0,-1).join('\n'):r.property_address||'';
+      const pPc=hasPc?lastLine:'';
+      await _tryProp(pAddr,pPc);
+      if(r.landlord_name)await _tryLandlord(r.landlord_name,r.landlord_address,'');
+      if(r.agency_name)await _tryAgent(r.agency_name,r.agency_address);
+    }
+
+    const total=counts.properties+counts.landlords+counts.agents+counts.appliances;
+    const msg=total===0
+      ?'<span style="color:var(--success,#22c55e)">✓ All records already in Directory — nothing to import.</span>'
+      :`<span style="color:var(--success,#22c55e)">✓ Imported: ${counts.properties} properties, ${counts.landlords} landlords, ${counts.agents} agents, ${counts.appliances} appliances.</span>`;
+    if(res)res.innerHTML=msg;
+  }catch(e){
+    if(res)res.innerHTML=`<span style="color:#dc2626">Error: ${e.message}</span>`;
+  }
+  if(btn){btn.disabled=false;btn.textContent='⬇ Import from All Reports';}
 }
 
 async function dirLoad(type){
