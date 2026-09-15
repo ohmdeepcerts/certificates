@@ -404,7 +404,7 @@ a{color:var(--accent);text-decoration:none}
 </style>
 <style>
 /* ===== CP12 FORM STYLES (GAS CERT template) ===== */
-.cp12-form-wrap{font-family:Arial,Helvetica,sans-serif;font-size:9pt;line-height:1.3;color:#111827;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cp12-form-wrap{font-family:Arial,Helvetica,sans-serif;font-size:9pt;line-height:1.3;color:#111827;-webkit-print-color-adjust:exact;print-color-adjust:exact;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 .cp12-form-wrap .page{width:297mm;height:210mm;min-height:210mm;max-height:210mm;background:#fff;margin:12px auto;padding:10mm 12mm;box-shadow:0 0 0 1px #9ca3af,0 10px 30px rgba(0,0,0,.2);position:relative;display:flex;flex-direction:column;overflow:hidden}
 .cp12-form-wrap .merged-header{display:grid;grid-template-columns:20% 80%;min-height:62px;margin-bottom:3px;border:2px solid #1e3a5f;border-radius:6px;overflow:hidden;flex-shrink:0;background:#1e3a5f}
 .cp12-form-wrap .logo-zone{position:relative;background:#1e3a5f;display:flex;align-items:center;justify-content:center;min-width:0;cursor:pointer;padding:5px 8px}
@@ -645,7 +645,7 @@ a{color:var(--accent);text-decoration:none}
   body.gas-printing #content-area>.view:not(#view-gas-new){display:none!important}
   body.gas-printing #view-gas-new{display:block!important;padding:0!important;margin:0!important}
   body.gas-printing #view-gas-new>*:not(#cp12Wrap){display:none!important}
-  body.gas-printing #cp12Wrap{display:block!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  body.gas-printing #cp12Wrap{display:block!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;zoom:1!important}
   body.gas-printing #cp12Wrap *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
   body.gas-printing #cp12Wrap .page{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
   body.gas-printing #cp12Wrap #page2{break-after:auto!important;page-break-after:auto!important}
@@ -1042,6 +1042,11 @@ a{color:var(--accent);text-decoration:none}
           <button class="btn btn-secondary btn-sm" onclick="navigate('gas-history')">← Back</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)">⬇ PDF</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="printGasCertificate()">🖨 Print</button>
+          <span id="cp12-zoom-ctrl" class="no-print" style="display:inline-flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface)">
+            <button onclick="adjustCP12Zoom(-10)" style="border:none;background:none;padding:0 9px;height:30px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;line-height:1" title="Zoom out">−</button>
+            <span id="cp12-zoom-label" style="font-size:11px;font-weight:700;color:var(--muted);min-width:38px;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);height:30px;line-height:30px">100%</span>
+            <button onclick="adjustCP12Zoom(10)" style="border:none;background:none;padding:0 9px;height:30px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;line-height:1" title="Zoom in">+</button>
+          </span>
           <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-edit" onclick="enterGasEditMode()" hidden>✏ Edit</button>
           <label id="lbl-gas-auto-email" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface)">
@@ -2115,7 +2120,7 @@ function _doNavigate(view){
   else if(view==='pat-new'){if(!editingPATId)newPAT();else doPatPreview();}
   else if(view==='compliance')loadCompliance();
   else if(view==='gas-history')loadGasHistory();
-  else if(view==='gas-new'){if(!_gasCertLoading)newGasCert();}
+  else if(view==='gas-new'){if(!_gasCertLoading)newGasCert();if(window._applyCP12Zoom)_applyCP12Zoom();}
   else if(view==='settings')loadSettingsUI();
   else if(view==='audit')loadAuditLog();
   else if(view==='staff')loadStaff();
@@ -3985,6 +3990,7 @@ async function loadGasForm(id){
   // Always show A4 form when viewing/editing an existing cert
   const _mwz=document.getElementById('mobile-gas-wizard');const _cwp=document.getElementById('cp12Wrap');
   if(_mwz)_mwz.hidden=true;if(_cwp)_cwp.style.display='';
+  if(window._applyCP12Zoom)_applyCP12Zoom();
   const btnC=document.getElementById('btn-gas-complete');
   if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';}
   else{btnC.disabled=false;btnC.dataset.completed='';}
@@ -4923,6 +4929,24 @@ function mgwSyncToDesktopForm(){
 
 async function mgwSaveDraft(){mgwSyncToDesktopForm();await saveGas(true);}
 async function mgwComplete(){mgwSyncToDesktopForm();await completeGas();}
+
+// ========== CP12 PREVIEW ZOOM ==========
+(function(){
+  let _z=parseInt(localStorage.getItem('cp12_preview_zoom')||'100',10);
+  function _applyZoom(){
+    const wrap=document.getElementById('cp12Wrap');
+    const lbl=document.getElementById('cp12-zoom-label');
+    if(wrap)wrap.style.zoom=(_z/100);
+    if(lbl)lbl.textContent=_z+'%';
+  }
+  window.adjustCP12Zoom=function(delta){
+    _z=Math.min(200,Math.max(60,_z+delta));
+    localStorage.setItem('cp12_preview_zoom',_z);
+    _applyZoom();
+  };
+  window._applyCP12Zoom=_applyZoom;
+  document.addEventListener('DOMContentLoaded',_applyZoom);
+})();
 
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
