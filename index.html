@@ -6140,9 +6140,9 @@ function _dirCard(type,r,q){
     const borderColor=c?_complianceBorderColor(c.status,days):'var(--border)';
     cardStyle=`border-left:4px solid ${borderColor};border-radius:2px 10px 10px 2px`;
     if(c){
-      if(days!==null)pills+=_daysPillHtml(days);
       const gasIcon={valid:'✓',expiring:'⚠',expired:'✕',none:'—'}[c.status]||'—';
-      pills+=_cpill(c.status,gasIcon,c.expText);
+      const gasLabel=c.expText+(c.status==='valid'&&days!==null?' · '+days+'d':'');
+      pills+=_cpill(c.status,gasIcon,gasLabel);
       if(c.pat.length)pills+=_cpill('info','📋',c.pat.length+' PAT'+(c.pat.length!==1?'s':''));
       else pills+=_cpill('none','📋','No PAT');
       const ll=r.landlord_id?(_dir.landlords||[]).find(l=>l.id===r.landlord_id):null;
