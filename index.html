@@ -2169,6 +2169,17 @@ async function onLogin(user){
   // Load profile
   const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
   currentProfile=profile||{id:user.id,email:user.email,full_name:user.email,role:'engineer'};
+  // Block deactivated accounts
+  if(currentProfile.is_active===false){
+    document.getElementById('auth-screen').classList.remove('gone');
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('app').style.display='none';
+    const err=document.getElementById('login-err');
+    if(err){err.textContent='Your account has been deactivated. Contact your administrator.';err.classList.add('on');}
+    await sb.auth.signOut();
+    currentUser=null;currentProfile=null;
+    return;
+  }
   // Update UI
   const name=currentProfile.full_name||currentProfile.email||'User';
   document.getElementById('user-name-display').textContent=name;
@@ -3031,9 +3042,9 @@ function getPATFormData(){
   };
 }
 
-function startNewPAT(){editingPATId=null;navigate('pat-new');}
+function startNewPAT(){editingPATId=null;_offlineQueueId=null;navigate('pat-new');}
 async function newPAT(){
-  editingPATId=null;patApps=[];
+  editingPATId=null;_offlineQueueId=null;patApps=[];
   patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
   patGe('pat-form-ref').textContent='Set dates then click Apply to All · Ctrl+S = Draft';
@@ -3098,6 +3109,7 @@ async function loadPATForm(id){
 
 // ==================== OFFLINE / IDB QUEUE ====================
 let _idbDb=null;
+let _offlineQueueId=null;
 function _getIDB(){
   if(_idbDb)return Promise.resolve(_idbDb);
   return new Promise((res,rej)=>{
@@ -3132,15 +3144,15 @@ async function _idbGetAll(){
     req.onerror=e=>rej(e.target.error);
   });
 }
-async function _idbPatchLast(fields){
+async function _idbPatchById(localId,fields){
   const db=await _getIDB();
   return new Promise((res,rej)=>{
     const tx=db.transaction('queue','readwrite');
     const store=tx.objectStore('queue');
-    const req=store.openCursor(null,'prev');
+    const req=store.get(localId);
     req.onsuccess=e=>{
-      const cursor=e.target.result;
-      if(cursor){const v={...cursor.value,...fields};const u=store.put(v);u.onsuccess=res;u.onerror=e=>rej(e.target.error);}
+      const v=e.target.result;
+      if(v){const u=store.put({...v,...fields});u.onsuccess=res;u.onerror=e=>rej(e.target.error);}
       else res();
     };
     req.onerror=e=>rej(e.target.error);
@@ -3223,8 +3235,8 @@ async function savePAT(){
   if(!navigator.onLine){
     // Offline path: queue in IndexedDB
     const existingId=editingPATId&&editingPATId!=='__offline__'?editingPATId:null;
-    await _idbEnqueue({type:'pat_upsert',form:d,supabaseId:existingId,userId:currentUser.id,ts:Date.now()});
-    if(!editingPATId)editingPATId='__offline__';
+    const localId=await _idbEnqueue({type:'pat_upsert',form:d,supabaseId:existingId,userId:currentUser.id,ts:Date.now()});
+    if(!editingPATId){editingPATId='__offline__';_offlineQueueId=localId;}
     _refreshSyncBadge();
     toast('Saved offline — will sync when online','success');
     return;
@@ -3254,8 +3266,9 @@ async function completePAT(){
   if(!editingPATId){toast('Save failed','error');return;}
   const refNum=patGv('pat-ref')||d.ref_number;
   if(editingPATId==='__offline__'){
-    // Offline: patch last queued entry with completed status
-    await _idbPatchLast({status:'completed',ref_number:refNum,base_ref:patCurrentBaseRef||refNum,completed_at:new Date().toISOString()});
+    // Offline: patch the specific queued entry by its IDB localId
+    if(_offlineQueueId!=null)await _idbPatchById(_offlineQueueId,{status:'completed',ref_number:refNum,base_ref:patCurrentBaseRef||refNum,completed_at:new Date().toISOString()});
+    _offlineQueueId=null;
     _refreshSyncBadge();
     patGe('pat-ref').value=refNum;
     patGe('pat-status').value='completed';
