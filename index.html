@@ -1982,7 +1982,10 @@ CREATE POLICY "Admin update requests" ON public.staff_requests
     <div class="form-group">
       <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Role</label>
       <select class="form-control" id="add-staff-role">
-        <option value="engineer">Engineer</option>
+        <option value="engineer">Full Access (Engineer)</option>
+        <option value="pat">PAT Only</option>
+        <option value="gas">Gas Only</option>
+        <option value="pat_gas">PAT &amp; Gas</option>
         <option value="admin">Admin</option>
       </select>
     </div>
@@ -2135,7 +2138,7 @@ async function onLogin(user){
   document.getElementById('user-name-display').textContent=name;
   document.getElementById('user-role-display').textContent=currentProfile.role||'engineer';
   document.getElementById('user-avatar').textContent=(name[0]||'U').toUpperCase();
-  if(currentProfile.role==='admin'){document.getElementById('audit-nav').style.display='flex';document.getElementById('staff-nav').style.display='flex';}
+  applySidebarPermissions(currentProfile.role||'engineer');
   // Load settings then navigate
   await loadAppSettings();
   if(currentProfile.must_change_password){
@@ -2145,7 +2148,37 @@ async function onLogin(user){
     document.getElementById('force-pw-modal').classList.remove('hidden');
     return;
   }
-  navigate('dashboard');
+  const{hasFull:_hf,hasPAT:_hp,hasGas:_hg}=_rolePerms(currentProfile.role||'engineer');
+  if(!_hf){if(_hp)navigate('pat-history');else if(_hg)navigate('gas-history');else navigate('settings');}
+  else navigate('dashboard');
+}
+function _rolePerms(role){
+  const full=role==='admin'||role==='engineer';
+  return {isAdmin:role==='admin',hasFull:full,hasPAT:full||role==='pat'||role==='pat_gas',hasGas:full||role==='gas'||role==='pat_gas'};
+}
+function applySidebarPermissions(role){
+  const{isAdmin,hasFull,hasPAT,hasGas}=_rolePerms(role);
+  function secVis(label,show){
+    document.querySelectorAll('.nav-section-label').forEach(lbl=>{
+      if(lbl.textContent.trim()===label)lbl.closest('.nav-section').style.display=show?'':'none';
+    });
+  }
+  secVis('Overview',hasFull);
+  secVis('PAT Testing',hasPAT);
+  secVis('Gas Safety',hasGas);
+  secVis('Library',hasFull);
+  secVis('Compliance',hasFull);
+  secVis('Coming Soon',hasFull);
+  document.getElementById('audit-nav').style.display=isAdmin?'flex':'none';
+  document.getElementById('staff-nav').style.display=isAdmin?'flex':'none';
+}
+function canNavigate(view){
+  if(!currentProfile)return true;
+  const{hasFull,hasPAT,hasGas}=_rolePerms(currentProfile.role||'engineer');
+  if(view==='settings')return true;
+  if(['pat-new','pat-history'].includes(view))return hasPAT;
+  if(['gas-new','gas-history'].includes(view))return hasGas;
+  return hasFull;
 }
 function onLogout(){
   currentUser=null; currentProfile=null;
@@ -2167,6 +2200,7 @@ function navigate(view){
   _doNavigate(view);
 }
 function _doNavigate(view){
+  if(!canNavigate(view))return;
   currentView=view;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const navEl=document.querySelector(`.nav-item[data-view="${view}"]`);
@@ -2263,10 +2297,13 @@ function renderStaffList(staff){
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <select class="form-input" style="font-size:12px;padding:4px 8px;width:auto" onchange="setStaffRole('${s.id}',this.value)" ${isMe?'disabled':''}>
-              <option value="engineer" ${role==='engineer'?'selected':''}>Engineer</option>
+              <option value="engineer" ${role==='engineer'?'selected':''}>Full Access</option>
+              <option value="pat" ${role==='pat'?'selected':''}>PAT Only</option>
+              <option value="gas" ${role==='gas'?'selected':''}>Gas Only</option>
+              <option value="pat_gas" ${role==='pat_gas'?'selected':''}>PAT &amp; Gas</option>
               <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
             </select>
-            ${isMe?'<span style="font-size:11px;color:var(--muted);padding:4px 8px">Active</span>':`<button class="btn btn-sm ${active?'btn-secondary':'btn-primary'}" onclick="toggleStaffActive('${s.id}',${active})">${active?'Deactivate':'Activate'}</button>`}
+            ${isMe?'<span style="font-size:11px;color:var(--muted);padding:4px 8px">Active</span>':`<button class="btn btn-sm ${active?'btn-secondary':'btn-primary'}" onclick="toggleStaffActive('${s.id}',${active})">${active?'Deactivate':'Activate'}</button><button class="btn btn-sm btn-secondary" onclick="resetStaffPassword('${s.email}','${s.id}')" title="Send password reset email">🔑 Reset PW</button>`}
           </div>
         </div>`;
       }).join('')}
@@ -2316,6 +2353,15 @@ async function toggleStaffActive(userId,currentlyActive){
   if(error){toast('Failed to update status: '+error.message,'error');loadStaff();return;}
   toast(currentlyActive?'Staff member deactivated':'Staff member activated','success');
   loadStaff();
+}
+async function resetStaffPassword(email,userId){
+  if(!confirm('Send password reset email to '+email+'?\n\nThey will receive a link to set a new password. Their account will also be flagged to prompt a password change on next login.'))return;
+  const[resetRes]=await Promise.all([
+    sb.auth.resetPasswordForEmail(email,{redirectTo:'https://ohmdeepcerts.github.io/certificates/'}),
+    sb.from('profiles').update({must_change_password:true}).eq('id',userId)
+  ]);
+  if(resetRes.error){toast('Error: '+resetRes.error.message,'error');return;}
+  toast('Reset email sent to '+email,'success',5000);
 }
 async function doForceChangePassword(){
   const pw=document.getElementById('force-pw-new').value;
@@ -5423,8 +5469,14 @@ function initAuthParticles(){
 // ========== INIT ==========
 async function init(){
   initAuthParticles();
-  const{data:{session}}=await sb.auth.getSession();
-  if(session)await onLogin(session.user);
+  if(window.location.hash.includes('type=recovery')){
+    _inPasswordRecovery=true;
+    history.replaceState(null,'',window.location.pathname+window.location.search);
+    switchAuthTab('reset');
+  } else {
+    const{data:{session}}=await sb.auth.getSession();
+    if(session)await onLogin(session.user);
+  }
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(event==='PASSWORD_RECOVERY'){
       _inPasswordRecovery=true;
