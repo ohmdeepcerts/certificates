@@ -358,11 +358,15 @@ a{color:var(--accent);text-decoration:none}
 .pat-card-date{font-size:12px;color:var(--text);font-weight:500;white-space:nowrap}
 .pat-card-sub{font-size:11px;color:var(--muted);white-space:nowrap}
 .pat-card-btns{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
+.pat-ref-chip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;font-size:10.5px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;flex-shrink:1;min-width:0}
+.pat-app-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.pat-app-header-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media(max-width:600px){
   .pat-card{padding:10px 11px;gap:9px}
   .pat-card-bot{flex-wrap:wrap;gap:5px;margin-top:5px}
   .pat-card-sub{display:none}
   .pat-card-date{font-size:11px}
+  .pat-ref-chip{max-width:calc(100% - 16px)}
 }
 /* ---- PAT A4 Live Certificate Preview ---- */
 .pat-cert-scroll{overflow-x:auto;overflow-y:visible;background:#d1d5db;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:120px}
@@ -950,9 +954,9 @@ a{color:var(--accent);text-decoration:none}
 
       <!-- Appliances -->
       <div class="form-section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="pat-app-header">
           <div class="form-section-title" style="margin:0">Appliances</div>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div class="pat-app-header-btns">
             <span id="pat-app-sum" style="font-size:12px;color:var(--muted)"></span>
             <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
             <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
@@ -3058,7 +3062,7 @@ function renderPATList(reports){
           ${_patExpiryPill(r)}
         </div>
         <div class="pat-card-bot">
-          <code style="font-size:10.5px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap;flex-shrink:0">${r.ref_number||'DRAFT'}</code>
+          <code class="pat-ref-chip">${r.ref_number||'DRAFT'}</code>
           <span class="pat-card-date">${patFd(r.test_date)||'No date'}</span>
           <span class="pat-card-sub">&middot; ${appCount} appliance${appCount!==1?'s':''}</span>
           <div class="pat-card-btns">
@@ -5084,24 +5088,24 @@ function renderGasList(reports){
   const mkRow=(r,hl='')=>{
     const isDraft=r.status!=='completed';const addr=r.install_address||'No address';
     const [abg,atx]=_addrColor(addr);const ini=(_addrInitials(addr)||'?').toUpperCase();
-    return `<div style="display:flex;align-items:center;background:var(--surface);border:1px solid ${hl||'var(--border)'};border-radius:12px;padding:11px 14px;gap:12px${isDraft?';opacity:.82':''}">
-      <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${ini}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${addr}</div>
-        <div style="margin-top:5px">
-          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
+    return `<div class="pat-card" style="${hl?'border-color:'+hl+';':''}${isDraft?'opacity:.82':''}">
+      <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
+      <div class="pat-card-body">
+        <div class="pat-card-top">
+          <span class="pat-card-addr">${addr}</span>
+          ${_gasExpiryPill(r)}
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-          <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${_fmtGasDate(r.cert_date)||'No date'}</span>
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap">Next: ${_fmtGasDate(r.next_check_date)||'—'}</span>
+        <div class="pat-card-bot">
+          <code class="pat-ref-chip">${r.ref_number||'DRAFT'}</code>
+          <span class="pat-card-date">${_fmtGasDate(r.cert_date)||'No date'}</span>
+          <span class="pat-card-sub">&middot; Next: ${_fmtGasDate(r.next_check_date)||'—'}</span>
+          <div class="pat-card-btns">
+            ${_ibtn('Open','fa-eye',`loadGasForm('${r.id}')`)}
+            ${!isDraft?_ibtn('PDF','fa-file-pdf',`openGasPDF('${r.id}')`):''}
+            ${!isDraft?_ibtn('Email','fa-envelope',`emailCP12FromList('${r.id}')`):''}
+            ${_ibtn('Delete','fa-trash',`deleteGas('${r.id}')`,true)}
+          </div>
         </div>
-        ${_gasExpiryPill(r)}
-        ${_ibtn('Open','fa-eye',`loadGasForm('${r.id}')`)}
-        ${!isDraft?_ibtn('PDF','fa-file-pdf',`openGasPDF('${r.id}')`):''}
-        ${!isDraft?_ibtn('Email','fa-envelope',`emailCP12FromList('${r.id}')`):''}
-        ${_ibtn('Delete','fa-trash',`deleteGas('${r.id}')`,true)}
       </div>
     </div>`;
   };
