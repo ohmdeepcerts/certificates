@@ -134,6 +134,9 @@ a{color:var(--accent);text-decoration:none}
 .nav-item .nav-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0}
 .nav-item .nav-badge{margin-left:auto;background:var(--error);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
 .nav-item.disabled{opacity:.5;pointer-events:none}
+.perm-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;line-height:1.3}
+.perm-chip:hover{border-color:var(--accent);color:var(--accent)}
+.perm-chip-on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 .nav-coming{font-size:10px;color:var(--warn);margin-left:auto}
 .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
 .user-row{display:flex;align-items:center;gap:10px}
@@ -1803,7 +1806,11 @@ DROP POLICY IF EXISTS "Admin update requests" ON public.staff_requests;
 CREATE POLICY "Admin update requests" ON public.staff_requests
   FOR UPDATE USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );</pre>
+  );
+
+-- Step 7: Drop role check constraint + add permissions column (run if upgrading)
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL DEFAULT '';</pre>
             <button class="btn btn-secondary btn-sm" onclick="copyStaffSQL()" style="position:absolute;top:10px;right:10px;font-size:11px" id="copy-sql-btn">📋 Copy</button>
           </div>
         </div>
@@ -1981,13 +1988,17 @@ CREATE POLICY "Admin update requests" ON public.staff_requests
     </div>
     <div class="form-group">
       <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Role</label>
-      <select class="form-control" id="add-staff-role">
-        <option value="engineer">Full Access (Engineer)</option>
-        <option value="pat">PAT Only</option>
-        <option value="gas">Gas Only</option>
-        <option value="pat_gas">PAT &amp; Gas</option>
+      <select class="form-control" id="add-staff-role" onchange="document.getElementById('add-staff-access-row').style.display=this.value==='admin'?'none':''">
+        <option value="engineer">Full Access</option>
         <option value="admin">Admin</option>
       </select>
+    </div>
+    <div class="form-group" id="add-staff-access-row">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px">Module Access <span style="font-size:11px;color:var(--muted);font-weight:400">— leave all unchecked for full access</span></label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px"><input type="checkbox" id="add-perm-pat" style="accent-color:var(--accent);width:15px;height:15px"> 📋 PAT Testing</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px"><input type="checkbox" id="add-perm-gas" style="accent-color:var(--accent);width:15px;height:15px"> 🔥 Gas Safety</label>
+      </div>
     </div>
     <div class="form-group">
       <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Temporary Password</label>
@@ -2152,9 +2163,14 @@ async function onLogin(user){
   if(!_hf){if(_hp)navigate('pat-history');else if(_hg)navigate('gas-history');else navigate('settings');}
   else navigate('dashboard');
 }
-function _rolePerms(role){
-  const full=role==='admin'||role==='engineer';
-  return {isAdmin:role==='admin',hasFull:full,hasPAT:full||role==='pat'||role==='pat_gas',hasGas:full||role==='gas'||role==='pat_gas'};
+function _rolePerms(role,perm){
+  if(perm===undefined)perm=(currentProfile&&currentProfile.permissions)||'';
+  const isAdmin=role==='admin';
+  const restricted=role==='engineer'&&perm.length>0;
+  const hasFull=isAdmin||(role==='engineer'&&!restricted);
+  const hasPAT=hasFull||perm.includes('pat');
+  const hasGas=hasFull||perm.includes('gas');
+  return{isAdmin,hasFull,hasPAT,hasGas};
 }
 function applySidebarPermissions(role){
   const{isAdmin,hasFull,hasPAT,hasGas}=_rolePerms(role);
@@ -2231,6 +2247,9 @@ function showAddStaffModal(){
   document.getElementById('add-staff-name').value='';
   document.getElementById('add-staff-email').value='';
   document.getElementById('add-staff-role').value='engineer';
+  document.getElementById('add-perm-pat').checked=false;
+  document.getElementById('add-perm-gas').checked=false;
+  document.getElementById('add-staff-access-row').style.display='';
   document.getElementById('add-staff-pw').value='';
   document.getElementById('add-staff-error').textContent='';
   document.getElementById('add-staff-modal').classList.remove('hidden');
@@ -2281,33 +2300,33 @@ async function loadStaff(){
 function renderStaffList(staff){
   const el=document.getElementById('staff-list');
   if(!staff||!staff.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>No staff members found.</p></div>';return;}
-  el.innerHTML=`
-    <div style="display:grid;gap:10px">
-      ${staff.map(s=>{
-        const isMe=s.id===currentUser?.id;
-        const active=s.is_active!==false;
-        const role=s.role||'engineer';
-        const name=s.full_name||s.email||'Unknown';
-        const initials=(name[0]||'?').toUpperCase();
-        return `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">${initials}</div>
-          <div style="flex:1;min-width:140px">
-            <div style="font-weight:600;font-size:14px">${name}${isMe?' <span style="font-size:11px;color:var(--muted)">(you)</span>':''}</div>
-            <div style="font-size:12px;color:var(--muted)">${s.email||''}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <select class="form-input" style="font-size:12px;padding:4px 8px;width:auto" onchange="setStaffRole('${s.id}',this.value)" ${isMe?'disabled':''}>
-              <option value="engineer" ${role==='engineer'?'selected':''}>Full Access</option>
-              <option value="pat" ${role==='pat'?'selected':''}>PAT Only</option>
-              <option value="gas" ${role==='gas'?'selected':''}>Gas Only</option>
-              <option value="pat_gas" ${role==='pat_gas'?'selected':''}>PAT &amp; Gas</option>
-              <option value="admin" ${role==='admin'?'selected':''}>Admin</option>
-            </select>
-            ${isMe?'<span style="font-size:11px;color:var(--muted);padding:4px 8px">Active</span>':`<button class="btn btn-sm ${active?'btn-secondary':'btn-primary'}" onclick="toggleStaffActive('${s.id}',${active})">${active?'Deactivate':'Activate'}</button><button class="btn btn-sm btn-secondary" onclick="resetStaffPassword('${s.email}','${s.id}')" title="Send password reset email">🔑 Reset PW</button>`}
-          </div>
-        </div>`;
-      }).join('')}
+  el.innerHTML='<div style="display:grid;gap:10px">'+staff.map(s=>{
+    const isMe=s.id===currentUser?.id;
+    const active=s.is_active!==false;
+    const role=s.role||'engineer';
+    const perm=s.permissions||'';
+    const name=s.full_name||s.email||'Unknown';
+    const initials=(name[0]||'?').toUpperCase();
+    const{isAdmin:sa,hasFull:sf,hasPAT:sp,hasGas:sg}=_rolePerms(role,perm);
+    const chip=(key,label,on)=>`<button type="button" class="perm-chip${on?' perm-chip-on':''}" data-key="${key}" onclick="setStaffPerm('${s.id}','${key}',this)">${label}</button>`;
+    const permsHTML=isMe
+      ?`<span style="font-size:11px;font-weight:600;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:6px">${sa?'Admin':sf?'Full Access':'Staff'}</span>`
+      :`<div style="display:flex;gap:4px;flex-wrap:wrap" data-perm-wrap>
+         ${chip('pat','📋 PAT',sp&&!sf)}
+         ${chip('gas','🔥 Gas',sg&&!sf)}
+         ${chip('full','Full',sf&&!sa)}
+         ${chip('admin','Admin',sa)}
+       </div>`;
+    const actBtns=isMe?'':`<button class="btn btn-sm ${active?'btn-secondary':'btn-primary'}" onclick="toggleStaffActive('${s.id}',${active})">${active?'Deactivate':'Activate'}</button><button class="btn btn-sm btn-secondary" onclick="resetStaffPassword('${s.email}','${s.id}')">🔑 Reset PW</button>`;
+    return `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">${initials}</div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-weight:600;font-size:14px">${name}${isMe?' <span style="font-size:11px;color:var(--muted)">(you)</span>':''}</div>
+        <div style="font-size:12px;color:var(--muted)">${s.email||''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${permsHTML}${actBtns}</div>
     </div>`;
+  }).join('')+'</div>';
 }
 
 async function doAddStaff(){
@@ -2315,6 +2334,9 @@ async function doAddStaff(){
   const email=document.getElementById('add-staff-email').value.trim().toLowerCase();
   const role=document.getElementById('add-staff-role').value;
   const pw=document.getElementById('add-staff-pw').value;
+  const perms=[];
+  if(role==='engineer'){if(document.getElementById('add-perm-pat').checked)perms.push('pat');if(document.getElementById('add-perm-gas').checked)perms.push('gas');}
+  const permissions=perms.join(',');
   const errEl=document.getElementById('add-staff-error');
   errEl.textContent='';
   if(!name||!email||!pw){errEl.textContent='All fields are required.';return;}
@@ -2327,7 +2349,7 @@ async function doAddStaff(){
     if(signUpErr)throw new Error(signUpErr.message);
     const uid=signUpData?.user?.id;
     if(!uid)throw new Error('Account created but no user ID returned. Check Supabase Auth for the new user.');
-    const{error:profileErr}=await sb.from('profiles').upsert({id:uid,email,full_name:name,role,is_active:true,must_change_password:true},{onConflict:'id'});
+    const{error:profileErr}=await sb.from('profiles').upsert({id:uid,email,full_name:name,role,permissions,is_active:true,must_change_password:true},{onConflict:'id'});
     if(profileErr)throw new Error('Auth account created but profile save failed: '+profileErr.message);
     // If this was an approval, mark the request as approved
     const reqId=document.getElementById('add-staff-modal').dataset.requestId;
@@ -2342,10 +2364,23 @@ async function doAddStaff(){
   }
 }
 
-async function setStaffRole(userId,role){
-  const{error}=await sb.from('profiles').update({role}).eq('id',userId);
-  if(error){toast('Failed to update role: '+error.message,'error');loadStaff();return;}
-  toast('Role updated','success');
+async function setStaffPerm(userId,key,btn){
+  const wrap=btn.closest('[data-perm-wrap]');if(!wrap)return;
+  const cur={};wrap.querySelectorAll('.perm-chip[data-key]').forEach(c=>cur[c.dataset.key]=c.classList.contains('perm-chip-on'));
+  const nowOn=!cur[key];
+  let newRole='engineer',newPerms='';
+  if(key==='admin'){newRole=nowOn?'admin':'engineer';newPerms='';}
+  else if(key==='full'){newRole='engineer';newPerms='';}
+  else{
+    const pat=key==='pat'?nowOn:cur['pat'];
+    const gas=key==='gas'?nowOn:cur['gas'];
+    const p=[];if(pat)p.push('pat');if(gas)p.push('gas');
+    newRole='engineer';newPerms=p.join(',');
+  }
+  const{error}=await sb.from('profiles').update({role:newRole,permissions:newPerms}).eq('id',userId);
+  if(error){toast('Failed: '+error.message,'error');return;}
+  toast('Access updated','success');
+  loadStaff();
 }
 
 async function toggleStaffActive(userId,currentlyActive){
