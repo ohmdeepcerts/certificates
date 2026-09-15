@@ -127,8 +127,8 @@ a{color:var(--accent);text-decoration:none}
 .sidebar-logo{font-size:20px;font-weight:700;color:var(--accent);transition:.15s}
 .sidebar-collapse-icon{margin-left:auto;color:var(--muted);font-size:14px;transition:.15s;line-height:1}
 .sidebar-header:hover .sidebar-collapse-icon{color:var(--accent)}
-#sidebar-expand-btn{display:none;position:fixed;top:14px;left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;width:22px;height:40px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:14px;transition:.15s;padding:0}
-#sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent)}
+#sidebar-expand-btn{display:none;position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;width:28px;height:56px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:.15s;padding:0}
+#sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent);width:32px}
 @media(min-width:769px){#sidebar.collapsed{width:0!important;overflow:hidden;border-right:none}}
 .sidebar-title{font-size:13px;font-weight:600;color:var(--text)}
 .sidebar-nav{flex:1;padding:8px 0}
