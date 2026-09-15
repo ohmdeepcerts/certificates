@@ -259,9 +259,31 @@ a{color:var(--accent);text-decoration:none}
   #sidebar.open{left:0}
   .sidebar-overlay.active{display:block}
   .mobile-header{display:flex;width:100%;flex-shrink:0}
-  #content-area{overflow-y:auto;width:100%;flex:1 1 auto}
+  #content-area{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;width:100%;flex:1 1 auto}
   .view{padding:16px}
   .field-grid-3{grid-template-columns:1fr 1fr}
+
+  /* F-07 hamburger tap target */
+  .hamburger{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+  /* F-08 logout tap target */
+  .btn-logout{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+  /* F-13 sidebar nav items */
+  .nav-item{min-height:40px}
+  /* F-06 form header action buttons */
+  .view-header .btn-sm{min-height:40px;padding:0 12px}
+  /* F-09 dashboard recent panels — stack vertically */
+  #recent-grids{grid-template-columns:1fr!important}
+  /* F-03 cert history rows — stack info + actions vertically */
+  .cert-row{flex-direction:column;align-items:flex-start}
+  .cert-row-actions{width:100%;display:flex;gap:8px;margin-top:4px}
+  .cert-row-actions .btn{flex:1;min-height:40px;justify-content:center}
+  /* F-05 settings tabs touch-scroll (overflow-x:auto already set) */
+  .settings-tabs{-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .settings-tabs::-webkit-scrollbar{display:none}
+  /* F-02 CP12 certificate form — horizontal scroll on mobile */
+  .cp12-form-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* F-14 print button useless on mobile */
+  #btn-gas-print{display:none!important}
 }
 
 /* ---- DIRECTORY / APPLIANCES ---- */
