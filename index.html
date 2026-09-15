@@ -2882,6 +2882,7 @@ async function completePAT(){
   patGe('btn-pat-complete2').disabled=true;
   doPatPreview();
   toast(`Certificate issued: ${refNum}`,'success',5000);
+  _autoSaveDirAfterCert('pat',getPATFormData()).catch(()=>{});
   // Auto-email: generate PDF and upload to storage
   const autoChk=document.getElementById('chk-pat-auto-email');
   if(autoChk&&autoChk.checked){
@@ -4654,6 +4655,7 @@ async function completeGas(){
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`CP12 issued: ${refNum}`,'success',5000);
   _setGasViewMode(true);
+  _autoSaveDirAfterCert('gas',getGasFormData()).catch(()=>{});
   // Auto-email: PDF form still in DOM — generate and upload
   const autoGasChk=document.getElementById('chk-gas-auto-email');
   if(autoGasChk&&autoGasChk.checked){
@@ -5275,6 +5277,81 @@ const _dir={agents:null,landlords:null,properties:null,contacts:null,appliances:
 const _dirTable={agents:'directory_agents',landlords:'directory_landlords',properties:'directory_properties',contacts:'directory_contacts'};
 let _dirActiveTab='agents';
 
+function _inferAppCat(t){
+  const s=(t||'').toLowerCase();
+  if(/boiler/.test(s))return'Boiler';if(/cooker|range/.test(s))return'Cooker';
+  if(/hob/.test(s))return'Hob';if(/fire/.test(s))return'Fire';
+  if(/water.*heat|heat.*water/.test(s))return'Water Heater';if(/heater/.test(s))return'Heater';
+  if(/tumble|dryer/.test(s))return'Tumble Dryer';return'Other';
+}
+async function _autoSaveDirAfterCert(certType,data){
+  try{
+    const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const now=new Date().toISOString(),uid=currentUser?.id||null;
+    // --- Property ---
+    let addr1='',postcode='',addrLines=[];
+    if(certType==='gas'){
+      addrLines=(data.install_address||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      addr1=addrLines[0]||'';postcode=(data.install_postcode||'').trim().toUpperCase();
+    }else{
+      addrLines=(typeof patGv==='function'?patGv('pat-addr'):''||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      addr1=addrLines[0]||'';postcode=(typeof patGv==='function'?patGv('pat-postcode'):''||'').trim().toUpperCase();
+    }
+    if(addr1){
+      if(!_dir.properties)await dirLoad('properties');
+      const exists=(_dir.properties||[]).some(r=>norm(r.addr1)===norm(addr1)&&(!postcode||norm(r.postcode)===norm(postcode)));
+      if(!exists){
+        const rec={addr1,addr2:addrLines[1]||'',town:addrLines[2]||'',county:addrLines[3]||'',postcode,is_active:true,usage_count:0,created_at:now,created_by:uid};
+        const{data:c}=await sb.from('directory_properties').insert(rec).select().single();
+        if(c){if(!_dir.properties)_dir.properties=[];_dir.properties.push(c);}
+      }
+    }
+    // --- Landlord ---
+    let lName='',lLines=[];
+    if(certType==='gas'){
+      lLines=(data.landlord_address||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      lName=lLines[0]||'';
+    }else{lName=(data.landlord_name||'').trim();lLines=[(data.landlord_address||'').trim()];}
+    if(lName){
+      if(!_dir.landlords)await dirLoad('landlords');
+      const exists=(_dir.landlords||[]).some(r=>norm(r.landlord_name||r.company_name)===norm(lName));
+      if(!exists){
+        const lAddr=(certType==='gas'?lLines.slice(1):lLines).filter(Boolean);
+        const rec={landlord_name:lName,company_name:'',addr1:lAddr[0]||'',addr2:lAddr[1]||'',town:lAddr[2]||'',postcode:(certType==='gas'?(data.landlord_postcode||'').toUpperCase():''),is_active:true,usage_count:0,created_at:now,created_by:uid};
+        const{data:c}=await sb.from('directory_landlords').insert(rec).select().single();
+        if(c){if(!_dir.landlords)_dir.landlords=[];_dir.landlords.push(c);}
+      }
+    }
+    // --- Agent (PAT) ---
+    if(certType==='pat'){
+      const aName=(data.agency_name||'').trim();
+      if(aName){
+        if(!_dir.agents)await dirLoad('agents');
+        const exists=(_dir.agents||[]).some(r=>norm(r.agency_name||r.contact_name)===norm(aName));
+        if(!exists){
+          const aL=(data.agency_address||'').split(/[,\n]/).map(l=>l.trim()).filter(Boolean);
+          const rec={agency_name:aName,addr1:aL[0]||'',addr2:aL[1]||'',town:aL[2]||'',is_active:true,usage_count:0,created_at:now,created_by:uid};
+          const{data:c}=await sb.from('directory_agents').insert(rec).select().single();
+          if(c){if(!_dir.agents)_dir.agents=[];_dir.agents.push(c);}
+        }
+      }
+    }
+    // --- Appliances (Gas) ---
+    if(certType==='gas'&&(data.appliances||[]).length){
+      if(!_dir.appliances){const{data:a}=await sb.from('appliance_templates').select('*');_dir.appliances=a||[];}
+      for(const app of data.appliances){
+        if(!app.type)continue;
+        const exists=(_dir.appliances||[]).some(r=>norm(r.name)===norm(app.type)&&(!app.make||!r.manufacturer||norm(r.manufacturer)===norm(app.make)));
+        if(!exists){
+          const rec={name:app.type,manufacturer:app.make||'',model:app.model||'',category:_inferAppCat(app.type),is_active:true,usage_count:0,created_at:now,created_by:uid};
+          const{data:c}=await sb.from('appliance_templates').insert(rec).select().single();
+          if(c)_dir.appliances.push(c);
+        }
+      }
+    }
+  }catch(e){/* silent */}
+}
+
 async function dirLoad(type){
   const tbl=_dirTable[type];if(!tbl)return[];
   try{
@@ -5383,8 +5460,7 @@ function _hlText(s,q){
 function _renderAcDD(items,type,inputEl,q,onSelect){
   _acItems=items;_acCurInput=inputEl;
   if(!items.length&&q.length>=2){
-    _acDD.innerHTML=`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div>`+
-      `<div style="border-top:1px solid var(--border);padding:7px 14px"><button onclick="_acQuickAdd(event,'${type}',${JSON.stringify(q).replace(/</g,'\\u003c')})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:2px 0">+ Save "${q}" to Directory</button></div>`;
+    _acDD.innerHTML=`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div>`;
     _posAcDD(inputEl);return;
   }
   if(!items.length){_hideAcDD();return;}
@@ -5392,7 +5468,6 @@ function _renderAcDD(items,type,inputEl,q,onSelect){
     <div style="font-size:13px;font-weight:500;color:var(--text)">${_hlText(_dirName(type,item),q)}</div>
     ${_dirSub(type,item)?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${_hlText(_dirSub(type,item),q)}</div>`:''}
   </div>`).join('');
-  html+=`<div style="padding:6px 14px;border-top:1px solid var(--border)"><button onclick="_acQuickAdd(event,'${type}','')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">+ Add new ${type.slice(0,-1)} to Directory</button></div>`;
   _acDD.innerHTML=html;
   _acDD._onSelect=onSelect;_acDD._type=type;_acDD._q=q;
   _acIdx=-1;_posAcDD(inputEl);
