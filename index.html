@@ -122,8 +122,14 @@ a{color:var(--accent);text-decoration:none}
 #app{display:none;height:100vh;overflow:hidden}
 #app.visible{display:flex}
 #sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;transition:.25s}
-.sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.sidebar-logo{font-size:20px;font-weight:700;color:var(--accent)}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.sidebar-header:hover .sidebar-logo{color:var(--text)}
+.sidebar-logo{font-size:20px;font-weight:700;color:var(--accent);transition:.15s}
+.sidebar-collapse-icon{margin-left:auto;color:var(--muted);font-size:14px;transition:.15s;line-height:1}
+.sidebar-header:hover .sidebar-collapse-icon{color:var(--accent)}
+#sidebar-expand-btn{display:none;position:fixed;top:14px;left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;width:22px;height:40px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:14px;transition:.15s;padding:0}
+#sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent)}
+@media(min-width:769px){#sidebar.collapsed{width:0!important;overflow:hidden;border-right:none}}
 .sidebar-title{font-size:13px;font-weight:600;color:var(--text)}
 .sidebar-nav{flex:1;padding:8px 0}
 .nav-section{margin:4px 0}
@@ -839,9 +845,10 @@ a{color:var(--accent);text-decoration:none}
 
   <!-- Sidebar -->
   <nav id="sidebar">
-    <div class="sidebar-header">
+    <div class="sidebar-header" onclick="toggleDesktopSidebar()" title="Collapse sidebar">
       <span class="sidebar-logo">OHM</span>
       <span class="sidebar-title">Certificates</span>
+      <span class="sidebar-collapse-icon">‹</span>
     </div>
     <div class="sidebar-nav">
       <div class="nav-section">
@@ -886,10 +893,12 @@ a{color:var(--accent);text-decoration:none}
       <div class="user-row">
         <div class="user-avatar" id="user-avatar">?</div>
         <div class="user-info"><div class="user-name" id="user-name-display">Loading…</div><div class="user-role" id="user-role-display">engineer</div></div>
+        <button class="btn-logout" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺</button>
         <button class="btn-logout" onclick="doLogout()" title="Sign out">⏻</button>
       </div>
     </div>
   </nav>
+  <button id="sidebar-expand-btn" onclick="toggleDesktopSidebar()" title="Expand sidebar">›</button>
 
   <!-- Content -->
   <main id="content-area">
@@ -2141,6 +2150,7 @@ async function onLogin(user){
   document.getElementById('auth-screen').classList.add('gone');
   document.getElementById('app').classList.add('visible');
   document.getElementById('app').style.display='flex';
+  _restoreDesktopSidebar();
   // Load profile
   const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
   currentProfile=profile||{id:user.id,email:user.email,full_name:user.email,role:'engineer'};
@@ -2241,6 +2251,21 @@ function _doNavigate(view){
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('active');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active');}
+function toggleDesktopSidebar(){
+  if(window.innerWidth<=768)return;
+  const s=document.getElementById('sidebar');
+  const btn=document.getElementById('sidebar-expand-btn');
+  const collapsed=s.classList.toggle('collapsed');
+  if(btn)btn.style.display=collapsed?'flex':'none';
+  try{localStorage.setItem('sidebar_collapsed',collapsed?'1':'');}catch(e){}
+}
+function _restoreDesktopSidebar(){
+  try{if(localStorage.getItem('sidebar_collapsed')==='1'&&window.innerWidth>768){document.getElementById('sidebar').classList.add('collapsed');const b=document.getElementById('sidebar-expand-btn');if(b)b.style.display='flex';}}catch(e){}
+}
+async function hardRefresh(){
+  try{const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)));}catch(e){}
+  window.location.href=window.location.pathname+'?v='+Date.now();
+}
 
 // ========== STAFF MANAGEMENT ==========
 function showAddStaffModal(){
