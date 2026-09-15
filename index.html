@@ -125,8 +125,10 @@ a{color:var(--accent);text-decoration:none}
 .sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
 .sidebar-header:hover .sidebar-logo{color:var(--text)}
 .sidebar-logo{font-size:20px;font-weight:700;color:var(--accent);transition:.15s}
-.sidebar-collapse-icon{margin-left:auto;color:var(--muted);font-size:14px;transition:.15s;line-height:1}
+.sidebar-collapse-icon{color:var(--muted);font-size:14px;transition:.15s;line-height:1}
 .sidebar-header:hover .sidebar-collapse-icon{color:var(--accent)}
+.sidebar-refresh-btn{margin-left:auto;margin-right:6px;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 4px;border-radius:4px;line-height:1;transition:.15s}
+.sidebar-refresh-btn:hover{color:var(--accent);background:var(--accent-dim)}
 #sidebar-expand-btn{display:none;position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;width:28px;height:56px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:.15s;padding:0}
 #sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent);width:32px}
 @media(min-width:769px){#sidebar.collapsed{width:0!important;overflow:hidden;border-right:none}}
@@ -848,6 +850,7 @@ a{color:var(--accent);text-decoration:none}
     <div class="sidebar-header" onclick="toggleDesktopSidebar()" title="Collapse sidebar">
       <span class="sidebar-logo">OHM</span>
       <span class="sidebar-title">Certificates</span>
+      <button class="sidebar-refresh-btn" onclick="event.stopPropagation();hardRefresh()" title="Hard refresh (clear cache)">↺</button>
       <span class="sidebar-collapse-icon">‹</span>
     </div>
     <div class="sidebar-nav">
@@ -893,7 +896,6 @@ a{color:var(--accent);text-decoration:none}
       <div class="user-row">
         <div class="user-avatar" id="user-avatar">?</div>
         <div class="user-info"><div class="user-name" id="user-name-display">Loading…</div><div class="user-role" id="user-role-display">engineer</div></div>
-        <button class="btn-logout" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺</button>
         <button class="btn-logout" onclick="doLogout()" title="Sign out">⏻</button>
       </div>
     </div>
