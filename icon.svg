@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1d4ed8"/>
+  <circle cx="256" cy="220" r="148" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="8"/>
+  <text x="256" y="288" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="156" fill="#ffffff" text-anchor="middle">DF</text>
+  <text x="256" y="360" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="46" letter-spacing="12" fill="#93c5fd" text-anchor="middle">DEEPFLOW</text>
+  <text x="256" y="420" font-family="Arial,Helvetica,sans-serif" font-weight="500" font-size="32" letter-spacing="6" fill="#ffffff" fill-opacity=".38" text-anchor="middle">CERTIFICATES</text>
+</svg>
