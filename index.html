@@ -319,7 +319,7 @@ a{color:var(--accent);text-decoration:none}
 .dir-tab{flex:1;padding:8px 10px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);background:none;border:none;transition:.15s;white-space:nowrap}
 .dir-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dir-list{display:flex;flex-direction:column;gap:8px}
-.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .15s}.dir-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
 .dir-card.dir-card-archived{opacity:.45}
 .dir-card-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;text-transform:uppercase}
 .dir-card-body{flex:1;min-width:0}
@@ -337,6 +337,13 @@ a{color:var(--accent);text-decoration:none}
 .dir-card-actions{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:flex-start;flex-direction:column}
 .dir-act-btn{padding:5px 11px;font-size:12px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;white-space:nowrap}
 .dir-quick-btn{padding:5px 11px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff;white-space:nowrap}
+.dir-new-btn{padding:7px 13px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;background:var(--accent);border:none;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;line-height:1.4}
+.dir-new-btn:hover{opacity:.9}
+#dir-new-cert-dd{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.22);min-width:220px;display:none;overflow:hidden}
+#dir-new-cert-dd .dnd-item{display:flex;align-items:center;gap:10px;width:100%;padding:11px 15px;background:none;border:none;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;box-sizing:border-box}
+#dir-new-cert-dd .dnd-item:last-child{border-bottom:none}
+#dir-new-cert-dd .dnd-item:hover{background:var(--surface2)}
+#dir-new-cert-dd .dnd-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 #dir-ac-dd{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:360px;overflow-y:auto;min-width:260px;display:none}
 #dir-ac-dd .ac-item:hover,#dir-ac-dd .ac-item.focused{background:var(--surface2)}
 #dir-ac-dd .ac-item:last-of-type{border-bottom:none}
@@ -5851,7 +5858,8 @@ function _propCompliance(prop){
       else{status='valid';expText='Valid to '+expDate.toLocaleDateString('en-GB');}
     }else{status='valid';expText='CP12 issued '+new Date(latest.cert_date||'').toLocaleDateString('en-GB');}
   }
-  return{gas,pat,completed,latest,status,expText};
+  const days=expDate?Math.floor((expDate-new Date())/86400000):null;
+  return{gas,pat,completed,latest,status,expText,days};
 }
 function _landlordCompliance(ll){
   const props=(_dir.properties||[]).filter(p=>p.is_active!==false&&p.landlord_id===ll.id);
@@ -5893,23 +5901,52 @@ async function renderDirectoryPage(){
 }
 
 function _cpill(cls,icon,txt){return`<span class="cpill cpill-${cls}">${icon} ${txt}</span>`;}
+function _daysPillHtml(days){
+  if(days===null||days===undefined)return'';
+  let bg,fg,bdr;
+  if(days>180){bg='rgba(34,197,94,.13)';fg='#16a34a';bdr='rgba(34,197,94,.35)';}
+  else if(days>90){bg='rgba(101,163,13,.13)';fg='#4d7c0f';bdr='rgba(101,163,13,.35)';}
+  else if(days>60){bg='rgba(234,179,8,.13)';fg='#a16207';bdr='rgba(234,179,8,.4)';}
+  else if(days>30){bg='rgba(234,88,12,.13)';fg='#c2410c';bdr='rgba(234,88,12,.35)';}
+  else if(days>0){bg='rgba(220,38,38,.13)';fg='#dc2626';bdr='rgba(220,38,38,.35)';}
+  else{bg='rgba(127,29,29,.15)';fg='#991b1b';bdr='rgba(127,29,29,.45)';}
+  const txt=days<=0?`Expired ${Math.abs(days)}d ago`:`${days} days`;
+  return`<span style="display:inline-flex;align-items:center;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;background:${bg};color:${fg};border:1px solid ${bdr};letter-spacing:.01em;line-height:1.6">${txt}</span>`;
+}
+function _complianceBorderColor(status,days){
+  if(status==='expired'||(days!==null&&days<=0))return'#ef4444';
+  if(status==='expiring'||status==='valid'){
+    if(days===null)return status==='valid'?'#22c55e':'#f59e0b';
+    if(days>180)return'#22c55e';
+    if(days>90)return'#65a30d';
+    if(days>60)return'#eab308';
+    if(days>30)return'#f97316';
+    if(days>0)return'#ef4444';
+    return'#b91c1c';
+  }
+  return'var(--border)';
+}
 function _dirCard(type,r,q){
   const name=_dirName(type,r);const sub=_dirSub(type,r);
   const arch=r.is_active===false;
   let pills='';let footer='';let extraBtns='';
+  let cardStyle='';
   if(type==='properties'){
     const c=_propCompliance(r);
+    const days=c?c.days:null;
+    const borderColor=c?_complianceBorderColor(c.status,days):'var(--border)';
+    cardStyle=`border-left:4px solid ${borderColor};border-radius:2px 10px 10px 2px`;
     if(c){
+      if(days!==null)pills+=_daysPillHtml(days);
       const gasIcon={valid:'✓',expiring:'⚠',expired:'✕',none:'—'}[c.status]||'—';
       pills+=_cpill(c.status,gasIcon,c.expText);
-      if(c.pat.length)pills+=_cpill('info','📋',c.pat.length+' PAT report'+(c.pat.length!==1?'s':''));
+      if(c.pat.length)pills+=_cpill('info','📋',c.pat.length+' PAT'+(c.pat.length!==1?'s':''));
       else pills+=_cpill('none','📋','No PAT');
       const ll=r.landlord_id?(_dir.landlords||[]).find(l=>l.id===r.landlord_id):null;
       if(ll)footer+=`<span>👤 ${ll.landlord_name||ll.company_name||'Landlord'}</span>`;
-      if(c.gas.length)footer+=`<span>${c.gas.length} CP12</span>`;
+      if(c.gas.length)footer+=`<span>📄 ${c.gas.length} CP12</span>`;
     }
-    const addr=encodeURIComponent(JSON.stringify({addr1:r.addr1,addr2:r.addr2||'',town:r.town||'',postcode:r.postcode||''}));
-    extraBtns=`<button class="dir-quick-btn" onclick="newCP12FromDir('${r.id}')">+ CP12</button><button class="dir-quick-btn" style="background:var(--surface2);color:var(--accent);border-color:var(--accent)" onclick="newPATFromDir('${r.id}')">+ PAT</button>`;
+    extraBtns=`<button class="dir-new-btn" onclick="showNewCertDD(this,'${r.id}')">+ New <span style="font-size:9px;opacity:.8">▾</span></button>`;
   } else if(type==='landlords'){
     const c=_landlordCompliance(r);
     pills+=_cpill('info','🏠',c.propCount+' propert'+(c.propCount===1?'y':'ies'));
@@ -5932,7 +5969,7 @@ function _dirCard(type,r,q){
     const usedTxt=r.usage_count?`Used ${r.usage_count}×`:'Never used';
     footer=usedTxt+(r.last_used_at?' · Last '+new Date(r.last_used_at).toLocaleDateString('en-GB'):'');
   }
-  return`<div class="dir-card${arch?' dir-card-archived':''}">
+  return`<div class="dir-card${arch?' dir-card-archived':''}"${cardStyle?` style="${cardStyle}"`:''}>
     <div class="dir-card-avatar">${(name[0]||'?')}</div>
     <div class="dir-card-body">
       <div class="dir-card-name">${_hlText(name,q)}${arch?' <span style="font-size:10px;color:var(--muted);font-weight:600">[archived]</span>':''}</div>
@@ -5948,6 +5985,38 @@ function _dirCard(type,r,q){
   </div>`;
 }
 
+function showNewCertDD(btn,propId){
+  let dd=document.getElementById('dir-new-cert-dd');
+  if(!dd){
+    dd=document.createElement('div');
+    dd.id='dir-new-cert-dd';
+    document.body.appendChild(dd);
+    document.addEventListener('click',function(e){
+      const d=document.getElementById('dir-new-cert-dd');
+      if(d&&d.style.display!=='none'&&!d.contains(e.target)&&!e.target.closest('.dir-new-btn'))d.style.display='none';
+    },true);
+  }
+  dd.innerHTML=`
+    <div style="padding:4px 0">
+      <button class="dnd-item" onclick="newCP12FromDir('${propId}');document.getElementById('dir-new-cert-dd').style.display='none'">
+        <span class="dnd-icon" style="background:rgba(239,68,68,.1)">🔥</span>
+        <span><div style="font-size:13px;font-weight:700;color:var(--text)">CP12 Gas Safety</div><div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:1px">Annual landlord certificate</div></span>
+      </button>
+      <button class="dnd-item" onclick="newPATFromDir('${propId}');document.getElementById('dir-new-cert-dd').style.display='none'">
+        <span class="dnd-icon" style="background:rgba(59,130,246,.1)">⚡</span>
+        <span><div style="font-size:13px;font-weight:700;color:var(--text)">PAT Electrical Test</div><div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:1px">Portable appliance testing</div></span>
+      </button>
+    </div>`;
+  const rect=btn.getBoundingClientRect();
+  dd.style.display='block';
+  const ddW=220;
+  let left=rect.right-ddW;
+  if(left<8)left=8;
+  let top=rect.bottom+5;
+  if(top+200>window.innerHeight)top=rect.top-200-5;
+  dd.style.left=left+'px';
+  dd.style.top=top+'px';
+}
 function newCP12FromDir(propId){
   const p=(_dir.properties||[]).find(r=>r.id===propId);if(!p)return;
   navigate('gas-new');
