@@ -465,6 +465,14 @@ a{color:var(--accent);text-decoration:none}
 .lprev img{max-width:100%;max-height:100%;object-fit:contain}
 .ldrop{border:2px dashed var(--border);border-radius:6px;padding:8px 12px;text-align:center;cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:6px;transition:.15s}
 .ldrop:hover{border-color:var(--accent);color:var(--accent)}
+/* --- Offline / sync --- */
+#offline-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:#f97316;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:6px 16px;letter-spacing:.02em}
+#sync-badge{display:none;position:fixed;bottom:20px;right:20px;z-index:200;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid;box-shadow:0 2px 8px rgba(0,0,0,.13);background:var(--surface)}
+#sync-badge.pending{border-color:#f59e0b;color:#d97706;display:flex}
+#sync-badge.syncing{border-color:var(--accent);color:var(--accent);display:flex}
+#sync-badge.done{border-color:#22c55e;color:#22c55e;display:flex}
+.sync-spin{display:inline-block;animation:_syncSpin .7s linear infinite}
+@keyframes _syncSpin{to{transform:rotate(360deg)}}
 </style>
 <style>
 /* ===== CP12 FORM STYLES (GAS CERT template) ===== */
@@ -843,6 +851,8 @@ a{color:var(--accent);text-decoration:none}
     <button onclick="hardRefresh()" title="Hard refresh" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">↺</button>
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div id="offline-bar">⚡ You are offline — PAT entries will sync when you reconnect</div>
+  <div id="sync-badge"></div>
 
   <!-- Sidebar -->
   <nav id="sidebar">
@@ -2151,6 +2161,8 @@ async function onLogin(user){
   document.getElementById('app').classList.add('visible');
   document.getElementById('app').style.display='flex';
   _restoreDesktopSidebar();
+  _refreshSyncBadge();
+  if(navigator.onLine)_syncQueue();
   // Load profile
   const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
   currentProfile=profile||{id:user.id,email:user.email,full_name:user.email,role:'engineer'};
@@ -3080,13 +3092,137 @@ async function loadPATForm(id){
   navigate('pat-new');
   _syncAutoCapBtn();
 }
+
+// ==================== OFFLINE / IDB QUEUE ====================
+let _idbDb=null;
+function _getIDB(){
+  if(_idbDb)return Promise.resolve(_idbDb);
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('ohm_offline_queue',1);
+    req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('queue'))db.createObjectStore('queue',{keyPath:'localId',autoIncrement:true});};
+    req.onsuccess=e=>{_idbDb=e.target.result;res(_idbDb);};
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function _idbEnqueue(item){
+  const db=await _getIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('queue','readwrite');
+    const req=tx.objectStore('queue').add(item);
+    req.onsuccess=()=>res(req.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function _idbRemove(localId){
+  const db=await _getIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('queue','readwrite');
+    tx.objectStore('queue').delete(localId);
+    tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);
+  });
+}
+async function _idbGetAll(){
+  const db=await _getIDB();
+  return new Promise((res,rej)=>{
+    const req=db.transaction('queue','readonly').objectStore('queue').getAll();
+    req.onsuccess=()=>res(req.result||[]);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function _idbPatchLast(fields){
+  const db=await _getIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('queue','readwrite');
+    const store=tx.objectStore('queue');
+    const req=store.openCursor(null,'prev');
+    req.onsuccess=e=>{
+      const cursor=e.target.result;
+      if(cursor){const v={...cursor.value,...fields};const u=store.put(v);u.onsuccess=res;u.onerror=e=>rej(e.target.error);}
+      else res();
+    };
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+let _syncBadgeTimer=null;
+function _setSyncBadge(pending,total,syncing){
+  const el=document.getElementById('sync-badge');
+  if(!el)return;
+  clearTimeout(_syncBadgeTimer);
+  if(syncing){
+    el.className='sync-badge syncing';
+    el.innerHTML=`<span class="sync-spin">↑</span> ${total-pending}/${total} synced`;
+    el.style.display='flex';
+  } else if(pending>0){
+    el.className='sync-badge pending';
+    el.innerHTML=`↑ ${pending} pending`;
+    el.style.display='flex';
+  } else if(total>0){
+    el.className='sync-badge done';
+    el.innerHTML='✓ All synced';
+    el.style.display='flex';
+    _syncBadgeTimer=setTimeout(()=>{el.style.display='none';},3000);
+  } else {
+    el.style.display='none';
+  }
+}
+async function _refreshSyncBadge(){
+  try{const items=await _idbGetAll();_setSyncBadge(items.length,items.length,false);}catch(e){}
+}
+let _syncing=false;
+async function _syncQueue(){
+  if(_syncing||!navigator.onLine)return;
+  _syncing=true;
+  try{
+    const items=await _idbGetAll();
+    if(!items.length){_setSyncBadge(0,0,false);_syncing=false;return;}
+    const total=items.length;
+    let done=0;
+    _setSyncBadge(total-done,total,true);
+    for(const item of items){
+      try{
+        if(item.type==='pat_upsert'){
+          const d={...item.form};
+          const completed=d.status==='completed';
+          const completedAt=d.completed_at;
+          const refNum=d.ref_number;
+          const baseRef=d.base_ref;
+          delete d.status;delete d.completed_at;delete d.ref_number;delete d.base_ref;
+          if(item.supabaseId){
+            await sb.from('pat_reports').update({...d,updated_at:new Date().toISOString()}).eq('id',item.supabaseId);
+            if(completed)await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:baseRef,completed_at:completedAt}).eq('id',item.supabaseId);
+          } else {
+            const{data:created}=await sb.from('pat_reports').insert({...d,created_by:item.userId}).select().single();
+            if(created&&completed)await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:baseRef,completed_at:completedAt}).eq('id',created.id);
+          }
+        }
+        await _idbRemove(item.localId);
+        done++;
+        _setSyncBadge(total-done,total,done<total);
+      }catch(e){break;}
+    }
+    _dirCerts=null;
+    const remaining=await _idbGetAll();
+    _setSyncBadge(remaining.length,total,false);
+  }catch(e){}
+  _syncing=false;
+}
+
 async function savePAT(){
   const d=getPATFormData();
   if(!d.property_address){toast('Property address required','error');return;}
   if(!(patGv('pat-postcode')||'').trim()){toast('Postcode is required — enter it in the Postcode field','error');patGe('pat-postcode').focus();return;}
+  if(!navigator.onLine){
+    // Offline path: queue in IndexedDB
+    const existingId=editingPATId&&editingPATId!=='__offline__'?editingPATId:null;
+    await _idbEnqueue({type:'pat_upsert',form:d,supabaseId:existingId,userId:currentUser.id,ts:Date.now()});
+    if(!editingPATId)editingPATId='__offline__';
+    _refreshSyncBadge();
+    toast('Saved offline — will sync when online','success');
+    return;
+  }
   showOverlay('Saving…');
   let err;
-  if(editingPATId){
+  if(editingPATId&&editingPATId!=='__offline__'){
     ({error:err}=await sb.from('pat_reports').update({...d,updated_at:new Date().toISOString()}).eq('id',editingPATId));
   } else {
     const{data:created,error:e}=await sb.from('pat_reports').insert({...d,created_by:currentUser.id}).select().single();
@@ -3107,8 +3243,23 @@ async function completePAT(){
   }
   await savePAT();
   if(!editingPATId){toast('Save failed','error');return;}
-  showOverlay('Issuing certificate…');
   const refNum=patGv('pat-ref')||d.ref_number;
+  if(editingPATId==='__offline__'){
+    // Offline: patch last queued entry with completed status
+    await _idbPatchLast({status:'completed',ref_number:refNum,base_ref:patCurrentBaseRef||refNum,completed_at:new Date().toISOString()});
+    _refreshSyncBadge();
+    patGe('pat-ref').value=refNum;
+    patGe('pat-status').value='completed';
+    patGe('pat-form-ref').textContent=refNum;
+    patGe('pat-form-title').textContent=`PAT — ${refNum}`;
+    patGe('btn-pat-email').hidden=false;
+    patGe('btn-pat-complete').disabled=true;
+    patGe('btn-pat-complete2').disabled=true;
+    doPatPreview();
+    toast(`Certificate queued offline: ${refNum} — will sync when online`,'success',5000);
+    return;
+  }
+  showOverlay('Issuing certificate…');
   const{error}=await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:patCurrentBaseRef||refNum,completed_at:new Date().toISOString()}).eq('id',editingPATId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
@@ -5564,6 +5715,18 @@ async function init(){
   },15000);
   // Init CP12 form (builds appliance cards, attaches date/sig handlers)
   initCP12Form();
+  // Service worker
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('/certificates/sw.js').catch(()=>{});}
+  // Online / offline events
+  window.addEventListener('online',()=>{
+    document.getElementById('offline-bar').style.display='none';
+    _syncQueue();
+  });
+  window.addEventListener('offline',()=>{
+    document.getElementById('offline-bar').style.display='block';
+    _refreshSyncBadge();
+  });
+  if(!navigator.onLine)document.getElementById('offline-bar').style.display='block';
 }
 init();
 
