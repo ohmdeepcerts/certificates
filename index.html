@@ -2768,11 +2768,28 @@ function addPATRow(data=null){
     result:getSetting('pat_default_result','Pass')
   };
   patApps.push(a);
-  renderPATRows({focusDesc:patApps.length-1});
+  _appendPATRow(patApps.length-1);
   updatePatRef();
-  doPatPreview();
 }
 
+function _appendPATRow(i){
+  const tbody=patGe('pat-app-body');if(!tbody)return;
+  const a=patApps[i];if(!a)return;
+  const tr=document.createElement('tr');
+  tr.innerHTML=
+    `<td><input class="pat-ti" id="pat-a${i}" value="${patEsc(a.assetId)}" onchange="patUpd(${i},'assetId',this.value)" placeholder="A001"></td>`
+    +`<td><textarea class="pat-ti" id="pat-d${i}" style="height:auto;min-height:28px;resize:none;overflow:hidden;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this);patAutoH(this)" onkeydown="patDTab(event,${i})">${patEsc(a.description)}</textarea></td>`
+    +`<td><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
+    +`<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
+    +`<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3','6','12','24','48'].map(n=>`<option value="${n} Months"${a.retestPeriod===n+' Months'?' selected':''}>${n}m</option>`).join('')}</select></td>`
+    +`<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
+    +`<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':'#dc2626';this.style.fontWeight='700'" style="color:${a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
+    +`<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
+  tbody.appendChild(tr);
+  setTimeout(()=>{const d=patGe('pat-d'+i);if(d){patAutoH(d);d.focus();}},0);
+  const sum=patGe('pat-app-sum');
+  if(sum){const p=patApps.filter(r=>r.result==='Pass').length,f=patApps.filter(r=>r.result==='Fail').length,t=patApps.length;sum.textContent=t+' item'+(t!==1?'s':'')+' · '+p+' Pass / '+f+' Fail';}
+}
 function renderPATRows(opts={}){
   const tbody=patGe('pat-app-body');if(!tbody)return;
   tbody.innerHTML='';
@@ -2810,8 +2827,8 @@ function patDTab(e,i){
   }
   setTimeout(()=>{const d=patGe('pat-d'+(i+1));if(d)d.focus();},30);
 }
-function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));renderPATRows();doPatPreview();}
-function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));renderPATRows();doPatPreview();}
+function patUpdDate(i,v){if(!patApps[i])return;patApps[i].date=v;patApps[i].nextTest=patCalcNext(v,parseInt(patApps[i].retestPeriod));const _nd=patGe('pat-t'+i)?.closest('tr')?.cells[5]?.querySelector('input');if(_nd)_nd.value=patApps[i].nextTest||'';doPatPreview();}
+function patUpdPer(i,v){if(!patApps[i])return;patApps[i].retestPeriod=v;patApps[i].nextTest=patCalcNext(patApps[i].date,parseInt(v));const _nd=patGe('pat-t'+i)?.closest('tr')?.cells[5]?.querySelector('input');if(_nd)_nd.value=patApps[i].nextTest||'';doPatPreview();}
 function patDateChanged(v){
   if(!v)return;
   // Auto-fill expiry to test date + 364 days
@@ -3200,7 +3217,7 @@ function filterCompliance(){
 }
 
 // ========== PAT - PREVIEW & PDF ==========
-function doPatPreview(){
+function _doPatPreviewNow(){
   const wrap=patGe('pat-cert-pages');if(!wrap)return;
   wrap.innerHTML='';
   const ref=patGv('pat-ref'),testDate=patFd(patGv('pat-date'));
@@ -3490,6 +3507,9 @@ async function openPATPDF(id){
   const{data:r}=await sb.from('pat_reports').select('*').eq('id',id).single();
   if(r)generatePATPDFFromData(r);
 }
+let _patPreviewTimer=null;
+function doPatPreview(){clearTimeout(_patPreviewTimer);_patPreviewTimer=setTimeout(_doPatPreviewNow,280);}
+function doPatPreviewImmediate(){_doPatPreviewNow();}
 async function generatePATPDF(){
   const d=getPATFormData();
   if(!d.property_address){toast('Add a property address first','warn');return;}
@@ -3498,7 +3518,7 @@ async function generatePATPDF(){
 async function generatePATPDFFromData(r,{returnB64=false}={}){
   showOverlay(returnB64?'Generating PDF for email…':'Generating PDF…');
   if(r.id&&r.id!==editingPATId){editingPATId=r.id;populatePATForm(r);}
-  doPatPreview();
+  doPatPreviewImmediate();
   await new Promise(res=>setTimeout(res,400));
   try{
     const{jsPDF}=window.jspdf;
@@ -3549,7 +3569,7 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
   finally{hideOverlay();}
 }
 function printPATCertificate(){
-  doPatPreview();
+  doPatPreviewImmediate();
   setTimeout(()=>{
     const src=document.getElementById('pat-cert-pages');
     const target=document.getElementById('print-target');
