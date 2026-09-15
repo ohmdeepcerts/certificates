@@ -286,6 +286,34 @@ a{color:var(--accent);text-decoration:none}
   #btn-gas-print{display:none!important}
 }
 
+/* ===== MOBILE GAS WIZARD ===== */
+#mobile-gas-wizard{padding-bottom:88px}
+.mgw-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.mgw-card-title{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.mgw-field-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;margin-top:10px}
+.mgw-card-title+.mgw-field-label,.mgw-field-label:first-child{margin-top:0}
+.mgw-input,.mgw-textarea{width:100%;box-sizing:border-box;padding:11px 12px;font-size:15px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;transition:border-color .15s}
+.mgw-textarea{resize:none;line-height:1.4}
+.mgw-input:focus,.mgw-textarea:focus{border-color:var(--accent);outline:none}
+.mgw-section-divider{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--border)}
+.mgw-checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mgw-check-item{display:flex;flex-direction:column;gap:4px}
+.mgw-check-label{font-size:11px;font-weight:600;color:var(--muted);line-height:1.2}
+.mgw-toggle-row{display:flex;gap:5px;flex-wrap:wrap}
+.mgw-toggle{min-height:40px;padding:0 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;flex:1;white-space:nowrap;transition:.15s}
+.mgw-toggle.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.mgw-toggle[data-val="No"].active,.mgw-toggle[data-val="Fail"].active{border-color:#dc2626;background:#dc2626;color:#fff}
+.mgw-toggle[data-val="N/A"].active{border-color:#6b7280;background:#6b7280;color:#fff}
+.mgw-app-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;position:relative}
+.mgw-app-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.mgw-app-num{font-size:13px;font-weight:700;color:var(--accent)}
+.mgw-remove-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1.4}
+.mgw-add-app-btn{width:100%;padding:14px;border:2px dashed var(--border);border-radius:12px;background:transparent;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;box-sizing:border-box}
+.mgw-defect-add-btn{background:none;border:1px dashed var(--border);border-radius:8px;padding:10px 16px;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box}
+.mgw-defect-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;margin-bottom:8px}
+.mgw-defect-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:8px;line-height:1;border-radius:6px}
+.mgw-actions{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:8px;z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,.12)}
+
 /* ---- DIRECTORY / APPLIANCES ---- */
 .dir-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:18px}
 .dir-tab{flex:1;padding:8px 10px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);background:none;border:none;transition:.15s;white-space:nowrap}
@@ -1021,6 +1049,49 @@ a{color:var(--accent);text-decoration:none}
           </label>
           <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save</button>
+        </div>
+      </div>
+
+      <!-- MOBILE GAS WIZARD (shown on phones instead of A4 form) -->
+      <div id="mobile-gas-wizard" hidden>
+        <datalist id="mgw-app-types">
+          <option value="Combi Boiler"><option value="System Boiler"><option value="Back Boiler"><option value="Regular Boiler"><option value="Gas Fire"><option value="Gas Cooker"><option value="Gas Hob"><option value="Gas Range Cooker"><option value="Warm Air Unit"><option value="Water Heater"><option value="Gas Tumble Dryer">
+        </datalist>
+        <div class="mgw-card">
+          <div class="mgw-card-title">Certificate Date</div>
+          <input type="text" id="mgw-cert-date" class="mgw-input fast-date" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric">
+        </div>
+        <div class="mgw-card">
+          <div class="mgw-card-title">Property Address</div>
+          <div class="mgw-field-label">Address</div>
+          <textarea id="mgw-install-address" class="mgw-textarea" placeholder="Full address of inspected property" rows="3"></textarea>
+          <div class="mgw-field-label">Postcode</div>
+          <input type="text" id="mgw-install-postcode" class="mgw-input" placeholder="e.g. M1 1AA" style="text-transform:uppercase">
+        </div>
+        <div class="mgw-card">
+          <div class="mgw-card-title">Landlord / Customer</div>
+          <div class="mgw-field-label">Name &amp; Address</div>
+          <textarea id="mgw-landlord-address" class="mgw-textarea" placeholder="Landlord name and address" rows="3"></textarea>
+          <div class="mgw-field-label">Postcode</div>
+          <input type="text" id="mgw-landlord-postcode" class="mgw-input" placeholder="e.g. M1 1AA" style="text-transform:uppercase">
+          <div class="mgw-field-label">Email (certificate sent here)</div>
+          <input type="email" id="mgw-recipient-email" class="mgw-input" value="gbelectricalcertificates@hotmail.com">
+        </div>
+        <div id="mgw-appliances"></div>
+        <button class="mgw-add-app-btn" id="mgw-btn-add-app" onclick="mgwAddAppliance()">+ Add Appliance</button>
+        <div class="mgw-card">
+          <div class="mgw-card-title">Work Carried Out</div>
+          <textarea id="mgw-work-details" class="mgw-textarea" rows="3">Annual gas safety inspection and landlord gas safety record (CP12) completed.</textarea>
+        </div>
+        <div class="mgw-card" id="mgw-defects-card">
+          <div class="mgw-card-title">Defects / Warnings</div>
+          <div id="mgw-defects-list"></div>
+          <button class="mgw-defect-add-btn" onclick="mgwAddDefect()">+ Add Defect</button>
+        </div>
+        <div style="height:20px"></div>
+        <div class="mgw-actions">
+          <button class="btn btn-success" onclick="mgwComplete()" style="flex:2;min-height:48px;font-size:15px;justify-content:center">✓ Issue CP12</button>
+          <button class="btn btn-secondary" onclick="mgwSaveDraft()" style="flex:1;min-height:48px;justify-content:center">💾 Draft</button>
         </div>
       </div>
 
@@ -3879,6 +3950,14 @@ function newGasCert(){
   syncSettingsToCP12Form();loadCP12Logo();
   _setGasViewMode(false);
   setTimeout(_attachGasFormAC, 0);
+  // Auto-switch: mobile gets wizard, desktop gets A4 form
+  const isMobile=window.innerWidth<=768;
+  const wizard=document.getElementById('mobile-gas-wizard');
+  const wrap=document.getElementById('cp12Wrap');
+  if(wizard&&wrap){
+    if(isMobile){wizard.hidden=false;wrap.style.display='none';mgwInit();}
+    else{wizard.hidden=true;wrap.style.display='';}
+  }
 }
 async function loadGasForm(id){
   showOverlay('Loading…');
@@ -3893,6 +3972,9 @@ async function loadGasForm(id){
   });
   for(let n=1;n<=5;n++){const c=document.getElementById(`cp12App${n}`);if(c&&c.classList.contains('is-disabled'))toggleCP12AppRow(n);}
   populateCP12Form(r);syncSettingsToCP12Form();loadCP12Logo();updateAddApplianceBtn();setTimeout(_attachGasFormAC,0);
+  // Always show A4 form when viewing/editing an existing cert
+  const _mwz=document.getElementById('mobile-gas-wizard');const _cwp=document.getElementById('cp12Wrap');
+  if(_mwz)_mwz.hidden=true;if(_cwp)_cwp.style.display='';
   const btnC=document.getElementById('btn-gas-complete');
   if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';}
   else{btnC.disabled=false;btnC.dataset.completed='';}
@@ -4532,7 +4614,8 @@ function initCP12Form(){
 
 // ========== PIPEWORK ITEMS (kept for PDF generation from history) ==========
 const PIPEWORK_ITEMS=['Gas Tightness Test','Standing / Working Pressure Test','Gas Installation Visual Check','Meter / Governor Condition','Emergency Control Accessible'];
-async function saveGas(){
+async function saveGas(_fromMgw){
+  if(!_fromMgw&&mgwActive())mgwSyncToDesktopForm();
   const d=getGasFormData();
   if(!d.install_address){toast('Installation address required','error');return false;}
   showOverlay('Saving…');
@@ -4591,6 +4674,244 @@ async function completeGas(){
     }catch(e){toast('Auto-email setup error','error');}
   }
 }
+
+// ========== MOBILE GAS WIZARD ==========
+let _mgwSlots=0; // how many appliance slots currently shown
+
+function mgwActive(){const w=document.getElementById('mobile-gas-wizard');return w&&!w.hidden;}
+
+function mgwInit(){
+  _mgwSlots=0;
+  const t=new Date();
+  const today=`${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()}`;
+  const el=document.getElementById('mgw-cert-date');if(el)el.value=today;
+  ['mgw-install-address','mgw-install-postcode','mgw-landlord-address','mgw-landlord-postcode'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const em=document.getElementById('mgw-recipient-email');if(em)em.value='gbelectricalcertificates@hotmail.com';
+  const wd=document.getElementById('mgw-work-details');if(wd)wd.value='Annual gas safety inspection and landlord gas safety record (CP12) completed.';
+  const appDiv=document.getElementById('mgw-appliances');if(appDiv)appDiv.innerHTML='';
+  const defDiv=document.getElementById('mgw-defects-list');if(defDiv)defDiv.innerHTML='';
+  const addBtn=document.getElementById('mgw-btn-add-app');if(addBtn)addBtn.hidden=false;
+  mgwAddAppliance();
+}
+
+function mgwBuildAppCard(slot){
+  const isFirst=slot===1;
+  const removeBtn=isFirst?'':`<button class="mgw-remove-btn" onclick="mgwRemoveAppliance(${slot})" title="Remove">Remove</button>`;
+  return`<div class="mgw-app-card" id="mgw-app-${slot}" data-mgw-slot="${slot}">
+    <div class="mgw-app-header"><div class="mgw-app-num">Appliance ${slot}</div>${removeBtn}</div>
+    <div class="mgw-field-label">Location</div>
+    <input type="text" id="mgw-a${slot}-loc" class="mgw-input" placeholder="e.g. Kitchen, Loft">
+    <div class="mgw-field-label">Type</div>
+    <input type="text" id="mgw-a${slot}-type" class="mgw-input" placeholder="e.g. Combi Boiler, Gas Fire" list="mgw-app-types" oninput="mgwOnTypeChange(${slot})">
+    <div class="mgw-field-label">Manufacturer</div>
+    <input type="text" id="mgw-a${slot}-make" class="mgw-input" placeholder="e.g. Vaillant, Worcester">
+    <div class="mgw-field-label">Model</div>
+    <input type="text" id="mgw-a${slot}-model" class="mgw-input" placeholder="e.g. ecoTec Pro 28">
+    <div class="mgw-field-label">Flue Type</div>
+    <input type="text" id="mgw-a${slot}-flue" class="mgw-input" placeholder="e.g. RS, FL, Open">
+    <div class="mgw-field-label">Operating Pressure</div>
+    <input type="text" id="mgw-a${slot}-pressure" class="mgw-input" value="20 mbar">
+    <div class="mgw-field-label">Combustion Reading</div>
+    <input type="text" id="mgw-a${slot}-comb" class="mgw-input" placeholder="e.g. CO 0 ppm, N/A">
+    <div class="mgw-section-divider">Inspection Checks</div>
+    <div class="mgw-checks-grid">
+      <div class="mgw-check-item"><div class="mgw-check-label">Owned by Landlord?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-ownership"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Inspected?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-inspected"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Safety Devices</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-safety"><button class="mgw-toggle active" data-val="Pass" onclick="mgwToggle(this)">Pass</button><button class="mgw-toggle" data-val="Fail" onclick="mgwToggle(this)">Fail</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Ventilation</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-vent"><button class="mgw-toggle active" data-val="Pass" onclick="mgwToggle(this)">Pass</button><button class="mgw-toggle" data-val="Fail" onclick="mgwToggle(this)">Fail</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Visual Condition</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-visual"><button class="mgw-toggle" data-val="Pass" onclick="mgwToggle(this)">Pass</button><button class="mgw-toggle" data-val="Fail" onclick="mgwToggle(this)">Fail</button><button class="mgw-toggle active" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Flue Flow / Spillage</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-flueflow"><button class="mgw-toggle" data-val="Pass" onclick="mgwToggle(this)">Pass</button><button class="mgw-toggle" data-val="Fail" onclick="mgwToggle(this)">Fail</button><button class="mgw-toggle active" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Serviced?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-serviced"><button class="mgw-toggle active" data-val="No" onclick="mgwToggle(this)">No</button><button class="mgw-toggle" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">Safe to Use?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-safe"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button></div></div>
+    </div>
+    <div class="mgw-section-divider">CO Alarm</div>
+    <div class="mgw-checks-grid">
+      <div class="mgw-check-item"><div class="mgw-check-label">CO Alarm Fitted?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-co-fitted"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">CO Alarm In Date?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-co-date"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+      <div class="mgw-check-item"><div class="mgw-check-label">CO Alarm Tested?</div>
+        <div class="mgw-toggle-row" data-mgw="a${slot}-co-test"><button class="mgw-toggle active" data-val="Yes" onclick="mgwToggle(this)">Yes</button><button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No</button><button class="mgw-toggle" data-val="N/A" onclick="mgwToggle(this)">N/A</button></div></div>
+    </div>
+  </div>`;
+}
+
+function mgwAddAppliance(){
+  if(_mgwSlots>=5)return;
+  _mgwSlots++;
+  const slot=_mgwSlots;
+  const appDiv=document.getElementById('mgw-appliances');
+  if(appDiv)appDiv.insertAdjacentHTML('beforeend',mgwBuildAppCard(slot));
+  const addBtn=document.getElementById('mgw-btn-add-app');
+  if(addBtn)addBtn.hidden=(_mgwSlots>=5);
+}
+
+function mgwRemoveAppliance(slot){
+  const card=document.getElementById(`mgw-app-${slot}`);
+  if(card)card.remove();
+  // renumber remaining
+  const remaining=document.querySelectorAll('#mgw-appliances .mgw-app-card');
+  remaining.forEach((c,i)=>{
+    const n=i+1;
+    c.dataset.mgwSlot=n;
+    const numEl=c.querySelector('.mgw-app-num');
+    if(numEl)numEl.textContent=`Appliance ${n}`;
+    const rmBtn=c.querySelector('.mgw-remove-btn');
+    if(rmBtn)rmBtn.setAttribute('onclick',`mgwRemoveAppliance(${n})`);
+    c.id=`mgw-app-${n}`;
+    // remap data-mgw attribute for toggle rows and input ids
+    c.querySelectorAll('[data-mgw]').forEach(el=>{
+      el.dataset.mgw=el.dataset.mgw.replace(/^a\d+/,`a${n}`);
+    });
+    c.querySelectorAll('[id^="mgw-a"]').forEach(el=>{
+      el.id=el.id.replace(/^mgw-a\d+/,`mgw-a${n}`);
+    });
+    c.querySelectorAll('[oninput]').forEach(el=>{
+      el.setAttribute('oninput',`mgwOnTypeChange(${n})`);
+    });
+  });
+  _mgwSlots=remaining.length;
+  const addBtn=document.getElementById('mgw-btn-add-app');
+  if(addBtn)addBtn.hidden=false;
+}
+
+function mgwToggle(btn){
+  const row=btn.closest('.mgw-toggle-row');
+  if(!row)return;
+  row.querySelectorAll('.mgw-toggle').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function mgwGetToggle(mgwKey){
+  const row=document.querySelector(`.mgw-toggle-row[data-mgw="${mgwKey}"]`);
+  if(!row)return'';
+  const active=row.querySelector('.mgw-toggle.active');
+  return active?active.dataset.val:'';
+}
+
+function mgwSetToggle(mgwKey,val){
+  const row=document.querySelector(`.mgw-toggle-row[data-mgw="${mgwKey}"]`);
+  if(!row)return;
+  row.querySelectorAll('.mgw-toggle').forEach(b=>b.classList.toggle('active',b.dataset.val===val));
+}
+
+function mgwOnTypeChange(slot){
+  const el=document.getElementById(`mgw-a${slot}-type`);
+  if(!el)return;
+  const type=el.value.toLowerCase();
+  const isCookerHob=/cooker|hob/.test(type);
+  if(isCookerHob){
+    mgwSetToggle(`a${slot}-co-fitted`,'N/A');
+    mgwSetToggle(`a${slot}-co-date`,'N/A');
+    mgwSetToggle(`a${slot}-co-test`,'N/A');
+    mgwSetToggle(`a${slot}-flueflow`,'N/A');
+    mgwSetToggle(`a${slot}-vent`,'N/A');
+  }
+}
+
+let _mgwDefectCount=0;
+function mgwAddDefect(){
+  if(_mgwDefectCount>=5)return;
+  _mgwDefectCount++;
+  const d=_mgwDefectCount;
+  const list=document.getElementById('mgw-defects-list');
+  if(!list)return;
+  list.insertAdjacentHTML('beforeend',`<div class="mgw-defect-row" id="mgw-defect-${d}">
+    <div>
+      <input type="text" id="mgw-d${d}-desc" class="mgw-input" placeholder="Defect description…" style="margin-bottom:6px">
+      <div class="mgw-toggle-row" data-mgw="d${d}-warn">
+        <button class="mgw-toggle active" data-val="N/A" onclick="mgwToggle(this)">N/A</button>
+        <button class="mgw-toggle" data-val="Yes" onclick="mgwToggle(this)">Warning Issued</button>
+        <button class="mgw-toggle" data-val="No" onclick="mgwToggle(this)">No Warning</button>
+      </div>
+    </div>
+    <button class="mgw-defect-del" onclick="mgwRemoveDefect(${d})" title="Remove">×</button>
+  </div>`);
+}
+
+function mgwRemoveDefect(d){
+  const el=document.getElementById(`mgw-defect-${d}`);
+  if(el)el.remove();
+}
+
+function mgwSyncToDesktopForm(){
+  const certDate=document.getElementById('mgw-cert-date')?.value||'';
+  setCP12Field('cert_date',certDate);
+  if(certDate.length===10)setCP12Field('next_check_date',oneYearMinusOneDayUK(certDate));
+  setCP12Field('install_address',document.getElementById('mgw-install-address')?.value||'');
+  setCP12Field('install_postcode',document.getElementById('mgw-install-postcode')?.value||'');
+  setCP12Field('landlord_address',document.getElementById('mgw-landlord-address')?.value||'');
+  setCP12Field('landlord_postcode',document.getElementById('mgw-landlord-postcode')?.value||'');
+  setCP12Field('recipient_email',document.getElementById('mgw-recipient-email')?.value||'');
+  setCP12Field('work_details',document.getElementById('mgw-work-details')?.value||'');
+  // Pipework — all pass (already set in newGasCert but set again to be safe)
+  ['pipe_gas_tight','pipe_pressure','pipe_visual','pipe_meter','pipe_emergency'].forEach(f=>setCP12Field(f,'✓'));
+  // Appliances — map visible mgw cards to desktop slots in order
+  const cards=document.querySelectorAll('#mgw-appliances .mgw-app-card');
+  for(let n=1;n<=5;n++){
+    const card=document.getElementById(`cp12App${n}`);
+    if(!card)continue;
+    const isActive=n<=cards.length;
+    const isDisabled=card.classList.contains('is-disabled');
+    if(isActive&&isDisabled)toggleCP12AppRow(n);
+    if(!isActive&&!isDisabled)toggleCP12AppRow(n);
+  }
+  cards.forEach((c,i)=>{
+    const n=i+1;
+    const s=parseInt(c.dataset.mgwSlot)||n;
+    setCP12Field(`app${n}_location`,document.getElementById(`mgw-a${s}-loc`)?.value||'');
+    setCP12Field(`app${n}_type`,document.getElementById(`mgw-a${s}-type`)?.value||'');
+    setCP12Field(`app${n}_make`,document.getElementById(`mgw-a${s}-make`)?.value||'');
+    setCP12Field(`app${n}_model`,document.getElementById(`mgw-a${s}-model`)?.value||'');
+    setCP12Field(`app${n}_flue_type`,document.getElementById(`mgw-a${s}-flue`)?.value||'');
+    setCP12Field(`app${n}_op_pressure`,document.getElementById(`mgw-a${s}-pressure`)?.value||'20 mbar');
+    setCP12Field(`app${n}_combustion`,document.getElementById(`mgw-a${s}-comb`)?.value||'');
+    const chk=[
+      [`app${n}_ownership`,`a${s}-ownership`],
+      [`app${n}_inspected`,`a${s}-inspected`],
+      [`app${n}_safety_dev`,`a${s}-safety`],
+      [`app${n}_vent`,`a${s}-vent`],
+      [`app${n}_visual`,`a${s}-visual`],
+      [`app${n}_flue_flow`,`a${s}-flueflow`],
+      [`app${n}_serviced`,`a${s}-serviced`],
+      [`app${n}_safe_to_use`,`a${s}-safe`],
+      [`app${n}_co_fitted`,`a${s}-co-fitted`],
+      [`app${n}_co_in_date`,`a${s}-co-date`],
+      [`app${n}_co_alarm_test`,`a${s}-co-test`],
+    ];
+    chk.forEach(([df,mf])=>{
+      const v=mgwGetToggle(mf);
+      if(v){
+        setCP12Field(df,v);
+        const btn=document.querySelector(`button.choice-cycle[data-group="${df}"]`);
+        if(btn){btn.dataset.current=v;btn.textContent=v;}
+      }
+    });
+  });
+  // Defects — fill present ones, N/A for the rest
+  for(let i=1;i<=5;i++){
+    const descEl=document.getElementById(`mgw-d${i}-desc`);
+    if(descEl&&descEl.closest(`#mgw-defect-${i}`)){
+      setCP12Field(`defect_${i}`,descEl.value||'N/A');
+      setCP12Field(`defect_warn_${i}`,mgwGetToggle(`d${i}-warn`)||'N/A');
+    } else {
+      setCP12Field(`defect_${i}`,'N/A');
+      setCP12Field(`defect_warn_${i}`,'N/A');
+    }
+  }
+  setCP12Field('remedial_action','N/A');
+}
+
+async function mgwSaveDraft(){mgwSyncToDesktopForm();await saveGas(true);}
+async function mgwComplete(){mgwSyncToDesktopForm();await completeGas();}
 
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
