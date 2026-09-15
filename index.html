@@ -127,8 +127,6 @@ a{color:var(--accent);text-decoration:none}
 .sidebar-logo{font-size:20px;font-weight:700;color:var(--accent);transition:.15s}
 .sidebar-collapse-icon{color:var(--muted);font-size:14px;transition:.15s;line-height:1}
 .sidebar-header:hover .sidebar-collapse-icon{color:var(--accent)}
-#global-refresh-btn{position:fixed;right:16px;top:12px;z-index:99;background:var(--surface);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:17px;transition:.15s;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-#global-refresh-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
 #sidebar-expand-btn{display:none;position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;width:28px;height:56px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:.15s;padding:0}
 #sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent);width:32px}
 @media(min-width:769px){#sidebar.collapsed{width:0!important;overflow:hidden;border-right:none}}
@@ -900,14 +898,13 @@ a{color:var(--accent);text-decoration:none}
     </div>
   </nav>
   <button id="sidebar-expand-btn" onclick="toggleDesktopSidebar()" title="Expand sidebar">›</button>
-  <button id="global-refresh-btn" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺</button>
 
   <!-- Content -->
   <main id="content-area">
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
-      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div>
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div></div>
       <div class="stat-grid" id="stat-grid">
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
