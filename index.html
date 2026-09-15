@@ -2185,13 +2185,14 @@ function applySidebarPermissions(role){
   secVis('Library',hasFull);
   secVis('Compliance',hasFull);
   secVis('Coming Soon',hasFull);
+  secVis('System',hasFull);
   document.getElementById('audit-nav').style.display=isAdmin?'flex':'none';
   document.getElementById('staff-nav').style.display=isAdmin?'flex':'none';
 }
 function canNavigate(view){
   if(!currentProfile)return true;
   const{hasFull,hasPAT,hasGas}=_rolePerms(currentProfile.role||'engineer');
-  if(view==='settings')return true;
+  if(view==='settings')return hasFull;
   if(['pat-new','pat-history'].includes(view))return hasPAT;
   if(['gas-new','gas-history'].includes(view))return hasGas;
   return hasFull;
