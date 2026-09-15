@@ -6038,6 +6038,7 @@ function newCP12FromDir(propId){
 }
 function newPATFromDir(propId){
   const p=(_dir.properties||[]).find(r=>r.id===propId);if(!p)return;
+  editingPATId=null;
   navigate('pat-new');
   setTimeout(()=>{
     const addr=[p.addr1,p.addr2,p.town,p.county].filter(Boolean).join('\n');
@@ -6048,6 +6049,7 @@ function newPATFromDir(propId){
       const patLl=document.getElementById('pat-landlord');if(patLl)patLl.value=ll.landlord_name||ll.company_name||'';
       const patEm=document.getElementById('pat-email');if(patEm)patEm.value=ll.email||'';
     }
+    updatePatRef();
   },250);
 }
 
