@@ -4425,7 +4425,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
       sigSnap[f]={dataUrl:hasInk?c.toDataURL('image/png'):null,className:c.className,style:c.style.cssText};
     });
     const canvas=await html2canvas(livePage,{
-      scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+      scale:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
       logging:false,imageTimeout:5000,
       onclone:(clonedDoc,clonedEl)=>{
         // 1. Remove screen-only / interactive elements
@@ -4478,8 +4478,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         });
       }
     });
-    const q=returnB64?0.82:0.90;
-    doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
+    doc.addImage(canvas.toDataURL('image/png'),'PNG',0,0,297,210);
   }
   return doc;
 }
