@@ -2166,11 +2166,10 @@ async function onLogin(user){
 function _rolePerms(role,perm){
   if(perm===undefined)perm=(currentProfile&&currentProfile.permissions)||'';
   const isAdmin=role==='admin';
-  const restricted=role==='engineer'&&perm.length>0;
-  const hasFull=isAdmin||(role==='engineer'&&!restricted);
-  const hasPAT=hasFull||perm.includes('pat');
-  const hasGas=hasFull||perm.includes('gas');
-  return{isAdmin,hasFull,hasPAT,hasGas};
+  const isFull=role==='engineer';
+  const hasPAT=isAdmin||isFull||perm.includes('pat');
+  const hasGas=isAdmin||isFull||perm.includes('gas');
+  return{isAdmin,hasFull:isAdmin,hasPAT,hasGas};
 }
 function applySidebarPermissions(role){
   const{isAdmin,hasFull,hasPAT,hasGas}=_rolePerms(role);
