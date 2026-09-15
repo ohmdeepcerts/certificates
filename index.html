@@ -6141,10 +6141,11 @@ function _dirCard(type,r,q){
     cardStyle=`border-left:4px solid ${borderColor};border-radius:2px 10px 10px 2px`;
     if(c){
       const gasIcon={valid:'✓',expiring:'⚠',expired:'✕',none:'—'}[c.status]||'—';
-      const gasLabel=c.expText+(c.status==='valid'&&days!==null?' · '+days+'d':'');
+      const gasLabel='CP12 · '+c.expText+(c.status==='valid'&&days!==null?' · '+days+'d':'');
       pills+=_cpill(c.status,gasIcon,gasLabel);
-      if(c.pat.length)pills+=_cpill('info','📋',c.pat.length+' PAT'+(c.pat.length!==1?'s':''));
-      else pills+=_cpill('none','📋','No PAT');
+      const latestPat=[...c.pat].filter(p=>p.status==='completed').sort((a,b)=>new Date(b.test_date||0)-new Date(a.test_date||0))[0];
+      if(latestPat&&latestPat.test_date){const pd=new Date(latestPat.test_date).toLocaleDateString('en-GB');pills+=_cpill('info','📋','PAT · Tested '+pd);}
+      else pills+=_cpill('none','📋','PAT · None');
       const ll=r.landlord_id?(_dir.landlords||[]).find(l=>l.id===r.landlord_id):null;
       if(ll)footer+=`<span>👤 ${ll.landlord_name||ll.company_name||'Landlord'}</span>`;
       if(c.gas.length)footer+=`<span>📄 ${c.gas.length} CP12</span>`;
