@@ -318,7 +318,25 @@ a{color:var(--accent);text-decoration:none}
 .dir-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:18px}
 .dir-tab{flex:1;padding:8px 10px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);background:none;border:none;transition:.15s;white-space:nowrap}
 .dir-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.dir-list{display:flex;flex-direction:column;gap:7px}
+.dir-list{display:flex;flex-direction:column;gap:8px}
+.dir-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+.dir-card.dir-card-archived{opacity:.45}
+.dir-card-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;text-transform:uppercase}
+.dir-card-body{flex:1;min-width:0}
+.dir-card-name{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+.dir-card-sub{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dir-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.cpill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6;border:1px solid transparent}
+.cpill-valid{background:rgba(34,197,94,.1);color:#16a34a;border-color:rgba(34,197,94,.25)}
+.cpill-expiring{background:rgba(245,158,11,.1);color:#b45309;border-color:rgba(245,158,11,.3)}
+.cpill-expired{background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.25)}
+.cpill-none{background:var(--surface2);color:var(--muted);border-color:var(--border)}
+.cpill-info{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-dim)}
+.cpill-warn{background:rgba(245,158,11,.1);color:#b45309;border-color:rgba(245,158,11,.3)}
+.dir-card-footer{font-size:11px;color:var(--muted);margin-top:7px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dir-card-actions{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:flex-start;flex-direction:column}
+.dir-act-btn{padding:5px 11px;font-size:12px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;white-space:nowrap}
+.dir-quick-btn{padding:5px 11px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff;white-space:nowrap}
 #dir-ac-dd{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:360px;overflow-y:auto;min-width:260px;display:none}
 #dir-ac-dd .ac-item:hover,#dir-ac-dd .ac-item.focused{background:var(--surface2)}
 #dir-ac-dd .ac-item:last-of-type{border-bottom:none}
@@ -2896,6 +2914,7 @@ async function completePAT(){
   patGe('btn-pat-complete2').disabled=true;
   doPatPreview();
   toast(`Certificate issued: ${refNum}`,'success',5000);
+  _dirCerts=null;
   _autoSaveDirAfterCert('pat',getPATFormData()).catch(()=>{});
   // Auto-email: generate PDF and upload to storage
   const autoChk=document.getElementById('chk-pat-auto-email');
@@ -4669,6 +4688,7 @@ async function completeGas(){
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`CP12 issued: ${refNum}`,'success',5000);
   _setGasViewMode(true);
+  _dirCerts=null;
   _autoSaveDirAfterCert('gas',getGasFormData()).catch(()=>{});
   // Auto-email: PDF form still in DOM — generate and upload
   const autoGasChk=document.getElementById('chk-gas-auto-email');
@@ -5768,11 +5788,63 @@ async function switchDirTab(type){
   await renderDirectoryPage();
 }
 
+// ---- Directory compliance cache ----
+let _dirCerts=null;
+async function _loadDirCerts(){
+  if(_dirCerts)return;
+  const[gr,pr]=await Promise.all([
+    sb.from('gas_certs').select('id,install_address,install_postcode,cert_date,next_check_date,status').in('status',['completed','draft']),
+    sb.from('pat_reports').select('id,property_address,test_date,status')
+  ]);
+  _dirCerts={gas:gr.data||[],pat:pr.data||[]};
+}
+const _dn=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+
+function _propCompliance(prop){
+  if(!_dirCerts)return null;
+  const pc=_dn(prop.postcode);const a1=_dn(prop.addr1);
+  const gas=_dirCerts.gas.filter(c=>(pc&&_dn(c.install_postcode)===pc)||(a1&&_dn(c.install_address||'').startsWith(a1)));
+  const pat=_dirCerts.pat.filter(p=>{const pa=_dn(p.property_address||'');return(pc&&pa.includes(pc))||(a1&&pa.includes(a1));});
+  const completed=gas.filter(c=>c.status==='completed').sort((a,b)=>new Date(b.cert_date||0)-new Date(a.cert_date||0));
+  const latest=completed[0];
+  let status='none',expText='No CP12 found',expDate=null;
+  if(latest){
+    expDate=latest.next_check_date?new Date(latest.next_check_date):null;
+    if(expDate){
+      const days=Math.floor((expDate-new Date())/86400000);
+      if(days<0){status='expired';expText='CP12 expired '+expDate.toLocaleDateString('en-GB');}
+      else if(days<=60){status='expiring';expText='Expires '+expDate.toLocaleDateString('en-GB')+' ('+days+'d)';}
+      else{status='valid';expText='Valid to '+expDate.toLocaleDateString('en-GB');}
+    }else{status='valid';expText='CP12 issued '+new Date(latest.cert_date||'').toLocaleDateString('en-GB');}
+  }
+  return{gas,pat,completed,latest,status,expText};
+}
+function _landlordCompliance(ll){
+  const props=(_dir.properties||[]).filter(p=>p.is_active!==false&&p.landlord_id===ll.id);
+  let valid=0,expiring=0,expired=0,missing=0,totalGas=0,totalPat=0;
+  props.forEach(p=>{
+    const c=_propCompliance(p);if(!c){missing++;return;}
+    totalGas+=c.gas.length;totalPat+=c.pat.length;
+    if(c.status==='valid')valid++;else if(c.status==='expiring')expiring++;else if(c.status==='expired')expired++;else missing++;
+  });
+  return{propCount:props.length,valid,expiring,expired,missing,totalGas,totalPat};
+}
+function _agentCompliance(ag){
+  const props=(_dir.properties||[]).filter(p=>p.is_active!==false&&p.agent_id===ag.id);
+  let valid=0,expiring=0,expired=0,missing=0;
+  props.forEach(p=>{const c=_propCompliance(p);if(!c){missing++;return;}if(c.status==='valid')valid++;else if(c.status==='expiring')expiring++;else if(c.status==='expired')expired++;else missing++;});
+  return{propCount:props.length,valid,expiring,expired,missing};
+}
+
 async function renderDirectoryPage(){
   const el=document.getElementById('dir-list-area');if(!el)return;
   const type=_dirActiveTab;
   el.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
-  if(!_dir[type])await dirLoad(type);
+  await Promise.all([
+    _dir[type]?null:dirLoad(type),
+    (type==='landlords'||type==='agents')&&!_dir.properties?dirLoad('properties'):null,
+    _loadDirCerts()
+  ].filter(Boolean));
   const q=(document.getElementById('dir-search-input')?.value||'').trim();
   const showArch=document.getElementById('dir-show-archived')?.checked;
   let recs=_dir[type]||[];
@@ -5786,23 +5858,94 @@ async function renderDirectoryPage(){
   el.innerHTML='<div class="dir-list">'+recs.map(r=>_dirCard(type,r,q2)).join('')+'</div>';
 }
 
+function _cpill(cls,icon,txt){return`<span class="cpill cpill-${cls}">${icon} ${txt}</span>`;}
 function _dirCard(type,r,q){
   const name=_dirName(type,r);const sub=_dirSub(type,r);
   const arch=r.is_active===false;
-  const usedTxt=r.usage_count?`Used ${r.usage_count}×`:'Never used';
-  const lastTxt=r.last_used_at?'· Last used '+new Date(r.last_used_at).toLocaleDateString('en-GB'):'';
-  return`<div style="background:var(--surface);border:1px solid ${arch?'var(--border)':'var(--border)'};border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px${arch?';opacity:.5':''}">
-    <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;text-transform:uppercase">${(name[0]||'?')}</div>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:14px;font-weight:600;color:var(--text)">${_hlText(name,q)}</div>
-      ${sub?`<div style="font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_hlText(sub,q)}</div>`:''}
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">${usedTxt} ${lastTxt}${arch?' <span style="color:var(--warn);font-weight:700">[ARCHIVED]</span>':''}</div>
+  let pills='';let footer='';let extraBtns='';
+  if(type==='properties'){
+    const c=_propCompliance(r);
+    if(c){
+      const gasIcon={valid:'✓',expiring:'⚠',expired:'✕',none:'—'}[c.status]||'—';
+      pills+=_cpill(c.status,gasIcon,c.expText);
+      if(c.pat.length)pills+=_cpill('info','📋',c.pat.length+' PAT report'+(c.pat.length!==1?'s':''));
+      else pills+=_cpill('none','📋','No PAT');
+      const ll=r.landlord_id?(_dir.landlords||[]).find(l=>l.id===r.landlord_id):null;
+      if(ll)footer+=`<span>👤 ${ll.landlord_name||ll.company_name||'Landlord'}</span>`;
+      if(c.gas.length)footer+=`<span>${c.gas.length} CP12</span>`;
+    }
+    const addr=encodeURIComponent(JSON.stringify({addr1:r.addr1,addr2:r.addr2||'',town:r.town||'',postcode:r.postcode||''}));
+    extraBtns=`<button class="dir-quick-btn" onclick="newCP12FromDir('${r.id}')">+ CP12</button><button class="dir-quick-btn" style="background:var(--surface2);color:var(--accent);border-color:var(--accent)" onclick="newPATFromDir('${r.id}')">+ PAT</button>`;
+  } else if(type==='landlords'){
+    const c=_landlordCompliance(r);
+    pills+=_cpill('info','🏠',c.propCount+' propert'+(c.propCount===1?'y':'ies'));
+    if(c.valid)pills+=_cpill('valid','✓',c.valid+' compliant');
+    if(c.expiring)pills+=_cpill('expiring','⚠',c.expiring+' expiring');
+    if(c.expired)pills+=_cpill('expired','✕',c.expired+' expired');
+    if(c.missing)pills+=_cpill('none','—',c.missing+' no cert');
+    if(c.totalGas||c.totalPat)footer+=`<span>${c.totalGas} CP12 · ${c.totalPat} PAT</span>`;
+    if(r.email)footer+=`<span>${r.email}</span>`;
+    if(r.phone)footer+=`<span>${r.phone}</span>`;
+  } else if(type==='agents'){
+    const c=_agentCompliance(r);
+    pills+=_cpill('info','🏠',c.propCount+' propert'+(c.propCount===1?'y':'ies'));
+    if(c.valid)pills+=_cpill('valid','✓',c.valid+' compliant');
+    if(c.expiring)pills+=_cpill('expiring','⚠',c.expiring+' expiring');
+    if(c.expired)pills+=_cpill('expired','✕',c.expired+' expired');
+    if(r.email)footer+=`<span>${r.email}</span>`;
+    if(r.phone)footer+=`<span>${r.phone}</span>`;
+  } else {
+    const usedTxt=r.usage_count?`Used ${r.usage_count}×`:'Never used';
+    footer=usedTxt+(r.last_used_at?' · Last '+new Date(r.last_used_at).toLocaleDateString('en-GB'):'');
+  }
+  return`<div class="dir-card${arch?' dir-card-archived':''}">
+    <div class="dir-card-avatar">${(name[0]||'?')}</div>
+    <div class="dir-card-body">
+      <div class="dir-card-name">${_hlText(name,q)}${arch?' <span style="font-size:10px;color:var(--muted);font-weight:600">[archived]</span>':''}</div>
+      ${sub?`<div class="dir-card-sub">${_hlText(sub,q)}</div>`:''}
+      ${pills?`<div class="dir-pills">${pills}</div>`:''}
+      ${footer?`<div class="dir-card-footer">${footer}</div>`:''}
     </div>
-    <div style="display:flex;gap:4px;flex-shrink:0">
-      <button onclick="openDirEditModal('${type}','${r.id}')" style="padding:5px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text)">Edit</button>
-      <button onclick="dirToggleArchive('${type}','${r.id}',${r.is_active!==false})" style="padding:5px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:${arch?'var(--success)':'var(--muted)'}">${arch?'Restore':'Archive'}</button>
+    <div class="dir-card-actions">
+      ${extraBtns}
+      <button class="dir-act-btn" onclick="openDirEditModal('${type}','${r.id}')">Edit</button>
+      <button class="dir-act-btn" style="color:${arch?'var(--success)':'var(--muted)'}" onclick="dirToggleArchive('${type}','${r.id}',${r.is_active!==false})">${arch?'Restore':'Archive'}</button>
     </div>
   </div>`;
+}
+
+function newCP12FromDir(propId){
+  const p=(_dir.properties||[]).find(r=>r.id===propId);if(!p)return;
+  navigate('gas-new');
+  setTimeout(()=>{
+    const addr=[p.addr1,p.addr2,p.town,p.county].filter(Boolean).join('\n');
+    setCP12Field('install_address',addr);setCP12Field('install_postcode',p.postcode||'');
+    const ll=p.landlord_id?(_dir.landlords||[]).find(l=>l.id===p.landlord_id):null;
+    if(ll){
+      const la=[ll.addr1,ll.addr2,ll.town,ll.county].filter(Boolean).join('\n');
+      const ln=ll.landlord_name||ll.company_name||'';
+      setCP12Field('landlord_address',ln+(la?'\n'+la:''));setCP12Field('landlord_postcode',ll.postcode||'');
+      setCP12Field('recipient_email',ll.email||'');
+    }
+    const mAddr=document.getElementById('mgw-install-address');
+    if(mAddr)mAddr.value=addr;
+    const mPc=document.getElementById('mgw-install-postcode');
+    if(mPc)mPc.value=p.postcode||'';
+  },250);
+}
+function newPATFromDir(propId){
+  const p=(_dir.properties||[]).find(r=>r.id===propId);if(!p)return;
+  navigate('pat-new');
+  setTimeout(()=>{
+    const addr=[p.addr1,p.addr2,p.town,p.county].filter(Boolean).join('\n');
+    const patAddr=document.getElementById('pat-addr');if(patAddr)patAddr.value=addr;
+    const patPc=document.getElementById('pat-postcode');if(patPc)patPc.value=p.postcode||'';
+    const ll=p.landlord_id?(_dir.landlords||[]).find(l=>l.id===p.landlord_id):null;
+    if(ll){
+      const patLl=document.getElementById('pat-landlord');if(patLl)patLl.value=ll.landlord_name||ll.company_name||'';
+      const patEm=document.getElementById('pat-email');if(patEm)patEm.value=ll.email||'';
+    }
+  },250);
 }
 
 async function dirToggleArchive(type,id,currentlyActive){
