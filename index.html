@@ -127,8 +127,8 @@ a{color:var(--accent);text-decoration:none}
 .sidebar-logo{font-size:20px;font-weight:700;color:var(--accent);transition:.15s}
 .sidebar-collapse-icon{color:var(--muted);font-size:14px;transition:.15s;line-height:1}
 .sidebar-header:hover .sidebar-collapse-icon{color:var(--accent)}
-.sidebar-refresh-btn{margin-left:auto;margin-right:6px;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 4px;border-radius:4px;line-height:1;transition:.15s}
-.sidebar-refresh-btn:hover{color:var(--accent);background:var(--accent-dim)}
+#global-refresh-btn{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:99;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;width:28px;height:56px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:.15s;padding:0}
+#global-refresh-btn:hover{color:var(--accent);border-color:var(--accent);width:32px}
 #sidebar-expand-btn{display:none;position:fixed;top:50%;transform:translateY(-50%);left:0;z-index:50;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;width:28px;height:56px;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:.15s;padding:0}
 #sidebar-expand-btn:hover{color:var(--accent);border-color:var(--accent);width:32px}
 @media(min-width:769px){#sidebar.collapsed{width:0!important;overflow:hidden;border-right:none}}
@@ -850,7 +850,6 @@ a{color:var(--accent);text-decoration:none}
     <div class="sidebar-header" onclick="toggleDesktopSidebar()" title="Collapse sidebar">
       <span class="sidebar-logo">OHM</span>
       <span class="sidebar-title">Certificates</span>
-      <button class="sidebar-refresh-btn" onclick="event.stopPropagation();hardRefresh()" title="Hard refresh (clear cache)">↺</button>
       <span class="sidebar-collapse-icon">‹</span>
     </div>
     <div class="sidebar-nav">
@@ -901,6 +900,7 @@ a{color:var(--accent);text-decoration:none}
     </div>
   </nav>
   <button id="sidebar-expand-btn" onclick="toggleDesktopSidebar()" title="Expand sidebar">›</button>
+  <button id="global-refresh-btn" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺</button>
 
   <!-- Content -->
   <main id="content-area">
