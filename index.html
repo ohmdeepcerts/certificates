@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Certificates | DeepFlow Software</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -385,6 +385,10 @@ a{color:var(--accent);text-decoration:none}
 #pat-main-col{flex:1;min-width:0}
 #pat-side-col{width:258px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;align-self:flex-start}
 @media(max-width:1050px){#pat-side-col{display:none}}
+@media(max-width:768px){
+  #pat-preview-wrap{height:0;overflow:hidden;margin:0!important;padding:0!important}
+  #pat-cert-pages{position:fixed;left:-12000px;top:-12000px;width:826px;pointer-events:none}
+}
 .sw-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .sw-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px}
 .sw-kv{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
@@ -897,6 +901,7 @@ a{color:var(--accent);text-decoration:none}
       </div>
 
       <div id="pat-edit-banner" hidden style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:8px">✏️ EDITING — you are updating an existing certificate. Changes will overwrite the saved record.</div>
+      <div id="pat-restore-banner" hidden style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">💾 Unsaved PAT found — restore it?<button type="button" onclick="restorePATAutosave()" style="margin-left:auto;background:#3b82f6;color:#fff;border:none;padding:4px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Restore</button><button type="button" onclick="discardPATAutosave()" style="background:none;color:#6b7280;border:1px solid var(--border);padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">Discard</button></div>
 
       <div class="pat-two-col">
       <div id="pat-main-col">
@@ -920,7 +925,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="form-section">
         <div class="form-section-title">Property &amp; Client</div>
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
-          <div class="field-group"><label>Landlord Name</label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
+          <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
           <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
           <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode <span style="color:#ef4444">*</span></label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:#ef4444;font-weight:600">Required — do NOT put postcode in the address box above</span></div></div>
           <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
@@ -963,7 +968,7 @@ a{color:var(--accent);text-decoration:none}
       </div>
 
       <!-- Live Certificate Preview -->
-      <div style="margin-top:16px">
+      <div id="pat-preview-wrap" style="margin-top:16px">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
           <span>Live Certificate Preview</span>
           <span style="font-size:11px">Use ⬇ PDF above for exact A4 output</span>
@@ -2888,6 +2893,16 @@ async function newPAT(){
   addPATRow();addPATRow();
   _syncAutoCapBtn();
   setTimeout(_attachPATFormAC, 0);
+  // Autosave restore check
+  try{
+    const saved=localStorage.getItem('pat_autosave');
+    if(saved){
+      const d=JSON.parse(saved);
+      if(d&&(d.property_address||'').trim()){
+        const rb=patGe('pat-restore-banner');if(rb)rb.hidden=false;
+      }
+    }
+  }catch(e){}
 }
 function _syncAutoCapBtn(){
   const btn=document.getElementById('autocap-btn');
@@ -2904,6 +2919,7 @@ async function loadPATForm(id){
   patGe('pat-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit PAT Test';
   patGe('pat-form-ref').textContent=r.ref_number||'Draft';
   patGe('pat-edit-banner').hidden=false;
+  const rb=patGe('pat-restore-banner');if(rb)rb.hidden=true;
   const isDone=r.status==='completed';
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=!isDone;
@@ -3811,6 +3827,32 @@ function applyCP12Logo(dataUrl){
 }
 function loadCP12Logo(){
   try{const s=localStorage.getItem('cp12_logo_v1');if(s)applyCP12Logo(s);}catch(e){}
+}
+
+// ========== PAT HELPERS ==========
+function patCopyAddrToLandlord(){
+  const addr=patGe('pat-addr');const pc=patGe('pat-postcode');
+  const la=patGe('pat-landlord-addr');
+  if(!la)return;
+  const parts=[];
+  if(addr&&addr.value.trim())parts.push(addr.value.trim());
+  if(pc&&pc.value.trim())parts.push(pc.value.trim());
+  la.value=parts.join('\n');
+  doPatPreview();
+}
+function restorePATAutosave(){
+  try{
+    const saved=localStorage.getItem('pat_autosave');
+    if(!saved)return;
+    const d=JSON.parse(saved);
+    populatePATForm(d);
+    const rb=patGe('pat-restore-banner');if(rb)rb.hidden=true;
+    toast('Draft restored','success');
+  }catch(e){toast('Could not restore draft','error');}
+}
+function discardPATAutosave(){
+  localStorage.removeItem('pat_autosave');
+  const rb=patGe('pat-restore-banner');if(rb)rb.hidden=true;
 }
 
 // ========== CP12 HELPERS ==========
