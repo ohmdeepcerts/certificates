@@ -349,6 +349,21 @@ a{color:var(--accent);text-decoration:none}
 #dir-ac-dd .ac-item:last-of-type{border-bottom:none}
 .dir-filled-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--success);background:var(--green-dim);padding:2px 7px;border-radius:4px;vertical-align:middle}
 
+/* ---- PAT History Cards ---- */
+.pat-card{display:flex;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;gap:12px}
+.pat-card-body{flex:1;min-width:0}
+.pat-card-top{display:flex;align-items:center;gap:8px;min-width:0}
+.pat-card-addr{flex:1;min-width:0;font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pat-card-bot{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:nowrap}
+.pat-card-date{font-size:12px;color:var(--text);font-weight:500;white-space:nowrap}
+.pat-card-sub{font-size:11px;color:var(--muted);white-space:nowrap}
+.pat-card-btns{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
+@media(max-width:600px){
+  .pat-card{padding:10px 11px;gap:9px}
+  .pat-card-bot{flex-wrap:wrap;gap:5px;margin-top:5px}
+  .pat-card-sub{display:none}
+  .pat-card-date{font-size:11px}
+}
 /* ---- PAT A4 Live Certificate Preview ---- */
 .pat-cert-scroll{overflow-x:auto;overflow-y:visible;background:#d1d5db;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:120px}
 .a4{background:#fff;width:794px;min-height:1123px;padding:20px 24px;box-sizing:border-box;color:#000;font-size:.7rem;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.18)}
@@ -3034,24 +3049,25 @@ function renderPATList(reports){
   const mkRow=(r,hl='')=>{
     const isDraft=r.status!=='completed';const addr=r.property_address||'No address';
     const [abg,atx]=_addrColor(addr);const ini=(_addrInitials(addr)||'?').toUpperCase();
-    return `<div style="display:flex;align-items:center;background:var(--surface);border:1px solid ${hl||'var(--border)'};border-radius:12px;padding:11px 14px;gap:12px${isDraft?';opacity:.82':''}">
-      <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${ini}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${addr}</div>
-        <div style="margin-top:5px">
-          <code style="font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap">${r.ref_number||'DRAFT'}</code>
+    const appCount=(r.appliances||[]).length;
+    return `<div class="pat-card" style="${hl?'border-color:'+hl+';':'';}${isDraft?'opacity:.82':''}">
+      <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
+      <div class="pat-card-body">
+        <div class="pat-card-top">
+          <span class="pat-card-addr">${addr}</span>
+          ${_patExpiryPill(r)}
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-          <span style="font-size:12px;color:var(--text);font-weight:500;white-space:nowrap">${patFd(r.test_date)||'No date'}</span>
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap">${(r.appliances||[]).length} appliance(s)</span>
+        <div class="pat-card-bot">
+          <code style="font-size:10.5px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:5px;border:1px solid var(--accent);font-weight:600;letter-spacing:.02em;white-space:nowrap;flex-shrink:0">${r.ref_number||'DRAFT'}</code>
+          <span class="pat-card-date">${patFd(r.test_date)||'No date'}</span>
+          <span class="pat-card-sub">&middot; ${appCount} appliance${appCount!==1?'s':''}</span>
+          <div class="pat-card-btns">
+            ${_ibtn('Open','fa-eye',`loadPATForm('${r.id}')`)}
+            ${!isDraft?_ibtn('PDF','fa-file-pdf',`openPATPDF('${r.id}')`):''}
+            ${!isDraft?_ibtn('Email','fa-envelope',`emailPATFromList('${r.id}')`):''}
+            ${_ibtn('Delete','fa-trash',`deletePAT('${r.id}')`,true)}
+          </div>
         </div>
-        ${_patExpiryPill(r)}
-        ${_ibtn('Open','fa-eye',`loadPATForm('${r.id}')`)}
-        ${!isDraft?_ibtn('PDF','fa-file-pdf',`openPATPDF('${r.id}')`):''}
-        ${!isDraft?_ibtn('Email','fa-envelope',`emailPATFromList('${r.id}')`):''}
-        ${_ibtn('Delete','fa-trash',`deletePAT('${r.id}')`,true)}
       </div>
     </div>`;
   };
