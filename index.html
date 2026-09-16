@@ -1133,9 +1133,6 @@ a{color:var(--accent);text-decoration:none}
           </span>
           <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-edit" onclick="enterGasEditMode()" hidden>✏ Edit</button>
-          <label id="lbl-gas-auto-email" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface)">
-            <input type="checkbox" id="chk-gas-auto-email" style="accent-color:var(--accent)"> ⚡ Auto Email
-          </label>
           <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save</button>
         </div>
@@ -5078,25 +5075,7 @@ async function completeGas(){
   _setGasViewMode(true);
   _dirCerts=null;
   _autoSaveDirAfterCert('gas',getGasFormData()).catch(()=>{});
-  // Auto-email: PDF form still in DOM — generate and upload
-  const autoGasChk=document.getElementById('chk-gas-auto-email');
-  if(autoGasChk&&autoGasChk.checked){
-    try{
-      const currentId=editingGasId;
-      const b64=await buildCP12PdfBase64();
-      if(b64){
-        const binary=atob(b64);const u8=new Uint8Array(binary.length);
-        for(let i=0;i<binary.length;i++)u8[i]=binary.charCodeAt(i);
-        const blob=new Blob([u8],{type:'application/pdf'});
-        const path=`gas/${currentId}.pdf`;
-        const{error:upErr}=await sb.storage.from('cert-pdfs').upload(path,blob,{upsert:true,contentType:'application/pdf'});
-        if(!upErr){
-          await sb.from('gas_certs').update({auto_email:true,pdf_storage_path:path}).eq('id',currentId);
-          toast('⚡ Auto-email queued — will send in background','success',4000);
-        }else{toast('Auto-email storage error: '+upErr.message,'error');}
-      }
-    }catch(e){toast('Auto-email setup error','error');}
-  }
+  emailGas(true);
 }
 
 // ========== MOBILE GAS WIZARD ==========
@@ -5541,25 +5520,28 @@ function _buildCP12EmailHtml(r){
 </td></tr></table></td></tr></table>
 </body></html>`;
 }
-async function emailGas(){
-  if(!editingGasId){toast('No certificate loaded','warn');return;}
+async function emailGas(autoTriggered=false){
+  if(!editingGasId){if(!autoTriggered)toast('No certificate loaded','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
-  if(!r){toast('Not found','error');return;}
+  if(!r){if(!autoTriggered)toast('Not found','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
-  if(!toEmail){toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
+  if(!toEmail){if(!autoTriggered)toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
   const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
   const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
-  const _gasSteps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
-  showEmailProgress(_gasSteps,1);
+  if(autoTriggered){
+    showOverlay('Sending email…');
+  } else {
+    const _gasSteps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
+    showEmailProgress(_gasSteps,1);
+  }
   try{
     const b64=await buildCP12PdfBase64();
-    showEmailProgress(_gasSteps,2);
+    if(!autoTriggered)showEmailProgress([{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}],2);
     const bcc=getSetting('email_bcc','');
     const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
-    finishEmailProgress();
-    await new Promise(res=>setTimeout(res,600));
+    if(!autoTriggered){finishEmailProgress();await new Promise(res=>setTimeout(res,600));}
     sb.from('email_sends').insert({
       cert_id:r.id,cert_type:'gas',cert_ref:r.ref_number,
       to_email:toEmail,to_name:toName,subject,
@@ -5569,7 +5551,7 @@ async function emailGas(){
     }).then(({error})=>{if(error)console.warn('email_sends insert:',error.message);});
     toast('Email sent ✓ — '+toEmail,'success',5000);
     await logAppEvent('EMAILED','gas',r.id,r.ref_number,{to:toEmail,brevo_message_id:result.messageId||null});
-  }catch(e){toast('Email failed: '+e.message,'error');}
+  }catch(e){if(!autoTriggered)toast('Email failed: '+e.message,'error');}
   finally{hideOverlay();}
 }
 
