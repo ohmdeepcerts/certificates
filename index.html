@@ -653,7 +653,7 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .appliance-value-cell input:focus,.cp12-form-wrap .appliance-value-cell select:focus{background:#eff6ff;box-shadow:inset 0 0 0 1px #60a5fa}
 .cp12-form-wrap .appliance-number-input{font-size:7.4pt!important;font-weight:900!important;color:#1e3a5f!important}
 .cp12-form-wrap .appliance-value-cell.location,.cp12-form-wrap .appliance-value-cell.type,.cp12-form-wrap .appliance-value-cell.make,.cp12-form-wrap .appliance-value-cell.model{align-items:center;flex-direction:column;justify-content:center}
-.cp12-form-wrap .appliance-value-cell.location textarea,.cp12-form-wrap .appliance-value-cell.type textarea,.cp12-form-wrap .appliance-value-cell.make textarea,.cp12-form-wrap .appliance-value-cell.model textarea{width:100%;height:auto;border:0;outline:0;background:transparent;color:#111827;font-family:inherit;font-size:8.5pt;font-weight:650;line-height:1.25;padding:0 4px 0 6px;text-align:left;resize:none;overflow:hidden;display:block}
+.cp12-form-wrap .appliance-value-cell.location textarea,.cp12-form-wrap .appliance-value-cell.type textarea,.cp12-form-wrap .appliance-value-cell.make textarea,.cp12-form-wrap .appliance-value-cell.model textarea{width:100%;height:auto;min-height:1.25em;max-height:calc(3 * 1.25em);border:0;outline:0;background:transparent;color:#111827;font-family:inherit;font-size:8.5pt;font-weight:650;line-height:1.25;padding:0 4px 0 6px;text-align:left;resize:none;overflow:hidden;display:block;box-sizing:content-box;word-break:break-word}
 .cp12-form-wrap .appliance-value-cell.location textarea:focus,.cp12-form-wrap .appliance-value-cell.type textarea:focus,.cp12-form-wrap .appliance-value-cell.make textarea:focus,.cp12-form-wrap .appliance-value-cell.model textarea:focus{background:#eff6ff;box-shadow:inset 0 0 0 1px #60a5fa}
 .cp12-form-wrap .co-hanger{width:100%;min-height:20px;display:flex;flex-direction:row;align-items:stretch;background:rgba(251,191,36,.06);border:2px solid #1e3a5f;border-top:2px solid #1e3a5f;border-radius:0 0 6px 6px;overflow:hidden}
 .cp12-form-wrap .co-hanger-title{flex:0 0 26px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.2);color:#92400e;font-size:5.8pt;font-weight:900;text-transform:uppercase;letter-spacing:.1px;border-right:1px solid #e2e8f0}
@@ -4122,10 +4122,12 @@ function cp12Field(f){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return'';
   return el.tagName==='BUTTON'?el.dataset.current||'':el.value||'';
 }
+function _cp12ResizeTA(el){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 function setCP12Field(f,v){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
   if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
   else{el.value=v||'';
+    if(el.tagName==='TEXTAREA')_cp12ResizeTA(el);
     // If hidden input used by a data-group button, refresh button text
     if(el.type==='hidden'){const btn=el.closest('.choice-group')&&el.closest('.choice-group').querySelector(`.choice-cycle[data-group="${f}"]`);if(btn)btn.textContent=v||(btn.dataset.options||'').split(',')[0]||'';}
   }
@@ -4957,6 +4959,11 @@ function initCP12Form(){
   // Auto-capitalize text/textarea fields in gas cert (shared flag with PAT)
   document.querySelectorAll('#cp12Wrap input[type="text"]:not([readonly]),#cp12Wrap textarea').forEach(function(el){
     el.addEventListener('input',function(){liveCapitalize(this);});
+  });
+  // Auto-resize appliance textareas (location/type/make/model) as user types
+  document.querySelectorAll('#cp12Wrap .appliance-value-cell textarea').forEach(function(el){
+    el.addEventListener('input',function(){_cp12ResizeTA(this);});
+    _cp12ResizeTA(el);
   });
   // Boiler autofill: when type contains "boiler", fill flue type, flue flow check, combustion reading
   for(let n=1;n<=5;n++){
