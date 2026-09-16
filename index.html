@@ -876,8 +876,8 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Gas Safety</div>
-        <div class="nav-item" data-view="gas-new" onclick="navigate('gas-new')"><span class="nav-icon">✚</span>New CP12</div>
-        <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">≡</span>CP12 History</div>
+        <div class="nav-item" data-view="gas-new" onclick="navigate('gas-new')"><span class="nav-icon">✚</span>New Gas</div>
+        <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">≡</span>Gas History</div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Library</div>
@@ -923,13 +923,13 @@ a{color:var(--accent);text-decoration:none}
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
         <div class="stat-card warn"><div class="stat-label">PAT Renewals Due</div><div class="stat-value" id="stat-pat-due">—</div><div class="stat-sub">Next 30 days</div></div>
-        <div class="stat-card accent"><div class="stat-label">Total CP12s</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card success"><div class="stat-label">CP12 Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total Gas</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">Gas Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
         <div class="stat-card error"><div class="stat-label">Gas Renewals Due</div><div class="stat-value" id="stat-gas-due">—</div><div class="stat-sub">Next 30 days</div></div>
       </div>
       <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px" id="recent-grids">
         <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Recent CP12s</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Recent Gas Certs</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div></div></div>
       </div>
     </div>
 
@@ -1098,7 +1098,7 @@ a{color:var(--accent);text-decoration:none}
         <select id="comp-type" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="">All Types</option>
           <option value="pat">PAT Only</option>
-          <option value="gas">Gas CP12 Only</option>
+          <option value="gas">Gas Only</option>
         </select>
         <select id="comp-urgency" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="60">Due in 60 days</option>
@@ -1121,7 +1121,7 @@ a{color:var(--accent);text-decoration:none}
     <!-- GAS NEW/EDIT -->
     <div class="view" id="view-gas-new">
       <div class="view-header no-print">
-        <div><div class="view-title" id="gas-form-title">New CP12</div><div class="view-subtitle" id="gas-form-ref"></div></div>
+        <div><div class="view-title" id="gas-form-title">New Gas</div><div class="view-subtitle" id="gas-form-ref"></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="navigate('gas-history')">← Back</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)">⬇ PDF</button>
@@ -1176,7 +1176,7 @@ a{color:var(--accent);text-decoration:none}
         </div>
         <div style="height:20px"></div>
         <div class="mgw-actions">
-          <button class="btn btn-success" onclick="mgwComplete()" style="flex:2;min-height:48px;font-size:15px;justify-content:center">✓ Issue CP12</button>
+          <button class="btn btn-success" onclick="mgwComplete()" style="flex:2;min-height:48px;font-size:15px;justify-content:center">✓ Issue Gas Cert</button>
           <button class="btn btn-secondary" onclick="mgwSaveDraft()" style="flex:1;min-height:48px;justify-content:center">💾 Draft</button>
         </div>
       </div>
@@ -1437,7 +1437,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- GAS HISTORY -->
     <div class="view" id="view-gas-history">
-      <div class="view-header"><div><div class="view-title">CP12 History</div><div class="view-subtitle">All gas safety certificate records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New CP12</button></div>
+      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New Gas</button></div>
       <div class="list-controls">
         <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
         <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
@@ -2818,7 +2818,7 @@ async function loadDashboard(){
   const recentPat=(pats||[]).slice(-5).reverse();
   const recentGas=(gases||[]).slice(-5).reverse();
   document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
-  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s yet</p></div>';
+  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
 }
 
 // ========== PAT - HELPERS ==========
@@ -3461,9 +3461,9 @@ function filterCompliance(){
     const dStr=i.due.toLocaleDateString('en-GB');
     const urgClass=i.overdue?'overdue':i.daysLeft<=7?'urgent':'due';
     const urgLabel=i.overdue?`OVERDUE ${Math.abs(i.daysLeft)}d ago`:i.daysLeft===0?'TODAY':i.daysLeft===1?'Tomorrow':'Due '+dStr;
-    const typeBadge=i.type==='pat'?`<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">📋 PAT</span>`:`<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">🔥 Gas CP12</span>`;
+    const typeBadge=i.type==='pat'?`<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">📋 PAT</span>`:`<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">🔥 Gas</span>`;
     const meta=i.type==='pat'?`${i.label}${i.assetId?' · Asset: '+i.assetId:''}`:i.certDate?`Last cert: ${i.certDate}`:'Annual Gas Safety Check';
-    const action=i.type==='pat'?`<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>`:`<button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New CP12</button>`;
+    const action=i.type==='pat'?`<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>`:`<button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New Gas</button>`;
     return`<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${typeBadge}<span class="cert-ref">${i.ref}</span><span class="badge badge-${urgClass}">${urgLabel}</span></div><div class="cert-address">${i.address}</div><div class="cert-meta">${meta} · Engineer: ${i.engineer}</div></div>${action}</div>`;
   }).join('');
 }
@@ -4296,7 +4296,7 @@ function syncSettingsToCP12Form(){
 // ========== CP12 - FORM LIFECYCLE ==========
 function newGasCert(){
   editingGasId=null;
-  document.getElementById('gas-form-title').textContent='New CP12';
+  document.getElementById('gas-form-title').textContent='New Gas';
   document.getElementById('gas-form-ref').textContent='';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
@@ -4337,7 +4337,7 @@ async function loadGasForm(id){
   const{data:r,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
   hideOverlay();if(error){toast('Error loading','error');return;}
   editingGasId=id;
-  document.getElementById('gas-form-title').textContent=r.ref_number?`View — ${r.ref_number}`:'View CP12';
+  document.getElementById('gas-form-title').textContent=r.ref_number?`View — ${r.ref_number}`:'View Gas';
   document.getElementById('gas-form-ref').textContent=r.ref_number||'Draft';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
@@ -4852,7 +4852,7 @@ async function downloadCP12PDF(btn){
   try{
     const doc=await _buildCP12PdfFromHTML(false);
     const ref=cp12Field('cert_ref')||'DRAFT';
-    const filename=`CP12_${ref.replace(/[^\w-]/g,'_')}.pdf`;
+    const filename=`Gas_${ref.replace(/[^\w-]/g,'_')}.pdf`;
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(isIOS)window.open(URL.createObjectURL(new Blob([doc.output('arraybuffer')],{type:'application/pdf'})),'_blank'),toast('PDF ready — tap Share → Save to Files','info',7000);
     else doc.save(filename),toast('PDF downloaded ✓','success');
@@ -5031,7 +5031,7 @@ async function completeGas(){
   document.getElementById('btn-gas-pdf').hidden=false;
   document.getElementById('btn-gas-email').hidden=false;
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
-  toast(`CP12 issued: ${refNum}`,'success',5000);
+  toast(`Gas cert issued: ${refNum}`,'success',5000);
   _setGasViewMode(true);
   _dirCerts=null;
   _autoSaveDirAfterCert('gas',getGasFormData()).catch(()=>{});
@@ -5368,7 +5368,7 @@ function filterGasList(){
   renderGasList(list);
 }
 async function deleteGas(id){
-  confirm2('Delete CP12','This will permanently delete this certificate.',async()=>{
+  confirm2('Delete Gas Cert','This will permanently delete this certificate.',async()=>{
     await sb.from('gas_certs').delete().eq('id',id);
     toast('Deleted','warn');loadGasHistory();
   });
@@ -5406,7 +5406,7 @@ async function emailCP12FromList(id){
   const bcc=getSetting('email_bcc','');
   const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
   const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
-  const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
   // loadGasForm hid the overlay — re-show progress before rendering
   showEmailProgress(_steps,1);
@@ -5488,7 +5488,7 @@ async function emailGas(autoTriggered=false){
   if(!toEmail){if(!autoTriggered)toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
   const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
-  const pdfName=`CP12_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
+  const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
   if(autoTriggered){
     showOverlay('Sending email…');
@@ -6149,15 +6149,15 @@ function _propCompliance(prop){
   const pat=_dirCerts.pat.filter(p=>{const pa=_dn(p.property_address||'');return(pc&&pa.includes(pc))||(a1&&pa.includes(a1));});
   const completed=gas.filter(c=>c.status==='completed').sort((a,b)=>new Date(b.cert_date||0)-new Date(a.cert_date||0));
   const latest=completed[0];
-  let status='none',expText='No CP12 found',expDate=null;
+  let status='none',expText='No Gas cert',expDate=null;
   if(latest){
     expDate=latest.next_check_date?new Date(latest.next_check_date):null;
     if(expDate){
       const days=Math.floor((expDate-new Date())/86400000);
-      if(days<0){status='expired';expText='CP12 expired '+expDate.toLocaleDateString('en-GB');}
+      if(days<0){status='expired';expText='Gas expired '+expDate.toLocaleDateString('en-GB');}
       else if(days<=60){status='expiring';expText='Expires '+expDate.toLocaleDateString('en-GB')+' ('+days+'d)';}
       else{status='valid';expText='Valid to '+expDate.toLocaleDateString('en-GB');}
-    }else{status='valid';expText='CP12 issued '+new Date(latest.cert_date||'').toLocaleDateString('en-GB');}
+    }else{status='valid';expText='Gas issued '+new Date(latest.cert_date||'').toLocaleDateString('en-GB');}
   }
   const days=expDate?Math.floor((expDate-new Date())/86400000):null;
   return{gas,pat,completed,latest,status,expText,days};
@@ -6239,14 +6239,14 @@ function _dirCard(type,r,q){
     cardStyle=`border-left:4px solid ${borderColor};border-radius:2px 10px 10px 2px`;
     if(c){
       const gasIcon={valid:'✓',expiring:'⚠',expired:'✕',none:'—'}[c.status]||'—';
-      const gasLabel='CP12 · '+c.expText+(c.status==='valid'&&days!==null?' · '+days+'d':'');
+      const gasLabel='Gas · '+c.expText+(c.status==='valid'&&days!==null?' · '+days+'d':'');
       pills+=_cpill(c.status,gasIcon,gasLabel);
       const latestPat=[...c.pat].filter(p=>p.status==='completed').sort((a,b)=>new Date(b.test_date||0)-new Date(a.test_date||0))[0];
       if(latestPat&&latestPat.test_date){const pd=new Date(latestPat.test_date).toLocaleDateString('en-GB');pills+=_cpill('info','📋','PAT · Tested '+pd);}
       else pills+=_cpill('none','📋','PAT · None');
       const ll=r.landlord_id?(_dir.landlords||[]).find(l=>l.id===r.landlord_id):null;
       if(ll)footer+=`<span>👤 ${ll.landlord_name||ll.company_name||'Landlord'}</span>`;
-      if(c.gas.length)footer+=`<span>📄 ${c.gas.length} CP12</span>`;
+      if(c.gas.length)footer+=`<span>📄 ${c.gas.length} Gas</span>`;
     }
     extraBtns=`<button class="dir-new-btn" onclick="showNewCertDD(this,'${r.id}')">+ New <span style="font-size:9px;opacity:.8">▾</span></button>`;
   } else if(type==='landlords'){
@@ -6256,7 +6256,7 @@ function _dirCard(type,r,q){
     if(c.expiring)pills+=_cpill('expiring','⚠',c.expiring+' expiring');
     if(c.expired)pills+=_cpill('expired','✕',c.expired+' expired');
     if(c.missing)pills+=_cpill('none','—',c.missing+' no cert');
-    if(c.totalGas||c.totalPat)footer+=`<span>${c.totalGas} CP12 · ${c.totalPat} PAT</span>`;
+    if(c.totalGas||c.totalPat)footer+=`<span>${c.totalGas} Gas · ${c.totalPat} PAT</span>`;
     if(r.email)footer+=`<span>${r.email}</span>`;
     if(r.phone)footer+=`<span>${r.phone}</span>`;
   } else if(type==='agents'){
