@@ -5404,8 +5404,7 @@ async function emailCP12FromList(id){
   // Load the form (navigates to gas-new) so buildCP12PdfBase64 can render it
   await loadGasForm(id);
   const bcc=getSetting('email_bcc','');
-  const _fl1=(r.landlord_address||'').split('\n')[0].trim();
-  const toName=(r.sig_received_name||(!/^\d/.test(_fl1)?_fl1:'')).trim();
+  const toName=(r.sig_received_name||'').trim();
   const subject=`Gas Safety Certificate — ${r.ref_number||r.install_address||''}`;
   const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
@@ -5441,8 +5440,9 @@ function _buildCP12EmailHtml(r){
   const navy=getSetting('gas_hdr_color','#1e3a5f');
   const gasSafe=r.gas_safe_no||getSetting('gas_safe_no','');
   const _llFirst=(r.landlord_address||'').split('\n')[0].trim();
-  const _llIsName=_llFirst&&!/^\d/.test(_llFirst);
-  const toName=esc((r.sig_received_name||(_llIsName?_llFirst:'')).trim());
+  const _addrRx=/^(flat\b|apt\b|apartment\b|unit\b|suite\b|room\b|block\b|ground\s+floor|first\s+floor|second\s+floor|top\s+floor|basement|\d)/i;
+  const _llIsName=_llFirst&&!_addrRx.test(_llFirst);
+  const toName=esc((r.sig_received_name||'').trim());
   const contactLine=[coPhone?'&#128222; '+esc(coPhone):'',coEmail?'&#9993; '+esc(coEmail):''].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
   const landlordRow=_llIsName?`<tr><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;width:110px;vertical-align:top">Landlord</td><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right">${esc(_llFirst)}</td></tr>`:'';
   const _gcalDate=(r.next_check_date||'').replace(/-/g,'');
@@ -5491,8 +5491,7 @@ async function emailGas(autoTriggered=false){
   if(!r){if(!autoTriggered)toast('Not found','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
   if(!toEmail){if(!autoTriggered)toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
-  const _fl2=(r.landlord_address||'').split('\n')[0].trim();
-  const toName=(r.sig_received_name||(!/^\d/.test(_fl2)?_fl2:'')).trim();
+  const toName=(r.sig_received_name||'').trim();
   const subject=`Gas Safety Certificate — ${r.ref_number||r.install_address||''}`;
   const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
