@@ -2744,10 +2744,12 @@ function switchSettingsTab(tab){
   if(tab==='ref'){updateRefPreview();loadRefStats();}
 }
 function updateRefPreview(){
-  const base=(document.getElementById('s-ref-base')||{value:'OHM655'}).value||'OHM655';
+  const rawBase=(document.getElementById('s-ref-base')||{value:'OHM210'}).value||'OHM210';
+  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
+  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
   const yy=String(new Date().getFullYear()).slice(-2);
   const el=document.getElementById('ref-preview-line');
-  if(el)el.textContent=`${base}${yy}001 / 1 MARINA POINT`;
+  if(el)el.textContent=`${prefix}${startN}${yy}44 / 1 MARINA POINT`;
 }
 async function loadRefStats(){
   if(!sb||!currentUser)return;
@@ -2856,26 +2858,31 @@ function _refAddrPart(addr){
   return tokens.slice(0,doorIdx+3).join(' ');// business name + door + 2 words
 }
 function buildCertRef(fullAddress,postcode){
-  const base=getSetting('ref_base','OHM');
+  const rawBase=getSetting('ref_base','OHM210');
+  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
+  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
   const yy=String(new Date().getFullYear()).slice(-2);
-  const month=String(new Date().getMonth()+1);
   const pc=postcode||_extractPC(fullAddress);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(fullAddress);
-  return`${base}${yy}${month}${score} / ${addrPart}`;
+  return`${prefix}${startN}${yy}${score} / ${addrPart}`;
 }
 async function buildCertRefSeq(addr,postcode){
-  const base=getSetting('ref_base','OHM');
+  const rawBase=getSetting('ref_base','OHM210');
+  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
+  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
   const yy=String(new Date().getFullYear()).slice(-2);
+  const pc=postcode||_extractPC(addr);
+  const score=_pcScore(pc);
   const addrPart=_refAddrPart(addr||'');
   try{
-    const{count}=await sb.from('gas_certs').select('*',{count:'exact',head:true});
-    const seq=String((count||0)+1).padStart(3,'0');
-    return`${base}${yy}${seq} / ${addrPart}`;
+    const{data}=await sb.from('gas_certs').select('base_ref').not('base_ref','is',null);
+    const nums=(data||[]).map(r=>parseInt((r.base_ref||'').replace(/[^0-9]/g,''))||0);
+    const maxN=Math.max(startN-1,...nums);
+    const nextN=maxN+1;
+    return`${prefix}${nextN}${yy}${score} / ${addrPart}`;
   }catch(e){
-    const n=new Date();
-    const ts=String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0');
-    return`${base}${yy}${ts} / ${addrPart}`;
+    return`${prefix}${startN}${yy}${score} / ${addrPart}`;
   }
 }
 function updatePatRef(){
