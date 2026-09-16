@@ -1657,10 +1657,10 @@ a{color:var(--accent);text-decoration:none}
             <div id="ref-preview-line" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.02em;color:var(--text)">OHM6559/1 MARINA POINT</div>
             <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7">
               <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[BASE]</span>
-              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[MONTH]</span>
-              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[POSTCODE SCORE]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[YY]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[SEQ]</span>
               / <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[DOOR + STREET]</span><br>
-              <span style="margin-top:6px;display:inline-block">Example: Base <strong>OHM655</strong> + Month <strong>9</strong> + IG1 1JP score <strong>44</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM655944/1 MARINA POINT</strong></span>
+              <span style="margin-top:6px;display:inline-block">Example: Base <strong>OHM655</strong> + Year <strong>26</strong> + Sequence <strong>001</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM65526001 / 1 MARINA POINT</strong></span>
             </div>
           </div>
         </div>
@@ -2745,9 +2745,9 @@ function switchSettingsTab(tab){
 }
 function updateRefPreview(){
   const base=(document.getElementById('s-ref-base')||{value:'OHM655'}).value||'OHM655';
-  const month=String(new Date().getMonth()+1);
+  const yy=String(new Date().getFullYear()).slice(-2);
   const el=document.getElementById('ref-preview-line');
-  if(el)el.textContent=`${base}${month}44/1 MARINA POINT`;
+  if(el)el.textContent=`${base}${yy}001 / 1 MARINA POINT`;
 }
 async function loadRefStats(){
   if(!sb||!currentUser)return;
@@ -2857,11 +2857,26 @@ function _refAddrPart(addr){
 }
 function buildCertRef(fullAddress,postcode){
   const base=getSetting('ref_base','OHM');
+  const yy=String(new Date().getFullYear()).slice(-2);
   const month=String(new Date().getMonth()+1);
   const pc=postcode||_extractPC(fullAddress);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(fullAddress);
-  return`${base}${month}${score} / ${addrPart}`;
+  return`${base}${yy}${month}${score} / ${addrPart}`;
+}
+async function buildCertRefSeq(addr,postcode){
+  const base=getSetting('ref_base','OHM');
+  const yy=String(new Date().getFullYear()).slice(-2);
+  const addrPart=_refAddrPart(addr||'');
+  try{
+    const{count}=await sb.from('gas_certs').select('*',{count:'exact',head:true});
+    const seq=String((count||0)+1).padStart(3,'0');
+    return`${base}${yy}${seq} / ${addrPart}`;
+  }catch(e){
+    const n=new Date();
+    const ts=String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0');
+    return`${base}${yy}${ts} / ${addrPart}`;
+  }
 }
 function updatePatRef(){
   const el=patGe('pat-ref');
@@ -5022,7 +5037,7 @@ async function completeGas(){
   const saved=await saveGas();
   if(!saved){return;} // saveGas already showed the error
   showOverlay('Issuing certificate…');
-  const refNum=buildCertRef((d.install_address||'')+(d.install_postcode?' '+d.install_postcode:''),d.install_postcode);
+  const refNum=await buildCertRefSeq(d.install_address||'',d.install_postcode);
   const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingGasId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
