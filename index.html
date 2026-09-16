@@ -638,14 +638,14 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .p2-head-cell:last-child{border-right:0}
 .cp12-form-wrap .p2-head-cell.important{background:rgba(255,255,255,.08)}
 .cp12-form-wrap .appliance-cards{flex:1 1 auto;min-height:0;display:grid;grid-template-rows:repeat(5,auto);align-content:start;gap:30px}
-.cp12-form-wrap .appliance-card{display:grid;grid-template-rows:36px auto;row-gap:0}
+.cp12-form-wrap .appliance-card{display:grid;grid-template-rows:auto auto;row-gap:0}
 .cp12-form-wrap .appliance-main-shell{min-height:0;background:#fff;border:2px solid #1e3a5f;border-radius:6px 6px 0 0;border-bottom:2px solid #1e3a5f;overflow:hidden}
 .cp12-form-wrap .appliance-co-row{display:inline-flex;align-items:center;gap:10px;background:#fffbeb;border:2px solid #1e3a5f;border-top:none;border-radius:0 0 6px 6px;padding:4px 8px;flex-wrap:wrap;width:fit-content}
 .cp12-form-wrap .appliance-co-label{background:#f59e0b;color:#fff;padding:2px 7px;border-radius:3px;font-size:6pt;font-weight:800;letter-spacing:.5px;white-space:nowrap;text-transform:uppercase}
 .cp12-form-wrap .appliance-co-item{display:flex;align-items:center;gap:5px;font-size:6.5pt;font-weight:700;color:#1e3a5f;white-space:nowrap}
 .cp12-form-wrap .appliance-co-item .choice-group{display:inline-flex}
 .cp12-form-wrap .appliance-co-item .choice-cycle{font-size:6.5pt;padding:2px 7px;min-width:32px;border-radius:3px}
-.cp12-form-wrap .appliance-value-row{height:100%;min-height:0}
+.cp12-form-wrap .appliance-value-row{height:auto;min-height:0}
 .cp12-form-wrap .appliance-value-cell{min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border-right:1px solid #1e3a5f;overflow:hidden}
 .cp12-form-wrap .appliance-value-cell:last-child{border-right:0}
 .cp12-form-wrap .appliance-value-cell.number-cell{background:#f8fafc}
@@ -4122,7 +4122,7 @@ function cp12Field(f){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return'';
   return el.tagName==='BUTTON'?el.dataset.current||'':el.value||'';
 }
-function _cp12ResizeTA(el){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+function _cp12ResizeTA(el){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';const _maxH=parseFloat(getComputedStyle(el).maxHeight)||9999;const _h=Math.min(el.scrollHeight,_maxH);el.style.height=_h+'px';const _cell=el.closest('.appliance-value-cell');if(_cell)_cell.style.minHeight=_h+'px';}
 function setCP12Field(f,v){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
   if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
