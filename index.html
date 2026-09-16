@@ -5404,8 +5404,9 @@ async function emailCP12FromList(id){
   // Load the form (navigates to gas-new) so buildCP12PdfBase64 can render it
   await loadGasForm(id);
   const bcc=getSetting('email_bcc','');
-  const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
-  const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
+  const _fl1=(r.landlord_address||'').split('\n')[0].trim();
+  const toName=(r.sig_received_name||(!/^\d/.test(_fl1)?_fl1:'')).trim();
+  const subject=`Gas Safety Certificate — ${r.ref_number||r.install_address||''}`;
   const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
   // loadGasForm hid the overlay — re-show progress before rendering
@@ -5490,8 +5491,9 @@ async function emailGas(autoTriggered=false){
   if(!r){if(!autoTriggered)toast('Not found','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
   if(!toEmail){if(!autoTriggered)toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
-  const toName=(r.sig_received_name||r.landlord_address?.split('\n')[0]||'').trim();
-  const subject=`Gas Safety Certificate (CP12) — ${r.ref_number||r.install_address||''}`;
+  const _fl2=(r.landlord_address||'').split('\n')[0].trim();
+  const toName=(r.sig_received_name||(!/^\d/.test(_fl2)?_fl2:'')).trim();
+  const subject=`Gas Safety Certificate — ${r.ref_number||r.install_address||''}`;
   const pdfName=`Gas_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
   if(autoTriggered){
