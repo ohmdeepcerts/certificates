@@ -943,9 +943,6 @@ a{color:var(--accent);text-decoration:none}
           <button class="btn btn-secondary btn-sm" id="btn-pat-pdf" onclick="generatePATPDF()">⬇ PDF</button>
           <button class="btn btn-secondary btn-sm" id="btn-pat-print" onclick="printPATCertificate()">🖨 Print</button>
           <button class="btn btn-secondary btn-sm" id="btn-pat-email" onclick="emailPAT()" hidden>✉ Email</button>
-          <label id="lbl-pat-auto-email" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface)">
-            <input type="checkbox" id="chk-pat-auto-email" style="accent-color:var(--accent)"> ⚡ Auto Email
-          </label>
           <button class="btn btn-success btn-sm" id="btn-pat-complete" onclick="completePAT()">✓ Complete</button>
           <button class="btn btn-primary btn-sm" id="btn-pat-save" onclick="savePAT()">💾 Draft</button>
         </div>
@@ -3296,28 +3293,7 @@ async function completePAT(){
   toast(`Certificate issued: ${refNum}`,'success',5000);
   _dirCerts=null;
   _autoSaveDirAfterCert('pat',getPATFormData()).catch(()=>{});
-  // Auto-email: generate PDF and upload to storage
-  const autoChk=document.getElementById('chk-pat-auto-email');
-  if(autoChk&&autoChk.checked){
-    try{
-      const currentId=editingPATId;
-      const{data:certRow}=await sb.from('pat_reports').select('*').eq('id',currentId).single();
-      if(certRow){
-        const b64=await generatePATPDFFromData(certRow,{returnB64:true});
-        if(b64){
-          const binary=atob(b64);const u8=new Uint8Array(binary.length);
-          for(let i=0;i<binary.length;i++)u8[i]=binary.charCodeAt(i);
-          const blob=new Blob([u8],{type:'application/pdf'});
-          const path=`pat/${currentId}.pdf`;
-          const{error:upErr}=await sb.storage.from('cert-pdfs').upload(path,blob,{upsert:true,contentType:'application/pdf'});
-          if(!upErr){
-            await sb.from('pat_reports').update({auto_email:true,pdf_storage_path:path}).eq('id',currentId);
-            toast('⚡ Auto-email queued — will send in background','success',4000);
-          }else{toast('Auto-email storage error: '+upErr.message,'error');}
-        }
-      }
-    }catch(e){toast('Auto-email setup error','error');}
-  }
+  emailPAT();
 }
 
 // ========== PAT - HISTORY ==========
