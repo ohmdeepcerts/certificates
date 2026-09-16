@@ -3887,67 +3887,21 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
 // ========== PAT - EMAIL ==========
 async function emailPAT(autoTriggered=false){
   if(!editingPATId){if(!autoTriggered)toast('No report loaded','warn');return;}
-  const{data:r}=await sb.from('pat_reports').select('*').eq('id',editingPATId).single();
-  if(!r){if(!autoTriggered)toast('Report not found','error');return;}
-  const toEmail=(r.email_address||'').trim()||getSetting('email_fallback','');
-  if(!toEmail){if(!autoTriggered)toast('No email on this report','warn');return;}
-  const method=getSetting('email_method','script');
-  if(method==='script'){
-    const scriptUrl=getSetting('email_script_url');
-    if(!scriptUrl){toast('Email not configured — set Email Method in Settings','error');return;}
-    showOverlay('Sending email…');
-    try{
-      await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:toEmail,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
-      toast('Email sent ✓','success');
-      await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
-    }catch(e){toast('Email failed','error');}
-    finally{hideOverlay();}
-  } else {
-    try{
-      const b64=await generatePATPDFFromData(r,{returnB64:true});
-      const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-      const co=getSetting('pat_co_name','OHM Electrical Engineering Ltd');
-      const html=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-        <div style="background:#1a3a6b;color:#fff;padding:20px 24px;border-radius:4px 4px 0 0">
-          <h2 style="margin:0">${co}</h2>
-          <p style="margin:4px 0 0;font-size:13px">PAT Test Certificate</p>
-        </div>
-        <div style="padding:24px;background:#fff;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 4px 4px">
-          <p>Dear Customer,</p>
-          <p>Please find attached your PAT Test Certificate.</p>
-          <table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px">
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold;width:45%">Certificate Ref</td><td style="padding:8px 12px;font-weight:700;color:#b45309">${r.ref_number||'—'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold">Property Address</td><td style="padding:8px 12px">${r.property_address||'—'}</td></tr>
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Test Date</td><td style="padding:8px 12px">${patFd(r.test_date)||'—'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold">Engineer</td><td style="padding:8px 12px">${r.engineer||'—'}</td></tr>
-            <tr style="background:#f5f7fa"><td style="padding:8px 12px;font-weight:bold">Next Test Due</td><td style="padding:8px 12px;font-weight:bold;color:#b45309">${r.next_test_date||'—'}</td></tr>
-          </table>
-          <p style="font-size:13px;color:#555">Please keep this certificate in a safe place. Contact us if you have any questions.</p>
-          <p style="margin-top:24px">Kind regards,<br><strong>${co}</strong></p>
-        </div>
-        <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('pat_co_phone','')} &nbsp;·&nbsp; ${getSetting('pat_co_email','')} &nbsp;·&nbsp; ${getSetting('pat_co_address','')}</p>
-      </div>`;
-      showOverlay('Sending email…');
-      await sendBrevoEmail(toEmail,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,getSetting('email_bcc',''));
-      toast('Email sent ✓','success');
-      await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
-    }catch(e){toast('Email failed: '+e.message,'error');}
-    finally{hideOverlay();}
-  }
+  await emailPATFromList(editingPATId,autoTriggered);
 }
 
 // ========== PAT - EMAIL FROM LIST ==========
-async function emailPATFromList(id){
+async function emailPATFromList(id,autoTriggered=false){
   const _emailSteps=[{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}];
-  showEmailProgress(_emailSteps,0);
+  if(!autoTriggered)showEmailProgress(_emailSteps,0); else showOverlay('Sending email…');
   let r;
   try{
     const{data,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
-    if(error||!data){toast('Could not load certificate','error');hideOverlay();return;}
+    if(error||!data){if(!autoTriggered)toast('Could not load certificate','error');hideOverlay();return;}
     r=data;
-  }catch(e){toast('Error: '+e.message,'error');hideOverlay();return;}
+  }catch(e){if(!autoTriggered)toast('Error: '+e.message,'error');hideOverlay();return;}
   const toEmail=(r.email_address||'').trim()||getSetting('email_fallback','');
-  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
+  if(!toEmail){if(!autoTriggered)toast('No email address on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
   const bcc=getSetting('email_bcc','');
   const co=getSetting('pat_co_name',getSetting('company_name','OHM Electrical Engineering Ltd'));
   const coPhone=getSetting('pat_co_phone','');
@@ -4011,13 +3965,12 @@ async function emailPATFromList(id){
 </td></tr></table></td></tr></table>
 </body></html>`;
   try{
-    showEmailProgress(_emailSteps,1);
+    if(!autoTriggered)showEmailProgress(_emailSteps,1);
     const b64=await generatePATPDFFromData(r,{returnB64:true});
     const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
-    showEmailProgress(_emailSteps,2);
+    if(!autoTriggered)showEmailProgress(_emailSteps,2);
     await sendBrevoEmail(toEmail,client,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,bcc);
-    finishEmailProgress();
-    await new Promise(res=>setTimeout(res,600));
+    if(!autoTriggered){finishEmailProgress();await new Promise(res=>setTimeout(res,600));}
     toast('Email sent to '+toEmail+(bcc?' (BCC: '+bcc+')':''),'success');
     await logAppEvent('EMAILED','pat',r.id,r.ref_number);
   }catch(e){toast('Email failed: '+e.message,'error');}
