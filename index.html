@@ -3293,7 +3293,7 @@ async function completePAT(){
   toast(`Certificate issued: ${refNum}`,'success',5000);
   _dirCerts=null;
   _autoSaveDirAfterCert('pat',getPATFormData()).catch(()=>{});
-  emailPAT();
+  emailPAT(true);
 }
 
 // ========== PAT - HISTORY ==========
@@ -3888,19 +3888,20 @@ async function sendBrevoEmail(to,toName,subject,htmlContent,pdfBase64,pdfFilenam
 }
 
 // ========== PAT - EMAIL ==========
-async function emailPAT(){
-  if(!editingPATId){toast('No report loaded','warn');return;}
+async function emailPAT(autoTriggered=false){
+  if(!editingPATId){if(!autoTriggered)toast('No report loaded','warn');return;}
   const{data:r}=await sb.from('pat_reports').select('*').eq('id',editingPATId).single();
-  if(!r){toast('Report not found','error');return;}
-  if(!r.email_address){toast('No email on this report','warn');return;}
+  if(!r){if(!autoTriggered)toast('Report not found','error');return;}
+  const toEmail=(r.email_address||'').trim()||getSetting('email_fallback','');
+  if(!toEmail){if(!autoTriggered)toast('No email on this report','warn');return;}
   const method=getSetting('email_method','script');
   if(method==='script'){
     const scriptUrl=getSetting('email_script_url');
-    if(!scriptUrl){toast('Google Apps Script URL not set in Settings','error');return;}
+    if(!scriptUrl){toast('Email not configured — set Email Method in Settings','error');return;}
     showOverlay('Sending email…');
     try{
-      await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:r.email_address,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
-      toast('Email sent (delivery unconfirmed)','info');
+      await fetch(scriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:toEmail,subject:`PAT Test Certificate — ${r.ref_number||''}`,ref:r.ref_number,address:r.property_address,date:r.test_date,type:'pat'})});
+      toast('Email sent ✓','success');
       await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
     }catch(e){toast('Email failed','error');}
     finally{hideOverlay();}
@@ -3930,7 +3931,7 @@ async function emailPAT(){
         <p style="font-size:11px;color:#999;text-align:center;margin-top:12px">${getSetting('pat_co_phone','')} &nbsp;·&nbsp; ${getSetting('pat_co_email','')} &nbsp;·&nbsp; ${getSetting('pat_co_address','')}</p>
       </div>`;
       showOverlay('Sending email…');
-      await sendBrevoEmail(r.email_address,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,getSetting('email_bcc',''));
+      await sendBrevoEmail(toEmail,r.client_name,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,getSetting('email_bcc',''));
       toast('Email sent ✓','success');
       await logAppEvent('EMAILED','pat',editingPATId,r.ref_number);
     }catch(e){toast('Email failed: '+e.message,'error');}
