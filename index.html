@@ -1538,6 +1538,20 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
         <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — PAT</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. PAT)</small></label>
+              <input type="text" id="s-pat-ref-prefix" placeholder="PAT" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-pat-ref-start" placeholder="1" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">PAT certs will be: <strong id="pat-ref-eg" style="color:var(--text);font-family:monospace">PAT12644 / 1 MARINA POINT</strong></div>
+        </div>
+        <div class="form-section">
           <div class="form-section-title">Branding — Logos &amp; Signature</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:16px">
             <div>
@@ -1636,22 +1650,26 @@ a{color:var(--accent);text-decoration:none}
             </div>
           </div>
         </div>
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — Gas CP12</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. OHM)</small></label>
+              <input type="text" id="s-gas-ref-prefix" placeholder="OHM" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-gas-ref-start" placeholder="210" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Gas certs will be: <strong id="gas-ref-eg" style="color:var(--text);font-family:monospace">OHM2102636 / 5 EXAMPLE RD</strong></div>
+        </div>
       </div>
       <div class="settings-pane" id="pane-ref">
         <div class="form-section">
           <div class="form-section-title">🔢 Reference Number System</div>
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
-            One reference system for all certificate types — PAT and Gas CP12 share the same base and format.
-          </div>
-          <div class="field-grid" style="grid-template-columns:1fr 1fr">
-            <div class="field-group">
-              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. OHM)</small></label>
-              <input type="text" id="s-ref-prefix" placeholder="OHM" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase();updateRefPreview()">
-            </div>
-            <div class="field-group">
-              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first cert number)</small></label>
-              <input type="number" id="s-ref-start" placeholder="210" min="1" max="99999" oninput="updateRefPreview()">
-            </div>
+            Each certificate type has its own prefix and serial series — configure in the <strong>PAT</strong> and <strong>Gas CP12</strong> settings tabs.
           </div>
         </div>
         <div class="form-section">
@@ -2088,7 +2106,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
 let _settingsDirty = false, _pendingNav = null, _inPasswordRecovery = false;
 let editingPATId = null, editingGasId = null, _gasCertLoading = false;
-let _cachedNextSerial = null;
+let _cachedNextGasSerial = null, _cachedNextPATSerial = null;
 let patReports = [], gasReports = [], appSettings = {};
 
 // ========== AUTH ==========
@@ -2661,8 +2679,10 @@ function loadSettingsUI(){
   document.getElementById('s-fallback-email').value=getSetting('email_fallback','');
   document.getElementById('s-bcc-email').value=getSetting('email_bcc','');
   // PAT
-  document.getElementById('s-ref-prefix').value=getSetting('ref_prefix','OHM');
-  document.getElementById('s-ref-start').value=getSetting('ref_start','210');
+  document.getElementById('s-pat-ref-prefix').value=getSetting('pat_ref_prefix','PAT');
+  document.getElementById('s-pat-ref-start').value=getSetting('pat_ref_start','1');
+  document.getElementById('s-gas-ref-prefix').value=getSetting('gas_ref_prefix',getSetting('ref_prefix','OHM'));
+  document.getElementById('s-gas-ref-start').value=getSetting('gas_ref_start',getSetting('ref_start','210'));
   document.getElementById('s-pat-period').value=getSetting('pat_period','12');
   document.getElementById('s-pat-engineer').value=getSetting('pat_default_engineer');
   document.getElementById('s-pat-instrument').value=getSetting('pat_default_instrument','');
@@ -2716,8 +2736,10 @@ async function saveSettings(){
     ['email_from_name',document.getElementById('s-from-name').value],
     ['email_fallback',document.getElementById('s-fallback-email').value],
     ['email_bcc',document.getElementById('s-bcc-email').value],
-    ['ref_prefix',(document.getElementById('s-ref-prefix').value||'OHM').toUpperCase()],
-    ['ref_start',document.getElementById('s-ref-start').value||'210'],
+    ['pat_ref_prefix',(document.getElementById('s-pat-ref-prefix').value||'PAT').toUpperCase()],
+    ['pat_ref_start',document.getElementById('s-pat-ref-start').value||'1'],
+    ['gas_ref_prefix',(document.getElementById('s-gas-ref-prefix').value||'OHM').toUpperCase()],
+    ['gas_ref_start',document.getElementById('s-gas-ref-start').value||'210'],
     ['pat_period',document.getElementById('s-pat-period').value],
     ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
     ['pat_default_instrument',document.getElementById('s-pat-instrument').value],
@@ -2752,11 +2774,15 @@ function switchSettingsTab(tab){
   if(tab==='ref'){updateRefPreview();loadRefStats();}
 }
 function updateRefPreview(){
-  const prefix=((document.getElementById('s-ref-prefix')||{}).value||'OHM').toUpperCase();
-  const startN=parseInt((document.getElementById('s-ref-start')||{}).value)||210;
+  const gPrefix=((document.getElementById('s-gas-ref-prefix')||{}).value||'OHM').toUpperCase();
+  const gStart=parseInt((document.getElementById('s-gas-ref-start')||{}).value)||210;
+  const pPrefix=((document.getElementById('s-pat-ref-prefix')||{}).value||'PAT').toUpperCase();
+  const pStart=parseInt((document.getElementById('s-pat-ref-start')||{}).value)||1;
   const yy=String(new Date().getFullYear()).slice(-2);
-  const el=document.getElementById('ref-preview-line');
-  if(el)el.textContent=`${prefix}${startN}${yy}44 / 1 MARINA POINT`;
+  const gEl=document.getElementById('gas-ref-eg');
+  const pEl=document.getElementById('pat-ref-eg');
+  if(gEl)gEl.textContent=`${gPrefix}${gStart}${yy}36 / 5 EXAMPLE RD`;
+  if(pEl)pEl.textContent=`${pPrefix}${pStart}${yy}44 / 1 MARINA POINT`;
 }
 async function loadRefStats(){
   if(!sb||!currentUser)return;
@@ -2864,28 +2890,36 @@ function _refAddrPart(addr){
   if(doorIdx===-1)return tokens.slice(0,3).join(' ');
   return tokens.slice(0,doorIdx+3).join(' ');// business name + door + 2 words
 }
-function buildCertRef(fullAddress,postcode){
-  const prefix=getSetting('ref_prefix','OHM')||'OHM';
-  const startN=parseInt(getSetting('ref_start','210'))||210;
+function _refSettings(type){
+  if(type==='pat'){
+    return{
+      prefix:(getSetting('pat_ref_prefix','PAT')||'PAT').toUpperCase(),
+      startN:parseInt(getSetting('pat_ref_start','1'))||1
+    };
+  }
+  return{
+    prefix:(getSetting('gas_ref_prefix',getSetting('ref_prefix','OHM'))||'OHM').toUpperCase(),
+    startN:parseInt(getSetting('gas_ref_start',getSetting('ref_start','210')))||210
+  };
+}
+function buildCertRef(fullAddress,postcode,type='gas'){
+  const{prefix,startN}=_refSettings(type);
   const yy=String(new Date().getFullYear()).slice(-2);
   const pc=postcode||_extractPC(fullAddress);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(fullAddress);
   return`${prefix}${startN}${yy}${score} / ${addrPart}`;
 }
-async function buildCertRefSeq(addr,postcode){
-  const prefix=getSetting('ref_prefix','OHM')||'OHM';
-  const startN=parseInt(getSetting('ref_start','210'))||210;
+async function buildCertRefSeq(addr,postcode,type='gas'){
+  const{prefix,startN}=_refSettings(type);
   const yy=String(new Date().getFullYear()).slice(-2);
   const pc=postcode||_extractPC(addr);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(addr||'');
+  const table=type==='pat'?'pat_reports':'gas_certs';
   try{
-    const[{data:gd},{data:pd}]=await Promise.all([
-      sb.from('gas_certs').select('base_ref').not('base_ref','is',null),
-      sb.from('pat_reports').select('base_ref').not('base_ref','is',null)
-    ]);
-    const allNums=[...(gd||[]),...(pd||[])].map(r=>{
+    const{data}=await sb.from(table).select('base_ref').not('base_ref','is',null);
+    const allNums=(data||[]).map(r=>{
       const m=(r.base_ref||'').trim().match(/^[A-Za-z]+(\d+)$/);
       if(!m)return 0;const n=parseInt(m[1]);return n<=9999?n:0;
     });
@@ -2902,17 +2936,16 @@ function updatePatRef(){
   const addr=(patGv('pat-addr')||'').trim();
   if(!addr)return;
   const pc=(patGv('pat-postcode')||'').trim();
-  const prefix=getSetting('ref_prefix','OHM')||'OHM';
-  const startN=parseInt(getSetting('ref_start','210'))||210;
+  const{prefix,startN}=_refSettings('pat');
   const yy=String(new Date().getFullYear()).slice(-2);
   const score=_pcScore(pc||_extractPC(addr));
   const addrPart=_refAddrPart(addr);
-  const serial=_cachedNextSerial||startN;
+  const serial=_cachedNextPATSerial||startN;
   el.value=`${prefix}${serial}${yy}${score} / ${addrPart}`;
-  if(!_cachedNextSerial&&!editingPATId){
-    buildCertRefSeq(addr,pc).then(({baseRef})=>{
+  if(!_cachedNextPATSerial&&!editingPATId){
+    buildCertRefSeq(addr,pc,'pat').then(({baseRef})=>{
       const n=parseInt((baseRef||'').replace(/[^0-9]/g,''))||startN;
-      _cachedNextSerial=n;
+      _cachedNextPATSerial=n;
       updatePatRef();
     }).catch(()=>{});
   }
@@ -3085,7 +3118,7 @@ function getPATFormData(){
 function startNewPAT(){editingPATId=null;_offlineQueueId=null;navigate('pat-new');}
 async function newPAT(){
   editingPATId=null;_offlineQueueId=null;patApps=[];
-  _cachedNextSerial=null;
+  _cachedNextPATSerial=null;
   patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
   patGe('pat-form-ref').textContent='Set dates then click Apply to All · Ctrl+S = Draft';
@@ -3300,7 +3333,7 @@ async function completePAT(){
   if(!(patGv('pat-postcode')||'').trim()){toast('Postcode is required — enter it in the Postcode field','error');patGe('pat-postcode').focus();return;}
   // Generate ref from address at issue time
   if(patGe('pat-ref').dataset.manual!=='true'){
-    const{ref:r,baseRef:b}=await buildCertRefSeq(d.property_address,(patGv('pat-postcode')||'').trim());
+    const{ref:r,baseRef:b}=await buildCertRefSeq(d.property_address,(patGv('pat-postcode')||'').trim(),'pat');
     patGe('pat-ref').value=r;patCurrentBaseRef=b;
   }
   await savePAT();
@@ -4343,7 +4376,7 @@ function syncSettingsToCP12Form(){
 // ========== CP12 - FORM LIFECYCLE ==========
 function newGasCert(){
   editingGasId=null;
-  _cachedNextSerial=null;
+  _cachedNextGasSerial=null;
   document.getElementById('gas-form-title').textContent='New Gas';
   document.getElementById('gas-form-ref').textContent='';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
@@ -4996,19 +5029,18 @@ function initCP12Form(){
     const addr=cp12Field('install_address');
     const pc=cp12Field('install_postcode');
     if(!addr)return;
-    const prefix=getSetting('ref_prefix','OHM')||'OHM';
-    const startN=parseInt(getSetting('ref_start','210'))||210;
+    const{prefix,startN}=_refSettings('gas');
     const yy=String(new Date().getFullYear()).slice(-2);
     const score=_pcScore(pc||_extractPC(addr));
     const addrPart=_refAddrPart(addr);
-    const serial=_cachedNextSerial||startN;
+    const serial=_cachedNextGasSerial||startN;
     const ref=`${prefix}${serial}${yy}${score} / ${addrPart}`;
     setCP12Field('cert_ref',ref);
     setCP12Field('cert_ref_p2',ref);
-    if(!_cachedNextSerial&&!editingGasId){
-      buildCertRefSeq(addr,pc).then(({baseRef})=>{
+    if(!_cachedNextGasSerial&&!editingGasId){
+      buildCertRefSeq(addr,pc,'gas').then(({baseRef})=>{
         const n=parseInt((baseRef||'').replace(/[^0-9]/g,''))||startN;
-        _cachedNextSerial=n;
+        _cachedNextGasSerial=n;
         _refreshGasRef();
       }).catch(()=>{});
     }
@@ -5083,7 +5115,7 @@ async function completeGas(){
   const saved=await saveGas();
   if(!saved){return;} // saveGas already showed the error
   showOverlay('Issuing certificate…');
-  const{ref:refNum,baseRef:certBaseRef}=await buildCertRefSeq(d.install_address||'',d.install_postcode);
+  const{ref:refNum,baseRef:certBaseRef}=await buildCertRefSeq(d.install_address||'',d.install_postcode,'gas');
   const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:certBaseRef,completed_at:new Date().toISOString()}).eq('id',editingGasId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
