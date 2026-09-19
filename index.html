@@ -2884,7 +2884,10 @@ async function buildCertRefSeq(addr,postcode){
       sb.from('gas_certs').select('base_ref').not('base_ref','is',null),
       sb.from('pat_reports').select('base_ref').not('base_ref','is',null)
     ]);
-    const allNums=[...(gd||[]),...(pd||[])].map(r=>parseInt((r.base_ref||'').replace(/[^0-9]/g,''))||0);
+    const allNums=[...(gd||[]),...(pd||[])].map(r=>{
+      const m=(r.base_ref||'').trim().match(/^[A-Za-z]+(\d+)$/);
+      if(!m)return 0;const n=parseInt(m[1]);return n<=9999?n:0;
+    });
     const maxN=Math.max(startN-1,...allNums);
     const nextN=maxN+1;
     return{ref:`${prefix}${nextN}${yy}${score} / ${addrPart}`,baseRef:`${prefix}${nextN}`};
