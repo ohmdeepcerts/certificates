@@ -2088,6 +2088,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
 let _settingsDirty = false, _pendingNav = null, _inPasswordRecovery = false;
 let editingPATId = null, editingGasId = null, _gasCertLoading = false;
+let _cachedNextSerial = null;
 let patReports = [], gasReports = [], appSettings = {};
 
 // ========== AUTH ==========
@@ -4328,6 +4329,7 @@ function syncSettingsToCP12Form(){
 // ========== CP12 - FORM LIFECYCLE ==========
 function newGasCert(){
   editingGasId=null;
+  _cachedNextSerial=null;
   document.getElementById('gas-form-title').textContent='New Gas';
   document.getElementById('gas-form-ref').textContent='';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
@@ -4980,9 +4982,22 @@ function initCP12Form(){
     const addr=cp12Field('install_address');
     const pc=cp12Field('install_postcode');
     if(!addr)return;
-    const ref=buildCertRef(addr+(pc?' '+pc:''),pc);
+    const prefix=getSetting('ref_prefix','OHM')||'OHM';
+    const startN=parseInt(getSetting('ref_start','210'))||210;
+    const yy=String(new Date().getFullYear()).slice(-2);
+    const score=_pcScore(pc||_extractPC(addr));
+    const addrPart=_refAddrPart(addr);
+    const serial=_cachedNextSerial||startN;
+    const ref=`${prefix}${serial}${yy}${score} / ${addrPart}`;
     setCP12Field('cert_ref',ref);
     setCP12Field('cert_ref_p2',ref);
+    if(!_cachedNextSerial&&!editingGasId){
+      buildCertRefSeq(addr,pc).then(({baseRef})=>{
+        const n=parseInt((baseRef||'').replace(/[^0-9]/g,''))||startN;
+        _cachedNextSerial=n;
+        _refreshGasRef();
+      }).catch(()=>{});
+    }
   }
   const _addrEl=document.querySelector('[data-field="install_address"]');
   const _pcEl=document.querySelector('[data-field="install_postcode"]');
