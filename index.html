@@ -2902,7 +2902,20 @@ function updatePatRef(){
   const addr=(patGv('pat-addr')||'').trim();
   if(!addr)return;
   const pc=(patGv('pat-postcode')||'').trim();
-  el.value=buildCertRef(addr,pc);
+  const prefix=getSetting('ref_prefix','OHM')||'OHM';
+  const startN=parseInt(getSetting('ref_start','210'))||210;
+  const yy=String(new Date().getFullYear()).slice(-2);
+  const score=_pcScore(pc||_extractPC(addr));
+  const addrPart=_refAddrPart(addr);
+  const serial=_cachedNextSerial||startN;
+  el.value=`${prefix}${serial}${yy}${score} / ${addrPart}`;
+  if(!_cachedNextSerial&&!editingPATId){
+    buildCertRefSeq(addr,pc).then(({baseRef})=>{
+      const n=parseInt((baseRef||'').replace(/[^0-9]/g,''))||startN;
+      _cachedNextSerial=n;
+      updatePatRef();
+    }).catch(()=>{});
+  }
   doPatPreview();
 }
 // ─────────────────────────────────────────────────────
@@ -3072,6 +3085,7 @@ function getPATFormData(){
 function startNewPAT(){editingPATId=null;_offlineQueueId=null;navigate('pat-new');}
 async function newPAT(){
   editingPATId=null;_offlineQueueId=null;patApps=[];
+  _cachedNextSerial=null;
   patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
   patGe('pat-form-ref').textContent='Set dates then click Apply to All · Ctrl+S = Draft';
