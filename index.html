@@ -1711,6 +1711,12 @@ a{color:var(--accent);text-decoration:none}
             <div style="color:var(--muted);font-size:12px">Opens when you switch to this tab.</div>
           </div>
         </div>
+        <div class="form-section">
+          <div class="form-section-title">🔍 Serial Integrity Check</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Scans each certificate series for missing serial numbers. Gaps occur when a certificate is voided, issued in error, or manually deleted. Record a reason for each gap so it appears in the audit log.</div>
+          <button class="btn btn-secondary btn-sm" onclick="runSerialGapCheck()" id="gap-check-btn">Run Sequence Check</button>
+          <div id="ref-gap-list" style="margin-top:12px"></div>
+        </div>
       </div>
       <div class="settings-pane" id="pane-profile">
         <div class="form-section">
@@ -2818,6 +2824,79 @@ async function loadRefStats(){
       }).join('');
     }
   }catch(e){if(note)note.textContent='Could not load counts.';}
+}
+async function runSerialGapCheck(){
+  const btn=document.getElementById('gap-check-btn');
+  const out=document.getElementById('ref-gap-list');
+  if(!out)return;
+  if(btn){btn.disabled=true;btn.textContent='Checking…';}
+  out.innerHTML='<div style="color:var(--muted);font-size:12px">Scanning all serial numbers…</div>';
+  try{
+    const[{data:gasData},{data:patData}]=await Promise.all([
+      sb.from('gas_certs').select('base_ref').not('base_ref','is',null),
+      sb.from('pat_reports').select('base_ref').not('base_ref','is',null)
+    ]);
+    function findGaps(rows){
+      const entries=rows.map(r=>{
+        const m=(r.base_ref||'').trim().match(/^([A-Za-z]+)(\d+)$/);
+        if(!m)return null;const n=parseInt(m[2]);return n<=9999?{prefix:m[1],n}:null;
+      }).filter(Boolean);
+      if(!entries.length)return[];
+      const prefix=entries[0].prefix;
+      const nums=entries.map(e=>e.n);
+      const min=Math.min(...nums),max=Math.max(...nums);
+      const set=new Set(nums);
+      const gaps=[];
+      for(let i=min;i<=max;i++){if(!set.has(i))gaps.push({n:i,prefix});}
+      return gaps;
+    }
+    const gasGaps=findGaps(gasData||[]).map(g=>({...g,type:'gas'}));
+    const patGaps=findGaps(patData||[]).map(g=>({...g,type:'pat'}));
+    const allGaps=[...gasGaps,...patGaps];
+    if(!allGaps.length){
+      out.innerHTML='<div style="color:#10b981;font-size:13px;font-weight:600;padding:8px 0">✓ No gaps found — all serial sequences are complete.</div>';
+      if(btn){btn.disabled=false;btn.textContent='Run Sequence Check';}
+      return;
+    }
+    out.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${allGaps.length} gap${allGaps.length>1?'s':''} found.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="border-bottom:2px solid var(--border)">
+          <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Missing Serial</th>
+          <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Type</th>
+          <th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left">Action</th>
+        </tr></thead>
+        <tbody>${allGaps.map((g,i)=>`<tr id="gap-row-${i}" style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:var(--text)">${g.prefix}${g.n}</td>
+          <td style="padding:6px 8px"><span class="badge badge-${g.type==='gas'?'due':'done'}">${g.type.toUpperCase()}</span></td>
+          <td style="padding:6px 8px" id="gap-action-${i}"><button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="showGapReasonInput(${i},'${g.prefix}${g.n}','${g.type}')">Record reason</button></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }catch(e){out.innerHTML=`<div style="color:#ef4444;font-size:12px">Error: ${e.message}</div>`;}
+  if(btn){btn.disabled=false;btn.textContent='Run Sequence Check';}
+}
+function showGapReasonInput(idx,serialRef,certType){
+  const cell=document.getElementById(`gap-action-${idx}`);
+  if(!cell)return;
+  cell.innerHTML=`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <input type="text" id="gap-reason-${idx}" placeholder="e.g. Issued in error — client cancelled" style="flex:1;min-width:160px;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" maxlength="200">
+    <button class="btn btn-primary btn-sm" style="font-size:11px;white-space:nowrap" onclick="saveGapReason(${idx},'${serialRef}','${certType}')">Save to Audit</button>
+    <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="runSerialGapCheck()">✕</button>
+  </div>`;
+  document.getElementById(`gap-reason-${idx}`)?.focus();
+}
+async function saveGapReason(idx,serialRef,certType){
+  const inp=document.getElementById(`gap-reason-${idx}`);
+  const reason=(inp?.value||'').trim();
+  if(!reason){inp?.focus();toast('Enter a reason first','warn');return;}
+  const cell=document.getElementById(`gap-action-${idx}`);
+  if(cell)cell.innerHTML='<span style="color:var(--muted);font-size:12px">Saving…</span>';
+  await logAppEvent('SERIAL_GAP_NOTED',certType,null,serialRef,{reason,gap_serial:serialRef});
+  const row=document.getElementById(`gap-row-${idx}`);
+  if(row)row.innerHTML=`
+    <td style="padding:6px 8px;font-family:monospace;font-weight:700;text-decoration:line-through;color:var(--muted)">${serialRef}</td>
+    <td style="padding:6px 8px"><span class="badge badge-${certType==='gas'?'due':'done'}">${certType.toUpperCase()}</span></td>
+    <td style="padding:6px 8px;font-size:12px;color:#10b981">✓ Recorded: ${reason}</td>`;
+  toast('Gap reason saved to audit log ✓','success');
 }
 
 // ========== DASHBOARD ==========
@@ -5652,7 +5731,7 @@ async function loadAuditLog(){
   const el=document.getElementById('audit-list');
   if(error){el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠</div><p>${error.message}</p></div>`;return;}
   if(!data||!data.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No audit entries yet</p></div>';return;}
-  const colors={CREATED:'#10b981',UPDATED_DRAFT:'#6366f1',ISSUED:'#f59e0b',SUPERSEDED:'#8b5cf6',DELETED:'#ef4444',PDF_DOWNLOADED:'#3b82f6',EMAILED:'#06b6d4'};
+  const colors={CREATED:'#10b981',UPDATED_DRAFT:'#6366f1',ISSUED:'#f59e0b',SUPERSEDED:'#8b5cf6',DELETED:'#ef4444',PDF_DOWNLOADED:'#3b82f6',EMAILED:'#06b6d4',SERIAL_GAP_NOTED:'#f97316'};
   el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="border-bottom:2px solid var(--border)">
       <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Time</th>
