@@ -1643,10 +1643,14 @@ a{color:var(--accent);text-decoration:none}
           <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
             One reference system for all certificate types — PAT and Gas CP12 share the same base and format.
           </div>
-          <div class="field-grid">
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
             <div class="field-group">
-              <label>Reference Base <small style="color:var(--muted);font-weight:400">(e.g. OHM655 or your initials+code)</small></label>
-              <input type="text" id="s-ref-base" placeholder="OHM655" maxlength="12" oninput="updateRefPreview()">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. OHM)</small></label>
+              <input type="text" id="s-ref-prefix" placeholder="OHM" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase();updateRefPreview()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first cert number)</small></label>
+              <input type="number" id="s-ref-start" placeholder="210" min="1" max="99999" oninput="updateRefPreview()">
             </div>
           </div>
         </div>
@@ -1656,11 +1660,12 @@ a{color:var(--accent);text-decoration:none}
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Your reference numbers will look like:</div>
             <div id="ref-preview-line" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.02em;color:var(--text)">OHM6559/1 MARINA POINT</div>
             <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7">
-              <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[BASE]</span>
+              <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[PREFIX]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[SERIAL]</span>
               + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[YY]</span>
-              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[SEQ]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[POSTCODE SCORE]</span>
               / <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[DOOR + STREET]</span><br>
-              <span style="margin-top:6px;display:inline-block">Example: Base <strong>OHM655</strong> + Year <strong>26</strong> + Sequence <strong>001</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM65526001 / 1 MARINA POINT</strong></span>
+              <span style="margin-top:6px;display:inline-block">Example: Prefix <strong>OHM</strong> + Serial <strong>210</strong> + Year <strong>26</strong> + Score <strong>44</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM2102644 / 1 MARINA POINT</strong></span>
             </div>
           </div>
         </div>
@@ -2655,7 +2660,8 @@ function loadSettingsUI(){
   document.getElementById('s-fallback-email').value=getSetting('email_fallback','');
   document.getElementById('s-bcc-email').value=getSetting('email_bcc','');
   // PAT
-  document.getElementById('s-ref-base').value=getSetting('ref_base','OHM');
+  document.getElementById('s-ref-prefix').value=getSetting('ref_prefix','OHM');
+  document.getElementById('s-ref-start').value=getSetting('ref_start','210');
   document.getElementById('s-pat-period').value=getSetting('pat_period','12');
   document.getElementById('s-pat-engineer').value=getSetting('pat_default_engineer');
   document.getElementById('s-pat-instrument').value=getSetting('pat_default_instrument','');
@@ -2709,7 +2715,8 @@ async function saveSettings(){
     ['email_from_name',document.getElementById('s-from-name').value],
     ['email_fallback',document.getElementById('s-fallback-email').value],
     ['email_bcc',document.getElementById('s-bcc-email').value],
-    ['ref_base',document.getElementById('s-ref-base').value||'OHM'],
+    ['ref_prefix',(document.getElementById('s-ref-prefix').value||'OHM').toUpperCase()],
+    ['ref_start',document.getElementById('s-ref-start').value||'210'],
     ['pat_period',document.getElementById('s-pat-period').value],
     ['pat_default_engineer',document.getElementById('s-pat-engineer').value],
     ['pat_default_instrument',document.getElementById('s-pat-instrument').value],
@@ -2744,9 +2751,8 @@ function switchSettingsTab(tab){
   if(tab==='ref'){updateRefPreview();loadRefStats();}
 }
 function updateRefPreview(){
-  const rawBase=(document.getElementById('s-ref-base')||{value:'OHM210'}).value||'OHM210';
-  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
-  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
+  const prefix=((document.getElementById('s-ref-prefix')||{}).value||'OHM').toUpperCase();
+  const startN=parseInt((document.getElementById('s-ref-start')||{}).value)||210;
   const yy=String(new Date().getFullYear()).slice(-2);
   const el=document.getElementById('ref-preview-line');
   if(el)el.textContent=`${prefix}${startN}${yy}44 / 1 MARINA POINT`;
@@ -2858,9 +2864,8 @@ function _refAddrPart(addr){
   return tokens.slice(0,doorIdx+3).join(' ');// business name + door + 2 words
 }
 function buildCertRef(fullAddress,postcode){
-  const rawBase=getSetting('ref_base','OHM210');
-  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
-  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
+  const prefix=getSetting('ref_prefix','OHM')||'OHM';
+  const startN=parseInt(getSetting('ref_start','210'))||210;
   const yy=String(new Date().getFullYear()).slice(-2);
   const pc=postcode||_extractPC(fullAddress);
   const score=_pcScore(pc);
@@ -2868,21 +2873,23 @@ function buildCertRef(fullAddress,postcode){
   return`${prefix}${startN}${yy}${score} / ${addrPart}`;
 }
 async function buildCertRefSeq(addr,postcode){
-  const rawBase=getSetting('ref_base','OHM210');
-  const prefix=rawBase.replace(/[0-9]/g,'')||'OHM';
-  const startN=parseInt(rawBase.replace(/[^0-9]/g,''))||210;
+  const prefix=getSetting('ref_prefix','OHM')||'OHM';
+  const startN=parseInt(getSetting('ref_start','210'))||210;
   const yy=String(new Date().getFullYear()).slice(-2);
   const pc=postcode||_extractPC(addr);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(addr||'');
   try{
-    const{data}=await sb.from('gas_certs').select('base_ref').not('base_ref','is',null);
-    const nums=(data||[]).map(r=>parseInt((r.base_ref||'').replace(/[^0-9]/g,''))||0);
-    const maxN=Math.max(startN-1,...nums);
+    const[{data:gd},{data:pd}]=await Promise.all([
+      sb.from('gas_certs').select('base_ref').not('base_ref','is',null),
+      sb.from('pat_reports').select('base_ref').not('base_ref','is',null)
+    ]);
+    const allNums=[...(gd||[]),...(pd||[])].map(r=>parseInt((r.base_ref||'').replace(/[^0-9]/g,''))||0);
+    const maxN=Math.max(startN-1,...allNums);
     const nextN=maxN+1;
-    return`${prefix}${nextN}${yy}${score} / ${addrPart}`;
+    return{ref:`${prefix}${nextN}${yy}${score} / ${addrPart}`,baseRef:`${prefix}${nextN}`};
   }catch(e){
-    return`${prefix}${startN}${yy}${score} / ${addrPart}`;
+    return{ref:`${prefix}${startN}${yy}${score} / ${addrPart}`,baseRef:`${prefix}${startN}`};
   }
 }
 function updatePatRef(){
@@ -3275,8 +3282,8 @@ async function completePAT(){
   if(!(patGv('pat-postcode')||'').trim()){toast('Postcode is required — enter it in the Postcode field','error');patGe('pat-postcode').focus();return;}
   // Generate ref from address at issue time
   if(patGe('pat-ref').dataset.manual!=='true'){
-    const r=buildCertRef(d.property_address,(patGv('pat-postcode')||'').trim());
-    patGe('pat-ref').value=r;patCurrentBaseRef=r;
+    const{ref:r,baseRef:b}=await buildCertRefSeq(d.property_address,(patGv('pat-postcode')||'').trim());
+    patGe('pat-ref').value=r;patCurrentBaseRef=b;
   }
   await savePAT();
   if(!editingPATId){toast('Save failed','error');return;}
@@ -5044,8 +5051,8 @@ async function completeGas(){
   const saved=await saveGas();
   if(!saved){return;} // saveGas already showed the error
   showOverlay('Issuing certificate…');
-  const refNum=await buildCertRefSeq(d.install_address||'',d.install_postcode);
-  const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:refNum,completed_at:new Date().toISOString()}).eq('id',editingGasId);
+  const{ref:refNum,baseRef:certBaseRef}=await buildCertRefSeq(d.install_address||'',d.install_postcode);
+  const{error}=await sb.from('gas_certs').update({status:'completed',ref_number:refNum,base_ref:certBaseRef,completed_at:new Date().toISOString()}).eq('id',editingGasId);
   hideOverlay();
   if(error){toast('Error issuing: '+error.message,'error');return;}
   document.getElementById('gas-form-ref').textContent=refNum;
