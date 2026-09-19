@@ -1713,7 +1713,7 @@ a{color:var(--accent);text-decoration:none}
         </div>
         <div class="form-section">
           <div class="form-section-title">🔍 Serial Integrity Check</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Scans each certificate series for missing serial numbers. Gaps occur when a certificate is voided, issued in error, or manually deleted. Record a reason for each gap so it appears in the audit log.</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Scans each certificate series for missing serials. Automatically detects the reason from audit history (deleted, superseded, etc.) and logs each gap to the audit log — no manual input needed.</div>
           <button class="btn btn-secondary btn-sm" onclick="runSerialGapCheck()" id="gap-check-btn">Run Sequence Check</button>
           <div id="ref-gap-list" style="margin-top:12px"></div>
         </div>
@@ -2830,11 +2830,12 @@ async function runSerialGapCheck(){
   const out=document.getElementById('ref-gap-list');
   if(!out)return;
   if(btn){btn.disabled=true;btn.textContent='Checking…';}
-  out.innerHTML='<div style="color:var(--muted);font-size:12px">Scanning all serial numbers…</div>';
+  out.innerHTML='<div style="color:var(--muted);font-size:12px">Scanning serial numbers and audit history…</div>';
   try{
-    const[{data:gasData},{data:patData}]=await Promise.all([
+    const[{data:gasData},{data:patData},{data:auditData}]=await Promise.all([
       sb.from('gas_certs').select('base_ref').not('base_ref','is',null),
-      sb.from('pat_reports').select('base_ref').not('base_ref','is',null)
+      sb.from('pat_reports').select('base_ref').not('base_ref','is',null),
+      sb.from('audit_events').select('event_type,cert_ref,cert_type,created_at,user_email,metadata').order('created_at',{ascending:false}).limit(2000)
     ]);
     function findGaps(rows){
       const entries=rows.map(r=>{
@@ -2842,13 +2843,23 @@ async function runSerialGapCheck(){
         if(!m)return null;const n=parseInt(m[2]);return n<=9999?{prefix:m[1],n}:null;
       }).filter(Boolean);
       if(!entries.length)return[];
-      const prefix=entries[0].prefix;
       const nums=entries.map(e=>e.n);
+      const prefix=entries[0].prefix;
       const min=Math.min(...nums),max=Math.max(...nums);
       const set=new Set(nums);
       const gaps=[];
       for(let i=min;i<=max;i++){if(!set.has(i))gaps.push({n:i,prefix});}
       return gaps;
+    }
+    function autoReason(serialRef){
+      const evts=(auditData||[]).filter(e=>e.cert_ref&&e.cert_ref.startsWith(serialRef));
+      const prev=evts.find(e=>e.event_type==='SERIAL_GAP_NOTED');
+      if(prev)return{reason:prev.metadata?.reason||'Previously noted',alreadyLogged:true};
+      const del=evts.find(e=>e.event_type==='DELETED');
+      if(del)return{reason:`Deleted by ${del.user_email||'unknown'} on ${new Date(del.created_at).toLocaleDateString('en-GB')}`,alreadyLogged:false};
+      const sup=evts.find(e=>e.event_type==='SUPERSEDED');
+      if(sup)return{reason:`Superseded on ${new Date(sup.created_at).toLocaleDateString('en-GB')}`,alreadyLogged:false};
+      return{reason:'Gap detected — no audit trail found',alreadyLogged:false};
     }
     const gasGaps=findGaps(gasData||[]).map(g=>({...g,type:'gas'}));
     const patGaps=findGaps(patData||[]).map(g=>({...g,type:'pat'}));
@@ -2858,45 +2869,33 @@ async function runSerialGapCheck(){
       if(btn){btn.disabled=false;btn.textContent='Run Sequence Check';}
       return;
     }
-    out.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${allGaps.length} gap${allGaps.length>1?'s':''} found.</div>
+    // Auto-derive reason and log any unrecorded gaps
+    const results=[];
+    for(const g of allGaps){
+      const serialRef=`${g.prefix}${g.n}`;
+      const{reason,alreadyLogged}=autoReason(serialRef);
+      if(!alreadyLogged)await logAppEvent('SERIAL_GAP_NOTED',g.type,null,serialRef,{reason,gap_serial:serialRef,auto:true});
+      results.push({...g,serialRef,reason,alreadyLogged});
+    }
+    const newCount=results.filter(r=>!r.alreadyLogged).length;
+    out.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${allGaps.length} gap${allGaps.length>1?'s':''} found${newCount?` — ${newCount} auto-logged to audit`:''}.</div>
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr style="border-bottom:2px solid var(--border)">
           <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Missing Serial</th>
           <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Type</th>
-          <th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left">Action</th>
+          <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Reason (auto-detected)</th>
+          <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Status</th>
         </tr></thead>
-        <tbody>${allGaps.map((g,i)=>`<tr id="gap-row-${i}" style="border-bottom:1px solid var(--border)">
-          <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:var(--text)">${g.prefix}${g.n}</td>
-          <td style="padding:6px 8px"><span class="badge badge-${g.type==='gas'?'due':'done'}">${g.type.toUpperCase()}</span></td>
-          <td style="padding:6px 8px" id="gap-action-${i}"><button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="showGapReasonInput(${i},'${g.prefix}${g.n}','${g.type}')">Record reason</button></td>
+        <tbody>${results.map(r=>`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:var(--text)">${r.serialRef}</td>
+          <td style="padding:6px 8px"><span class="badge badge-${r.type==='gas'?'due':'done'}">${r.type.toUpperCase()}</span></td>
+          <td style="padding:6px 8px;font-size:12px;color:var(--muted)">${r.reason}</td>
+          <td style="padding:6px 8px;font-size:12px;color:${r.alreadyLogged?'#6b7280':'#10b981'}">${r.alreadyLogged?'Previously noted':'✓ Auto-logged'}</td>
         </tr>`).join('')}</tbody>
       </table>`;
+    if(newCount)toast(`${newCount} gap${newCount>1?'s':''} auto-logged to audit ✓`,'success');
   }catch(e){out.innerHTML=`<div style="color:#ef4444;font-size:12px">Error: ${e.message}</div>`;}
   if(btn){btn.disabled=false;btn.textContent='Run Sequence Check';}
-}
-function showGapReasonInput(idx,serialRef,certType){
-  const cell=document.getElementById(`gap-action-${idx}`);
-  if(!cell)return;
-  cell.innerHTML=`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-    <input type="text" id="gap-reason-${idx}" placeholder="e.g. Issued in error — client cancelled" style="flex:1;min-width:160px;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" maxlength="200">
-    <button class="btn btn-primary btn-sm" style="font-size:11px;white-space:nowrap" onclick="saveGapReason(${idx},'${serialRef}','${certType}')">Save to Audit</button>
-    <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="runSerialGapCheck()">✕</button>
-  </div>`;
-  document.getElementById(`gap-reason-${idx}`)?.focus();
-}
-async function saveGapReason(idx,serialRef,certType){
-  const inp=document.getElementById(`gap-reason-${idx}`);
-  const reason=(inp?.value||'').trim();
-  if(!reason){inp?.focus();toast('Enter a reason first','warn');return;}
-  const cell=document.getElementById(`gap-action-${idx}`);
-  if(cell)cell.innerHTML='<span style="color:var(--muted);font-size:12px">Saving…</span>';
-  await logAppEvent('SERIAL_GAP_NOTED',certType,null,serialRef,{reason,gap_serial:serialRef});
-  const row=document.getElementById(`gap-row-${idx}`);
-  if(row)row.innerHTML=`
-    <td style="padding:6px 8px;font-family:monospace;font-weight:700;text-decoration:line-through;color:var(--muted)">${serialRef}</td>
-    <td style="padding:6px 8px"><span class="badge badge-${certType==='gas'?'due':'done'}">${certType.toUpperCase()}</span></td>
-    <td style="padding:6px 8px;font-size:12px;color:#10b981">✓ Recorded: ${reason}</td>`;
-  toast('Gap reason saved to audit log ✓','success');
 }
 
 // ========== DASHBOARD ==========
