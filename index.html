@@ -736,6 +736,39 @@ a{color:var(--accent);text-decoration:none}
   body.gas-printing #cp12Wrap .appliance-card.is-disabled .appliance-value-cell:not(.number-cell) *{visibility:hidden!important}
   body.gas-printing #cp12Wrap .appliance-card.is-disabled .appliance-co-item{display:none!important}
 }
+/* ===== EL WIZARD ===== */
+.el-wizard{max-width:640px;margin:0 auto;padding:8px 0 32px;}
+.elwiz-progress{height:3px;background:var(--border);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+.elwiz-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;}
+.elwiz-q{font-size:1.3rem;font-weight:700;margin-bottom:5px;line-height:1.3;}
+.elwiz-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.elwiz-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+.elwiz-chip{padding:9px 16px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;}
+.elwiz-chip:hover{border-color:var(--accent);color:var(--accent);}
+.elwiz-chip.sel{border-color:var(--accent);background:var(--accent-dim,rgba(239,68,68,.08));color:var(--accent);font-weight:600;}
+.elwiz-type-cards{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:22px;}
+.elwiz-type-card{padding:16px 18px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;text-align:left;}
+.elwiz-type-card:hover,.elwiz-type-card.sel{border-color:var(--accent);}
+.elwiz-type-card.sel{background:var(--accent-dim,rgba(239,68,68,.08));}
+.elwiz-type-card-title{font-size:15px;font-weight:700;margin-bottom:3px;}
+.elwiz-type-card-sub{font-size:12px;color:var(--muted);}
+.elwiz-outcome{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.elwiz-outcome-chip{padding:20px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);cursor:pointer;text-align:center;font-weight:700;font-size:15px;transition:all .15s;}
+.elwiz-outcome-chip.pass.sel{border-color:var(--success,#16a34a);background:rgba(22,163,74,.08);color:var(--success,#16a34a);}
+.elwiz-outcome-chip.fail.sel{border-color:var(--error,#dc2626);background:rgba(220,38,38,.08);color:var(--error,#dc2626);}
+.elwiz-input-label{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;display:block;}
+.elwiz-input{width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:15px;outline:none;transition:.15s;margin-bottom:14px;box-sizing:border-box;}
+.elwiz-input:focus{border-color:var(--accent);}
+.elwiz-nav{display:flex;gap:10px;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border);margin-top:4px;}
+.elwiz-back{background:none;border:1px solid var(--border);color:var(--muted);padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;}
+.elwiz-next{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;}
+.elwiz-step{animation:elwiz-in .18s ease;}
+@keyframes elwiz-in{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+.el-history-item{padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);margin-bottom:8px;cursor:pointer;transition:.15s;}
+.el-history-item:hover{border-color:var(--accent);}
+.el-history-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:8px;}
+.el-history-badge.sat{background:rgba(22,163,74,.12);color:var(--success,#16a34a);}
+.el-history-badge.uns{background:rgba(220,38,38,.1);color:var(--error,#dc2626);}
 </style>
 </head>
 <body>
@@ -889,9 +922,13 @@ a{color:var(--accent);text-decoration:none}
         <div class="nav-item" data-view="compliance" onclick="navigate('compliance')"><span class="nav-icon">⚠</span>Renewals &amp; Expiry <span id="compliance-badge" class="nav-badge" hidden>0</span></div>
       </div>
       <div class="nav-section">
+        <div class="nav-section-label">Emergency Lighting</div>
+        <div class="nav-item" data-view="el-new" onclick="startNewEL()"><span class="nav-icon">💡</span>New EL Cert</div>
+        <div class="nav-item" data-view="el-history" onclick="navigate('el-history')"><span class="nav-icon">≡</span>EL History</div>
+      </div>
+      <div class="nav-section">
         <div class="nav-section-label">Coming Soon</div>
         <div class="nav-item disabled"><span class="nav-icon">🔥</span>Fire Risk<span class="nav-coming">Soon</span></div>
-        <div class="nav-item disabled"><span class="nav-icon">💡</span>Emergency Lighting<span class="nav-coming">Soon</span></div>
         <div class="nav-item disabled"><span class="nav-icon">⚡</span>Periodic Inspection<span class="nav-coming">Soon</span></div>
         <div class="nav-item disabled"><span class="nav-icon">📋</span>Installation Cert<span class="nav-coming">Soon</span></div>
         <div class="nav-item disabled"><span class="nav-icon">🌀</span>AOV Panel<span class="nav-coming">Soon</span></div>
@@ -1967,6 +2004,27 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
       <div id="app-list-area" class="dir-list"></div>
     </div>
 
+    <!-- ===== EL NEW (wizard) ===== -->
+    <div class="view" id="view-el-new">
+      <div class="page-header">
+        <h1 class="page-title">New EL Certificate</h1>
+        <p class="page-sub" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+      </div>
+      <div class="el-wizard" id="el-wizard-body"></div>
+    </div>
+
+    <!-- ===== EL HISTORY ===== -->
+    <div class="view" id="view-el-history">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <h1 class="page-title">EL Certificates</h1>
+          <p class="page-sub">Emergency Lighting history</p>
+        </div>
+        <button class="btn-primary" onclick="startNewEL()">+ New EL Cert</button>
+      </div>
+      <div id="el-history-list"><p class="empty-state">No EL certificates yet.</p></div>
+    </div>
+
   </main>
 </div>
 
@@ -2241,6 +2299,7 @@ function applySidebarPermissions(role){
   secVis('Overview',hasFull);
   secVis('PAT Testing',hasPAT);
   secVis('Gas Safety',hasGas);
+  secVis('Emergency Lighting',hasFull);
   secVis('Library',hasFull);
   secVis('Compliance',hasFull);
   secVis('Coming Soon',hasFull);
@@ -2298,6 +2357,8 @@ function _doNavigate(view){
   else if(view==='staff')loadStaff();
   else if(view==='directory')renderDirectoryPage();
   else if(view==='appliances')renderAppliancesPage();
+  else if(view==='el-new'){elRenderStep();}
+  else if(view==='el-history')loadELHistory();
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('active');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active');}
@@ -6861,6 +6922,639 @@ async function saveApplianceRecord(){
   },{capture:true});
 
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDateDrum();});
+})();
+</script>
+
+<!-- ===== EL WIZARD JS ===== -->
+<script>
+(function(){
+  /* ---- state ---- */
+  var _w = {};
+
+  var STEPS = [
+    'type',        // 0: EL.1 / EL.2 / EL.3
+    'premises',    // 1: premises name + address
+    'premises2',   // 2: premises type + occupancy
+    'client',      // 3: client name + org
+    'system',      // 4: system type + operating mode
+    'duration',    // 5: rated duration
+    'test',        // 6: test date + inspection type
+    'luminaires',  // 7: total / pass / fail counts
+    'outcome',     // 8: SATISFACTORY / UNSATISFACTORY
+    'observations',// 9: optional notes
+    'engineer',    // 10: engineer name + NICEIC
+    'review'       // 11: review & issue
+  ];
+
+  var CERT_TYPES = [
+    {id:'EL.1', label:'EL.1 — Completion Certificate', sub:'New installation or major modification — BS 5266-1 Annex B'},
+    {id:'EL.2', label:'EL.2 — Periodic Inspection & Test', sub:'Annual / monthly service record — BS 5266-1 Annex C'},
+    {id:'EL.3', label:'EL.3 — Existing Site Assessment', sub:'Condition report for existing systems — BS 5266-1 Annex D'}
+  ];
+
+  var PREMISES_TYPES = ['House','Flat / Apartment','HMO','Commercial Office','Retail / Shop','Care Home','School / College','Warehouse','Hotel','Restaurant / Café','Other'];
+  var SYSTEM_TYPES = ['Self-contained luminaires','Central battery system','Sub-mains (generator)','Combined system'];
+  var MODES = ['Non-maintained (X)','Maintained (Y)','Sustained (Z)'];
+  var DURATIONS = ['1 hour','2 hours','3 hours'];
+  var INSPECTION_TYPES = ['Annual full test','Monthly functional test','Commissioning test','Quarterly check'];
+
+  function todayStr(){
+    var d=new Date();
+    return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+  }
+
+  function genRef(type){
+    var n=Math.floor(Math.random()*90000)+10000;
+    return type+'-'+new Date().getFullYear()+'-'+n;
+  }
+
+  window.startNewEL = function(){
+    _w = {
+      step: 0,
+      certType: '',
+      premisesName: '',
+      premisesAddress: '',
+      premisesType: '',
+      occupancy: '',
+      clientName: '',
+      clientOrg: '',
+      systemType: '',
+      mode: '',
+      ratedDuration: '',
+      testDate: todayStr(),
+      inspectionType: '',
+      lumTotal: '',
+      lumPass: '',
+      lumFail: '',
+      outcome: '',
+      durationAchieved: '',
+      observations: '',
+      engineerName: getSetting('default_engineer',''),
+      niceicNo: getSetting('niceic_scheme_no',''),
+      ref: ''
+    };
+    navigate('el-new');
+  };
+
+  window.elRenderStep = function(){
+    var body = document.getElementById('el-wizard-body');
+    if(!body) return;
+    var s = _w.step;
+    var total = STEPS.length;
+    var pct = Math.round((s/total)*100);
+
+    var html = '<div class="elwiz-progress"><div class="elwiz-progress-bar" style="width:'+pct+'%"></div></div>';
+    html += '<div class="elwiz-step">';
+
+    if(s===0){
+      html += '<div class="elwiz-q">Which type of certificate?</div>';
+      html += '<div class="elwiz-sub">Select the BS 5266-1 certificate that applies to this job.</div>';
+      html += '<div class="elwiz-type-cards">';
+      CERT_TYPES.forEach(function(ct){
+        var sel = _w.certType===ct.id?' sel':'';
+        html += '<div class="elwiz-type-card'+sel+'" onclick="elPick(\'certType\',\''+ct.id+'\')">';
+        html += '<div class="elwiz-type-card-title">'+ct.label+'</div>';
+        html += '<div class="elwiz-type-card-sub">'+ct.sub+'</div></div>';
+      });
+      html += '</div>';
+    } else if(s===1){
+      html += '<div class="elwiz-q">Premises details</div>';
+      html += '<div class="elwiz-sub">Name and address of the property being certified.</div>';
+      html += '<label class="elwiz-input-label">Premises / site name</label>';
+      html += '<input class="elwiz-input" id="elw-pname" placeholder="e.g. Sunrise Care Home" value="'+esc(_w.premisesName)+'" oninput="_w.premisesName=this.value">';
+      html += '<label class="elwiz-input-label">Address</label>';
+      html += '<textarea class="elwiz-input" id="elw-paddr" rows="3" placeholder="Full address including postcode" oninput="_w.premisesAddress=this.value">'+esc(_w.premisesAddress)+'</textarea>';
+    } else if(s===2){
+      html += '<div class="elwiz-q">Premises type</div>';
+      html += '<div class="elwiz-sub">Select the type of occupancy.</div>';
+      html += '<div class="elwiz-chips">';
+      PREMISES_TYPES.forEach(function(pt){
+        var sel = _w.premisesType===pt?' sel':'';
+        html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'premisesType\',\''+pt+'\')">'+pt+'</div>';
+      });
+      html += '</div>';
+    } else if(s===3){
+      html += '<div class="elwiz-q">Client details</div>';
+      html += '<div class="elwiz-sub">Who is the responsible person / duty holder?</div>';
+      html += '<label class="elwiz-input-label">Client name</label>';
+      html += '<input class="elwiz-input" id="elw-cname" placeholder="Full name" value="'+esc(_w.clientName)+'" oninput="_w.clientName=this.value">';
+      html += '<label class="elwiz-input-label">Organisation (optional)</label>';
+      html += '<input class="elwiz-input" id="elw-corg" placeholder="Company or organisation" value="'+esc(_w.clientOrg)+'" oninput="_w.clientOrg=this.value">';
+    } else if(s===4){
+      html += '<div class="elwiz-q">Emergency lighting system</div>';
+      html += '<div class="elwiz-sub">System type and operating mode.</div>';
+      html += '<div class="elwiz-input-label" style="font-size:13px;font-weight:600;margin-bottom:10px">System type</div>';
+      html += '<div class="elwiz-chips">';
+      SYSTEM_TYPES.forEach(function(st){
+        var sel = _w.systemType===st?' sel':'';
+        html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'systemType\',\''+st+'\')">'+st+'</div>';
+      });
+      html += '</div>';
+      html += '<div class="elwiz-input-label" style="font-size:13px;font-weight:600;margin-bottom:10px">Operating mode</div>';
+      html += '<div class="elwiz-chips">';
+      MODES.forEach(function(m){
+        var sel = _w.mode===m?' sel':'';
+        html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'mode\',\''+m+'\')">'+m+'</div>';
+      });
+      html += '</div>';
+    } else if(s===5){
+      html += '<div class="elwiz-q">Rated duration</div>';
+      html += '<div class="elwiz-sub">Minimum duration the system must sustain emergency lighting. Sleeping accommodation requires 3 hours.</div>';
+      html += '<div class="elwiz-chips">';
+      DURATIONS.forEach(function(d){
+        var sel = _w.ratedDuration===d?' sel':'';
+        html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'ratedDuration\',\''+d+'\')">'+d+'</div>';
+      });
+      html += '</div>';
+    } else if(s===6){
+      html += '<div class="elwiz-q">Test date</div>';
+      html += '<div class="elwiz-sub">Date the inspection or commissioning was carried out.</div>';
+      html += '<label class="elwiz-input-label">Date (DD/MM/YYYY)</label>';
+      html += '<input class="elwiz-input" id="elw-tdate" placeholder="DD/MM/YYYY" value="'+esc(_w.testDate)+'" oninput="_w.testDate=this.value" style="max-width:200px">';
+      if(_w.certType==='EL.2'){
+        html += '<div class="elwiz-input-label" style="font-size:13px;font-weight:600;margin:12px 0 8px">Inspection type</div>';
+        html += '<div class="elwiz-chips">';
+        INSPECTION_TYPES.forEach(function(it){
+          var sel = _w.inspectionType===it?' sel':'';
+          html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'inspectionType\',\''+it+'\')">'+it+'</div>';
+        });
+        html += '</div>';
+      }
+    } else if(s===7){
+      html += '<div class="elwiz-q">Luminaire schedule</div>';
+      html += '<div class="elwiz-sub">How many emergency luminaires were tested?</div>';
+      html += '<label class="elwiz-input-label">Total luminaires</label>';
+      html += '<input class="elwiz-input" id="elw-ltot" type="number" min="0" placeholder="e.g. 24" value="'+esc(_w.lumTotal)+'" oninput="_w.lumTotal=this.value" style="max-width:160px">';
+      html += '<label class="elwiz-input-label">Pass</label>';
+      html += '<input class="elwiz-input" id="elw-lpass" type="number" min="0" placeholder="e.g. 24" value="'+esc(_w.lumPass)+'" oninput="_w.lumPass=this.value" style="max-width:160px">';
+      html += '<label class="elwiz-input-label">Fail</label>';
+      html += '<input class="elwiz-input" id="elw-lfail" type="number" min="0" placeholder="e.g. 0" value="'+esc(_w.lumFail)+'" oninput="_w.lumFail=this.value" style="max-width:160px">';
+    } else if(s===8){
+      html += '<div class="elwiz-q">Overall outcome</div>';
+      html += '<div class="elwiz-sub">Does the installation satisfy the requirements of BS 5266-1?</div>';
+      html += '<div class="elwiz-outcome">';
+      html += '<div class="elwiz-outcome-chip pass'+(_w.outcome==='SATISFACTORY'?' sel':'')+'" onclick="elPick(\'outcome\',\'SATISFACTORY\')">✓ SATISFACTORY</div>';
+      html += '<div class="elwiz-outcome-chip fail'+(_w.outcome==='UNSATISFACTORY'?' sel':'')+'" onclick="elPick(\'outcome\',\'UNSATISFACTORY\')">✗ UNSATISFACTORY</div>';
+      html += '</div>';
+      if(_w.outcome==='UNSATISFACTORY'||_w.certType==='EL.2'){
+        html += '<label class="elwiz-input-label">Duration achieved (if less than rated)</label>';
+        html += '<input class="elwiz-input" id="elw-dach" placeholder="e.g. 2hr 15min" value="'+esc(_w.durationAchieved)+'" oninput="_w.durationAchieved=this.value" style="max-width:220px">';
+      }
+    } else if(s===9){
+      html += '<div class="elwiz-q">Observations <span style="font-size:14px;font-weight:400;color:var(--muted)">(optional)</span></div>';
+      html += '<div class="elwiz-sub">Note any defects, limitations, or recommendations.</div>';
+      html += '<textarea class="elwiz-input" rows="5" placeholder="e.g. Luminaire 7 in corridor A failed duration test — replacement recommended before next inspection." oninput="_w.observations=this.value">'+esc(_w.observations)+'</textarea>';
+    } else if(s===10){
+      html += '<div class="elwiz-q">Engineer details</div>';
+      html += '<div class="elwiz-sub">The competent person who carried out the inspection.</div>';
+      html += '<label class="elwiz-input-label">Engineer name</label>';
+      html += '<input class="elwiz-input" id="elw-eng" placeholder="Full name" value="'+esc(_w.engineerName)+'" oninput="_w.engineerName=this.value">';
+      html += '<label class="elwiz-input-label">NICEIC scheme number (from settings if blank)</label>';
+      html += '<input class="elwiz-input" id="elw-niceic" placeholder="e.g. 12345678" value="'+esc(_w.niceicNo)+'" oninput="_w.niceicNo=this.value">';
+    } else if(s===11){
+      if(!_w.ref) _w.ref = genRef(_w.certType||'EL');
+      html += '<div class="elwiz-q">Review &amp; Issue</div>';
+      html += '<div class="elwiz-sub">Check the summary below then issue the certificate.</div>';
+      html += '<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:20px;font-size:13px;line-height:1.8">';
+      html += '<b>Ref:</b> '+esc(_w.ref)+'<br>';
+      html += '<b>Type:</b> '+esc(_w.certType)+'<br>';
+      html += '<b>Premises:</b> '+esc(_w.premisesName)+((_w.premisesAddress)?' — '+esc(_w.premisesAddress.replace(/\n/g,', ')):'')+'<br>';
+      html += '<b>Client:</b> '+esc(_w.clientName)+((_w.clientOrg)?' ('+esc(_w.clientOrg)+')':'')+'<br>';
+      html += '<b>System:</b> '+esc(_w.systemType)+', '+esc(_w.mode)+'<br>';
+      html += '<b>Rated duration:</b> '+esc(_w.ratedDuration)+'<br>';
+      html += '<b>Test date:</b> '+esc(_w.testDate)+'<br>';
+      html += '<b>Luminaires:</b> '+esc(_w.lumTotal)+' total — '+esc(_w.lumPass)+' pass / '+esc(_w.lumFail)+' fail<br>';
+      var oc = _w.outcome==='SATISFACTORY'?'<span style="color:var(--success,#16a34a);font-weight:700">✓ SATISFACTORY</span>':'<span style="color:var(--error,#dc2626);font-weight:700">✗ UNSATISFACTORY</span>';
+      html += '<b>Outcome:</b> '+oc+'<br>';
+      html += '<b>Engineer:</b> '+esc(_w.engineerName)+'<br>';
+      html += '</div>';
+      html += '<div class="elwiz-nav"><button class="elwiz-back" onclick="elBack()">← Back</button><button class="elwiz-next" style="background:var(--success,#16a34a)" onclick="elSave()">Issue Certificate</button></div>';
+      html += '</div>';
+      body.innerHTML = html;
+      return;
+    }
+
+    var isFirst = s===0;
+    html += '<div class="elwiz-nav">';
+    if(!isFirst) html += '<button class="elwiz-back" onclick="elBack()">← Back</button>';
+    else html += '<span></span>';
+    var nextLabel = s===STEPS.length-2 ? 'Review →' : 'Next →';
+    html += '<button class="elwiz-next" onclick="elNext()">'+nextLabel+'</button>';
+    html += '</div>';
+    html += '</div>';
+    body.innerHTML = html;
+  };
+
+  function esc(s){
+    if(!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  window.elPick = function(field, val){
+    _w[field] = val;
+    elRenderStep();
+  };
+
+  window.elNext = function(){
+    var s = _w.step;
+    if(s===0 && !_w.certType){ toast('Please select a certificate type','warning',2000); return; }
+    if(s===1 && !_w.premisesName.trim()){ toast('Please enter the premises name','warning',2000); return; }
+    if(s===4 && (!_w.systemType||!_w.mode)){ toast('Please select system type and mode','warning',2000); return; }
+    if(s===5 && !_w.ratedDuration){ toast('Please select rated duration','warning',2000); return; }
+    if(s===8 && !_w.outcome){ toast('Please select the outcome','warning',2000); return; }
+    if(s===10 && !_w.engineerName.trim()){ toast('Please enter the engineer name','warning',2000); return; }
+    _w.step++;
+    elRenderStep();
+  };
+
+  window.elBack = function(){
+    if(_w.step>0){ _w.step--; elRenderStep(); }
+  };
+
+  window.elSave = function(){
+    var rec = Object.assign({}, _w, {
+      id: 'el_'+Date.now(),
+      savedAt: new Date().toISOString()
+    });
+    try {
+      var list = JSON.parse(localStorage.getItem('el_certs')||'[]');
+      list.unshift(rec);
+      localStorage.setItem('el_certs', JSON.stringify(list));
+    } catch(e){}
+    toast('EL Certificate issued — '+rec.ref,'success',3000);
+    elOpenCert(rec);
+  };
+
+  window.elOpenCert = function(rec){
+    var html = elBuildCertHTML(rec);
+    var w = window.open('','_blank');
+    if(w){
+      w.document.write(html);
+      w.document.close();
+    } else {
+      navigate('el-history');
+      loadELHistory();
+    }
+  };
+
+  window.elBuildCertHTML = function(r){
+    var sat = r.outcome==='SATISFACTORY';
+    var obBg = sat ? '#15803d' : '#b91c1c';
+    var obText = sat ? '✓ SATISFACTORY — System satisfies requirements of BS 5266-1:2025' : '⚠ UNSATISFACTORY — Remedial action required';
+    var certTitle = r.certType==='EL.1' ? 'EL.1 — Certificate of Completion'
+                  : r.certType==='EL.2' ? 'EL.2 — Periodic Inspection &amp; Test'
+                  : 'EL.3 — Existing Site Assessment';
+    var certEyebrow = r.certType==='EL.1' ? 'Emergency Lighting · Completion Certificate (Small Installation)'
+                    : r.certType==='EL.2' ? 'Emergency Lighting · Periodic Inspection and Test Certificate'
+                    : 'Emergency Lighting · Existing Site Assessment';
+    var niceic = r.niceicNo || getSetting('niceic_scheme_no','');
+    var company = getSetting('company_name','OHM Electricals Ltd');
+    var companyAddr = getSetting('company_address','14 Park Row, Leeds LS1 5HD');
+    var companyTel = getSetting('company_tel','0113 496 7821');
+    var lumTotal = r.lumTotal||'—';
+    var lumPass  = r.lumPass||'—';
+    var lumFail  = r.lumFail||'0';
+    var addr = (r.premisesAddress||'').replace(/\n/g,'<br>');
+    var modeLabel = r.mode ? r.mode.replace(/ \([XYZ]\)/,'') : '—';
+    var modeCode  = r.mode ? (r.mode.match(/\(([XYZ])\)/)||['',''])[1] : '';
+    var durCode   = r.ratedDuration==='1 hour' ? 'A' : r.ratedDuration==='2 hours' ? 'B' : r.ratedDuration==='3 hours' ? 'C' : '';
+    var classCode = modeCode && durCode ? 'X'+((modeCode==='X')?'0':(modeCode==='Y')?'1':'2')+durCode : '—';
+    var nextInsp  = ''; // calculate approx +1yr from testDate
+    try {
+      var pts = (r.testDate||'').split('/');
+      if(pts.length===3){
+        var nd = new Date(parseInt(pts[2])+1, parseInt(pts[1])-1, parseInt(pts[0]));
+        nextInsp = nd.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+      }
+    } catch(e){}
+
+    var css = `
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+body{background:#e8e4dc;font-family:'Inter',system-ui,sans-serif;padding:24px 12px 48px;color:#1c1917;}
+.cert-page{background:#fff;max-width:640px;margin:0 auto 32px;box-shadow:0 4px 24px rgba(0,0,0,.18);font-size:11px;color:#1c1917;line-height:1.4;}
+.cert-top-strip{background:#b91c1c;height:4px;}
+.ch{background:#fff;padding:14px 22px 0;}
+.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:10px;border-bottom:1px solid #f0ece4;}
+.ch-logo-row{display:flex;align-items:center;gap:9px;}
+.ch-logo{width:30px;height:30px;background:#b91c1c;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.05em;}
+.ch-company{font-size:12px;font-weight:700;color:#1c1917;}
+.ch-company-sub{font-size:9px;color:#9a948e;}
+.niceic-badge{border:1px solid #e0dbd0;border-radius:3px;padding:4px 9px;text-align:center;background:#fafaf9;}
+.niceic-badge .nb-title{font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1c1917;}
+.niceic-badge .nb-sub{font-size:6.5px;color:#9a948e;margin-top:1px;}
+.niceic-badge .nb-no{font-size:9px;font-weight:700;color:#b91c1c;margin-top:2px;font-family:monospace;}
+.ch-title-row{padding:10px 0 10px;}
+.ch-cert-eyebrow{font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;margin-bottom:3px;}
+.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:21px;font-weight:700;color:#b91c1c;line-height:1.15;}
+.ch-cert-std{font-size:8.5px;color:#9a948e;margin-top:3px;}
+.ch-ref-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #f0ece4;margin-top:2px;}
+.ch-ref{font-family:monospace;font-size:11px;font-weight:700;color:#1c1917;}
+.ch-date{font-size:10px;color:#6b6560;}
+.addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #b91c1c;}
+.addr-col{padding:11px 22px 13px;}
+.addr-col-left{border-right:1px solid #e8e4dc;}
+.addr-col-label{font-size:7.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;padding-bottom:5px;border-bottom:1px solid #fee2e2;margin-bottom:7px;}
+.addr-name{font-size:12px;font-weight:700;color:#1c1917;margin-bottom:1px;}
+.addr-line{font-size:10.5px;color:#44403c;line-height:1.6;}
+.addr-sub{font-size:9.5px;color:#9a948e;margin-top:4px;}
+.addr-detail-row{display:flex;gap:6px;align-items:baseline;margin-top:5px;}
+.addr-detail-lbl{font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;flex-shrink:0;}
+.addr-detail-val{font-size:10px;color:#1c1917;font-weight:500;}
+.addr-engineer-name{font-size:11px;font-weight:600;color:#1c1917;margin-bottom:2px;}
+.outcome-band{padding:9px 22px;text-align:center;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.ch-cont{background:#fff;padding:12px 22px 10px;border-bottom:2px solid #b91c1c;}
+.ch-cont-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.ch-cont-eyebrow{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:3px;}
+.ch-cont-title{font-family:'Crimson Pro',Georgia,serif;font-size:17px;font-weight:700;color:#b91c1c;line-height:1.2;}
+.ch-cont-right{text-align:right;flex-shrink:0;}
+.ch-cont-company{font-size:10px;font-weight:600;color:#1c1917;}
+.ch-cont-ref{font-family:monospace;font-size:11px;font-weight:700;color:#b91c1c;display:block;margin-top:2px;}
+.ch-cont-niceic{font-size:8.5px;color:#9a948e;margin-top:1px;}
+.cb{padding:16px 22px;}
+.sec-head{font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;padding-bottom:4px;border-bottom:1.5px solid #b91c1c;margin-bottom:10px;margin-top:14px;}
+.sec-head:first-child{margin-top:0;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+.fg-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;}
+.fg-full{grid-column:1/-1;}
+.field{padding-bottom:8px;border-bottom:1px solid #e8e4dc;margin-bottom:8px;}
+.fl{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:2px;}
+.fv{font-size:11px;font-weight:600;color:#1c1917;}
+.fv-green{font-size:11px;font-weight:600;color:#15803d;}
+.fv-red{font-size:11px;font-weight:600;color:#b91c1c;}
+.fv-small{font-size:10px;color:#1c1917;}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #e0dbd0;border-radius:3px;overflow:hidden;margin-bottom:12px;}
+.stat-cell{padding:8px 10px;text-align:center;border-right:1px solid #e0dbd0;}
+.stat-cell:last-child{border-right:none;}
+.stat-num{font-family:'Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;line-height:1;display:block;}
+.stat-lbl{font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;display:block;margin-top:2px;}
+.stat-pass .stat-num{color:#15803d;}
+.stat-fail .stat-num{color:#b91c1c;}
+.stat-tested .stat-num{color:#1c1917;}
+.obs-box{background:#fef2f2;border:1px solid #fecaca;border-left:3px solid #b91c1c;border-radius:2px;padding:8px 10px;margin-bottom:10px;}
+.obs-box .ob-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b91c1c;margin-bottom:4px;}
+.obs-box .ob-item{font-size:10px;color:#7f1d1d;padding-left:10px;position:relative;margin-bottom:3px;}
+.obs-box .ob-item::before{content:'▸';position:absolute;left:0;color:#b91c1c;}
+.note-box{background:#f0fdf4;border:1px solid #bbf7d0;border-left:3px solid #15803d;border-radius:2px;padding:8px 10px;margin-bottom:10px;}
+.note-box .nb-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#15803d;margin-bottom:3px;}
+.note-box p{font-size:10px;color:#14532d;margin:0;}
+.ltbl{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:8px;}
+.ltbl th{background:#1c1917;color:#fff;padding:6px 7px;text-align:left;font-size:8px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
+.ltbl td{padding:5px 7px;border-bottom:1px solid #e8e4dc;vertical-align:middle;}
+.ltbl .total-row td{background:#1c1917;color:#fff;font-weight:700;font-size:9px;padding:6px 7px;}
+.chip-pass{display:inline-block;background:#dcfce7;color:#166534;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;}
+.chip-fail{display:inline-block;background:#fee2e2;color:#991b1b;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;}
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
+.sig-block{border:1px solid #e0dbd0;border-radius:3px;overflow:hidden;}
+.sig-block-head{background:#f7f4ee;padding:7px 10px;border-bottom:1px solid #e0dbd0;}
+.sig-block-head .sbh-title{font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b6560;}
+.sig-block-body{padding:8px 10px;}
+.sig-field{margin-bottom:6px;}
+.sig-field .sfl{font-size:7.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;margin-bottom:2px;}
+.sig-field .sfv{font-size:10px;font-weight:600;color:#1c1917;border-bottom:1px solid #d0ccc6;padding-bottom:1px;}
+.sig-area{height:40px;border:1px dashed #d0ccc6;border-radius:2px;margin-top:6px;display:flex;align-items:center;justify-content:center;color:#c0bab2;font-size:8px;font-style:italic;}
+.decl-text{font-size:9px;color:#6b6560;line-height:1.6;margin-bottom:10px;padding:8px 10px;background:#f9f6f0;border-radius:3px;border-left:2px solid #d0ccc6;}
+.cert-footer{background:#f7f4ee;border-top:2px solid #b91c1c;padding:8px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.cf-left{font-size:9px;color:#6b6560;}
+.cf-right{font-size:9px;color:#9a948e;text-align:right;}
+.cf-ref{font-family:monospace;font-size:9px;font-weight:600;color:#1c1917;}
+.topbar{background:#1c1917;color:#f7f4ee;padding:14px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:0;}
+.topbar-title{font-family:'Crimson Pro',Georgia,serif;font-size:1.1rem;font-weight:700;color:#fff;}
+.topbar-sub{font-size:11px;color:#9a948e;}
+.print-btn{background:#b91c1c;color:#fff;border:none;padding:8px 18px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;}
+.print-btn:hover{background:#991b1b;}
+@media print{.topbar,.print-btn{display:none!important} body{background:#fff;padding:0} .cert-page{box-shadow:none;margin-bottom:0;page-break-after:always;}}
+@media(max-width:480px){.fg,.fg-3,.sig-grid,.addr-panel{grid-template-columns:1fr;} .stats-bar{grid-template-columns:1fr 1fr;}}
+`;
+
+    function field(label, val, cls){
+      return '<div class="field"><div class="fl">'+label+'</div><div class="'+(cls||'fv')+'">'+val+'</div></div>';
+    }
+
+    function contHead(certType, pageNum, pageTotal, pageTitle, ref, niceic, company){
+      return '<div class="ch-cont"><div class="ch-cont-inner"><div><div class="ch-cont-eyebrow">'+certType+' · Page '+pageNum+' of '+pageTotal+'</div><div class="ch-cont-title">'+pageTitle+'</div></div><div class="ch-cont-right"><div class="ch-cont-company">'+company+'</div><span class="ch-cont-ref">'+ref+'</span><div class="ch-cont-niceic">NICEIC No. '+niceic+'</div></div></div></div>';
+    }
+
+    function footer(left, ref, page, total){
+      return '<div class="cert-footer"><div class="cf-left">'+left+'</div><div class="cf-right"><span class="cf-ref">'+ref+'</span> · Page '+page+' of '+total+'</div></div>';
+    }
+
+    var ref = esc(r.ref);
+    var coName = esc(company);
+    var coAddr = esc(companyAddr);
+    var coTel  = esc(companyTel);
+    var nic    = esc(niceic||'—');
+    var eng    = esc(r.engineerName||'—');
+    var pName  = esc(r.premisesName||'—');
+    var pType  = esc(r.premisesType||'');
+    var cName  = esc(r.clientName||'—');
+    var cOrg   = esc(r.clientOrg||'');
+    var sys    = esc(r.systemType||'—');
+    var mode   = esc(modeLabel);
+    var rated  = esc(r.ratedDuration||'—');
+    var tDate  = esc(r.testDate||'—');
+    var iType  = esc(r.inspectionType||'—');
+    var obsText= esc(r.observations||'');
+
+    /* PAGE 1 — Cover */
+    var p1 = '<div class="cert-page">'
+      +'<div class="cert-top-strip"></div>'
+      +'<div class="ch">'
+        +'<div class="ch-top-row">'
+          +'<div class="ch-logo-row">'
+            +'<div class="ch-logo">OHM</div>'
+            +'<div><div class="ch-company">'+coName+'</div><div class="ch-company-sub">'+coAddr+' · '+coTel+'</div></div>'
+          +'</div>'
+          +'<div class="niceic-badge"><div class="nb-title">NICEIC</div><div class="nb-sub">Approved Contractor</div><div class="nb-no">'+nic+'</div></div>'
+        +'</div>'
+        +'<div class="ch-title-row">'
+          +'<div class="ch-cert-eyebrow">'+certEyebrow+'</div>'
+          +'<div class="ch-cert-title">'+certTitle+'</div>'
+          +'<div class="ch-cert-std">Issued in accordance with BS 5266-1:2025 · BS EN 50172:2004 · BS EN 1838:2013</div>'
+        +'</div>'
+        +'<div class="ch-ref-bar"><div class="ch-ref">'+ref+'</div><div class="ch-date">Date of Issue: '+tDate+'</div></div>'
+      +'</div>'
+      +'<div class="addr-panel">'
+        +'<div class="addr-col addr-col-left">'
+          +'<div class="addr-col-label">Client &amp; Property</div>'
+          +'<div class="addr-name">'+pName+'</div>'
+          +(addr?'<div class="addr-line">'+addr+'</div>':'')
+          +(pType?'<div class="addr-sub">'+pType+'</div>':'')
+          +(cName?'<div class="addr-detail-row" style="margin-top:6px"><span class="addr-detail-lbl">Client:</span><span class="addr-detail-val">'+cName+'</span></div>':'')
+          +(cOrg?'<div class="addr-detail-row"><span class="addr-detail-lbl">Organisation:</span><span class="addr-detail-val">'+cOrg+'</span></div>':'')
+        +'</div>'
+        +'<div class="addr-col">'
+          +'<div class="addr-col-label">Issued By</div>'
+          +'<div class="addr-engineer-name">'+eng+'</div>'
+          +'<div class="addr-line">Qualified Electrician<br>'+coName+'<br>'+coAddr+'</div>'
+          +'<div class="addr-detail-row" style="margin-top:6px"><span class="addr-detail-lbl">Tel:</span><span class="addr-detail-val">'+coTel+'</span></div>'
+          +(niceic?'<div class="addr-detail-row"><span class="addr-detail-lbl">NICEIC:</span><span class="addr-detail-val" style="color:#b91c1c;font-weight:700">No. '+nic+'</span></div>':'')
+        +'</div>'
+      +'</div>'
+      +'<div class="outcome-band" style="background:'+obBg+'">'+obText+'</div>'
+      +'<div class="cb">'
+        +'<div class="sec-head">System Summary</div>'
+        +'<div class="fg-3">'
+          +field('System Type',sys)
+          +field('Mode of Operation',mode)
+          +field('Rated Duration','<span class="fv-green">'+rated+'</span>','fv')
+          +field('Total Luminaires',lumTotal)
+          +field('Passed',lumPass,'fv-green')
+          +field('Failed',lumFail, parseInt(lumFail)>0 ? 'fv-red':'fv')
+          +(r.certType==='EL.2'?field('Inspection Type',iType):'')
+          +field('Classification Code',classCode)
+        +'</div>'
+        +'<div class="stats-bar">'
+          +'<div class="stat-cell stat-tested"><span class="stat-num">'+lumTotal+'</span><span class="stat-lbl">Luminaires</span></div>'
+          +'<div class="stat-cell stat-pass"><span class="stat-num">'+lumPass+'</span><span class="stat-lbl">Passed</span></div>'
+          +'<div class="stat-cell stat-fail"><span class="stat-num">'+lumFail+'</span><span class="stat-lbl">Failed</span></div>'
+          +'<div class="stat-cell"><span class="stat-num" style="font-size:14px">'+rated+'</span><span class="stat-lbl">Rated Duration</span></div>'
+        +'</div>'
+        +(sat
+          ?'<div class="note-box"><div class="nb-lbl">✓ Confirmation</div><p>The emergency lighting system has been inspected and tested in accordance with BS 5266-1:2025. The system satisfies the requirements of the standard. All luminaires tested successfully.</p></div>'
+          :'<div class="obs-box"><div class="ob-lbl">⚠ Action Required</div>'+(obsText?'<div class="ob-item">'+obsText+'</div>':'<div class="ob-item">System found UNSATISFACTORY — see pages 2–3 for defect details and remedial recommendations.</div>')+'</div>'
+        )
+      +'</div>'
+      +footer(pName+(pType?' · '+pType:''), ref, 1, 4)
+    +'</div>';
+
+    /* PAGE 2 — System Details */
+    var p2 = '<div class="cert-page">'
+      +contHead(r.certType, 2, 4, 'System and Installation Details', ref, nic, coName)
+      +'<div class="cb">'
+        +'<div class="sec-head">Installation and Test Information</div>'
+        +'<div class="fg">'
+          +field('Certificate Reference',ref,'fv')
+          +field('Certificate Type',esc(r.certType))
+          +field('Date of Test / Issue',tDate)
+          +(r.certType==='EL.2'?field('Inspection Type',iType):'')
+          +field('System Type',sys)
+          +field('Mode of Operation',mode)
+          +field('Rated Duration',rated)
+          +(r.durationAchieved?field('Duration Achieved',esc(r.durationAchieved),sat?'fv-green':'fv-red'):'')
+          +field('Classification Code',classCode)
+          +'<div class="field fg-full"><div class="fl">Premises</div><div class="fv">'+pName+(addr?' — '+esc((r.premisesAddress||'').replace(/\n/g,', ')):'')+'</div></div>'
+          +field('Client',cName+(cOrg?' ('+cOrg+')':''))
+          +field('Engineer',eng)
+          +field('Competent Person Scheme','NICEIC Approved Contractor')
+          +field('NICEIC Scheme No.',nic,'fv-red')
+        +'</div>'
+        +(obsText
+          ?'<div class="sec-head">Observations and Defects</div><div class="obs-box"><div class="ob-lbl">'+(sat?'Notes':'Action Required')+'</div><div class="ob-item">'+obsText+'</div></div>'
+          :sat?'<div class="note-box"><div class="nb-lbl">No defects</div><p>No defects or limitations were identified during this inspection. The system is fully compliant with BS 5266-1:2025.</p></div>':''
+        )
+        +(nextInsp?'<div class="note-box" style="margin-top:10px"><div class="nb-lbl">Next Inspection</div><p>Next periodic inspection is recommended by: <strong>'+nextInsp+'</strong></p></div>':'')
+      +'</div>'
+      +footer(pName, ref, 2, 4)
+    +'</div>';
+
+    /* PAGE 3 — Luminaire Schedule */
+    var p3 = '<div class="cert-page">'
+      +contHead(r.certType, 3, 4, 'Luminaire Schedule', ref, nic, coName)
+      +'<div class="cb">'
+        +'<div class="sec-head">Schedule of Emergency Luminaires</div>'
+        +'<table class="ltbl">'
+          +'<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>'
+          +(function(){
+            var rows='';
+            var tot = parseInt(lumTotal)||0;
+            var pas = parseInt(lumPass)||tot;
+            var fai = parseInt(lumFail)||0;
+            for(var i=1;i<=Math.max(tot,1);i++){
+              var pass_i = i<=pas;
+              rows += '<tr><td>EL-'+String(i).padStart(2,'0')+'</td><td>Zone '+(Math.ceil(i/4))+' — Luminaire '+i+'</td><td>LED Emergency Fitting</td><td>'+mode+'</td><td>'+rated+'</td><td>'+(pass_i?'<span class="chip-pass">PASS</span>':'<span class="chip-fail">FAIL</span>')+'</td></tr>';
+            }
+            if(!tot) rows='<tr><td colspan="6" style="text-align:center;color:#9a948e;font-style:italic">No luminaire count entered</td></tr>';
+            return rows;
+          })()
+          +'<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested · '+lumPass+' pass · '+lumFail+' fail</td></tr>'
+        +'</table>'
+        +(sat
+          ?'<div class="note-box"><div class="nb-lbl">Schedule Result</div><p>All luminaires recorded as satisfactory. The system is in compliance with BS 5266-1:2025 and BS EN 1838:2013.</p></div>'
+          :'<div class="obs-box"><div class="ob-lbl">Failures Noted</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. See page 2 for defect details and remedial action required.</div></div>'
+        )
+      +'</div>'
+      +footer(lumTotal+' luminaires · '+lumPass+' pass · '+lumFail+' fail', ref, 3, 4)
+    +'</div>';
+
+    /* PAGE 4 — Declarations */
+    var declText = r.certType==='EL.1'
+      ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
+      : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
+
+    var p4 = '<div class="cert-page">'
+      +contHead(r.certType, 4, 4, 'Declarations and Sign-Off', ref, nic, coName)
+      +'<div class="cb">'
+        +'<div class="sec-head">Competent Person Declaration</div>'
+        +'<div class="decl-text">'+declText+'</div>'
+        +'<div class="sig-grid">'
+          +'<div class="sig-block"><div class="sig-block-head"><div class="sbh-title">Competent Person</div></div>'
+            +'<div class="sig-block-body">'
+              +'<div class="sig-field"><div class="sfl">Full Name</div><div class="sfv">'+eng+'</div></div>'
+              +'<div class="sig-field"><div class="sfl">Employer</div><div class="sfv">'+coName+'</div></div>'
+              +(niceic?'<div class="sig-field"><div class="sfl">NICEIC Scheme No.</div><div class="sfv">'+nic+'</div></div>':'')
+              +'<div class="sig-field"><div class="sfl">Date</div><div class="sfv">'+tDate+'</div></div>'
+              +'<div class="sig-area">Signature</div>'
+            +'</div>'
+          +'</div>'
+          +'<div class="sig-block"><div class="sig-block-head"><div class="sbh-title">Responsible Person / Client</div></div>'
+            +'<div class="sig-block-body">'
+              +'<div class="sig-field"><div class="sfl">Full Name</div><div class="sfv">'+cName+'</div></div>'
+              +(cOrg?'<div class="sig-field"><div class="sfl">Organisation</div><div class="sfv">'+cOrg+'</div></div>':'')
+              +'<div class="sig-field"><div class="sfl">Date</div><div class="sfv">&nbsp;</div></div>'
+              +'<div class="sig-area">Signature</div>'
+            +'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div class="sec-head">Certificate Notes</div>'
+        +'<div class="fg">'
+          +field('Premises',pName)
+          +field('Certificate Type / Ref',r.certType+' · '+r.ref)
+          +field('Outcome',r.outcome||'—',sat?'fv-green':'fv-red')
+          +(nextInsp?field('Next Inspection Due','<span class="fv-green">'+nextInsp+'</span>','fv'):'')
+        +'</div>'
+        +(sat
+          ?'<div class="obs-box" style="background:#f0fdf4;border-color:#bbf7d0;border-left-color:#15803d"><div class="ob-lbl" style="color:#15803d">SATISFACTORY</div><div class="ob-item" style="color:#14532d">System satisfies requirements of BS 5266-1:2025</div><div class="ob-item" style="color:#14532d">'+lumTotal+' luminaires inspected · '+lumPass+' pass · '+lumFail+' fail</div></div>'
+          :'<div class="obs-box"><div class="ob-lbl">UNSATISFACTORY — Remedial Action Required</div>'+(obsText?'<div class="ob-item">'+obsText+'</div>':'')+'</div>'
+        )
+      +'</div>'
+      +footer(coName+' · NICEIC No. '+nic, ref, 4, 4)
+    +'</div>';
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+      +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
+      +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
+      +'<style>'+css+'</style></head><body>'
+      +'<div class="topbar"><div><div class="topbar-title">'+certTitle+'</div><div class="topbar-sub">'+esc(r.ref)+' · '+coName+'</div></div><button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button></div>'
+      +p1+p2+p3+p4
+      +'</body></html>';
+  };
+
+  window.loadELHistory = function(){
+    var el = document.getElementById('el-history-list');
+    if(!el) return;
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('el_certs')||'[]'); } catch(e){}
+    if(!list.length){
+      el.innerHTML='<p class="empty-state">No EL certificates yet. <a href="#" onclick="startNewEL();return false" style="color:var(--accent)">Create the first one →</a></p>';
+      return;
+    }
+    var html = '';
+    list.forEach(function(r,i){
+      var badge = r.outcome==='SATISFACTORY'
+        ? '<span class="el-history-badge sat">SATISFACTORY</span>'
+        : '<span class="el-history-badge uns">UNSATISFACTORY</span>';
+      var date = r.testDate || (r.savedAt||'').slice(0,10);
+      html += '<div class="el-history-item" onclick="(function(){var l=[];try{l=JSON.parse(localStorage.getItem(\'el_certs\')||\'[]\');}catch(e){}if(l['+i+'])elOpenCert(l['+i+']);})();">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">';
+      html += '<div><span style="font-weight:700;font-size:14px">'+(r.premisesName||'Unnamed site').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'+badge+'</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">'+(r.certType||'')+ ' · '+(date||'')+'</div></div>';
+      html += '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+(r.ref||'')+(r.engineerName?' · '+r.engineerName:'')+'</div>';
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  };
+
 })();
 </script>
 </body>
