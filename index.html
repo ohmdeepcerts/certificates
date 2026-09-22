@@ -8538,9 +8538,9 @@ async function saveApplianceRecord(){
     var _lrAll  = (r.lumRows||[]).filter(function(row){return row.loc;});
     var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
                   : (r.observations ? [{code:'—',text:r.observations}] : []);
-    var _DEF_P4=10, _DEF_CONT=10, _LUM_CONT=22;
+    var _DEF_P4=18, _DEF_CONT=18, _LUM_CONT=22;
     var _defCnt = _obsAll.length;
-    var _lumOnP4 = _defCnt===0?18:_defCnt<=5?13:_defCnt<=10?8:_defCnt<=_DEF_P4?3:0;
+    var _lumOnP4 = _defCnt===0?18:_defCnt<=5?13:_defCnt<=10?8:0;
     var _extraDef = _defCnt>_DEF_P4 ? Math.ceil((_defCnt-_DEF_P4)/_DEF_CONT) : 0;
     var _lrOnP4  = _lrAll.slice(0,_lumOnP4);
     var _lrRest  = _lrAll.slice(_lumOnP4);
