@@ -8826,10 +8826,6 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           ?'<div class="note-box"><div class="nb-lbl">✓ System Satisfactory</div><p>This emergency lighting system has been inspected and tested in accordance with BS 5266-1:2025. The system satisfies the requirements of the standard. All '+lumTotal+' luminaires were tested and '+lumPass+' achieved the full rated duration of '+rated+'.</p></div>'
           :'<div class="obs-box"><div class="ob-lbl">⚠ Action Required — Unsatisfactory</div>'+(obsText?'<div class="ob-item">'+obsText+'</div>':'<div class="ob-item">System found UNSATISFACTORY — see page 4 for full defect details and remedial recommendations.</div>')+'</div>'
         )
-        +'<div style="margin-top:auto;padding-top:20px;border-top:1px solid #e8e4dc">'
-          +'<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:8px">About This Certificate</div>'
-          +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
-        +'</div>'
       +'</div>'
       +footer(pName+(pType?' · '+pType:''), ref, 1, totalPages)
     +'</div>';
@@ -8918,6 +8914,10 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             +'<div style="padding:7px 10px;flex:1;color:#c0262b;font-weight:700;letter-spacing:0.04em">'+nic+'</div>'
           +'</div>'
         +'</div>'
+      +'</div>'
+      +'<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e8e4dc">'
+        +'<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:8px">About This Certificate</div>'
+        +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
       +'</div>'
       +footer(pName, ref, 2, totalPages)
     +'</div>';
