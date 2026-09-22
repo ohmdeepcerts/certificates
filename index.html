@@ -8819,36 +8819,10 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
         +'</div>'
       +'</div>'
-      +footer(pName+(pType?' · '+pType:''), ref, 1, 5)
+      +footer(pName+(pType?' · '+pType:''), ref, 1, 4)
     +'</div>';
 
-    /* PAGE 2 — Installation Details */
-    var p2 = '<div class="cert-page">'
-      +contHead(r.certType, 2, 5, 'Installation Details', ref, nic, coName)
-      +'<div class="cb">'
-        +'<div class="sec-head">Installation and Test Information</div>'
-        +'<div class="fg">'
-          +field('Certificate Reference',ref,'fv')
-          +field('Certificate Type',esc(r.certType))
-          +field('Date of Test / Issue',tDate)
-          +(r.certType==='EL.2'?field('Inspection Type',iType):'')
-          +field('System Type',sys)
-          +field('Mode of Operation',mode)
-          +field('Rated Duration',rated)
-          +(r.durationAchieved?field('Duration Achieved',esc(r.durationAchieved),sat?'fv-green':'fv-red'):'')
-          +field('Classification Code',classCode)
-          +'<div class="field fg-full"><div class="fl">Premises Address</div><div class="fv">'+(pName!=='—'?pName:'')+((pName!=='—'&&addr)?'<br>':'')+(addr||'')+(!pName&&!addr?'—':'')+'</div></div>'
-          +(pType?'<div class="field fg-full"><div class="fl">Premises Type</div><div class="fv">'+pType+'</div></div>':'')
-          +'<div class="field fg-full"><div class="fl">Client</div><div class="fv"><span style="font-weight:700">'+cName+'</span>'+(cAddrLine?'<br><span style="font-weight:400">'+esc(cAddrLine)+'</span>':'')+'</div></div>'
-          +field('Competent Person / Engineer',eng)
-          +field('Competent Person Scheme','NICEIC Approved Contractor')
-          +field('NICEIC Registration No.',nic,'fv-red')
-        +'</div>'
-      +'</div>'
-      +footer(pName, ref, 2, 5)
-    +'</div>';
-
-    /* PAGE 3 — System Purpose, Arrangement & Test Instruments */
+    /* PAGE 2 — System Purpose, Arrangement & Test Instruments */
     (function(){})(); // scope marker
     var declText = r.certType==='EL.1'
       ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
@@ -8856,7 +8830,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#16a34a;font-size:14px">✓</span>':'<span style="font-size:10px;color:#9a948e;font-weight:600">N/A</span>';};
     var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #ede9e4"><div style="flex:1;padding:6px 10px;font-size:11px;color:#44403c">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #ede9e4">'+_pv(val||'N/A')+'</div></div>';};
     var p2b = '<div class="cert-page">'
-      +contHead(r.certType, 3, 5, 'System Purpose &amp; Test Instruments', ref, nic, coName)
+      +contHead(r.certType, 2, 4, 'System Purpose &amp; Test Instruments', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Purpose of Installed Emergency Lighting System</div>'
         +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
@@ -8933,7 +8907,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'</div>'
         +'</div>'
       +'</div>'
-      +footer(pName, ref, 3, 5)
+      +footer(pName, ref, 2, 4)
     +'</div>';
 
     /* PAGE 4 — Compliance Checklist */
@@ -8965,7 +8939,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var _pChip=function(v){return v==='✓'?'<span class="chip-pass" style="min-width:28px">&#10003;</span>':v==='✗'?'<span class="chip-fail" style="min-width:28px">&#10007;</span>':'<span class="chip-na" style="min-width:28px">N/A</span>';};
 
     var p3 = '<div class="cert-page">'
-      +contHead(r.certType, 4, 5, 'Compliance Checklist', ref, nic, coName)
+      +contHead(r.certType, 3, 4, 'Compliance Checklist', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist (Annex M)</div>'
         +'<table class="ltbl">'
@@ -8983,12 +8957,12 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +(r.checklistNotes?'<tr><td colspan="3" style="padding:5px 8px;font-size:10px"><span style="font-weight:700;color:#78716c">Notes: </span>'+esc(r.checklistNotes)+'</td></tr>':'')
         +'</table>'
       +'</div>'
-      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 4, 5)
+      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, 4)
     +'</div>';
 
     /* PAGE 5 — Defects & Luminaire Schedule */
     var p4 = '<div class="cert-page">'
-      +contHead(r.certType, 5, 5, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
+      +contHead(r.certType, 4, 4, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Defects &amp; Recommendations</div>'
         +(function(){
@@ -9029,14 +9003,14 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             );
         })()
       +'</div>'
-      +footer(pName, ref, 5, 5)
+      +footer(pName, ref, 4, 4)
     +'</div>';
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
       +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
       +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
       +'<style>'+css+'</style></head><body>'
-      +p1+p2+p2b+p3+p4
+      +p1+p2b+p3+p4
       +'</body></html>';
   };
 
