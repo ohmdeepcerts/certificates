@@ -8425,29 +8425,29 @@ async function saveApplianceRecord(){
     var css = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24px 48px;color:#1c1917;}
-.cert-page{background:#fff;width:794px;min-height:1123px;margin:0 auto 40px;box-shadow:0 6px 28px rgba(0,0,0,.2);font-size:13px;color:#1c1917;line-height:1.5;display:flex;flex-direction:column;}
+.cert-page{background:#fff;width:794px;height:1123px;max-height:1123px;overflow:hidden;margin:0 auto 40px;box-shadow:0 6px 28px rgba(0,0,0,.2);font-size:13px;color:#1c1917;line-height:1.5;display:flex;flex-direction:column;}
 .cert-top-strip{background:#b91c1c;height:6px;flex-shrink:0;}
-.ch{background:#fff;padding:20px 28px 0;flex-shrink:0;}
-.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:16px;border-bottom:1.5px solid #f0ece4;}
+.ch{background:#fff;padding:12px 28px 0;flex-shrink:0;}
+.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1.5px solid #f0ece4;}
 .ch-logo-row{display:flex;align-items:center;gap:12px;}
-.ch-logo{width:42px;height:42px;background:#b91c1c;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.05em;}
-.ch-company{font-size:26px;font-weight:900;color:#1c1917;letter-spacing:-.02em;line-height:1.1;}
-.ch-company-sub{font-size:11px;color:#9a948e;margin-top:3px;}
+.ch-logo{width:40px;height:40px;background:#b91c1c;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.05em;}
+.ch-company{font-size:20px;font-weight:900;color:#1c1917;letter-spacing:-.02em;line-height:1.1;}
+.ch-company-sub{font-size:10px;color:#9a948e;margin-top:2px;}
 .ch-company-sub a{color:#9a948e;text-decoration:none;}
 .ch-company-sub a:hover{text-decoration:underline;}
 .niceic-badge{border:1.5px solid #e0dbd0;border-radius:4px;padding:7px 14px;text-align:center;background:#fafaf9;}
 .niceic-badge .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1c1917;}
 .niceic-badge .nb-sub{font-size:8px;color:#9a948e;margin-top:1px;}
 .niceic-badge .nb-no{font-size:12px;font-weight:700;color:#b91c1c;margin-top:3px;font-family:monospace;}
-.ch-title-row{padding:18px 0 14px;}
-.ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b91c1c;margin-bottom:5px;}
-.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:36px;font-weight:700;color:#b91c1c;line-height:1.0;}
-.ch-cert-std{font-size:10px;color:#9a948e;margin-top:8px;line-height:1.7;}
+.ch-title-row{padding:10px 0 10px;}
+.ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b91c1c;margin-bottom:4px;}
+.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:34px;font-weight:700;color:#b91c1c;line-height:1.0;}
+.ch-cert-std{font-size:10px;color:#9a948e;margin-top:6px;line-height:1.6;}
 .ch-ref-bar{background:#b91c1c;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.04em;}
 .ch-date{font-size:12px;color:rgba(255,255,255,.85);}
 .addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid #b91c1c;flex-shrink:0;}
-.addr-col{padding:16px 28px 20px;}
+.addr-col{padding:12px 28px 14px;}
 .addr-col-left{border-right:1px solid #e8e4dc;}
 .addr-col-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;padding-bottom:7px;border-bottom:1px solid #fee2e2;margin-bottom:10px;}
 .addr-name{font-size:16px;font-weight:700;color:#1c1917;margin-bottom:3px;}
@@ -8526,7 +8526,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .cf-left{font-size:10.5px;color:#9a948e;}
 .cf-right{font-size:10.5px;color:#9a948e;text-align:right;}
 .cf-ref{font-family:monospace;font-size:10.5px;font-weight:700;color:#b91c1c;}
-@media print{body{background:#fff;padding:0;margin:0} .cert-page{width:210mm;min-height:297mm;box-shadow:none;margin:0;page-break-after:always;}}
+@media print{body{background:#fff;padding:0;margin:0} .cert-page{width:210mm;height:297mm;min-height:297mm;max-height:297mm;overflow:hidden;box-shadow:none;margin:0;page-break-after:always;}}
 @media(max-width:480px){.fg,.fg-3,.sig-grid,.addr-panel{grid-template-columns:1fr;} .stats-bar{grid-template-columns:1fr 1fr;}}
 `;
 
