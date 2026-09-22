@@ -8538,6 +8538,10 @@ async function saveApplianceRecord(){
     var lumTotal = r.lumTotal||'—';
     var lumPass  = r.lumPass||'—';
     var lumFail  = r.lumFail||'0';
+    var _lrAll   = (r.lumRows||[]).filter(function(row){return row.loc;});
+    var ROWS_P4 = 20, ROWS_CONT = 35;
+    var extraLumPages = _lrAll.length > ROWS_P4 ? Math.ceil((_lrAll.length - ROWS_P4) / ROWS_CONT) : 0;
+    var totalPages = 4 + extraLumPages;
     var _pParts = [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean);
     var addr = _pParts.length ? _pParts.join('<br>') : (r.premisesAddress||'').replace(/\n/g,'<br>');
     var modeLabel = r.mode ? r.mode.replace(/ \([XYZ]\)/,'') : '—';
@@ -8813,7 +8817,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
         +'</div>'
       +'</div>'
-      +footer(pName+(pType?' · '+pType:''), ref, 1, 4)
+      +footer(pName+(pType?' · '+pType:''), ref, 1, totalPages)
     +'</div>';
 
     /* PAGE 2 — System Purpose, Arrangement & Test Instruments */
@@ -8824,7 +8828,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#16a34a;font-size:14px">✓</span>':'<span style="font-size:10px;color:#9a948e;font-weight:600">N/A</span>';};
     var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #ede9e4"><div style="flex:1;padding:6px 10px;font-size:11px;color:#44403c">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #ede9e4">'+_pv(val||'N/A')+'</div></div>';};
     var p2b = '<div class="cert-page">'
-      +contHead(r.certType, 2, 4, 'System Purpose &amp; Test Instruments', ref, nic, coName)
+      +contHead(r.certType, 2, totalPages, 'System Purpose &amp; Test Instruments', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Purpose of Installed Emergency Lighting System</div>'
         +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
@@ -8901,7 +8905,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'</div>'
         +'</div>'
       +'</div>'
-      +footer(pName, ref, 2, 4)
+      +footer(pName, ref, 2, totalPages)
     +'</div>';
 
     /* PAGE 4 — Compliance Checklist */
@@ -8933,7 +8937,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var _pChip=function(v){return v==='✓'?'<span class="chip-pass" style="min-width:28px">&#10003;</span>':v==='✗'?'<span class="chip-fail" style="min-width:28px">&#10007;</span>':'<span class="chip-na" style="min-width:28px">N/A</span>';};
 
     var p3 = '<div class="cert-page">'
-      +contHead(r.certType, 3, 4, 'Compliance Checklist', ref, nic, coName)
+      +contHead(r.certType, 3, totalPages, 'Compliance Checklist', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist (Annex M)</div>'
         +'<table class="ltbl">'
@@ -8954,12 +8958,31 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +(r.checklistNotes?esc(r.checklistNotes):'<span style="color:#a8a29e;font-style:italic">None</span>')
         +'</div>'
       +'</div>'
-      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, 4)
+      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, totalPages)
     +'</div>';
 
-    /* PAGE 5 — Defects & Luminaire Schedule */
+    /* PAGE 4 — Defects & Luminaire Schedule (paginated) */
+    var _lumSatNote = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2013. No further action required.</p></div>';
+    var _lumFailNote = '<div class="obs-box"><div class="ob-lbl">Failures Noted — Remedial Action Required</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. Refer to defects above for full details and recommended remedial action.</div></div>';
+    var _lumTotalRow = '<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested &middot; '+lumPass+' pass &middot; '+lumFail+' fail</td></tr>';
+    var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#78716c;font-style:italic;font-weight:400">Continued on next page…</td></tr>';
+    var _lumTableHead = '<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>';
+
+    function _buildLumRows(chunk, startNum){
+      return chunk.map(function(row,i){
+        return '<tr><td>EL-'+String(startNum+i).padStart(2,'0')+'</td>'
+          +'<td>'+esc(row.loc)+'</td>'
+          +'<td>LED Emergency Fitting</td>'
+          +'<td>'+mode+'</td><td>'+rated+'</td>'
+          +'<td>'+(row.result==='FAIL'?'<span class="chip-fail">FAIL</span>':'<span class="chip-pass">PASS</span>')+'</td></tr>';
+      }).join('');
+    }
+
+    var _lrChunk1 = _lrAll.slice(0, ROWS_P4);
+    var _lrIsLast1 = extraLumPages === 0;
+
     var p4 = '<div class="cert-page">'
-      +contHead(r.certType, 4, 4, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
+      +contHead(r.certType, 4, totalPages, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Defects &amp; Recommendations</div>'
         +(function(){
@@ -8979,35 +9002,44 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           return '<table class="ltbl"><tr><th style="width:60px">Code</th><th>Description</th></tr>'+rows+'</table>';
         })()
         +(nextInsp?'<div class="note-box" style="margin-top:12px"><div class="nb-lbl">Next Inspection</div><p>Next periodic inspection recommended by: <strong>'+nextInsp+'</strong></p></div>':'')
-        +(function(){
-          var _lr = (r.lumRows||[]).filter(function(row){return row.loc;});
-          if(!_lr.length) return '';
-          return '<div class="sec-head">Schedule of Emergency Luminaires</div>'
-            +'<table class="ltbl">'
-              +'<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>'
-              +_lr.map(function(row,i){
-                return '<tr><td>EL-'+String(i+1).padStart(2,'0')+'</td>'
-                  +'<td>'+esc(row.loc)+'</td>'
-                  +'<td>LED Emergency Fitting</td>'
-                  +'<td>'+mode+'</td><td>'+rated+'</td>'
-                  +'<td>'+(row.result==='FAIL'?'<span class="chip-fail">FAIL</span>':'<span class="chip-pass">PASS</span>')+'</td></tr>';
-              }).join('')
-              +'<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested &middot; '+lumPass+' pass &middot; '+lumFail+' fail</td></tr>'
+        +(_lrChunk1.length
+          ?'<div class="sec-head">Schedule of Emergency Luminaires</div>'
+            +'<table class="ltbl">'+_lumTableHead
+              +_buildLumRows(_lrChunk1, 1)
+              +(_lrIsLast1 ? _lumTotalRow : _lumContRow)
             +'</table>'
-            +(sat
-              ?'<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2013. No further action required.</p></div>'
-              :'<div class="obs-box"><div class="ob-lbl">Failures Noted — Remedial Action Required</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. Refer to defects above for full details and recommended remedial action.</div></div>'
-            );
-        })()
+            +(_lrIsLast1 ? (sat ? _lumSatNote : _lumFailNote) : '')
+          :'')
       +'</div>'
-      +footer(pName, ref, 4, 4)
+      +footer(pName, ref, 4, totalPages)
     +'</div>';
+
+    /* Continuation pages for large luminaire schedules */
+    var p4extra = '';
+    for(var _epi=0; _epi<extraLumPages; _epi++){
+      var _chunkStart = ROWS_P4 + _epi * ROWS_CONT;
+      var _chunk = _lrAll.slice(_chunkStart, _chunkStart + ROWS_CONT);
+      var _epNum = 5 + _epi;
+      var _epIsLast = _epi === extraLumPages - 1;
+      p4extra += '<div class="cert-page">'
+        +contHead(r.certType, _epNum, totalPages, 'Luminaire Schedule (continued)', ref, nic, coName)
+        +'<div class="cb">'
+          +'<div class="sec-head">Schedule of Emergency Luminaires (continued)</div>'
+          +'<table class="ltbl">'+_lumTableHead
+            +_buildLumRows(_chunk, _chunkStart + 1)
+            +(_epIsLast ? _lumTotalRow : _lumContRow)
+          +'</table>'
+          +(_epIsLast ? (sat ? _lumSatNote : _lumFailNote) : '')
+        +'</div>'
+        +footer(pName, ref, _epNum, totalPages)
+      +'</div>';
+    }
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
       +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
       +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
       +'<style>'+css+'</style></head><body>'
-      +p1+p2b+p3+p4
+      +p1+p2b+p3+p4+p4extra
       +'</body></html>';
   };
 
