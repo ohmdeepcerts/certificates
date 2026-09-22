@@ -7505,13 +7505,13 @@ async function saveApplianceRecord(){
       html += '<div class="elwiz-sub">Name and address of the property being certified.</div>';
       html += '<label class="elwiz-input-label">Premises / site name <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pname" placeholder="e.g. Sunrise Care Home, Flat 3" value="'+esc(_w.premisesName)+'" oninput="elSet(\'premisesName\',this.value)">';
-      html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
+      html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>';
       html += '<input class="elwiz-input" id="elw-pa1" placeholder="Street / building" value="'+esc(_w.premAddr1)+'" oninput="elSet(\'premAddr1\',this.value)">';
       html += '<label class="elwiz-input-label">Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pa2" placeholder="Area / district" value="'+esc(_w.premAddr2)+'" oninput="elSet(\'premAddr2\',this.value)">';
       html += '<label class="elwiz-input-label">Address line 3 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pa3" placeholder="Town / city" value="'+esc(_w.premAddr3)+'" oninput="elSet(\'premAddr3\',this.value)">';
-      html += '<label class="elwiz-input-label">Postcode <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
+      html += '<label class="elwiz-input-label">Postcode <span style="color:var(--error,#b91c1c)">*</span></label>';
       html += '<input class="elwiz-input" id="elw-papc" placeholder="e.g. LS1 5HD" style="max-width:160px;text-transform:uppercase" value="'+esc(_w.premPostcode)+'" oninput="elSet(\'premPostcode\',this.value.toUpperCase())">';
       var PT_PRIMARY = ['House','Flat / Apartment','HMO','Commercial Office','Retail / Shop'];
       var PT_MORE    = ['Care Home','School / College','Warehouse','Hotel','Restaurant / Café'];
@@ -7889,6 +7889,8 @@ async function saveApplianceRecord(){
   window.elNext = function(){
     var s = _w.step;
     if(s===0 && !_w.certType){ toast('Please select a certificate type','warning',2000); return; }
+    if(s===1 && !_w.premAddr1.trim()){ toast('Address line 1 is required','warn'); document.getElementById('elw-pa1')&&document.getElementById('elw-pa1').focus(); return; }
+    if(s===1 && !_w.premPostcode.trim()){ toast('Postcode is required','warn'); document.getElementById('elw-papc')&&document.getElementById('elw-papc').focus(); return; }
     if(s===2 && !_w.clientPostcode.trim()){ toast('Please fill in the client postcode','warning',2000); document.getElementById('elw-capc')&&document.getElementById('elw-capc').focus(); return; }
     if(s===3 && (!_w.systemType||!_w.mode)){ toast('Please select system type and mode','warning',2000); return; }
     if(s===4 && !_w.ratedDuration){ toast('Please select rated duration','warning',2000); return; }
