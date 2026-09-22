@@ -8348,10 +8348,11 @@ async function saveApplianceRecord(){
         +'</table></td></tr></table>'
         +'</body></html>';
 
-      // Attach cert as HTML file (base64)
-      var attachB64 = ''; var attachName = certRef.replace(/[^\w\-]/g,'_')+'.html';
-      if(certHTML){
-        try{ attachB64 = btoa(unescape(encodeURIComponent(certHTML))); }catch(e){ attachB64=''; }
+      // Attach cert as PDF
+      var attachB64 = '';
+      var attachName = certRef.replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
+      if(r2 && r2.certType){
+        try{ showOverlay('Preparing PDF…'); attachB64 = await elGeneratePDF(r2,true); }catch(e){ console.warn('PDF attach:',e); }finally{ hideOverlay(); }
       }
 
       var toName = (document.getElementById('el-em-to').value||'').split('@')[0];
