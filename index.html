@@ -8621,14 +8621,14 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         +'<div class="addr-col">'
           +'<div class="addr-col-label">Issued By</div>'
           +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+            +'<div style="flex:1;min-width:0">'
+              +'<div class="addr-engineer-name">'+eng+'</div>'
+              +'<div class="addr-line">'+engPos+'<br>'+coName+'</div>'
+            +'</div>'
             +(sigImg
               ?'<div style="flex-shrink:0;border:1px solid #e8e4dc;border-radius:3px;background:#fafaf9;padding:4px 8px"><img src="'+elSigData+'" style="max-height:38px;max-width:100px;object-fit:contain;display:block"></div>'
               :'<div style="flex-shrink:0;width:100px;height:38px;border:1.5px dashed #d0ccc6;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#c0bab2;font-size:9px;font-style:italic">Signature</div>'
             )
-            +'<div>'
-              +'<div class="addr-engineer-name">'+eng+'</div>'
-              +'<div class="addr-line">'+engPos+'<br>'+coName+'</div>'
-            +'</div>'
           +'</div>'
           +(coTel?'<div class="addr-detail-row"><span class="addr-detail-lbl">Tel:</span><span class="addr-detail-val">'+coTel+'</span></div>':'')
           +(coEmail?'<div class="addr-detail-row"><span class="addr-detail-lbl">Email:</span><span class="addr-detail-val">'+coEmail+'</span></div>':'')
