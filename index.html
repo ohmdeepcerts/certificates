@@ -9252,16 +9252,21 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           return {src:img.src,x:ir.left-pr.left,y:ir.top-pr.top,w:ir.width,h:ir.height};
         });
         var canvas = await html2canvas(page,{scale:2.5,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,windowHeight:ph,scrollX:0,scrollY:0,logging:false,imageTimeout:8000});
-        // Post-process: html2canvas leaves scale(2.5,2.5) transform on ctx and skips img with object-fit:contain.
-        // Draw each img at CSS coords — the active transform scales them to canvas pixels automatically.
+        // Post-process: html2canvas skips img[object-fit:contain] and leaves an active clip/transform.
+        // Fix: reset to identity, reset clip to full canvas, draw imgs at raw canvas pixel coords.
         var pageCtx = canvas.getContext('2d');
+        var h2cScale = pageCtx.getTransform().a || 2.5;
+        pageCtx.save();
+        pageCtx.setTransform(1,0,0,1,0,0);
+        pageCtx.beginPath(); pageCtx.rect(0,0,canvas.width,canvas.height); pageCtx.clip();
         for(var pi=0;pi<pageImgInfos.length;pi++){
           var pinfo=pageImgInfos[pi];
           if(pinfo.w<=0||pinfo.h<=0) continue;
           var drawImg=new Image();
           await new Promise(function(res){ drawImg.onload=res; drawImg.onerror=res; drawImg.src=pinfo.src; setTimeout(res,3000); });
-          if(drawImg.naturalWidth>0) pageCtx.drawImage(drawImg,pinfo.x,pinfo.y,pinfo.w,pinfo.h);
+          if(drawImg.naturalWidth>0) pageCtx.drawImage(drawImg,Math.round(pinfo.x*h2cScale),Math.round(pinfo.y*h2cScale),Math.round(pinfo.w*h2cScale),Math.round(pinfo.h*h2cScale));
         }
+        pageCtx.restore();
         page.style.cssText = savedStyle;
         var imgH = (canvas.height/canvas.width)*210;
         var imgData = canvas.toDataURL('image/jpeg',0.88);
