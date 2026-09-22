@@ -8537,10 +8537,38 @@ async function saveApplianceRecord(){
     var _lrAll  = (r.lumRows||[]).filter(function(row){return row.loc;});
     var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
                   : (r.observations ? [{code:'—',text:r.observations}] : []);
-    var _DEF_P4=18, _DEF_CONT=18, _LUM_CONT=22;
     var _defCnt = _obsAll.length;
+    // Measure actual defect row heights so pagination is based on real rendered sizes
+    var _defRowH = [];
+    (function(){
+      if(!_defCnt) return;
+      try {
+        var _tmp = document.createElement('div');
+        _tmp.style.cssText = 'position:fixed;left:-9999px;top:0;width:738px;visibility:hidden;pointer-events:none;background:#fff;font-size:12px;line-height:1.5;font-family:Inter,sans-serif';
+        document.body.appendChild(_tmp);
+        _tmp.innerHTML = '<table style="width:100%;border-collapse:collapse;table-layout:auto"><colgroup><col style="width:60px"><col></colgroup><tbody>'
+          +_obsAll.map(function(o){return '<tr><td style="padding:8px 10px;border-bottom:1px solid #e8e4dc;vertical-align:middle"><span style="display:inline-block;font-size:10px;padding:2px 7px">'+esc(o.code||'—')+'</span></td><td style="padding:8px 10px;border-bottom:1px solid #e8e4dc;vertical-align:middle">'+esc(o.text||'')+'</td></tr>';}).join('')
+          +'</tbody></table>';
+        _tmp.querySelectorAll('tbody tr').forEach(function(tr){_defRowH.push(tr.offsetHeight||35);});
+        document.body.removeChild(_tmp);
+      } catch(e){}
+    })();
+    // Budget per page: A4(1123) − ch-cont(75) − footer(40) − cb-pad(40) − sec-head(37) − th-row(32) − continued(25) − ltbl-margin(14) = 860, use 850 for safety
+    var _DEF_ROW_BUDGET = 850;
+    // _defPageBreaks[i] = index in _obsAll where continuation page i+1 starts
+    var _defPageBreaks = [];
+    (function(){
+      var _used = 0;
+      for(var _ri=0;_ri<_defCnt;_ri++){
+        var _rh = _defRowH[_ri]||35;
+        if(_used+_rh>_DEF_ROW_BUDGET && _ri>0){ _defPageBreaks.push(_ri); _used=0; }
+        _used += _rh;
+      }
+    })();
+    var _DEF_P4 = _defPageBreaks.length>0 ? _defPageBreaks[0] : _defCnt;
+    var _extraDef = _defPageBreaks.length;
+    var _LUM_CONT = 22;
     var _lumOnP4 = _defCnt===0?18:_defCnt<=5?13:_defCnt<=10?8:0;
-    var _extraDef = _defCnt>_DEF_P4 ? Math.ceil((_defCnt-_DEF_P4)/_DEF_CONT) : 0;
     var _lrOnP4  = _lrAll.slice(0,_lumOnP4);
     var _lrRest  = _lrAll.slice(_lumOnP4);
     var _extraLum = _lrRest.length>0 ? Math.ceil(_lrRest.length/_LUM_CONT) : 0;
@@ -9022,8 +9050,9 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
     /* Extra defect continuation pages */
     for(var _dpi=0;_dpi<_extraDef;_dpi++){
-      var _dStart=_DEF_P4+_dpi*_DEF_CONT;
-      var _dChunk=_obsAll.slice(_dStart,_dStart+_DEF_CONT);
+      var _dStart=_defPageBreaks[_dpi];
+      var _dEnd=_dpi+1<_defPageBreaks.length?_defPageBreaks[_dpi+1]:_defCnt;
+      var _dChunk=_obsAll.slice(_dStart,_dEnd);
       var _dpNum=5+_dpi;
       var _dLast=_dpi===_extraDef-1;
       p4extra+='<div class="cert-page">'
