@@ -8541,7 +8541,7 @@ async function saveApplianceRecord(){
     var _lrAll  = (r.lumRows||[]).filter(function(row){return row.loc;});
     var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
                   : (r.observations ? [{code:'—',text:r.observations}] : []);
-    var _DEF_P4=10, _DEF_CONT=10, _LUM_CONT=24;
+    var _DEF_P4=10, _DEF_CONT=10, _LUM_CONT=22;
     var _defCnt = _obsAll.length;
     var _lumOnP4 = _defCnt===0?18:_defCnt<=5?13:_defCnt<=10?8:_defCnt<=_DEF_P4?3:0;
     var _extraDef = _defCnt>_DEF_P4 ? Math.ceil((_defCnt-_DEF_P4)/_DEF_CONT) : 0;
@@ -8821,9 +8821,6 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +field('System Type',sys)
           +field('Mode of Operation',mode)
           +field('Classification Code',classCode)
-          +field('Certificate Reference',ref,'fv')
-          +field('Date of Test / Issue',tDate)
-          +field('Competent Person',eng)
         +'</div>'
         +(sat
           ?'<div class="note-box"><div class="nb-lbl">✓ System Satisfactory</div><p>This emergency lighting system has been inspected and tested in accordance with BS 5266-1:2025. The system satisfies the requirements of the standard. All '+lumTotal+' luminaires were tested and '+lumPass+' achieved the full rated duration of '+rated+'.</p></div>'
