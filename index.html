@@ -8842,7 +8842,23 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var all = _elAllCerts;
     var tot = all.length, sat = all.filter(function(r){return r.outcome==='SATISFACTORY';}).length, uns = all.filter(function(r){return r.outcome==='UNSATISFACTORY';}).length;
     var tile = function(n,lbl,col){ return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:'+(col||'var(--text)')+'">'+n+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+lbl+'</div></div>'; };
-    var html = '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+tile(tot,'Total certs')+tile(sat,'Satisfactory','#16a34a')+tile(uns,'Unsatisfactory','#dc2626')+'</div>';
+    var _typeShort = {'EL.1':'Installation','EL.2':'Periodic Inspection','EL.3':'Existing Site'};
+    var _typeRow = ['EL.1','EL.2','EL.3'].map(function(t){
+      var ta=all.filter(function(r){return r.certType===t;}),ts=ta.filter(function(r){return r.outcome==='SATISFACTORY';}).length,tu=ta.filter(function(r){return r.outcome==='UNSATISFACTORY';}).length;
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;flex:1;min-width:120px">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+        +'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:rgba(30,58,95,.08);color:#1e3a5f;letter-spacing:.05em">'+t+'</span>'
+        +'<span style="font-size:11px;color:var(--muted);white-space:nowrap">'+_typeShort[t]+'</span>'
+        +'</div>'
+        +'<div style="display:flex;align-items:baseline;gap:10px">'
+        +'<span style="font-size:20px;font-weight:700;color:var(--text)">'+ta.length+'</span>'
+        +'<span style="font-size:12px;font-weight:600;color:#16a34a">'+ts+' pass</span>'
+        +'<span style="font-size:12px;font-weight:600;color:#dc2626">'+tu+' fail</span>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+    var html = '<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">'+tile(tot,'Total certs')+tile(sat,'Satisfactory','#16a34a')+tile(uns,'Unsatisfactory','#dc2626')+'</div>'
+      +'<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+_typeRow+'</div>';
     html += '<div style="display:flex;flex-direction:column;gap:8px">';
     list.forEach(function(r){
       var sat = r.outcome==='SATISFACTORY';
