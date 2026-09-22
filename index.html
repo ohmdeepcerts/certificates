@@ -8712,7 +8712,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     html += '<div style="display:flex;flex-direction:column;gap:8px">';
     list.forEach(function(r){
       var sat = r.outcome==='SATISFACTORY';
-      var name = (r.premisesName||'Unnamed site');
+      var name = r.premisesName || [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') || 'Unknown site';
       var initials = name.replace(/[^a-zA-Z0-9 ]/g,'').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase()||'EL';
       var colors = [['#1e3a5f','#fff'],['#b91c1c','#fff'],['#065f46','#fff'],['#7c3aed','#fff'],['#92400e','#fff']];
       var col = colors[name.charCodeAt(0)%colors.length];
