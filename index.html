@@ -8850,6 +8850,9 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
     /* PAGE 3 — System Purpose, Arrangement & Test Instruments */
     (function(){})(); // scope marker
+    var declText = r.certType==='EL.1'
+      ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
+      : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
     var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#16a34a;font-size:14px">✓</span>':'<span style="font-size:10px;color:#9a948e;font-weight:600">N/A</span>';};
     var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #ede9e4"><div style="flex:1;padding:6px 10px;font-size:11px;color:#44403c">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #ede9e4">'+_pv(val||'N/A')+'</div></div>';};
     var p2b = '<div class="cert-page">'
@@ -8888,60 +8891,6 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             :'')
           +'<tr><td colspan="3" style="font-size:10px;color:#6b6560;font-style:italic;padding:5px 10px;background:#fafaf9">Where periodic requirement P2 is carried out by measurement, details of instruments MUST be recorded</td></tr>'
         +'</table>'
-      +'</div>'
-      +footer(pName, ref, 3, 5)
-    +'</div>';
-
-    /* PAGE 4 — Compliance Checklist + Declaration */
-    var declText = r.certType==='EL.1'
-      ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
-      : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
-
-    var P_CERT_ITEMS = [
-      ['p1','P1','Emergency luminaires installed on all required escape routes'],
-      ['p2','P2','Minimum illuminance levels achieved on escape routes (measured or checked)'],
-      ['p3','P3','Emergency luminaires positioned correctly at all required points'],
-      ['p4','P4','Emergency luminaires comply with BS EN 60598-2-22'],
-      ['p5','P5','Rated duration achievable from battery under full load'],
-      ['p6','P6','Central power supply system or generator provided (where applicable)'],
-      ['p7','P7','Change-over device operates correctly within 5 s (or 0.5 s for high risk)'],
-      ['p9','P9','Emergency escape route signage lit to BS 5499'],
-      ['p10','P10','Open area (anti-panic) lighting provided (where applicable)'],
-      ['p11','P11','High risk task area lighting provided (where applicable)'],
-      ['p12','P12','Mode of operation correct for occupancy type (sustained / non-sustained / combined)'],
-      ['p13','P13','All luminaires free from defects, damage and obstruction'],
-      ['p14','P14','Inhibiting switch / key-switch present and labelled (where fitted)'],
-      ['p15','P15','Log book / inspection record available on site'],
-      ['p16','P16','Monthly functional test records complete and up to date'],
-      ['p17','P17','Annual full-rated-duration test records available'],
-      ['p18','P18','System found satisfactory at conclusion of rated duration test'],
-      ['p19','P19','Battery charge restored after testing'],
-      ['p20','P20','Wiring / cable circuits comply with BS 7671 and are adequately protected'],
-      ['p21','P21','System commissioning records available on site'],
-      ['p22','P22','Addressable or monitored system performing correctly (where applicable)'],
-      ['p23','P23','Certificate and documentation retained by responsible person']
-    ];
-    var _pi = r.pItems || {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',p15:'✓',p16:'✓',p17:'✓',p18:'✓',p19:'✓',p20:'✓',p21:'✓',p22:'N/A',p23:'✓'};
-    var _pChip=function(v){return v==='✓'?'<span class="chip-pass" style="min-width:28px">&#10003;</span>':v==='✗'?'<span class="chip-fail" style="min-width:28px">&#10007;</span>':'<span class="chip-na" style="min-width:28px">N/A</span>';};
-
-    var p3 = '<div class="cert-page">'
-      +contHead(r.certType, 4, 5, 'Compliance Checklist &amp; Declaration', ref, nic, coName)
-      +'<div class="cb">'
-        +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist (Annex M)</div>'
-        +'<table class="ltbl">'
-          +'<tr><th style="width:55px;padding:5px 8px">Ref</th><th style="padding:5px 8px">Compliance Item</th><th style="text-align:center;padding:5px 8px;width:70px">Result</th></tr>'
-          +(function(){
-            var rows='';
-            for(var i=0;i<P_CERT_ITEMS.length;i++){
-              var itm=P_CERT_ITEMS[i];
-              rows+='<tr><td style="padding:4px 8px;font-weight:700;font-size:10px;color:#78716c">'+itm[1]+'</td>'
-                +'<td style="padding:4px 8px;font-size:10.5px">'+itm[2]+'</td>'
-                +'<td style="text-align:center;padding:4px 8px">'+_pChip(_pi[itm[0]]||'✓')+'</td></tr>';
-            }
-            return rows;
-          })()
-          +(r.checklistNotes?'<tr><td colspan="3" style="padding:5px 8px;font-size:10px"><span style="font-weight:700;color:#78716c">Notes: </span>'+esc(r.checklistNotes)+'</td></tr>':'')
-        +'</table>'
         +'<div class="sec-head">Competent Person Declaration</div>'
         +'<div style="border:1px solid #d0ccc6;border-radius:4px;overflow:hidden;font-size:11.5px">'
           +'<div style="display:flex;border-bottom:1px solid #d0ccc6">'
@@ -8975,6 +8924,56 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             +'</div>'
           +'</div>'
         +'</div>'
+      +'</div>'
+      +footer(pName, ref, 3, 5)
+    +'</div>';
+
+    /* PAGE 4 — Compliance Checklist */
+    var P_CERT_ITEMS = [
+      ['p1','P1','Emergency luminaires installed on all required escape routes'],
+      ['p2','P2','Minimum illuminance levels achieved on escape routes (measured or checked)'],
+      ['p3','P3','Emergency luminaires positioned correctly at all required points'],
+      ['p4','P4','Emergency luminaires comply with BS EN 60598-2-22'],
+      ['p5','P5','Rated duration achievable from battery under full load'],
+      ['p6','P6','Central power supply system or generator provided (where applicable)'],
+      ['p7','P7','Change-over device operates correctly within 5 s (or 0.5 s for high risk)'],
+      ['p9','P9','Emergency escape route signage lit to BS 5499'],
+      ['p10','P10','Open area (anti-panic) lighting provided (where applicable)'],
+      ['p11','P11','High risk task area lighting provided (where applicable)'],
+      ['p12','P12','Mode of operation correct for occupancy type (sustained / non-sustained / combined)'],
+      ['p13','P13','All luminaires free from defects, damage and obstruction'],
+      ['p14','P14','Inhibiting switch / key-switch present and labelled (where fitted)'],
+      ['p15','P15','Log book / inspection record available on site'],
+      ['p16','P16','Monthly functional test records complete and up to date'],
+      ['p17','P17','Annual full-rated-duration test records available'],
+      ['p18','P18','System found satisfactory at conclusion of rated duration test'],
+      ['p19','P19','Battery charge restored after testing'],
+      ['p20','P20','Wiring / cable circuits comply with BS 7671 and are adequately protected'],
+      ['p21','P21','System commissioning records available on site'],
+      ['p22','P22','Addressable or monitored system performing correctly (where applicable)'],
+      ['p23','P23','Certificate and documentation retained by responsible person']
+    ];
+    var _pi = r.pItems || {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',p15:'✓',p16:'✓',p17:'✓',p18:'✓',p19:'✓',p20:'✓',p21:'✓',p22:'N/A',p23:'✓'};
+    var _pChip=function(v){return v==='✓'?'<span class="chip-pass" style="min-width:28px">&#10003;</span>':v==='✗'?'<span class="chip-fail" style="min-width:28px">&#10007;</span>':'<span class="chip-na" style="min-width:28px">N/A</span>';};
+
+    var p3 = '<div class="cert-page">'
+      +contHead(r.certType, 4, 5, 'Compliance Checklist', ref, nic, coName)
+      +'<div class="cb">'
+        +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist (Annex M)</div>'
+        +'<table class="ltbl">'
+          +'<tr><th style="width:55px;padding:5px 8px">Ref</th><th style="padding:5px 8px">Compliance Item</th><th style="text-align:center;padding:5px 8px;width:70px">Result</th></tr>'
+          +(function(){
+            var rows='';
+            for(var i=0;i<P_CERT_ITEMS.length;i++){
+              var itm=P_CERT_ITEMS[i];
+              rows+='<tr><td style="padding:4px 8px;font-weight:700;font-size:10px;color:#78716c">'+itm[1]+'</td>'
+                +'<td style="padding:4px 8px;font-size:10.5px">'+itm[2]+'</td>'
+                +'<td style="text-align:center;padding:4px 8px">'+_pChip(_pi[itm[0]]||'✓')+'</td></tr>';
+            }
+            return rows;
+          })()
+          +(r.checklistNotes?'<tr><td colspan="3" style="padding:5px 8px;font-size:10px"><span style="font-weight:700;color:#78716c">Notes: </span>'+esc(r.checklistNotes)+'</td></tr>':'')
+        +'</table>'
       +'</div>'
       +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 4, 5)
     +'</div>';
