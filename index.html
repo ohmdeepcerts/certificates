@@ -9245,7 +9245,23 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         var savedStyle = page.style.cssText;
         page.style.cssText = 'width:794px;min-height:1123px;max-width:794px;box-sizing:border-box;background:#fff;color:#1c1917;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:visible';
         var pw = page.offsetWidth||794, ph = page.offsetHeight||1123;
-        var canvas = await html2canvas(page,{scale:2.5,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,imageTimeout:8000});
+        // Snapshot img CSS positions before html2canvas alters the DOM
+        var pr = page.getBoundingClientRect();
+        var pageImgInfos = Array.from(page.querySelectorAll('img[src]')).filter(function(img){ return img.naturalWidth>0; }).map(function(img){
+          var ir = img.getBoundingClientRect();
+          return {src:img.src,x:ir.left-pr.left,y:ir.top-pr.top,w:ir.width,h:ir.height};
+        });
+        var canvas = await html2canvas(page,{scale:2.5,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,windowHeight:ph,scrollX:0,scrollY:0,logging:false,imageTimeout:8000});
+        // Post-process: html2canvas leaves scale(2.5,2.5) transform on ctx and skips img with object-fit:contain.
+        // Draw each img at CSS coords — the active transform scales them to canvas pixels automatically.
+        var pageCtx = canvas.getContext('2d');
+        for(var pi=0;pi<pageImgInfos.length;pi++){
+          var pinfo=pageImgInfos[pi];
+          if(pinfo.w<=0||pinfo.h<=0) continue;
+          var drawImg=new Image();
+          await new Promise(function(res){ drawImg.onload=res; drawImg.onerror=res; drawImg.src=pinfo.src; setTimeout(res,3000); });
+          if(drawImg.naturalWidth>0) pageCtx.drawImage(drawImg,pinfo.x,pinfo.y,pinfo.w,pinfo.h);
+        }
         page.style.cssText = savedStyle;
         var imgH = (canvas.height/canvas.width)*210;
         var imgData = canvas.toDataURL('image/jpeg',0.88);
