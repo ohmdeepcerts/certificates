@@ -15,7 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
@@ -8445,10 +8445,9 @@ async function saveApplianceRecord(){
         +'<tr><td style="border-top:1px solid #e2e8f0"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#f1f5f9;padding:14px 26px 16px"><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Ownership</div><div style="font-size:11px;color:#94a3b8;line-height:1.7;margin-bottom:10px">This certificate remains the property of '+_escHtml(coName)+' until payment for the associated works has been received in full.</div><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Integrity</div><div style="font-size:11px;color:#94a3b8;line-height:1.7">Forging, altering or reproducing this certificate without written permission is unlawful and may result in prosecution.</div></td></tr><tr><td style="padding:12px 26px 16px;text-align:center;font-size:10px;color:#94a3b8;line-height:1.8">'+_escHtml(coName)+'<br>This email was generated automatically upon certificate completion.</td></tr></table></td></tr>'
         +'</table></td></tr></table>'
         +'</body></html>';
-      var certHTML = '';
-      try { certHTML = elBuildCertHTML(r2); } catch(e){}
-      var attachB64 = ''; var attachName = certRef.replace(/[^\w\-]/g,'_')+'.html';
-      if(certHTML){ try{ attachB64 = btoa(unescape(encodeURIComponent(certHTML))); }catch(e){ attachB64=''; } }
+      var attachB64 = '';
+      var attachName = (certRef||'certificate').replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
+      try { showOverlay('Preparing PDF…'); attachB64 = await elGeneratePDF(r2,true); } catch(e){ console.warn('PDF attach:',e); } finally{ hideOverlay(); }
       var subj = 'Emergency Lighting '+certTypeLbl+' — '+(r2.ref||'')+(propParts2.length?' — '+propParts2.join(', '):(r2.premisesName?' — '+r2.premisesName:''));
       var bcc = getSetting('email_bcc','');
       var toName = to.split('@')[0];
@@ -9165,11 +9164,72 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
       if(_listAdmin) html += _ibtn('View certificate','fa-eye','elOpenCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
       html += _ibtn('Edit certificate','fa-pencil','event.stopPropagation();elEditCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
       html += _ibtn('Email certificate','fa-envelope','event.stopPropagation();elEmailCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
+      if(_listAdmin) html += _ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
       html += _ibtn('Delete','fa-trash','deleteELCert("'+(r.id||'')+'",event)',true);
       html += '</div></div></div></div>';
     });
     html += '</div>';
     el.innerHTML = html;
+  };
+
+  // ── EL PDF generation (shared by download + email attachment) ─────────────
+  async function elGeneratePDF(r, returnB64){
+    var certHTML = elBuildCertHTML(r);
+    var certDoc = (new DOMParser()).parseFromString(certHTML,'text/html');
+
+    // Inject cert CSS into main document so html2canvas can see it
+    var tmpStyle = document.createElement('style');
+    tmpStyle.id = 'el-pdf-tmp-style';
+    var srcStyle = certDoc.querySelector('style');
+    if(srcStyle) tmpStyle.textContent = srcStyle.textContent;
+    document.head.appendChild(tmpStyle);
+
+    var shell = document.createElement('div');
+    shell.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;z-index:-1;background:#fff;pointer-events:none';
+    document.body.appendChild(shell);
+
+    try {
+      var {jsPDF} = window.jspdf;
+      var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      var pages = certDoc.querySelectorAll('.cert-page');
+      if(!pages.length) throw new Error('No cert pages found');
+      await document.fonts.ready;
+      for(var i=0;i<pages.length;i++){
+        if(i>0) doc.addPage('a4','portrait');
+        var clone = pages[i].cloneNode(true);
+        clone.style.cssText = 'width:794px;min-height:1123px;max-width:794px;box-sizing:border-box;background:#fff;color:#1c1917;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:visible';
+        shell.innerHTML = '';
+        shell.appendChild(clone);
+        await new Promise(function(res){setTimeout(res,80);});
+        var pw = clone.offsetWidth||794, ph = clone.offsetHeight||1123;
+        var canvas = await html2canvas(clone,{scale:returnB64?2:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,imageTimeout:5000});
+        var imgH = (canvas.height/canvas.width)*210;
+        var imgData = returnB64?canvas.toDataURL('image/jpeg',0.88):canvas.toDataURL('image/png');
+        doc.addImage(imgData,returnB64?'JPEG':'PNG',0,0,210,imgH);
+      }
+      if(returnB64) return doc.output('datauristring').split(',')[1];
+      var fname = (r.ref||r.ref_number||'certificate').replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+      if(isIOS){
+        var blob = new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
+        window.open(URL.createObjectURL(blob),'_blank');
+        toast('PDF ready — tap Share → Save to Files','info',7000);
+      } else {
+        doc.save(fname);
+        toast('Downloaded: '+fname,'success',3000);
+      }
+    } finally {
+      document.body.removeChild(shell);
+      var ts = document.getElementById('el-pdf-tmp-style');
+      if(ts) ts.remove();
+    }
+  }
+
+  window.elDownloadPDF = async function(r){
+    showOverlay('Generating PDF…');
+    try { await elGeneratePDF(r,false); }
+    catch(e){ toast('PDF error: '+e.message,'error'); }
+    finally { hideOverlay(); }
   };
 
 })();
