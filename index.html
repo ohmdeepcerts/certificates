@@ -8670,17 +8670,17 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         +'</div>'
         +(sat
           ?'<div class="note-box"><div class="nb-lbl">✓ System Satisfactory</div><p>This emergency lighting system has been inspected and tested in accordance with BS 5266-1:2025. The system satisfies the requirements of the standard. All '+lumTotal+' luminaires were tested and '+lumPass+' achieved the full rated duration of '+rated+'.</p></div>'
-          :'<div class="obs-box"><div class="ob-lbl">⚠ Action Required — Unsatisfactory</div>'+(obsText?'<div class="ob-item">'+obsText+'</div>':'<div class="ob-item">System found UNSATISFACTORY — see pages 2 and 3 for full defect details and remedial recommendations.</div>')+'</div>'
+          :'<div class="obs-box"><div class="ob-lbl">⚠ Action Required — Unsatisfactory</div>'+(obsText?'<div class="ob-item">'+obsText+'</div>':'<div class="ob-item">System found UNSATISFACTORY — see pages 3 and 4 for full defect details and remedial recommendations.</div>')+'</div>'
         )
         +'<div style="margin-top:auto;padding-top:20px;border-top:1px solid #e8e4dc">'
           +'<div style="font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:8px">About This Certificate</div>'
           +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
         +'</div>'
       +'</div>'
-      +footer(pName+(pType?' · '+pType:''), ref, 1, 4)
+      +footer(pName+(pType?' · '+pType:''), ref, 1, 5)
     +'</div>';
 
-    /* PAGE 2 — Installation Details + Compliance Checklist */
+    /* PAGE 2 — Installation Details */
     var bsChecklist = [
       ['Emergency luminaires installed on all required escape routes','PASS'],
       ['High-risk task area lighting provided where required','PASS'],
@@ -8698,7 +8698,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     ];
 
     var p2 = '<div class="cert-page">'
-      +contHead(r.certType, 2, 4, 'Installation Details &amp; Compliance Checklist', ref, nic, coName)
+      +contHead(r.certType, 2, 5, 'Installation Details', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Installation and Test Information</div>'
         +'<div class="fg">'
@@ -8718,6 +8718,14 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +field('Competent Person Scheme','NICEIC Approved Contractor')
           +field('NICEIC Registration No.',nic,'fv-red')
         +'</div>'
+      +'</div>'
+      +footer(pName, ref, 2, 5)
+    +'</div>';
+
+    /* PAGE 3 — BS 5266-1:2025 Compliance Checklist */
+    var p3 = '<div class="cert-page">'
+      +contHead(r.certType, 3, 5, 'BS 5266-1:2025 Compliance Checklist', ref, nic, coName)
+      +'<div class="cb">'
         +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist</div>'
         +'<table class="ltbl">'
           +'<tr><th style="width:70%">Compliance Item</th><th style="text-align:center">Result</th></tr>'
@@ -8734,12 +8742,12 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           })()
         +'</table>'
       +'</div>'
-      +footer(pName, ref, 2, 4)
+      +footer(pName, ref, 3, 5)
     +'</div>';
 
-    /* PAGE 3 — Defects & Luminaire Schedule */
-    var p3 = '<div class="cert-page">'
-      +contHead(r.certType, 3, 4, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
+    /* PAGE 4 — Defects & Luminaire Schedule */
+    var p4 = '<div class="cert-page">'
+      +contHead(r.certType, 4, 5, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Defects &amp; Recommendations</div>'
         +(function(){
@@ -8780,16 +8788,16 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             );
         })()
       +'</div>'
-      +footer(pName, ref, 3, 4)
+      +footer(pName, ref, 4, 5)
     +'</div>';
 
-    /* PAGE 4 — Competent Person Declaration + Signature */
+    /* PAGE 5 — Competent Person Declaration + Signature */
     var declText = r.certType==='EL.1'
       ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
       : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
 
-    var p4 = '<div class="cert-page">'
-      +contHead(r.certType, 4, 4, 'Competent Person Declaration', ref, nic, coName)
+    var p5 = '<div class="cert-page">'
+      +contHead(r.certType, 5, 5, 'Competent Person Declaration', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Competent Person Declaration</div>'
         +'<div class="decl-text">'+declText+'</div>'
@@ -8821,14 +8829,14 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div style="font-size:11px;color:#6b6560;line-height:1.7">This certificate must be retained by the responsible person and made available to the enforcing authority on request. The issuing contractor retains a copy. This document is the property of '+coName+' and is issued under the '+bodyLabel+' Approved Contractor scheme. NICEIC No. '+nic+'.</div>'
         +'</div>'
       +'</div>'
-      +footer(coName+' · NICEIC No. '+nic, ref, 4, 4)
+      +footer(coName+' · NICEIC No. '+nic, ref, 5, 5)
     +'</div>';
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
       +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
       +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
       +'<style>'+css+'</style></head><body>'
-      +p1+p2+p3+p4
+      +p1+p2+p3+p4+p5
       +'</body></html>';
   };
 
