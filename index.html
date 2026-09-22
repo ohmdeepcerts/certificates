@@ -8538,10 +8538,17 @@ async function saveApplianceRecord(){
     var lumTotal = r.lumTotal||'—';
     var lumPass  = r.lumPass||'—';
     var lumFail  = r.lumFail||'0';
-    var _lrAll   = (r.lumRows||[]).filter(function(row){return row.loc;});
-    var ROWS_P4 = 20, ROWS_CONT = 35;
-    var extraLumPages = _lrAll.length > ROWS_P4 ? Math.ceil((_lrAll.length - ROWS_P4) / ROWS_CONT) : 0;
-    var totalPages = 4 + extraLumPages;
+    var _lrAll  = (r.lumRows||[]).filter(function(row){return row.loc;});
+    var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
+                  : (r.observations ? [{code:'—',text:r.observations}] : []);
+    var _DEF_P4=12, _DEF_CONT=12, _LUM_CONT=35;
+    var _defCnt = _obsAll.length;
+    var _lumOnP4 = _defCnt===0?20:_defCnt<=5?16:_defCnt<=10?10:_defCnt<=_DEF_P4?4:0;
+    var _extraDef = _defCnt>_DEF_P4 ? Math.ceil((_defCnt-_DEF_P4)/_DEF_CONT) : 0;
+    var _lrOnP4  = _lrAll.slice(0,_lumOnP4);
+    var _lrRest  = _lrAll.slice(_lumOnP4);
+    var _extraLum = _lrRest.length>0 ? Math.ceil(_lrRest.length/_LUM_CONT) : 0;
+    var totalPages = 4 + _extraDef + _extraLum;
     var _pParts = [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean);
     var addr = _pParts.length ? _pParts.join('<br>') : (r.premisesAddress||'').replace(/\n/g,'<br>');
     var modeLabel = r.mode ? r.mode.replace(/ \([XYZ]\)/,'') : '—';
@@ -8961,77 +8968,89 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
       +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, totalPages)
     +'</div>';
 
-    /* PAGE 4 — Defects & Luminaire Schedule (paginated) */
-    var _lumSatNote = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2013. No further action required.</p></div>';
+    /* PAGE 4+ — Defects & Luminaire Schedule (fully paginated) */
+    var _lumSatNote  = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2013. No further action required.</p></div>';
     var _lumFailNote = '<div class="obs-box"><div class="ob-lbl">Failures Noted — Remedial Action Required</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. Refer to defects above for full details and recommended remedial action.</div></div>';
     var _lumTotalRow = '<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested &middot; '+lumPass+' pass &middot; '+lumFail+' fail</td></tr>';
-    var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#78716c;font-style:italic;font-weight:400">Continued on next page…</td></tr>';
-    var _lumTableHead = '<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>';
+    var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#78716c;font-style:italic;font-weight:400">Continued on next page&hellip;</td></tr>';
+    var _lumTblHd    = '<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>';
+    var _codeColor   = function(c){return c==='C1'?'#dc2626':c==='C2'?'#ea580c':c==='FI'?'#7c3aed':'#1d4ed8';};
 
-    function _buildLumRows(chunk, startNum){
+    function _buildLumRows(chunk,startNum){
       return chunk.map(function(row,i){
         return '<tr><td>EL-'+String(startNum+i).padStart(2,'0')+'</td>'
-          +'<td>'+esc(row.loc)+'</td>'
-          +'<td>LED Emergency Fitting</td>'
+          +'<td>'+esc(row.loc)+'</td><td>LED Emergency Fitting</td>'
           +'<td>'+mode+'</td><td>'+rated+'</td>'
           +'<td>'+(row.result==='FAIL'?'<span class="chip-fail">FAIL</span>':'<span class="chip-pass">PASS</span>')+'</td></tr>';
       }).join('');
     }
+    function _buildDefRows(chunk){
+      if(!chunk||!chunk.length)
+        return '<table class="ltbl"><tr><th style="width:60px">Code</th><th>Description</th></tr>'
+          +'<tr><td style="color:#9a948e">—</td><td style="color:#9a948e;font-style:italic">No defects identified. System fully satisfactory at date of inspection.</td></tr></table>';
+      return '<table class="ltbl"><tr><th style="width:60px">Code</th><th>Description</th></tr>'
+        +chunk.map(function(row){
+          var col=_codeColor(row.code);
+          return '<tr><td><span style="display:inline-block;background:'+col+';color:#fff;font-weight:700;font-size:10px;padding:2px 7px;border-radius:3px;letter-spacing:.05em">'+esc(row.code||'—')+'</span></td>'
+            +'<td>'+esc(row.text||'')+'</td></tr>';
+        }).join('')+'</table>';
+    }
 
-    var _lrChunk1 = _lrAll.slice(0, ROWS_P4);
-    var _lrIsLast1 = extraLumPages === 0;
+    var _defChunk1   = _obsAll.slice(0,_DEF_P4);
+    var _defIsLastP4 = _extraDef===0;
+    var _lumIsLastP4 = _extraDef===0&&_extraLum===0;
 
     var p4 = '<div class="cert-page">'
-      +contHead(r.certType, 4, totalPages, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
+      +contHead(r.certType,4,totalPages,'Defects, Recommendations &amp; Luminaire Schedule',ref,nic,coName)
       +'<div class="cb">'
         +'<div class="sec-head">Defects &amp; Recommendations</div>'
-        +(function(){
-          var obsRows = r.observationRows && r.observationRows.length ? r.observationRows : null;
-          if(!obsRows && obsText) obsRows=[{code:'—',text:r.observations}];
-          if(!obsRows || !obsRows.length){
-            return '<table class="ltbl"><tr><th style="width:60px">Code</th><th>Description</th></tr>'
-              +'<tr><td style="color:#9a948e">—</td><td style="color:#9a948e;font-style:italic">No defects identified. System fully satisfactory at date of inspection.</td></tr>'
-              +'</table>';
-          }
-          var codeColor = function(c){return c==='C1'?'#dc2626':c==='C2'?'#ea580c':c==='FI'?'#7c3aed':'#1d4ed8';};
-          var rows = obsRows.map(function(row){
-            var col = codeColor(row.code);
-            return '<tr><td><span style="display:inline-block;background:'+col+';color:#fff;font-weight:700;font-size:10px;padding:2px 7px;border-radius:3px;letter-spacing:.05em">'+esc(row.code)+'</span></td>'
-              +'<td>'+esc(row.text||'')+'</td></tr>';
-          }).join('');
-          return '<table class="ltbl"><tr><th style="width:60px">Code</th><th>Description</th></tr>'+rows+'</table>';
-        })()
-        +(nextInsp?'<div class="note-box" style="margin-top:12px"><div class="nb-lbl">Next Inspection</div><p>Next periodic inspection recommended by: <strong>'+nextInsp+'</strong></p></div>':'')
-        +(_lrChunk1.length
+        +_buildDefRows(_defChunk1)
+        +(!_defIsLastP4?'<div style="padding:5px 0;font-size:10px;color:#78716c;font-style:italic">Continued on next page&hellip;</div>':'')
+        +(_defIsLastP4&&nextInsp?'<div class="note-box" style="margin-top:12px"><div class="nb-lbl">Next Inspection</div><p>Next periodic inspection recommended by: <strong>'+nextInsp+'</strong></p></div>':'')
+        +(_lrOnP4.length&&_defIsLastP4
           ?'<div class="sec-head">Schedule of Emergency Luminaires</div>'
-            +'<table class="ltbl">'+_lumTableHead
-              +_buildLumRows(_lrChunk1, 1)
-              +(_lrIsLast1 ? _lumTotalRow : _lumContRow)
-            +'</table>'
-            +(_lrIsLast1 ? (sat ? _lumSatNote : _lumFailNote) : '')
+            +'<table class="ltbl">'+_lumTblHd+_buildLumRows(_lrOnP4,1)+(_lumIsLastP4?_lumTotalRow:_lumContRow)+'</table>'
+            +(_lumIsLastP4?(sat?_lumSatNote:_lumFailNote):'')
           :'')
       +'</div>'
-      +footer(pName, ref, 4, totalPages)
+      +footer(pName,ref,4,totalPages)
     +'</div>';
 
-    /* Continuation pages for large luminaire schedules */
-    var p4extra = '';
-    for(var _epi=0; _epi<extraLumPages; _epi++){
-      var _chunkStart = ROWS_P4 + _epi * ROWS_CONT;
-      var _chunk = _lrAll.slice(_chunkStart, _chunkStart + ROWS_CONT);
-      var _epNum = 5 + _epi;
-      var _epIsLast = _epi === extraLumPages - 1;
-      p4extra += '<div class="cert-page">'
-        +contHead(r.certType, _epNum, totalPages, 'Luminaire Schedule (continued)', ref, nic, coName)
+    var p4extra='';
+
+    /* Extra defect continuation pages */
+    for(var _dpi=0;_dpi<_extraDef;_dpi++){
+      var _dStart=_DEF_P4+_dpi*_DEF_CONT;
+      var _dChunk=_obsAll.slice(_dStart,_dStart+_DEF_CONT);
+      var _dpNum=5+_dpi;
+      var _dLast=_dpi===_extraDef-1;
+      p4extra+='<div class="cert-page">'
+        +contHead(r.certType,_dpNum,totalPages,'Defects &amp; Recommendations (continued)',ref,nic,coName)
+        +'<div class="cb">'
+          +'<div class="sec-head">Defects &amp; Recommendations (continued)</div>'
+          +_buildDefRows(_dChunk)
+          +(!_dLast?'<div style="padding:5px 0;font-size:10px;color:#78716c;font-style:italic">Continued on next page&hellip;</div>':'')
+          +(_dLast&&nextInsp?'<div class="note-box" style="margin-top:12px"><div class="nb-lbl">Next Inspection</div><p>Next periodic inspection recommended by: <strong>'+nextInsp+'</strong></p></div>':'')
+        +'</div>'
+        +footer(pName,ref,_dpNum,totalPages)
+      +'</div>';
+    }
+
+    /* Luminaire continuation pages */
+    for(var _lpi=0;_lpi<_extraLum;_lpi++){
+      var _lStart=_lpi*_LUM_CONT;
+      var _lChunk=_lrRest.slice(_lStart,_lStart+_LUM_CONT);
+      var _lpNum=4+_extraDef+1+_lpi;
+      var _lLast=_lpi===_extraLum-1;
+      var _lStartNum=_lumOnP4+_lStart+1;
+      p4extra+='<div class="cert-page">'
+        +contHead(r.certType,_lpNum,totalPages,'Luminaire Schedule (continued)',ref,nic,coName)
         +'<div class="cb">'
           +'<div class="sec-head">Schedule of Emergency Luminaires (continued)</div>'
-          +'<table class="ltbl">'+_lumTableHead
-            +_buildLumRows(_chunk, _chunkStart + 1)
-            +(_epIsLast ? _lumTotalRow : _lumContRow)
-          +'</table>'
-          +(_epIsLast ? (sat ? _lumSatNote : _lumFailNote) : '')
+          +'<table class="ltbl">'+_lumTblHd+_buildLumRows(_lChunk,_lStartNum)+(_lLast?_lumTotalRow:_lumContRow)+'</table>'
+          +(_lLast?(sat?_lumSatNote:_lumFailNote):'')
         +'</div>'
-        +footer(pName, ref, _epNum, totalPages)
+        +footer(pName,ref,_lpNum,totalPages)
       +'</div>';
     }
 
