@@ -1685,6 +1685,7 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Postcode</label><input type="text" id="s-el-co-postcode" placeholder="LS1 1AA" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
             <div class="field-group"><label>Phone</label><input type="tel" id="s-el-co-phone" placeholder="0113 000 0000"></div>
             <div class="field-group" style="grid-column:1/-1"><label>Email</label><input type="email" id="s-el-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Website</label><input type="url" id="s-el-co-website" placeholder="https://www.yourcompany.co.uk"></div>
           </div>
         </div>
 
@@ -2838,6 +2839,7 @@ function loadSettingsUI(){
   document.getElementById('s-el-co-postcode').value=getSetting('el_co_postcode','');
   document.getElementById('s-el-co-phone').value=getSetting('el_co_phone','');
   document.getElementById('s-el-co-email').value=getSetting('el_co_email','');
+  document.getElementById('s-el-co-website').value=getSetting('el_co_website','');
   document.getElementById('s-el-position').value=getSetting('el_position','');
   document.getElementById('s-el-body').value=getSetting('el_body','');
   document.getElementById('s-el-enrol-no').value=getSetting('el_enrol_no','');
@@ -2916,6 +2918,7 @@ async function saveSettings(){
     ['el_co_postcode',document.getElementById('s-el-co-postcode').value],
     ['el_co_phone',document.getElementById('s-el-co-phone').value],
     ['el_co_email',document.getElementById('s-el-co-email').value],
+    ['el_co_website',document.getElementById('s-el-co-website').value],
     ['el_position',document.getElementById('s-el-position').value],
     ['el_body',document.getElementById('s-el-body').value],
     ['el_enrol_no',document.getElementById('s-el-enrol-no').value],
@@ -8390,6 +8393,7 @@ async function saveApplianceRecord(){
     var companyAddr = [addr1,addr2,addr3,postcode].filter(Boolean).join(', ') || getSetting('company_address','14 Park Row, Leeds LS1 5HD');
     var companyTel = getSetting('el_co_phone',getSetting('company_tel','0113 496 7821'));
     var companyEmail = getSetting('el_co_email','');
+    var companyWeb = getSetting('el_co_website','');
     var engineerPosition = getSetting('el_position','');
     var elLogoData = getSetting('el_logo_data','');
     var elBodyLogoData = getSetting('el_body_logo_data','');
@@ -8427,8 +8431,10 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:16px;border-bottom:1.5px solid #f0ece4;}
 .ch-logo-row{display:flex;align-items:center;gap:12px;}
 .ch-logo{width:42px;height:42px;background:#b91c1c;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.05em;}
-.ch-company{font-size:20px;font-weight:900;color:#1c1917;letter-spacing:-.01em;line-height:1.1;}
-.ch-company-sub{font-size:11px;color:#9a948e;margin-top:2px;}
+.ch-company{font-size:26px;font-weight:900;color:#1c1917;letter-spacing:-.02em;line-height:1.1;}
+.ch-company-sub{font-size:11px;color:#9a948e;margin-top:3px;}
+.ch-company-sub a{color:#9a948e;text-decoration:none;}
+.ch-company-sub a:hover{text-decoration:underline;}
 .niceic-badge{border:1.5px solid #e0dbd0;border-radius:4px;padding:7px 14px;text-align:center;background:#fafaf9;}
 .niceic-badge .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1c1917;}
 .niceic-badge .nb-sub{font-size:8px;color:#9a948e;margin-top:1px;}
@@ -8576,7 +8582,15 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         +'<div class="ch-top-row">'
           +'<div class="ch-logo-row">'
             +elLogo
-            +'<div><div class="ch-company">'+coName+'</div><div class="ch-company-sub">'+coAddr+' · '+coTel+(coEmail?' · '+coEmail:'')+'</div></div>'
+            +'<div style="flex:1;min-width:0">'
+            +'<div class="ch-company">'+coName+'</div>'
+            +(coAddr?'<div class="ch-company-sub">'+coAddr+'</div>':'')
+            +'<div class="ch-company-sub">'
+            +(companyTel?'<a href="tel:'+companyTel.replace(/\s/g,'')+'">'+coTel+'</a>':'')
+            +((companyTel&&(companyWeb||companyEmail))?' &nbsp;&bull;&nbsp; ':'')
+            +(companyWeb?'<a href="'+(companyWeb.startsWith('http')?companyWeb:'https://'+companyWeb)+'" target="_blank">'+coWeb+'</a>':(companyEmail?'<a href="mailto:'+companyEmail+'">'+coEmail+'</a>':''))
+            +'</div>'
+            +'</div>'
           +'</div>'
           +bodyBadge
         +'</div>'
