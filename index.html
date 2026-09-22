@@ -7659,8 +7659,8 @@ async function saveApplianceRecord(){
           html += '<span style="font-size:10.5px;color:var(--muted);width:34px;flex-shrink:0;text-align:right">EL-'+String(i+1).padStart(2,'0')+'</span>';
           html += '<input class="elwiz-input" style="flex:1;margin:0" placeholder="Location or zone" value="'+esc(row.loc||'')+'" oninput="elSetLumRow('+i+',\'loc\',this.value)">';
           html += '<div style="display:flex;gap:4px;flex-shrink:0">';
-          html += '<span onclick="elSetLumRow('+i+',\'result\',\'PASS\');elRender()" style="cursor:pointer;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px;border:1.5px solid '+(pSel?'#16a34a':'var(--border)')+';background:'+(pSel?'#dcfce7':'transparent')+';color:'+(pSel?'#166534':'var(--muted)')+'">PASS</span>';
-          html += '<span onclick="elSetLumRow('+i+',\'result\',\'FAIL\');elRender()" style="cursor:pointer;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px;border:1.5px solid '+(fSel?'#dc2626':'var(--border)')+';background:'+(fSel?'#fee2e2':'transparent')+';color:'+(fSel?'#991b1b':'var(--muted)')+'">FAIL</span>';
+          html += '<span onclick="elSetLumRow('+i+',\'result\',\'PASS\');elRenderStep()" style="cursor:pointer;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px;border:1.5px solid '+(pSel?'#16a34a':'var(--border)')+';background:'+(pSel?'#dcfce7':'transparent')+';color:'+(pSel?'#166534':'var(--muted)')+'">PASS</span>';
+          html += '<span onclick="elSetLumRow('+i+',\'result\',\'FAIL\');elRenderStep()" style="cursor:pointer;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px;border:1.5px solid '+(fSel?'#dc2626':'var(--border)')+';background:'+(fSel?'#fee2e2':'transparent')+';color:'+(fSel?'#991b1b':'var(--muted)')+'">FAIL</span>';
           html += '</div>';
           html += '<span onclick="elRemoveLumRow('+i+')" style="cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0 4px;flex-shrink:0" title="Remove">&times;</span>';
           html += '</div>';
@@ -7862,10 +7862,10 @@ async function saveApplianceRecord(){
   window.elAddLumRow = function(){
     if(!_w.lumRows) _w.lumRows = [];
     _w.lumRows.push({loc:'', result:'PASS'});
-    elRender();
+    elRenderStep();
   };
   window.elRemoveLumRow = function(i){
-    if(_w.lumRows){ _w.lumRows.splice(i,1); elRender(); }
+    if(_w.lumRows){ _w.lumRows.splice(i,1); elRenderStep(); }
   };
   window.elSetLumRow = function(i, field, val){
     if(!_w.lumRows) _w.lumRows = [];
