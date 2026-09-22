@@ -7961,8 +7961,10 @@ async function saveApplianceRecord(){
     var typeLabel = {'EL.1':'Installation Certificate','EL.2':'Periodic Inspection & Test','EL.3':'Existing Site Assessment'};
     var certLabel = typeLabel[r.certType]||r.certType||'EL Certificate';
     var toAddr = r.clientEmail||'';
-    var subj = 'Emergency Lighting '+certLabel+' — '+r.ref+(r.premisesName?' — '+r.premisesName:'');
-    var body = 'Dear '+(r.clientName||'Sir/Madam')+',\n\nPlease find attached your Emergency Lighting '+certLabel+'.\n\nCertificate Reference: '+r.ref+'\nPremises: '+(r.premisesName||'—')+(r.premisesAddress?'\nAddress: '+r.premisesAddress.replace(/\n/g,', '):'')+'\nTest Date: '+(r.testDate||'—')+'\nNext Inspection Due: '+(r.nextTestDate||'—')+'\nOutcome: '+(r.outcome||'—')+'\nLuminaires: '+(r.lumTotal||'0')+' total — '+(r.lumPass||'0')+' pass / '+(r.lumFail||'0')+' fail\n\nThis certificate has been produced in accordance with BS 5266-1:2025 and BS EN 50172:2004.\n\nKind regards,\n'+engName+(engPos?'\n'+engPos:'')+'\n'+coName+(coPhone?'\nTel: '+coPhone:''+(coEmail?'\nEmail: '+coEmail:''));
+    var _premDisplay = r.premisesName || [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') || '—';
+    var _premAddr = r.premisesName ? [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') : '';
+    var subj = 'Emergency Lighting '+certLabel+' — '+r.ref+' — '+_premDisplay;
+    var body = 'Dear '+(r.clientName||'Sir/Madam')+',\n\nPlease find attached your Emergency Lighting '+certLabel+'.\n\nCertificate Reference: '+r.ref+'\nPremises: '+_premDisplay+(_premAddr?'\nAddress: '+_premAddr:'')+'\nTest Date: '+(r.testDate||'—')+'\nNext Inspection Due: '+(r.nextTestDate||'—')+'\nOutcome: '+(r.outcome||'—')+'\nLuminaires: '+(r.lumTotal||'0')+' total — '+(r.lumPass||'0')+' pass / '+(r.lumFail||'0')+' fail\n\nThis certificate has been produced in accordance with BS 5266-1:2025 and BS EN 50172:2004.\n\nKind regards,\n'+engName+(engPos?'\n'+engPos:'')+'\n'+coName+(coPhone?'\nTel: '+coPhone:''+(coEmail?'\nEmail: '+coEmail:''));
 
     var certHTML = '';
     try { certHTML = elBuildCertHTML(r); } catch(e){}
