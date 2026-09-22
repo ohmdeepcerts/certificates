@@ -8954,8 +8954,11 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             }
             return rows;
           })()
-          +(r.checklistNotes?'<tr><td colspan="3" style="padding:5px 8px;font-size:10px"><span style="font-weight:700;color:#78716c">Notes: </span>'+esc(r.checklistNotes)+'</td></tr>':'')
         +'</table>'
+        +'<div class="sec-head" style="margin-top:10px">Notes</div>'
+        +'<div style="border:1px solid #e8e4dc;border-radius:4px;padding:12px 14px;font-size:10.5px;color:#1c1917;min-height:120px;background:#fafaf9;line-height:1.6">'
+          +(r.checklistNotes?esc(r.checklistNotes):'<span style="color:#a8a29e;font-style:italic">None</span>')
+        +'</div>'
       +'</div>'
       +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, 4)
     +'</div>';
