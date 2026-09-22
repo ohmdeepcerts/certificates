@@ -7952,6 +7952,7 @@ async function saveApplianceRecord(){
     toast((isEdit?'Certificate updated — ':'EL Certificate issued — ')+rec.ref,'success',3000);
     var _admin = currentProfile && currentProfile.role === 'admin';
     if(_admin){ elOpenCert(rec); } else { navigate('el-history'); }
+    if(!isEdit && (rec.clientEmail||'').trim()){ elAutoEmail(rec, true); }
   };
 
   window.elPreviewCurrent = function(){
@@ -8208,7 +8209,8 @@ async function saveApplianceRecord(){
       }
 
       var toName = (document.getElementById('el-em-to').value||'').split('@')[0];
-      await sendBrevoEmail(to, toName, subj, htmlBody, attachB64||undefined, attachB64?attachName:undefined, bcc||undefined, cc||undefined);
+      var _sent = await sendBrevoEmail(to, toName, subj, htmlBody, attachB64||undefined, attachB64?attachName:undefined, bcc||undefined, cc||undefined);
+      if(_sent === false){ if(btn){ btn.disabled=false; btn.textContent='Send via Brevo →'; } return; }
       toast('Certificate emailed to '+to,'success',4000);
       document.getElementById('el-email-modal').remove();
     } catch(ex){
@@ -8218,6 +8220,105 @@ async function saveApplianceRecord(){
   };
 
   function _escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  window.elAutoEmail = async function(rec, autoTriggered){
+    var to = (rec.clientEmail||'').trim();
+    if(!to){ if(!autoTriggered) toast('No client email on this certificate','warn'); return; }
+    if(autoTriggered) showOverlay('Sending email…');
+    try {
+      var coName  = getSetting('el_co_name', getSetting('company_name','OHM Electricals Ltd'));
+      var coPhone = getSetting('el_co_phone', getSetting('company_tel',''));
+      var coEmail = getSetting('el_co_email','');
+      var niceic  = getSetting('el_niceic_no', getSetting('niceic_no',''));
+      var r2 = rec;
+      var certRef = r2.ref || 'EL-cert';
+      var _TL = {'EL.1':'Installation Certificate','EL.2':'Periodic Inspection & Test Certificate','EL.3':'Existing Site Assessment Certificate'};
+      var certTypeLbl = _TL[r2.certType] || (r2.certType ? r2.certType+' Certificate' : 'Emergency Lighting Certificate');
+      var propParts2  = [r2.premAddr1,r2.premAddr2,r2.premAddr3,r2.premPostcode].filter(Boolean);
+      var propAddrHtml = propParts2.length ? propParts2.map(_escHtml).join('<br>') : _escHtml((r2.premisesAddress||'').replace(/\n/g,', '));
+      var propNameHtml = _escHtml(r2.premisesName||'');
+      var testDtDisp   = _escHtml(r2.testDate||'—');
+      var nextDtDisp   = _escHtml(r2.nextTestDate||'');
+      var outcomeRaw   = (r2.outcome||'').toUpperCase();
+      var isGood       = outcomeRaw.indexOf('SATIS')!==-1;
+      var engDisp      = _escHtml(r2.engineerName||'');
+      var sysDisp      = [_escHtml(r2.systemType||''), r2.mode?_escHtml(r2.mode):''].filter(Boolean).join(' · ');
+      var lumTot2      = parseInt(r2.lumTotal)||0;
+      var lumPass2     = parseInt(r2.lumPass)||0;
+      var lumFail2     = parseInt(r2.lumFail)||0;
+      var calUrl2 = '#';
+      if(r2.nextTestDate){try{
+        var _cp=(r2.nextTestDate||'').split('/');
+        if(_cp.length===3){
+          var _due=new Date(parseInt(_cp[2]),parseInt(_cp[1])-1,parseInt(_cp[0]));
+          var _cf=function(d){return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);};
+          var _loc=[r2.premAddr1,r2.premAddr2,r2.premAddr3,r2.premPostcode].filter(Boolean).join(', ');
+          var _rem=new Date(_due.getTime());_rem.setDate(_rem.getDate()-13);
+          var _rem2=new Date(_rem.getTime());_rem2.setDate(_rem2.getDate()+1);
+          var _calTitle='Book Emergency Lighting Retest – Due '+r2.nextTestDate;
+          var _calDetails='Your emergency lighting retest is due on '+r2.nextTestDate+'.\n\nPlease arrange your inspection as soon as possible to stay compliant with BS 5266-1:2025.\n\nCertificate: '+(r2.ref||'')+'\nProperty: '+_loc+'\n\nContact '+coName+(coPhone?'\nPhone: '+coPhone:'')+(coEmail?'\nEmail: '+coEmail:'');
+          calUrl2='https://www.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(_calTitle)+'&dates='+_cf(_rem)+'/'+_cf(_rem2)+'&details='+encodeURIComponent(_calDetails)+'&location='+encodeURIComponent(_loc);
+        }
+      }catch(_e){}}
+      var htmlBody = '<!DOCTYPE html>'
+        +'<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        +'<style>@media only screen and (max-width:600px){.ec-outer{padding:0!important}.ec-card{border-radius:0!important}.ec-two td{display:block!important;width:100%!important;padding-right:0!important;padding-left:0!important;padding-bottom:8px!important}}</style>'
+        +'</head><body style="margin:0;padding:0;background:#e8f0e8;font-family:Arial,Helvetica,sans-serif;color:#1e293b">'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-outer" style="background:#e8f0e8;padding:20px 16px"><tr><td align="center">'
+        +'<table width="600" cellpadding="0" cellspacing="0" border="0" class="ec-card" style="max-width:600px;width:100%;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.13)">'
+        +'<tr><td style="padding:20px 26px 18px;border-bottom:3px solid #166534">'
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+            +'<td style="vertical-align:middle"><div style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:2px">'+_escHtml(coName)+'</div>'
+            +'<div style="font-size:11px;color:#64748b">Emergency Lighting '+certTypeLbl+' · BS 5266-1:2025</div></td>'
+            +'<td align="right" style="vertical-align:middle;padding-left:12px;white-space:nowrap">'
+              +'<span style="display:inline-block;background:#dcfce7;border:1.5px solid #86efac;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;letter-spacing:.04em">&#10003; Certificate Issued</span>'
+            +'</td>'
+          +'</tr></table>'
+        +'</td></tr>'
+        +'<tr><td style="background:#f0fdf4;border-bottom:1px solid #dcfce7;padding:10px 26px">'
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+            +'<td style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#86efac">Certificate Reference</td>'
+            +'<td align="right" style="font-size:14px;font-weight:700;color:#166534;font-family:Courier New,monospace">'+_escHtml(certRef)+'</td>'
+          +'</tr></table>'
+        +'</td></tr>'
+        +'<tr><td style="padding:22px 26px 0">'
+          +'<p style="font-size:15px;color:#334155;margin:0 0 16px 0">Dear <strong style="color:#0f172a">'+_escHtml(r2.clientName||'Sir/Madam')+'</strong>, your emergency lighting certificate is ready.</p>'
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-two" style="margin-bottom:6px">'
+            +'<tr>'
+              +'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Property</div><div style="font-size:13px;font-weight:600;color:#1e293b;line-height:1.45">'+(propNameHtml?propNameHtml+'<br>':'')+(propAddrHtml||'—')+'</div></td></tr></table></td>'
+              +'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Type</div><div style="font-size:13px;font-weight:600;color:#1e293b;line-height:1.45">'+certTypeLbl+'</div></td></tr></table></td>'
+            +'</tr>'
+            +'<tr>'
+              +'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Test Date</div><div style="font-size:13px;font-weight:600;color:#1e293b">'+testDtDisp+'</div></td></tr></table></td>'
+              +'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid '+(isGood?'#86efac':'#fca5a5')+';background:'+(isGood?'#f0fdf4':'#fef2f2')+';border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:'+(isGood?'#166534':'#b91c1c')+';margin-bottom:4px">Outcome</div><div style="font-size:14px;font-weight:700;color:'+(isGood?'#166534':'#b91c1c')+'">&#10003; '+_escHtml(r2.outcome||outcomeRaw)+'</div></td></tr></table></td>'
+            +'</tr>'
+            +((sysDisp||engDisp)?'<tr>'+(sysDisp?'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">System</div><div style="font-size:13px;font-weight:600;color:#1e293b">'+sysDisp+'</div></td></tr></table></td>':'<td width="50%"></td>')+(engDisp?'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Engineer</div><div style="font-size:13px;font-weight:600;color:#1e293b">'+engDisp+(niceic?' <span style="font-size:11px;background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:2px 7px;border-radius:10px;font-weight:700">NICEIC</span>':'')+'</div></td></tr></table></td>':'<td width="50%"></td>')+'</tr>':'')
+          +'</table>'
+          +(lumTot2?'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px"><tr><td width="33%" style="padding-right:5px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:14px 8px"><div style="font-size:30px;font-weight:700;color:#0f172a;line-height:1">'+lumTot2+'</div><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-top:4px">Total</div></td></tr></table></td><td width="33%" style="padding:0 2px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #86efac;background:#f0fdf4;border-radius:7px"><tr><td style="padding:14px 8px"><div style="font-size:30px;font-weight:700;color:#16a34a;line-height:1">'+lumPass2+'</div><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#16a34a;margin-top:4px">Passed</div></td></tr></table></td><td width="33%" style="padding-left:5px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #fca5a5;background:#fef2f2;border-radius:7px"><tr><td style="padding:14px 8px"><div style="font-size:30px;font-weight:700;color:#ef4444;line-height:1">'+lumFail2+'</div><div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#ef4444;margin-top:4px">Failed</div></td></tr></table></td></tr></table>':'')
+          +(nextDtDisp?'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #166534;border-radius:8px;background:#f0fdf4;margin-bottom:16px"><tr><td style="padding:16px 20px"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#166534;margin-bottom:4px">Next Test Due</div><div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:3px">'+nextDtDisp+'</div><div style="font-size:12px;color:#475569;margin-bottom:12px">Must be retested by this date — BS 5266-1:2025 compliance</div><a href="'+calUrl2+'" style="display:inline-block;background:#166534;color:#fff;font-size:12px;font-weight:700;padding:10px 18px;border-radius:6px;text-decoration:none">&#128197; Add to Google Calendar</a></td></tr></table>':'')
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc;margin-bottom:20px"><tr><td style="padding:12px 18px;font-size:22px;vertical-align:middle;width:44px">&#128206;</td><td style="padding:12px 18px 12px 0;vertical-align:middle;border-left:1px solid #e2e8f0"><div style="font-size:13px;font-weight:600;color:#1e293b">PDF certificate attached</div><div style="font-size:11px;color:#475569;margin-top:2px">Share with your fire risk assessor, letting agent, or local authority as required.</div></td></tr></table>'
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;margin-bottom:22px"><tr><td style="padding:16px 18px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px">Questions? Contact Us</div><div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:10px">'+_escHtml(coName)+'</div>'+(coPhone?'<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px"><tr><td style="vertical-align:middle;font-size:13px;color:#475569;padding-right:14px">&#128222;&nbsp; <strong style="color:#1e293b">'+_escHtml(coPhone)+'</strong></td><td style="vertical-align:middle"><a href="tel:'+_escHtml(coPhone.replace(/\s/g,''))+'" style="display:inline-block;background:#166534;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:6px;text-decoration:none;white-space:nowrap">&#128222; Call Now</a></td></tr></table>':'')+(coEmail?'<div style="font-size:13px;color:#475569">&#9993;&nbsp; <a href="mailto:'+_escHtml(coEmail)+'" style="color:#166534;font-weight:600;text-decoration:none">'+_escHtml(coEmail)+'</a></div>':'')+'</td></tr></table>'
+        +'</td></tr>'
+        +'<tr><td style="border-top:1px solid #e2e8f0"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#f1f5f9;padding:14px 26px 16px"><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Ownership</div><div style="font-size:11px;color:#94a3b8;line-height:1.7;margin-bottom:10px">This certificate remains the property of '+_escHtml(coName)+' until payment for the associated works has been received in full.</div><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Integrity</div><div style="font-size:11px;color:#94a3b8;line-height:1.7">Forging, altering or reproducing this certificate without written permission is unlawful and may result in prosecution.</div></td></tr><tr><td style="padding:12px 26px 16px;text-align:center;font-size:10px;color:#94a3b8;line-height:1.8">'+_escHtml(coName)+'<br>This email was generated automatically upon certificate completion.</td></tr></table></td></tr>'
+        +'</table></td></tr></table>'
+        +'</body></html>';
+      var certHTML = '';
+      try { certHTML = elBuildCertHTML(r2); } catch(e){}
+      var attachB64 = ''; var attachName = certRef.replace(/[^\w\-]/g,'_')+'.html';
+      if(certHTML){ try{ attachB64 = btoa(unescape(encodeURIComponent(certHTML))); }catch(e){ attachB64=''; } }
+      var subj = 'Emergency Lighting '+certTypeLbl+' — '+(r2.ref||'')+(propParts2.length?' — '+propParts2.join(', '):(r2.premisesName?' — '+r2.premisesName:''));
+      var bcc = getSetting('email_bcc','');
+      var toName = to.split('@')[0];
+      var result = await sendBrevoEmail(to, toName, subj, htmlBody, attachB64||undefined, attachB64?attachName:undefined, bcc||undefined);
+      if(autoTriggered) hideOverlay();
+      if(result === false) return;
+      toast('Certificate emailed to '+to,'success',4000);
+      sb.from('email_sends').insert({cert_id:r2.id,cert_type:'el',cert_ref:r2.ref,to_email:to,to_name:toName,subject:subj,brevo_message_id:(result&&result.messageId)||null,status:'sent',sent_by:currentUser&&currentUser.id,sent_by_email:currentUser&&currentUser.email}).then(function(x){if(x&&x.error)console.warn('email_sends:',x.error.message);});
+    } catch(ex) {
+      if(autoTriggered) hideOverlay();
+      toast('Email failed: '+ex.message,'error');
+    }
+  };
 
   window.elOpenCert = function(rec){
     var html = elBuildCertHTML(rec);
