@@ -8514,12 +8514,9 @@ async function saveApplianceRecord(){
     var sat = r.outcome==='SATISFACTORY';
     var obBg = sat ? '#15803d' : '#b91c1c';
     var obText = sat ? '✓ SATISFACTORY — System satisfies requirements of BS 5266-1:2025' : '⚠ UNSATISFACTORY — Remedial action required';
-    var certTitle = r.certType==='EL.1' ? 'Certificate of Completion'
-                  : r.certType==='EL.2' ? 'Periodic Inspection &amp; Test'
-                  : 'Existing Site Assessment';
-    var certEyebrow = r.certType==='EL.1' ? 'Emergency Lighting · Completion Certificate (Small Installation)'
-                    : r.certType==='EL.2' ? 'Emergency Lighting · Periodic Inspection and Test Certificate'
-                    : 'Emergency Lighting · Existing Site Assessment';
+    var certTitle = r.certType==='EL.1' ? 'Emergency Lighting &middot; Certificate of Completion'
+                  : r.certType==='EL.2' ? 'Emergency Lighting &middot; Periodic Inspection and Testing Certificate'
+                  : 'Emergency Lighting &middot; Existing Site Assessment';
     var niceic = r.niceicNo || getSetting('el_enrol_no',getSetting('niceic_scheme_no',''));
     var elBody = getSetting('el_body','NICEIC');
     var company = getSetting('el_co_name',getSetting('company_name','OHM Electricals Ltd'));
@@ -8590,7 +8587,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .niceic-badge .nb-no{font-size:12px;font-weight:700;color:#b91c1c;margin-top:3px;font-family:monospace;}
 .ch-title-row{padding:10px 0 10px;}
 .ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b91c1c;margin-bottom:4px;}
-.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:34px;font-weight:700;color:#b91c1c;line-height:1.0;}
+.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:26px;font-weight:700;color:#b91c1c;line-height:1.15;}
 .ch-cert-std{font-size:10px;color:#9a948e;margin-top:6px;line-height:1.6;}
 .ch-ref-bar{background:#b91c1c;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.04em;}
@@ -8745,9 +8742,8 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +bodyBadge
         +'</div>'
         +'<div class="ch-title-row">'
-          +'<div class="ch-cert-eyebrow">'+certEyebrow+'</div>'
           +'<div class="ch-cert-title">'+certTitle+'</div>'
-          +'<div class="ch-cert-std">BS 5266-1:2025 · BS EN 50172:2004 · BS EN 1838:2013<br>Issued by a NICEIC Approved Contractor</div>'
+          +'<div class="ch-cert-std">BS 5266-1:2025 &nbsp;&middot;&nbsp; BS EN 50172:2004 &nbsp;&middot;&nbsp; BS EN 1838:2013</div>'
         +'</div>'
       +'</div>'
       +'<div class="addr-panel">'
