@@ -2108,6 +2108,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
     <span style="color:#fff;font-size:14px;font-weight:600" id="el-cert-modal-title">EL Certificate</span>
     <div style="display:flex;gap:8px">
       <button onclick="elPrintCert()" style="background:#b91c1c;color:#fff;border:none;padding:7px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">🖨 Print / Save PDF</button>
+      <button id="el-cert-email-btn" onclick="elCertEmailBtn()" style="background:#15803d;color:#fff;border:none;padding:7px 16px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">✉ Email</button>
       <button onclick="elCloseCert()" style="background:#44403c;color:#fff;border:none;padding:7px 14px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer">✕ Close</button>
     </div>
   </div>
@@ -8326,6 +8327,7 @@ async function saveApplianceRecord(){
     var iframe = document.getElementById('el-cert-iframe');
     var titleEl = document.getElementById('el-cert-modal-title');
     if(titleEl) titleEl.textContent = (rec.certType||'EL') + ' Certificate — ' + (rec.ref||'');
+    modal._certRec = rec;
     try {
       var blob = new Blob([html], {type:'text/html'});
       var url = URL.createObjectURL(blob);
@@ -8337,6 +8339,17 @@ async function saveApplianceRecord(){
     }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+  };
+
+  window.elCertEmailBtn = function(){
+    var modal = document.getElementById('el-cert-modal');
+    var rec = modal && modal._certRec;
+    if(!rec){ toast('No certificate loaded','warn'); return; }
+    if((rec.clientEmail||'').trim()){
+      elAutoEmail(rec, false);
+    } else {
+      elEmailCert(rec);
+    }
   };
 
   window.elCloseCert = function(){
