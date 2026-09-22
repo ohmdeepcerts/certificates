@@ -7537,7 +7537,7 @@ async function saveApplianceRecord(){
       html += '<label class="elwiz-input-label">Client name</label>';
       html += '<input class="elwiz-input" id="elw-cname" placeholder="Full name" value="'+esc(_w.clientName)+'" oninput="elSet(\'clientName\',this.value)">';
       html += '<label class="elwiz-input-label" style="margin-top:8px">Client type</label>';
-      var CT_STD = ['Agency','Landlord','Owner','Tenant'];
+      var CT_STD = ['Agency','Landlord'];
       var ctCustom = []; try { ctCustom = JSON.parse(localStorage.getItem('el_client_types_custom')||'[]'); } catch(e){}
       var ctAll = CT_STD.concat(ctCustom.filter(function(c){ return CT_STD.indexOf(c)===-1; }));
       var isCtCustomVal = _w.clientType && ctAll.indexOf(_w.clientType)===-1;
@@ -7552,13 +7552,13 @@ async function saveApplianceRecord(){
       html += '<button type="button" onclick="elSaveClientType()" style="padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--accent);background:var(--accent);color:#fff;white-space:nowrap">+ Save</button>';
       html += '</div>';
       html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Type a new category and click Save — it will appear as a button for all future certificates.</div>';
-      html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 (optional)</label>';
+      html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>';
       html += '<input class="elwiz-input" id="elw-ca1" placeholder="Street / building" value="'+esc(_w.clientAddr1)+'" oninput="elSet(\'clientAddr1\',this.value)">';
       html += '<label class="elwiz-input-label">Address line 2 (optional)</label>';
       html += '<input class="elwiz-input" id="elw-ca2" placeholder="Area / district" value="'+esc(_w.clientAddr2)+'" oninput="elSet(\'clientAddr2\',this.value)">';
       html += '<label class="elwiz-input-label">Address line 3 (optional)</label>';
       html += '<input class="elwiz-input" id="elw-ca3" placeholder="Town / city" value="'+esc(_w.clientAddr3)+'" oninput="elSet(\'clientAddr3\',this.value)">';
-      html += '<label class="elwiz-input-label">Postcode</label>';
+      html += '<label class="elwiz-input-label">Postcode <span style="color:var(--error,#b91c1c)">*</span></label>';
       html += '<input class="elwiz-input" id="elw-capc" placeholder="e.g. LS1 5HD" style="max-width:160px;text-transform:uppercase" value="'+esc(_w.clientPostcode)+'" oninput="elSet(\'clientPostcode\',this.value.toUpperCase())">';
       html += '<label class="elwiz-input-label" style="margin-top:10px">Client email <small style="color:var(--muted);font-weight:400">(for certificate delivery)</small></label>';
       html += '<input class="elwiz-input" id="elw-cemail" type="email" placeholder="client@example.com" value="'+esc(_w.clientEmail)+'" oninput="elSet(\'clientEmail\',this.value)">';
@@ -7891,7 +7891,8 @@ async function saveApplianceRecord(){
     if(s===0 && !_w.certType){ toast('Please select a certificate type','warning',2000); return; }
     if(s===1 && !_w.premAddr1.trim()){ toast('Address line 1 is required','warn'); document.getElementById('elw-pa1')&&document.getElementById('elw-pa1').focus(); return; }
     if(s===1 && !_w.premPostcode.trim()){ toast('Postcode is required','warn'); document.getElementById('elw-papc')&&document.getElementById('elw-papc').focus(); return; }
-    if(s===2 && !_w.clientPostcode.trim()){ toast('Please fill in the client postcode','warning',2000); document.getElementById('elw-capc')&&document.getElementById('elw-capc').focus(); return; }
+    if(s===2 && !_w.clientAddr1.trim()){ toast('Client address line 1 is required','warn'); document.getElementById('elw-ca1')&&document.getElementById('elw-ca1').focus(); return; }
+    if(s===2 && !_w.clientPostcode.trim()){ toast('Client postcode is required','warn'); document.getElementById('elw-capc')&&document.getElementById('elw-capc').focus(); return; }
     if(s===3 && (!_w.systemType||!_w.mode)){ toast('Please select system type and mode','warning',2000); return; }
     if(s===4 && !_w.ratedDuration){ toast('Please select rated duration','warning',2000); return; }
     if(s===7 && !_w.outcome){ toast('Please select the outcome','warning',2000); return; }
