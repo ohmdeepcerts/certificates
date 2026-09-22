@@ -7443,6 +7443,7 @@ async function saveApplianceRecord(){
       premisesAddress: '',
       premAddr1: '', premAddr2: '', premAddr3: '', premPostcode: '',
       premisesType: '',
+      _ptShowMore: false,
       occupancy: '',
       clientName: '',
       clientType: '',
@@ -7512,15 +7513,23 @@ async function saveApplianceRecord(){
       html += '<input class="elwiz-input" id="elw-pa3" placeholder="Town / city" value="'+esc(_w.premAddr3)+'" oninput="elSet(\'premAddr3\',this.value)">';
       html += '<label class="elwiz-input-label">Postcode <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-papc" placeholder="e.g. LS1 5HD" style="max-width:160px;text-transform:uppercase" value="'+esc(_w.premPostcode)+'" oninput="elSet(\'premPostcode\',this.value.toUpperCase())">';
-      var PT_CHIPS = ['House','Flat / Apartment','HMO','Commercial Office','Retail / Shop','Care Home','School / College','Warehouse','Hotel','Restaurant / Café'];
-      var isPTCustom = _w.premisesType && PT_CHIPS.indexOf(_w.premisesType)===-1;
+      var PT_PRIMARY = ['House','Flat / Apartment','HMO','Commercial Office','Retail / Shop'];
+      var PT_MORE    = ['Care Home','School / College','Warehouse','Hotel','Restaurant / Café'];
+      var PT_ALL     = PT_PRIMARY.concat(PT_MORE);
+      var isPTCustom = _w.premisesType && PT_ALL.indexOf(_w.premisesType)===-1;
+      var moreSelected = PT_MORE.indexOf(_w.premisesType)!==-1;
+      var showMore = _w._ptShowMore || moreSelected;
+      function _ptChip(pt){var sel=_w.premisesType===pt;return '<button type="button" onclick="elPickPremType(\''+pt.replace(/'/g,'\\\'')+'\')" style="padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+pt+'</button>';}
       html += '<div class="elwiz-input-label" style="font-size:13px;font-weight:600;margin:16px 0 8px">Premises type <small style="font-weight:400;color:var(--muted)">(optional)</small></div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
-      PT_CHIPS.forEach(function(pt){
-        var sel = _w.premisesType===pt;
-        html += '<button type="button" onclick="elPickPremType(\''+pt.replace(/'/g,'\\\'')+'\')" style="padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+pt+'</button>';
-      });
+      PT_PRIMARY.forEach(function(pt){html+=_ptChip(pt);});
+      html += '<button type="button" onclick="elToggleMorePremTypes(this)" style="padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--muted)">'+(showMore?'Less ▴':'More ▾')+'</button>';
       html += '</div>';
+      if(showMore){
+        html += '<div id="elw-pt-more" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+        PT_MORE.forEach(function(pt){html+=_ptChip(pt);});
+        html += '</div>';
+      }
       html += '<input class="elwiz-input" id="elw-ptype-custom" placeholder="Or type your own premises type…" value="'+(isPTCustom?esc(_w.premisesType):'')+'" oninput="elSet(\'premisesType\',this.value)" style="max-width:320px">';
     } else if(s===2){
       html += '<div class="elwiz-q">Client details</div>';
@@ -7766,6 +7775,10 @@ async function saveApplianceRecord(){
 
   window.elPickPremType = function(val){
     _w.premisesType = (_w.premisesType === val) ? '' : val;
+    elRenderStep();
+  };
+  window.elToggleMorePremTypes = function(btn){
+    _w._ptShowMore = !_w._ptShowMore;
     elRenderStep();
   };
 
