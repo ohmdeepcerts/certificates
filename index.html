@@ -7422,17 +7422,20 @@ async function saveApplianceRecord(){
   var _w = {};
 
   var STEPS = [
-    'type',        // 0: EL.1 / EL.2 / EL.3
-    'premises',    // 1: premises name + address + type
-    'client',      // 2: client name + org
-    'system',      // 3: system type + operating mode
-    'duration',    // 4: rated duration
-    'test',        // 5: test date + inspection type
-    'luminaires',  // 6: total / pass / fail counts
-    'outcome',     // 7: SATISFACTORY / UNSATISFACTORY
-    'observations',// 8: optional notes
-    'engineer',    // 9: engineer name + NICEIC
-    'review'       // 10: review & issue
+    'type',        // 0:  EL.1 / EL.2 / EL.3
+    'premises',    // 1:  premises name + address + type
+    'client',      // 2:  client name + org
+    'system',      // 3:  system type + operating mode
+    'purpose',     // 4:  purpose of installation + arrangement checkboxes
+    'duration',    // 5:  rated duration
+    'test',        // 6:  test date + inspection type
+    'luminaires',  // 7:  total / pass / fail counts
+    'instruments', // 8:  test instruments
+    'checklist',   // 9:  P1-P23 compliance checklist
+    'outcome',     // 10: SATISFACTORY / UNSATISFACTORY
+    'observations',// 11: optional notes
+    'engineer',    // 12: engineer name + NICEIC
+    'review'       // 13: review & issue
   ];
 
   var CERT_TYPES = [
@@ -7478,6 +7481,19 @@ async function saveApplianceRecord(){
       nextTestDate: '',
       retestPeriod: '12months',
       inspectionType: '',
+      // Purpose of installed emergency lighting system (step 4)
+      purpEscape: '✓', purpStandby: 'N/A', purpEscRoute: '✓',
+      purpPartial: 'N/A', purpOpen: 'N/A', purpHighRisk: 'N/A',
+      // Installation arrangement (step 4)
+      arSelfContained: 'N/A', arGenerator: 'N/A', arCentral: 'N/A', arCombined: 'N/A',
+      // Test instruments (step 8)
+      inst1Model: '', inst1Serial: '', inst2Model: '', inst2Serial: '',
+      // P1-P23 compliance checklist (step 9)
+      pItems: {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',
+               p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',
+               p15:'✓',p16:'✓',p17:'✓',p18:'✓',p19:'✓',p20:'✓',
+               p21:'✓',p22:'N/A',p23:'✓'},
+      checklistNotes: '',
       lumTotal: '',
       lumPass: '',
       lumFail: '',
@@ -7619,6 +7635,32 @@ async function saveApplianceRecord(){
       });
       html += '</div>';
     } else if(s===4){
+      // PURPOSE OF INSTALLATION + ARRANGEMENT
+      html += '<div class="elwiz-q">Purpose &amp; arrangement</div>';
+      html += '<div class="elwiz-sub">Indicate which types of emergency lighting are installed and the system arrangement.</div>';
+      function _elToggle(field, label){
+        var v=_w[field]||'N/A';var isChk=v==='✓';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:5px">'
+          +'<span style="font-size:13px;color:var(--text)">'+label+'</span>'
+          +'<div style="display:flex;gap:4px">'
+            +'<button type="button" onclick="elPick(\''+field+'\',\'✓\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(isChk?'#16a34a':'var(--border)')+';background:'+(isChk?'#dcfce7':'transparent')+';color:'+(isChk?'#166534':'var(--muted)')+'">✓</button>'
+            +'<button type="button" onclick="elPick(\''+field+'\',\'N/A\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(!isChk?'#6366f1':'var(--border)')+';background:'+(!isChk?'#e0e7ff':'transparent')+';color:'+(!isChk?'#3730a3':'var(--muted)')+'">N/A</button>'
+          +'</div>'
+        +'</div>';
+      }
+      html += '<div style="font-size:12px;font-weight:700;color:var(--text);letter-spacing:.03em;margin-bottom:8px;margin-top:4px">PURPOSE OF INSTALLED EMERGENCY LIGHTING SYSTEM</div>';
+      html += _elToggle('purpEscape',   'Emergency escape lighting');
+      html += _elToggle('purpStandby',  'Standby lighting');
+      html += _elToggle('purpEscRoute', 'Escape route lighting');
+      html += _elToggle('purpPartial',  'Partial standby lighting');
+      html += _elToggle('purpOpen',     'Open area lighting');
+      html += _elToggle('purpHighRisk', 'High risk task area lighting');
+      html += '<div style="font-size:12px;font-weight:700;color:var(--text);letter-spacing:.03em;margin-bottom:8px;margin-top:16px">INSTALLATION ARRANGEMENT</div>';
+      html += _elToggle('arSelfContained','Self-contained emergency luminaire');
+      html += _elToggle('arGenerator',    'Standby generator system');
+      html += _elToggle('arCentral',      'Central battery system');
+      html += _elToggle('arCombined',     'Combined emergency luminaire');
+    } else if(s===5){
       html += '<div class="elwiz-q">Rated duration</div>';
       html += '<div class="elwiz-sub">Minimum duration the system must sustain emergency lighting. Sleeping accommodation requires 3 hours.</div>';
       html += '<div class="elwiz-chips">';
@@ -7627,7 +7669,7 @@ async function saveApplianceRecord(){
         html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'ratedDuration\',\''+d+'\');_w.durationAchieved=\''+d+'\'">'+d+'</div>';
       });
       html += '</div>';
-    } else if(s===5){
+    } else if(s===6){
       html += '<div class="elwiz-q">Test date &amp; next inspection</div>';
       html += '<div class="elwiz-sub">Date carried out and when the next test is due.</div>';
       // convert DD/MM/YYYY ↔ YYYY-MM-DD for the native date input
@@ -7655,7 +7697,7 @@ async function saveApplianceRecord(){
         });
         html += '</div>';
       }
-    } else if(s===6){
+    } else if(s===7){
       html += '<div class="elwiz-q">Luminaire schedule</div>';
       html += '<div class="elwiz-sub">Fill any two fields — the third calculates automatically.</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">';
@@ -7692,7 +7734,69 @@ async function saveApplianceRecord(){
         html += '<p style="font-size:12px;color:var(--muted);margin:0;padding:6px 0">No rows added — the luminaire schedule table will be omitted from the certificate.</p>';
       }
       html += '</div>';
-    } else if(s===7){
+    } else if(s===8){
+      // TEST INSTRUMENTS
+      html += '<div class="elwiz-q">Test instruments</div>';
+      html += '<div class="elwiz-sub">Record the instruments used. Where P2 measurement is carried out, instruments must be recorded.</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">';
+      html += '<div><label class="elwiz-input-label">Instrument 1 — Model</label>';
+      html += '<input class="elwiz-input" placeholder="e.g. Megger LTW325" value="'+esc(_w.inst1Model)+'" oninput="elSet(\'inst1Model\',this.value)"></div>';
+      html += '<div><label class="elwiz-input-label">Instrument 1 — Serial No.</label>';
+      html += '<input class="elwiz-input" placeholder="e.g. SN123456" value="'+esc(_w.inst1Serial)+'" oninput="elSet(\'inst1Serial\',this.value)"></div>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+      html += '<div><label class="elwiz-input-label">Instrument 2 — Model <small style="font-weight:400;color:var(--muted)">(if any)</small></label>';
+      html += '<input class="elwiz-input" placeholder="Optional" value="'+esc(_w.inst2Model)+'" oninput="elSet(\'inst2Model\',this.value)"></div>';
+      html += '<div><label class="elwiz-input-label">Instrument 2 — Serial No.</label>';
+      html += '<input class="elwiz-input" placeholder="Optional" value="'+esc(_w.inst2Serial)+'" oninput="elSet(\'inst2Serial\',this.value)"></div>';
+      html += '</div>';
+    } else if(s===9){
+      // COMPLIANCE CHECKLIST P1-P23
+      html += '<div class="elwiz-q">Compliance checklist</div>';
+      html += '<div class="elwiz-sub">Set the result for each item. BS 5266-1:2025 Annex M. Tap ✓ / ✗ / N/A for each row.</div>';
+      if(!_w.pItems) _w.pItems = {};
+      var P_ITEMS = [
+        ['p1','4.2','P1','Plans are available and correct'],
+        ['p2','12','P2','Under test conditions, adequate illumination provided for safe movement on escape routes and areas'],
+        ['p3','5','P3','Luminaires correctly positioned and oriented as shown on plans'],
+        ['p4','6','P4','Original design still valid'],
+        ['p5','5.2.9','P5','All escape route safety signs and fire fighting equipment location signs visible with normal lighting extinguished'],
+        ['p6','5.2.8','P6','Correct application and siting of additional emergency lighting'],
+        ['p7','6.7.1','P7','Luminaires conform to BS EN IEC 60598-2-22:2022'],
+        ['p9','8','P9','Wiring systems comply with the requirements of BS 7671'],
+        ['p10','8.2','P10','Fire protection of central wiring systems satisfactory'],
+        ['p11','8.2.6','P11','Emergency circuits correctly segregated from other supplies'],
+        ['p12','8.2.11','P12','Wiring to emergency lighting supply power sources a fixed installation, protected against unauthorised interference'],
+        ['p13','8.3.3','P13','System has a suitable test facility for the application'],
+        ['p14','8.2.12','P14','Central power system output voltage range compatible with supply voltage range of the luminaires'],
+        ['p15','12','P15','Luminaires tested and found to operate for their full rated duration'],
+        ['p16','11','P16','Operation and maintenance'],
+        ['p17','11','P17','Test records in the log book complete and satisfactory'],
+        ['p18','11','P18','Instructions together with a suitable log book showing a satisfactory commissioning test available for use by the building occupier'],
+        ['p19','12','P19','Luminaires clean and undamaged with lamps in good condition'],
+        ['p20','10.7','P20','Building occupier and staff trained on suitable maintenance, testing and operating procedures, or a current maintenance contract is in place'],
+        ['p21','13.3','P21','Evidence of servicing of Central Battery System (in line with manufacturer\'s procedures); in-house or current maintenance contract is in place'],
+        ['p22','13.3','P22','Evidence of servicing of Standby Generator System (in line with manufacturer\'s procedures); in-house or current maintenance contract is in place'],
+        ['p23','12','P23','After test, the charging indicators operate correctly']
+      ];
+      html += '<div style="display:flex;flex-direction:column;gap:3px">';
+      P_ITEMS.forEach(function(item){
+        var key=item[0],clause=item[1],code=item[2],desc=item[3];
+        var v=(_w.pItems&&_w.pItems[key])||'✓';
+        html += '<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface2);border-radius:5px">';
+        html += '<span style="font-size:9px;color:var(--muted);width:32px;flex-shrink:0;text-align:right;line-height:1.2">'+clause+'</span>';
+        html += '<span style="font-size:11.5px;font-weight:700;width:22px;flex-shrink:0;color:var(--accent)">'+code+'</span>';
+        html += '<span style="font-size:11.5px;flex:1;color:var(--text);line-height:1.3">'+esc(desc)+'</span>';
+        html += '<div style="display:flex;gap:3px;flex-shrink:0">';
+        html += '<button type="button" onclick="elSetPItem(\''+key+'\',\'✓\')" style="padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(v==='✓'?'#16a34a':'var(--border)')+';background:'+(v==='✓'?'#dcfce7':'transparent')+';color:'+(v==='✓'?'#166534':'var(--muted)')+'">✓</button>';
+        html += '<button type="button" onclick="elSetPItem(\''+key+'\',\'X\')" style="padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(v==='X'?'#dc2626':'var(--border)')+';background:'+(v==='X'?'#fee2e2':'transparent')+';color:'+(v==='X'?'#991b1b':'var(--muted)')+'">✗</button>';
+        html += '<button type="button" onclick="elSetPItem(\''+key+'\',\'N/A\')" style="padding:3px 8px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(v==='N/A'?'#6366f1':'var(--border)')+';background:'+(v==='N/A'?'#e0e7ff':'transparent')+';color:'+(v==='N/A'?'#3730a3':'var(--muted)')+'">N/A</button>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      html += '<label class="elwiz-input-label" style="margin-top:12px">Notes</label>';
+      html += '<textarea class="elwiz-input" rows="3" placeholder="e.g. N/A" style="resize:vertical" oninput="elSet(\'checklistNotes\',this.value)">'+esc(_w.checklistNotes||'')+'</textarea>';
+    } else if(s===10){
       html += '<div class="elwiz-q">Overall outcome</div>';
       html += '<div class="elwiz-sub">Does the installation satisfy the requirements of BS 5266-1?</div>';
       html += '<div class="elwiz-outcome">';
@@ -7703,7 +7807,7 @@ async function saveApplianceRecord(){
         html += '<label class="elwiz-input-label">Duration achieved (if less than rated)</label>';
         html += '<input class="elwiz-input" id="elw-dach" placeholder="e.g. 2hr 15min" value="'+esc(_w.durationAchieved)+'" oninput="elSet(\'durationAchieved\',this.value)" style="max-width:220px">';
       }
-    } else if(s===8){
+    } else if(s===11){
       html += '<div class="elwiz-q">Observations <span style="font-size:14px;font-weight:400;color:var(--muted)">(optional)</span></div>';
       html += '<div class="elwiz-sub">Add defects or recommendations. C1 = immediate danger · C2 = urgent action · C3 = recommendation · FI = further investigation.</div>';
       // Quick-add chips
@@ -7742,14 +7846,14 @@ async function saveApplianceRecord(){
       }
       html += '</div>';
       html += '<button type="button" onclick="elAddObsRow(\'C3\',\'\')" style="margin-top:8px;font-size:13px;padding:8px 16px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--accent);cursor:pointer;font-weight:600;width:100%">+ Add observation</button>';
-    } else if(s===9){
+    } else if(s===12){
       html += '<div class="elwiz-q">Engineer details</div>';
       html += '<div class="elwiz-sub">The competent person who carried out the inspection.</div>';
       html += '<label class="elwiz-input-label">Engineer name</label>';
       html += '<input class="elwiz-input" id="elw-eng" placeholder="Full name" value="'+esc(_w.engineerName)+'" oninput="elSet(\'engineerName\',this.value)">';
       html += '<label class="elwiz-input-label">NICEIC scheme number (from settings if blank)</label>';
       html += '<input class="elwiz-input" id="elw-niceic" placeholder="e.g. 12345678" value="'+esc(_w.niceicNo)+'" oninput="elSet(\'niceicNo\',this.value)">';
-    } else if(s===10){
+    } else if(s===13){
       if(!_w.ref){
         _w.ref='Generating…';
         (function(){var _a=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');buildCertRefSeq(_a,_w.premPostcode,'el').then(function(r){_w.ref=r.ref;_w.baseRef=r.baseRef;elRenderStep();}).catch(function(){_w.ref=genRef(_w.certType||'EL');elRenderStep();});})();
@@ -7897,6 +8001,11 @@ async function saveApplianceRecord(){
     if(!_w.lumRows[i]) _w.lumRows[i] = {loc:'', result:'PASS'};
     _w.lumRows[i][field] = val;
   };
+  window.elSetPItem = function(key, val){
+    if(!_w.pItems) _w.pItems = {};
+    _w.pItems[key] = val;
+    elRenderStep();
+  };
 
   // Select a quick period and recalculate expiry
   window.elSetPeriod = function(period){
@@ -7919,9 +8028,9 @@ async function saveApplianceRecord(){
     if(s===2 && !_w.clientAddr1.trim()){ toast('Client address line 1 is required','warn'); document.getElementById('elw-ca1')&&document.getElementById('elw-ca1').focus(); return; }
     if(s===2 && !_w.clientPostcode.trim()){ toast('Client postcode is required','warn'); document.getElementById('elw-capc')&&document.getElementById('elw-capc').focus(); return; }
     if(s===3 && (!_w.systemType||!_w.mode)){ toast('Please select system type and mode','warning',2000); return; }
-    if(s===4 && !_w.ratedDuration){ toast('Please select rated duration','warning',2000); return; }
-    if(s===7 && !_w.outcome){ toast('Please select the outcome','warning',2000); return; }
-    if(s===6){
+    if(s===5 && !_w.ratedDuration){ toast('Please select rated duration','warning',2000); return; }
+    if(s===10 && !_w.outcome){ toast('Please select the outcome','warning',2000); return; }
+    if(s===7){
       var _fc = parseInt(_w.lumFail)||0;
       if(_fc >= 2){
         if(!_w.observationRows) _w.observationRows=[];
@@ -7929,11 +8038,11 @@ async function saveApplianceRecord(){
         if(!_alr) _w.observationRows.unshift({code:'C2', text:_fc+' emergency luminaires failed to sustain the full rated duration. Remedial work required before next test.'});
       }
     }
-    if(s===8){ elSyncObs(); }
-    if(s===9 && !_w.engineerName.trim()){ toast('Please enter the engineer name','warning',2000); return; }
+    if(s===11){ elSyncObs(); }
+    if(s===12 && !_w.engineerName.trim()){ toast('Please enter the engineer name','warning',2000); return; }
     _w.step++;
     // Auto-skip engineer step if already filled from settings
-    if(_w.step===9 && _w.engineerName.trim() && _w.niceicNo.trim()) _w.step++;
+    if(_w.step===12 && _w.engineerName.trim() && _w.niceicNo.trim()) _w.step++;
     elRenderStep();
   };
 
@@ -7941,7 +8050,7 @@ async function saveApplianceRecord(){
     if(_w.step>0){
       _w.step--;
       // Auto-skip engineer step going back if already filled
-      if(_w.step===9 && _w.engineerName.trim() && _w.niceicNo.trim()) _w.step--;
+      if(_w.step===12 && _w.engineerName.trim() && _w.niceicNo.trim()) _w.step--;
       elRenderStep();
     }
   };
@@ -8709,28 +8818,12 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div style="font-size:11.5px;color:#6b6560;line-height:1.75">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025 (Code of practice for emergency lighting of premises). It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client and retained by the issuing contractor. For queries contact '+coName+' on '+coTel+'.</div>'
         +'</div>'
       +'</div>'
-      +footer(pName+(pType?' · '+pType:''), ref, 1, 4)
+      +footer(pName+(pType?' · '+pType:''), ref, 1, 5)
     +'</div>';
 
     /* PAGE 2 — Installation Details */
-    var bsChecklist = [
-      ['Emergency luminaires installed on all required escape routes','PASS'],
-      ['High-risk task area lighting provided where required','PASS'],
-      ['Open area (anti-panic) lighting provided where required',sat?'PASS':'FAIL'],
-      ['Escape route signage illuminated to BS 5499','PASS'],
-      ['Minimum illuminance levels verified on all escape routes',sat?'PASS':'FAIL'],
-      ['Rated duration achieved on functional duration test',sat?'PASS':'FAIL'],
-      ['System mode appropriate for occupancy type','PASS'],
-      ['Central battery / self-contained mode correctly set','PASS'],
-      ['Inhibiting key switch or control device present and labelled','N/A'],
-      ['Monthly visual inspection records maintained on site','N/A'],
-      ['Annual full duration test records available on site','N/A'],
-      ['All luminaires accessible for routine maintenance','PASS'],
-      ['Certificate and log book retained by responsible person','PASS']
-    ];
-
     var p2 = '<div class="cert-page">'
-      +contHead(r.certType, 2, 4, 'Installation Details', ref, nic, coName)
+      +contHead(r.certType, 2, 5, 'Installation Details', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Installation and Test Information</div>'
         +'<div class="fg">'
@@ -8751,31 +8844,102 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +field('NICEIC Registration No.',nic,'fv-red')
         +'</div>'
       +'</div>'
-      +footer(pName, ref, 2, 4)
+      +footer(pName, ref, 2, 5)
     +'</div>';
 
-    /* PAGE 3 — Compliance Checklist + Declaration */
+    /* PAGE 3 — System Purpose, Arrangement & Test Instruments */
+    (function(){})(); // scope marker
+    var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#16a34a;font-size:14px">✓</span>':'<span style="font-size:10px;color:#9a948e;font-weight:600">N/A</span>';};
+    var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #ede9e4"><div style="flex:1;padding:6px 10px;font-size:11px;color:#44403c">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #ede9e4">'+_pv(val||'N/A')+'</div></div>';};
+    var p2b = '<div class="cert-page">'
+      +contHead(r.certType, 3, 5, 'System Purpose &amp; Test Instruments', ref, nic, coName)
+      +'<div class="cb">'
+        +'<div class="sec-head">Purpose of Installed Emergency Lighting System</div>'
+        +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr">'
+            +_pr('Emergency escape lighting',r.purpEscape||'✓')
+            +_pr('Standby lighting',r.purpStandby||'N/A')
+            +_pr('Escape route lighting',r.purpEscRoute||'✓')
+            +_pr('Partial standby lighting',r.purpPartial||'N/A')
+            +_pr('Open area lighting',r.purpOpen||'N/A')
+            +_pr('High risk task area lighting',r.purpHighRisk||'N/A')
+          +'</div>'
+        +'</div>'
+        +'<div class="sec-head">Emergency Lighting Installation Arrangement</div>'
+        +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr">'
+            +_pr('Self-contained emergency luminaire',r.arSelfContained||'N/A')
+            +_pr('Standby generator system',r.arGenerator||'N/A')
+            +_pr('Central battery system',r.arCentral||'N/A')
+            +_pr('Combined emergency luminaire',r.arCombined||'N/A')
+          +'</div>'
+        +'</div>'
+        +'<div class="sec-head">Test Instruments Used</div>'
+        +'<table class="ltbl">'
+          +'<tr><th>Instrument</th><th>Model</th><th style="width:160px">Serial No.</th></tr>'
+          +'<tr><td style="padding:7px 10px">Instrument 1 (light meter)</td>'
+            +'<td>'+(r.inst1Model?esc(r.inst1Model):'<span style="color:#9a948e;font-style:italic">Not recorded</span>')+'</td>'
+            +'<td>'+(r.inst1Serial?esc(r.inst1Serial):'—')+'</td></tr>'
+          +(r.inst2Model||r.inst2Serial
+            ?'<tr><td style="padding:7px 10px">Instrument 2</td>'
+              +'<td>'+(r.inst2Model?esc(r.inst2Model):'—')+'</td>'
+              +'<td>'+(r.inst2Serial?esc(r.inst2Serial):'—')+'</td></tr>'
+            :'')
+          +'<tr><td colspan="3" style="font-size:10px;color:#6b6560;font-style:italic;padding:5px 10px;background:#fafaf9">Where periodic requirement P2 is carried out by measurement, details of instruments MUST be recorded</td></tr>'
+        +'</table>'
+      +'</div>'
+      +footer(pName, ref, 3, 5)
+    +'</div>';
+
+    /* PAGE 4 — Compliance Checklist + Declaration */
     var declText = r.certType==='EL.1'
       ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
       : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
 
+    var P_CERT_ITEMS = [
+      ['p1','P1','Emergency luminaires installed on all required escape routes'],
+      ['p2','P2','Minimum illuminance levels achieved on escape routes (measured or checked)'],
+      ['p3','P3','Emergency luminaires positioned correctly at all required points'],
+      ['p4','P4','Emergency luminaires comply with BS EN 60598-2-22'],
+      ['p5','P5','Rated duration achievable from battery under full load'],
+      ['p6','P6','Central power supply system or generator provided (where applicable)'],
+      ['p7','P7','Change-over device operates correctly within 5 s (or 0.5 s for high risk)'],
+      ['p9','P9','Emergency escape route signage lit to BS 5499'],
+      ['p10','P10','Open area (anti-panic) lighting provided (where applicable)'],
+      ['p11','P11','High risk task area lighting provided (where applicable)'],
+      ['p12','P12','Mode of operation correct for occupancy type (sustained / non-sustained / combined)'],
+      ['p13','P13','All luminaires free from defects, damage and obstruction'],
+      ['p14','P14','Inhibiting switch / key-switch present and labelled (where fitted)'],
+      ['p15','P15','Log book / inspection record available on site'],
+      ['p16','P16','Monthly functional test records complete and up to date'],
+      ['p17','P17','Annual full-rated-duration test records available'],
+      ['p18','P18','System found satisfactory at conclusion of rated duration test'],
+      ['p19','P19','Battery charge restored after testing'],
+      ['p20','P20','Wiring / cable circuits comply with BS 7671 and are adequately protected'],
+      ['p21','P21','System commissioning records available on site'],
+      ['p22','P22','Addressable or monitored system performing correctly (where applicable)'],
+      ['p23','P23','Certificate and documentation retained by responsible person']
+    ];
+    var _pi = r.pItems || {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',p15:'✓',p16:'✓',p17:'✓',p18:'✓',p19:'✓',p20:'✓',p21:'✓',p22:'N/A',p23:'✓'};
+    var _pChip=function(v){return v==='✓'?'<span class="chip-pass" style="min-width:28px">&#10003;</span>':v==='✗'?'<span class="chip-fail" style="min-width:28px">&#10007;</span>':'<span class="chip-na" style="min-width:28px">N/A</span>';};
+
     var p3 = '<div class="cert-page">'
-      +contHead(r.certType, 3, 4, 'Compliance Checklist &amp; Declaration', ref, nic, coName)
+      +contHead(r.certType, 4, 5, 'Compliance Checklist &amp; Declaration', ref, nic, coName)
       +'<div class="cb">'
-        +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist</div>'
+        +'<div class="sec-head">BS 5266-1:2025 Compliance Checklist (Annex M)</div>'
         +'<table class="ltbl">'
-          +'<tr><th style="width:70%;padding:7px 10px">Compliance Item</th><th style="text-align:center;padding:7px 10px">Result</th></tr>'
+          +'<tr><th style="width:55px;padding:5px 8px">Ref</th><th style="padding:5px 8px">Compliance Item</th><th style="text-align:center;padding:5px 8px;width:70px">Result</th></tr>'
           +(function(){
             var rows='';
-            for(var i=0;i<bsChecklist.length;i++){
-              var item=bsChecklist[i];
-              var chip = item[1]==='PASS'?'<span class="chip-pass">PASS</span>'
-                       : item[1]==='FAIL'?'<span class="chip-fail">FAIL</span>'
-                       : '<span class="chip-na">N/A</span>';
-              rows += '<tr><td style="padding:6px 10px">'+item[0]+'</td><td style="text-align:center;padding:6px 10px">'+chip+'</td></tr>';
+            for(var i=0;i<P_CERT_ITEMS.length;i++){
+              var itm=P_CERT_ITEMS[i];
+              rows+='<tr><td style="padding:4px 8px;font-weight:700;font-size:10px;color:#78716c">'+itm[1]+'</td>'
+                +'<td style="padding:4px 8px;font-size:10.5px">'+itm[2]+'</td>'
+                +'<td style="text-align:center;padding:4px 8px">'+_pChip(_pi[itm[0]]||'✓')+'</td></tr>';
             }
             return rows;
           })()
+          +(r.checklistNotes?'<tr><td colspan="3" style="padding:5px 8px;font-size:10px"><span style="font-weight:700;color:#78716c">Notes: </span>'+esc(r.checklistNotes)+'</td></tr>':'')
         +'</table>'
         +'<div class="sec-head">Competent Person Declaration</div>'
         +'<div style="border:1px solid #d0ccc6;border-radius:4px;overflow:hidden;font-size:11.5px">'
@@ -8811,12 +8975,12 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'</div>'
         +'</div>'
       +'</div>'
-      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 3, 4)
+      +footer(coName+' · '+bodyLabel+' No. '+nic, ref, 4, 5)
     +'</div>';
 
-    /* PAGE 4 — Defects & Luminaire Schedule */
+    /* PAGE 5 — Defects & Luminaire Schedule */
     var p4 = '<div class="cert-page">'
-      +contHead(r.certType, 4, 4, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
+      +contHead(r.certType, 5, 5, 'Defects, Recommendations &amp; Luminaire Schedule', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Defects &amp; Recommendations</div>'
         +(function(){
@@ -8857,14 +9021,14 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             );
         })()
       +'</div>'
-      +footer(pName, ref, 4, 4)
+      +footer(pName, ref, 5, 5)
     +'</div>';
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
       +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
       +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
       +'<style>'+css+'</style></head><body>'
-      +p1+p2+p3+p4
+      +p1+p2+p2b+p3+p4
       +'</body></html>';
   };
 
