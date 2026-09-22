@@ -3165,6 +3165,12 @@ function _refSettings(type){
       startN:parseInt(getSetting('pat_ref_start','1'))||1
     };
   }
+  if(type==='el'){
+    return{
+      prefix:(getSetting('el_ref_prefix','EL')||'EL').toUpperCase(),
+      startN:parseInt(getSetting('el_ref_start','1001'))||1001
+    };
+  }
   return{
     prefix:(getSetting('gas_ref_prefix',getSetting('ref_prefix','OHM'))||'OHM').toUpperCase(),
     startN:parseInt(getSetting('gas_ref_start',getSetting('ref_start','210')))||210
@@ -3184,13 +3190,23 @@ async function buildCertRefSeq(addr,postcode,type='gas'){
   const pc=postcode||_extractPC(addr);
   const score=_pcScore(pc);
   const addrPart=_refAddrPart(addr||'');
-  const table=type==='pat'?'pat_reports':'gas_certs';
+  const table=type==='pat'?'pat_reports':type==='el'?'el_certs':'gas_certs';
   try{
-    const{data}=await sb.from(table).select('base_ref').not('base_ref','is',null);
-    const allNums=(data||[]).map(r=>{
-      const m=(r.base_ref||'').trim().match(/^[A-Za-z]+(\d+)$/);
-      if(!m)return 0;const n=parseInt(m[1]);return n<=9999?n:0;
-    });
+    let allNums;
+    if(type==='el'){
+      const{data}=await sb.from(table).select('data');
+      allNums=(data||[]).map(r=>{
+        const br=((r.data&&r.data.baseRef)||'').trim();
+        const m=br.match(/^[A-Za-z]+(\d+)$/);
+        if(!m)return 0;const n=parseInt(m[1]);return n<=99999?n:0;
+      });
+    }else{
+      const{data}=await sb.from(table).select('base_ref').not('base_ref','is',null);
+      allNums=(data||[]).map(r=>{
+        const m=(r.base_ref||'').trim().match(/^[A-Za-z]+(\d+)$/);
+        if(!m)return 0;const n=parseInt(m[1]);return n<=9999?n:0;
+      });
+    }
     const maxN=Math.max(startN-1,...allNums);
     const nextN=maxN+1;
     return{ref:`${prefix}${nextN}${yy}${score} / ${addrPart}`,baseRef:`${prefix}${nextN}`};
@@ -7734,7 +7750,10 @@ async function saveApplianceRecord(){
       html += '<label class="elwiz-input-label">NICEIC scheme number (from settings if blank)</label>';
       html += '<input class="elwiz-input" id="elw-niceic" placeholder="e.g. 12345678" value="'+esc(_w.niceicNo)+'" oninput="elSet(\'niceicNo\',this.value)">';
     } else if(s===10){
-      if(!_w.ref) _w.ref = genRef(_w.certType||'EL');
+      if(!_w.ref){
+        _w.ref='Generating…';
+        (function(){var _a=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');buildCertRefSeq(_a,_w.premPostcode,'el').then(function(r){_w.ref=r.ref;_w.baseRef=r.baseRef;elRenderStep();}).catch(function(){_w.ref=genRef(_w.certType||'EL');elRenderStep();});})();
+      }
       html += '<div class="elwiz-q">Review &amp; Issue</div>';
       html += '<div class="elwiz-sub">Check the summary below then issue the certificate.</div>';
       html += '<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:20px;font-size:13px;line-height:1.8">';
@@ -7930,6 +7949,15 @@ async function saveApplianceRecord(){
   window.elSave = async function(){
     var isEdit = !!_w._editId;
     var editId = _w._editId || null;
+    if(!isEdit && (!_w.ref || _w.ref==='Generating…' || !_w.baseRef)){
+      showOverlay('Generating reference…');
+      try{
+        var _sa=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');
+        var _sr=await buildCertRefSeq(_sa,_w.premPostcode,'el');
+        _w.ref=_sr.ref; _w.baseRef=_sr.baseRef;
+      }catch(e){ if(!_w.ref||_w.ref==='Generating…') _w.ref=genRef(_w.certType||'EL'); }
+      hideOverlay();
+    }
     var rec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
     delete rec._editId;
     delete rec.step;
