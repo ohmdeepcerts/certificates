@@ -9233,14 +9233,31 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         clone.style.cssText = 'width:794px;min-height:1123px;max-width:794px;box-sizing:border-box;background:#fff;color:#1c1917;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:visible';
         shell.innerHTML = '';
         shell.appendChild(clone);
-        // Wait for all images (including data-URI signatures) to fully decode
+        // Convert data-URI img srcs to blob: URLs so html2canvas can render them
+        // without crossOrigin="anonymous" side-effects that silently drop large data URIs
+        var _blobUrls = [];
+        Array.from(clone.querySelectorAll('img[src^="data:"]')).forEach(function(img){
+          try {
+            var src = img.getAttribute('src');
+            var mime = (src.match(/^data:([^;]+);/)||[,'image/png'])[1];
+            var b64 = src.split(',')[1];
+            if(!b64) return;
+            var bytes = atob(b64), ab = new ArrayBuffer(bytes.length), ua = new Uint8Array(ab);
+            for(var j=0;j<bytes.length;j++) ua[j]=bytes.charCodeAt(j);
+            var burl = URL.createObjectURL(new Blob([ab],{type:mime}));
+            _blobUrls.push(burl);
+            img.src = burl;
+          } catch(e){}
+        });
+        // Wait for all images to be ready
         await Promise.all(Array.from(clone.querySelectorAll('img')).map(function(img){
           if(img.complete&&img.naturalWidth>0) return Promise.resolve();
-          return new Promise(function(res){ img.onload=res; img.onerror=res; setTimeout(res,3000); });
+          return new Promise(function(res){ img.onload=res; img.onerror=res; setTimeout(res,5000); });
         }));
-        await new Promise(function(res){setTimeout(res,40);});
+        await new Promise(function(res){setTimeout(res,60);});
         var pw = clone.offsetWidth||794, ph = clone.offsetHeight||1123;
-        var canvas = await html2canvas(clone,{scale:2.5,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,imageTimeout:5000});
+        var canvas = await html2canvas(clone,{scale:2.5,allowTaint:true,backgroundColor:'#ffffff',width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,imageTimeout:8000});
+        _blobUrls.forEach(function(u){ URL.revokeObjectURL(u); });
         var imgH = (canvas.height/canvas.width)*210;
         var imgData = canvas.toDataURL('image/jpeg',0.88);
         doc.addImage(imgData,'JPEG',0,0,210,imgH);
