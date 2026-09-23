@@ -9901,8 +9901,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
   };
   var _elAllCerts = [];
 
-  window.deleteELCert = function(id, e){
-    e.stopPropagation();
+  window.deleteELCert = function(id){
     var isAdmin=_isAdminUser();
     confirm2('Delete EL Certificate',isAdmin?'Permanently delete this certificate?':'Move to Recycle Bin? Admins can restore it.', async function(){
       await _softDelete('el_certs',id,loadELHistory);
@@ -9991,10 +9990,10 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
       html += '<div class="pat-card-btns">';
       if(_listAdmin) html += _ibtn('View certificate','fa-eye','elOpenCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
       html += _ibtn('Edit certificate','fa-pencil','event.stopPropagation();elEditCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
-      html += _ibtn('Copy to new','fa-copy','event.stopPropagation();copyELCert("'+(r.id||'')+'")');
+      html += _ibtn('Copy to new','fa-copy','event.stopPropagation();copyELCert(\''+(r.id||'')+'\')');
       html += _ibtn('Email certificate','fa-envelope','event.stopPropagation();elEmailCert('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
       if(_listAdmin) html += _ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF('+JSON.stringify(r).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')');
-      html += _ibtn('Delete','fa-trash','deleteELCert("'+(r.id||'')+'",event)',true);
+      html += _ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+(r.id||'')+'\');',true);
       html += '</div></div></div></div>';
     });
     html += '</div>';
