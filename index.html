@@ -957,6 +957,10 @@ a{color:var(--accent);text-decoration:none}
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button></div></div>
+      <div style="position:relative;margin-bottom:20px">
+        <input id="global-search" class="search-input" placeholder="🔍  Search all certificates — PAT, Gas, EL by address, ref, client…" oninput="globalSearch(this.value)" onfocus="document.getElementById('gs-results').hidden=false" onblur="setTimeout(()=>{const r=document.getElementById('gs-results');if(r)r.hidden=true;},200)" style="width:100%;box-sizing:border-box;font-size:14px;padding:11px 16px">
+        <div id="gs-results" hidden style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;max-height:380px;overflow-y:auto"></div>
+      </div>
       <div class="stat-grid" id="stat-grid">
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
@@ -1840,6 +1844,19 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Licence No</label><input type="text" id="s-profile-licence"></div>
           </div>
         </div>
+        <div class="form-section">
+          <div class="form-section-title">🎨 Appearance</div>
+          <div class="field-grid">
+            <div class="field-group"><label>App Name</label><input type="text" id="s-app-name" placeholder="OHM Certificates"><div style="font-size:11px;color:var(--muted);margin-top:3px">Shown in the sidebar header</div></div>
+            <div class="field-group"><label>Theme</label>
+              <div style="display:flex;gap:8px;margin-top:2px">
+                <button id="theme-btn-system" onclick="setAppTheme('system')" class="btn btn-secondary btn-sm">System</button>
+                <button id="theme-btn-light" onclick="setAppTheme('light')" class="btn btn-secondary btn-sm">☀ Light</button>
+                <button id="theme-btn-dark" onclick="setAppTheme('dark')" class="btn btn-secondary btn-sm">🌙 Dark</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="settings-pane" id="pane-backend">
@@ -2274,6 +2291,9 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
 const SUPABASE_URL = 'https://iihnfgmsfshrgrhargxz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpaG5mZ21zZnNocmdyaGFyZ3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTA1MDAsImV4cCI6MjEwMzkyNjUwMH0.h3N4tW20cByuA28lmbYd5iSsfJoQ7lelvzWDKHMfK5Q';
 
+// Apply theme immediately (before auth) to avoid flash
+(function(){try{const t=localStorage.getItem('app_theme');if(t==='dark')document.documentElement.dataset.theme='dark';else if(t==='light')document.documentElement.dataset.theme='light';}catch(e){}})();
+
 // ========== SUPABASE CLIENT ==========
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -2384,6 +2404,26 @@ async function onLogin(user){
   applySidebarPermissions(currentProfile.role||'engineer');
   // Load settings then navigate
   await loadAppSettings();
+  applyStoredTheme();
+  updateSidebarAppName();
+  // PWA install gate — non-admin must use the installed app
+  const _isInstalled=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true||document.referrer.includes('android-app://');
+  const _isAdmin=(currentProfile.role||'engineer')==='admin';
+  if(!_isInstalled&&!_isAdmin){
+    document.getElementById('auth-screen').classList.remove('gone');
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('app').style.display='none';
+    const _pwaDiv=document.getElementById('pwa-gate-msg')||document.createElement('div');
+    _pwaDiv.id='pwa-gate-msg';
+    _pwaDiv.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px 24px;max-width:400px;margin:40px auto;text-align:center;font-family:inherit';
+    _pwaDiv.innerHTML='<div style="font-size:42px;margin-bottom:12px">📲</div><div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Install Required</div><div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Please install this app before logging in. In your browser tap <strong>Share → Add to Home Screen</strong> (iOS) or the install icon in the address bar (Android / Chrome).</div><button onclick="sb.auth.signOut()" style="padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">Sign Out</button>';
+    const authWrap=document.getElementById('auth-screen');
+    if(authWrap&&!document.getElementById('pwa-gate-msg'))authWrap.appendChild(_pwaDiv);
+    else if(!document.body.contains(_pwaDiv))document.body.appendChild(_pwaDiv);
+    await sb.auth.signOut();
+    currentUser=null;currentProfile=null;
+    return;
+  }
   if(currentProfile.must_change_password){
     document.getElementById('force-pw-error').textContent='';
     document.getElementById('force-pw-new').value='';
@@ -2813,6 +2853,33 @@ function toggleEmailMethod(){
   document.getElementById('email-section-script').style.display=m==='script'?'':'none';
   document.getElementById('email-section-brevo').style.display=m==='brevo'?'':'none';
 }
+function setAppTheme(mode){
+  try{localStorage.setItem('app_theme',mode);}catch(e){}
+  const r=document.documentElement;
+  if(mode==='dark')r.dataset.theme='dark';
+  else if(mode==='light')r.dataset.theme='light';
+  else delete r.dataset.theme;
+  ['system','light','dark'].forEach(m=>{
+    const b=document.getElementById('theme-btn-'+m);
+    if(b){b.style.background=m===mode?'var(--accent)':'';b.style.color=m===mode?'#fff':'';b.style.borderColor=m===mode?'var(--accent)':'';}
+  });
+}
+function applyStoredTheme(){
+  try{const t=localStorage.getItem('app_theme');if(t)setAppTheme(t);}catch(e){}
+}
+function updateSidebarAppName(){
+  const name=getSetting('app_name','');
+  const titleEl=document.querySelector('.sidebar-title');
+  const logoEl=document.querySelector('.sidebar-logo');
+  if(name){
+    const parts=name.trim().split(/\s+/);
+    if(titleEl)titleEl.textContent=parts.slice(1).join(' ')||parts[0];
+    if(logoEl)logoEl.textContent=parts[0].substring(0,4).toUpperCase();
+  } else {
+    if(titleEl)titleEl.textContent='Certificates';
+    if(logoEl)logoEl.textContent='OHM';
+  }
+}
 function buildEmailSubject(certType,ref,address){
   const tmpl=getSetting('email_subject_tmpl','');
   if(!tmpl)return `${certType} Certificate — ${ref||address||''}`;
@@ -2927,6 +2994,10 @@ function loadSettingsUI(){
   document.getElementById('s-profile-email').value=currentProfile?.email||currentUser?.email||'';
   document.getElementById('s-profile-gas').value=currentProfile?.gas_safe_no||'';
   document.getElementById('s-profile-licence').value=currentProfile?.licence_no||'';
+  document.getElementById('s-app-name').value=getSetting('app_name','');
+  // Highlight active theme button
+  const _at=localStorage.getItem('app_theme')||'system';
+  ['system','light','dark'].forEach(m=>{const b=document.getElementById('theme-btn-'+m);if(b){b.style.background=m===_at?'var(--accent)':'';b.style.color=m===_at?'#fff':'';b.style.borderColor=m===_at?'var(--accent)':'';}});
 }
 async function saveSettings(){
   showOverlay('Saving…');
@@ -2973,6 +3044,7 @@ async function saveSettings(){
     ['email_bcc',document.getElementById('s-bcc-email').value],
     ['email_cc',document.getElementById('s-cc-email').value],
     ['email_subject_tmpl',document.getElementById('s-email-subject-tmpl').value],
+    ['app_name',document.getElementById('s-app-name').value],
     ['pat_ref_prefix',(document.getElementById('s-pat-ref-prefix').value||'PAT').toUpperCase()],
     ['pat_ref_start',document.getElementById('s-pat-ref-start').value||'1'],
     ['gas_ref_prefix',(document.getElementById('s-gas-ref-prefix').value||'OHM').toUpperCase()],
@@ -3005,6 +3077,7 @@ async function saveSettings(){
   Object.assign(currentProfile,profileUpdate);
   hideOverlay();toast('Settings saved ✓','success');
   _settingsDirty=false;
+  updateSidebarAppName();
 }
 function switchSettingsTab(tab){
   document.querySelectorAll('.settings-tab').forEach(t=>t.classList.remove('active'));
@@ -3130,6 +3203,36 @@ async function runSerialGapCheck(){
     if(newCount)toast(`${newCount} gap${newCount>1?'s':''} auto-logged to audit ✓`,'success');
   }catch(e){out.innerHTML=`<div style="color:#ef4444;font-size:12px">Error: ${e.message}</div>`;}
   if(btn){btn.disabled=false;btn.textContent='Run Sequence Check';}
+}
+
+// ========== GLOBAL SEARCH ==========
+let _gsTimer=null;
+async function globalSearch(q){
+  const box=document.getElementById('gs-results');if(!box)return;
+  q=(q||'').trim();
+  if(q.length<2){box.innerHTML='';box.hidden=true;return;}
+  box.hidden=false;
+  box.innerHTML='<div style="padding:12px 16px;color:var(--muted);font-size:13px">Searching…</div>';
+  clearTimeout(_gsTimer);
+  _gsTimer=setTimeout(async()=>{
+    const ql=q.toLowerCase();
+    const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const rows=[];
+    try{
+      const[p,g,e]=await Promise.all([
+        sb.from('pat_reports').select('id,ref_number,property_address,status,engineer,test_date').or(`ref_number.ilike.%${q}%,property_address.ilike.%${q}%,landlord_name.ilike.%${q}%`).limit(6),
+        sb.from('gas_certs').select('id,ref_number,install_address,status,engineer,cert_date').or(`ref_number.ilike.%${q}%,install_address.ilike.%${q}%,recipient_email.ilike.%${q}%`).limit(6),
+        sb.from('el_certs').select('id,ref_number,premises_name,outcome,test_date').or(`ref_number.ilike.%${q}%,premises_name.ilike.%${q}%`).limit(6)
+      ]);
+      (p.data||[]).forEach(r=>rows.push({type:'PAT',label:esc(r.ref_number||'—'),sub:esc((r.property_address||'').substring(0,50)),status:r.status,action:`loadPATForm('${r.id}')`}));
+      (g.data||[]).forEach(r=>rows.push({type:'Gas',label:esc(r.ref_number||'—'),sub:esc((r.install_address||'').substring(0,50)),status:r.status,action:`navigate('gas-new');loadGasForm('${r.id}')`}));
+      (e.data||[]).forEach(r=>rows.push({type:'EL',label:esc(r.ref_number||'—'),sub:esc((r.premises_name||'').substring(0,50)),status:r.outcome,action:`navigate('el-history')`}));
+    }catch(ex){box.innerHTML='<div style="padding:12px 16px;color:var(--muted);font-size:13px">Search error</div>';return;}
+    if(!rows.length){box.innerHTML='<div style="padding:12px 16px;color:var(--muted);font-size:13px">No results for "'+esc(q)+'"</div>';return;}
+    const typeColor={PAT:'#dbeafe',Gas:'#fef3c7',EL:'#ede9fe'};
+    const typeText={PAT:'#1e40af',Gas:'#92400e',EL:'#5b21b6'};
+    box.innerHTML=rows.map(r=>`<div onclick="${r.action};document.getElementById('gs-results').hidden=true;document.getElementById('global-search').value=''" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><span style="background:${typeColor[r.type]};color:${typeText[r.type]};font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap">${r.type}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.label}</div><div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sub}</div></div><span style="font-size:10px;color:var(--muted)">${r.status||''}</span></div>`).join('');
+  },300);
 }
 
 // ========== DASHBOARD ==========
