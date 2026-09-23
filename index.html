@@ -8110,6 +8110,20 @@ async function saveApplianceRecord(){
     var total = STEPS.length;
     var pct = Math.round((s/total)*100);
 
+    // Update page subtitle: show ref once generated, else address once entered
+    (function(){
+      var _hs = document.getElementById('elwiz-header-sub');
+      if(!_hs) return;
+      var _addr = [_w.premAddr1, _w.premPostcode].filter(Boolean).join(', ');
+      if(_w.ref && _w.ref !== 'Generating…'){
+        _hs.textContent = _w.ref + (_addr ? ' · ' + _addr : '');
+      } else if(_addr){
+        _hs.textContent = (_w.certType ? _w.certType + ' · ' : '') + _addr;
+      } else {
+        _hs.textContent = 'BS 5266-1 Emergency Lighting';
+      }
+    })();
+
     var html = '<div class="elwiz-progress"><div class="elwiz-progress-bar" style="width:'+pct+'%"></div></div>';
     html += '<div class="elwiz-step">';
 
