@@ -1727,6 +1727,7 @@ a{color:var(--accent);text-decoration:none}
             <div class="field-group"><label>Phone</label><input type="tel" id="s-el-co-phone" placeholder="0113 000 0000"></div>
             <div class="field-group" style="grid-column:1/-1"><label>Email</label><input type="email" id="s-el-co-email" placeholder="info@yourcompany.co.uk"></div>
             <div class="field-group" style="grid-column:1/-1"><label>Website</label><input type="url" id="s-el-co-website" placeholder="https://www.yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Company Name Size on Certificate <span id="s-el-coname-size-v" style="font-weight:700;color:var(--accent);margin-left:4px">22px</span></label><input type="range" id="s-el-coname-size" min="14" max="40" value="22" style="width:100%;margin-top:4px" oninput="appSettings['el_coname_size']=this.value;document.getElementById('s-el-coname-size-v').textContent=this.value+'px'"></div>
           </div>
         </div>
 
@@ -3037,6 +3038,7 @@ function loadSettingsUI(){
   document.getElementById('s-el-co-phone').value=getSetting('el_co_phone','');
   document.getElementById('s-el-co-email').value=getSetting('el_co_email','');
   document.getElementById('s-el-co-website').value=getSetting('el_co_website','https://www.ohmelectricals.co.uk');
+  const _elcsz=getSetting('el_coname_size','22');document.getElementById('s-el-coname-size').value=_elcsz;document.getElementById('s-el-coname-size-v').textContent=_elcsz+'px';
   document.getElementById('s-el-position').value=getSetting('el_position','');
   document.getElementById('s-el-body').value=getSetting('el_body','');
   document.getElementById('s-el-enrol-no').value=getSetting('el_enrol_no','');
@@ -3118,6 +3120,7 @@ async function saveSettings(){
     ['gas_licence',document.getElementById('s-gas-licence').value],
     // EL
     ['el_co_name',document.getElementById('s-el-co-name').value],
+    ['el_coname_size',document.getElementById('s-el-coname-size').value],
     ['el_engineer',document.getElementById('s-el-engineer').value],
     ['el_co_addr1',document.getElementById('s-el-co-addr1').value],
     ['el_co_addr2',document.getElementById('s-el-co-addr2').value],
@@ -9259,7 +9262,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1.5px solid #d5e5db;}
 .ch-logo-row{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .ch-logo{width:40px;height:40px;background:linear-gradient(135deg,#0e4d33,#093423);border:1px solid #b08d2e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f4ecd8;flex-shrink:0;letter-spacing:.05em;}
-.ch-company{font-size:22px;font-weight:900;color:#182420;letter-spacing:-.02em;line-height:1.1;}
+.ch-company{font-size:${getSetting('el_coname_size','22')}px;font-weight:900;color:#182420;letter-spacing:-.02em;line-height:1.1;}
 .ch-company-sub{font-size:10px;color:#5a6660;margin-top:2px;}
 .ch-company-sub a{color:#5a6660;text-decoration:none;}
 .ch-company-sub a:hover{text-decoration:underline;}
