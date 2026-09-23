@@ -1516,6 +1516,13 @@ a{color:var(--accent);text-decoration:none}
           <div class="field-grid">
             <div class="field-group"><label>Fallback Client Email</label><input type="email" id="s-fallback-email" placeholder="fallback@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Used when a certificate has no client email set</div></div>
             <div class="field-group"><label>BCC Email</label><input type="email" id="s-bcc-email" placeholder="bcc@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Silently copied on every certificate email — all types</div></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Global CC Email(s)</label><input type="text" id="s-cc-email" placeholder="cc@yourcompany.co.uk, partner@example.com"><div style="font-size:11px;color:var(--muted);margin-top:3px">Comma-separated — copied on every certificate email. Individual client CC overrides this when set in Directory.</div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">✉ Email Subject Template</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Subject Line Template</label><input type="text" id="s-email-subject-tmpl" placeholder="{cert_type} Certificate — {ref} — {address}"><div style="font-size:11px;color:var(--muted);margin-top:3px">Tokens: <strong>{cert_type}</strong> PAT/Gas/EL · <strong>{ref}</strong> reference number · <strong>{address}</strong> property address · <strong>{company}</strong> your company name. Leave blank for default.</div></div>
           </div>
         </div>
       </div>
@@ -2806,6 +2813,13 @@ function toggleEmailMethod(){
   document.getElementById('email-section-script').style.display=m==='script'?'':'none';
   document.getElementById('email-section-brevo').style.display=m==='brevo'?'':'none';
 }
+function buildEmailSubject(certType,ref,address){
+  const tmpl=getSetting('email_subject_tmpl','');
+  if(!tmpl)return `${certType} Certificate — ${ref||address||''}`;
+  const co=getSetting('pat_co_name',getSetting('gas_co_name',getSetting('company_name','')));
+  return tmpl.replace(/\{cert_type\}/gi,certType).replace(/\{ref\}/gi,ref||'').replace(/\{address\}/gi,address||'').replace(/\{company\}/gi,co);
+}
+function getGlobalCC(){return getSetting('email_cc','')||'';}
 async function sendTestEmail(){
   const to=document.getElementById('s-test-email').value.trim().toLowerCase();
   if(!to){toast('Enter a test email address','warn');return;}
@@ -2881,6 +2895,8 @@ function loadSettingsUI(){
   document.getElementById('s-from-name').value=getSetting('email_from_name');
   document.getElementById('s-fallback-email').value=getSetting('email_fallback','');
   document.getElementById('s-bcc-email').value=getSetting('email_bcc','');
+  document.getElementById('s-cc-email').value=getSetting('email_cc','');
+  document.getElementById('s-email-subject-tmpl').value=getSetting('email_subject_tmpl','');
   // PAT
   document.getElementById('s-pat-ref-prefix').value=getSetting('pat_ref_prefix','PAT');
   document.getElementById('s-pat-ref-start').value=getSetting('pat_ref_start','1');
@@ -2955,6 +2971,8 @@ async function saveSettings(){
     ['email_from_name',document.getElementById('s-from-name').value],
     ['email_fallback',document.getElementById('s-fallback-email').value],
     ['email_bcc',document.getElementById('s-bcc-email').value],
+    ['email_cc',document.getElementById('s-cc-email').value],
+    ['email_subject_tmpl',document.getElementById('s-email-subject-tmpl').value],
     ['pat_ref_prefix',(document.getElementById('s-pat-ref-prefix').value||'PAT').toUpperCase()],
     ['pat_ref_start',document.getElementById('s-pat-ref-start').value||'1'],
     ['gas_ref_prefix',(document.getElementById('s-gas-ref-prefix').value||'OHM').toUpperCase()],
@@ -4398,7 +4416,9 @@ async function emailPATFromList(id,autoTriggered=false){
     const b64=await generatePATPDFFromData(r,{returnB64:true});
     const pdfName=`PAT_${(r.ref_number||r.id).replace(/[^\w-]/g,'_')}.pdf`;
     if(!autoTriggered)showEmailProgress(_emailSteps,2);
-    await sendBrevoEmail(toEmail,client,`PAT Test Certificate — ${r.ref_number||r.property_address||''}`,html,b64,pdfName,bcc);
+    const _patSubj=buildEmailSubject('PAT Test',r.ref_number||'',r.property_address||'');
+    const _patCC=getGlobalCC();
+    await sendBrevoEmail(toEmail,client,_patSubj,html,b64,pdfName,bcc,_patCC||undefined);
     if(!autoTriggered){finishEmailProgress();await new Promise(res=>setTimeout(res,600));}
     toast('Email sent to '+toEmail+(bcc?' (BCC: '+bcc+')':''),'success');
     await logAppEvent('EMAILED','pat',r.id,r.ref_number);
@@ -6210,15 +6230,16 @@ async function emailCP12FromList(id){
   const bcc=getSetting('email_bcc','');
   const toName=(r.sig_received_name||'').trim();
   let _gasRef1=r.ref_number||'';if(_gasRef1&&_gasRef1.trim().startsWith('{')){try{const _p=JSON.parse(_gasRef1);_gasRef1=_p.ref||_p.baseRef||'';}catch(e){}}
-  const subject=`Gas Safety Certificate — ${_gasRef1||r.install_address||''}`;
+  const subject=buildEmailSubject('Gas Safety',_gasRef1||'',r.install_address||'');
   const pdfName=`Gas_${(_gasRef1||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
+  const _gasCC=getGlobalCC();
   // loadGasForm hid the overlay — re-show progress before rendering
   showEmailProgress(_steps,1);
   try{
     const b64=await buildCP12PdfBase64();
     showEmailProgress(_steps,2);
-    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
+    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc,_gasCC||undefined);
     finishEmailProgress();
     await new Promise(res=>setTimeout(res,600));
     sb.from('email_sends').insert({
@@ -6298,9 +6319,10 @@ async function emailGas(autoTriggered=false){
   if(!toEmail){toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||'').trim();
   let _gasRef2=r.ref_number||'';if(_gasRef2&&_gasRef2.trim().startsWith('{')){try{const _p=JSON.parse(_gasRef2);_gasRef2=_p.ref||_p.baseRef||'';}catch(e){}}
-  const subject=`Gas Safety Certificate — ${_gasRef2||r.install_address||''}`;
+  const subject=buildEmailSubject('Gas Safety',_gasRef2||'',r.install_address||'');
   const pdfName=`Gas_${(_gasRef2||r.id).replace(/[^\w-]/g,'_')}.pdf`;
   const html=_buildCP12EmailHtml(r);
+  const _gasCC2=getGlobalCC();
   if(autoTriggered){
     showOverlay('Sending email…');
   } else {
@@ -6311,7 +6333,7 @@ async function emailGas(autoTriggered=false){
     const b64=await buildCP12PdfBase64();
     if(!autoTriggered)showEmailProgress([{label:'Loading certificate'},{label:'Rendering PDF'},{label:'Sending email'}],2);
     const bcc=getSetting('email_bcc','');
-    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc);
+    const result=await sendBrevoEmail(toEmail,toName,subject,html,b64,pdfName,bcc,_gasCC2||undefined);
     if(!autoTriggered){finishEmailProgress();await new Promise(res=>setTimeout(res,600));}
     sb.from('email_sends').insert({
       cert_id:r.id,cert_type:'gas',cert_ref:r.ref_number,
@@ -7243,8 +7265,8 @@ function _dirForm(type,rec,pf=''){
   const inp=(f,lbl,t2='text',req=false)=>`<div class="field-group"><label>${lbl}${req?' <span style="color:var(--error)">*</span>':''}</label><input type="${t2}" id="de-${f}" value="${esc(v(f))}" placeholder="${lbl}" class="form-control"></div>`;
   const ta=(f,lbl,rows=2)=>`<div class="field-group"><label>${lbl}</label><textarea id="de-${f}" rows="${rows}" class="form-control" style="resize:vertical">${v(f)}</textarea></div>`;
   const row=(...cols)=>`<div class="field-grid">${cols.join('')}</div>`;
-  if(type==='agents')return row(inp('agency_name','Agency / Company Name','text',true),inp('contact_name','Contact Person'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('phone','Telephone','tel'),inp('mobile','Mobile','tel'))+row(inp('addr1','Address Line 1'),inp('addr2','Address Line 2'))+row(inp('town','Town / City'),inp('county','County'))+row(inp('postcode','Postcode'),'<div></div>')+ta('notes','Notes');
-  if(type==='landlords')return row(inp('landlord_name','Landlord Name','text',true),inp('company_name','Company Name'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('phone','Telephone','tel'),inp('mobile','Mobile','tel'))+row(inp('addr1','Address Line 1'),inp('addr2','Address Line 2'))+row(inp('town','Town / City'),inp('county','County'))+row(inp('postcode','Postcode'),'<div></div>')+ta('notes','Notes');
+  if(type==='agents')return row(inp('agency_name','Agency / Company Name','text',true),inp('contact_name','Contact Person'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('cc_emails','CC Emails (comma-separated)'),inp('phone','Telephone','tel'))+row(inp('mobile','Mobile','tel'),inp('addr1','Address Line 1'))+row(inp('addr2','Address Line 2'),inp('town','Town / City'))+row(inp('county','County'),inp('postcode','Postcode'))+ta('notes','Notes');
+  if(type==='landlords')return row(inp('landlord_name','Landlord Name','text',true),inp('company_name','Company Name'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('cc_emails','CC Emails (comma-separated)'),inp('phone','Telephone','tel'))+row(inp('mobile','Mobile','tel'),inp('addr1','Address Line 1'))+row(inp('addr2','Address Line 2'),inp('town','Town / City'))+row(inp('county','County'),inp('postcode','Postcode'))+ta('notes','Notes');
   if(type==='contacts')return row(inp('name','Full Name','text',true),inp('company','Company'))+row(inp('role','Role / Title'),inp('email','Email','email'))+row(inp('phone','Telephone','tel'),inp('mobile','Mobile','tel'))+ta('notes','Notes');
   if(type==='properties')return row(inp('addr1','Address Line 1','text',true),inp('addr2','Address Line 2'))+row(inp('town','Town / City'),inp('county','County'))+row(inp('postcode','Postcode','text',true),inp('property_ref','Property Ref (optional)'))+'<div class="field-grid"><div class="field-group"><label>Linked Landlord</label><select id="de-landlord_id" class="form-control"><option value="">— None —</option></select></div><div class="field-group"><label>Linked Agent</label><select id="de-agent_id" class="form-control"><option value="">— None —</option></select></div></div>'+ta('access_notes','Access Notes')+ta('keysafe','Keysafe / Entry Code',1)+ta('notes','Notes');
   return'';
@@ -7270,8 +7292,8 @@ async function saveDirRecord(){
   const type=_dirEditType;const tbl=_dirTable[type];if(!tbl)return;
   const gv=id=>(document.getElementById('de-'+id)||{}).value?.trim()||'';
   let data={},pk='';
-  if(type==='agents'){pk='agency_name';data={agency_name:gv('agency_name'),contact_name:gv('contact_name'),email:gv('email'),email2:gv('email2'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
-  else if(type==='landlords'){pk='landlord_name';data={landlord_name:gv('landlord_name'),company_name:gv('company_name'),email:gv('email'),email2:gv('email2'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
+  if(type==='agents'){pk='agency_name';data={agency_name:gv('agency_name'),contact_name:gv('contact_name'),email:gv('email'),email2:gv('email2'),cc_emails:gv('cc_emails'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
+  else if(type==='landlords'){pk='landlord_name';data={landlord_name:gv('landlord_name'),company_name:gv('company_name'),email:gv('email'),email2:gv('email2'),cc_emails:gv('cc_emails'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
   else if(type==='properties'){pk='addr1';data={addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),property_ref:gv('property_ref'),landlord_id:gv('landlord_id')||null,agent_id:gv('agent_id')||null,access_notes:gv('access_notes'),keysafe:gv('keysafe'),notes:gv('notes')};}
   else if(type==='contacts'){pk='name';data={name:gv('name'),company:gv('company'),role:gv('role'),email:gv('email'),phone:gv('phone'),mobile:gv('mobile'),notes:gv('notes')};}
   if(!data[pk]){toast('Required field missing','warn');return;}
@@ -8278,7 +8300,7 @@ async function saveApplianceRecord(){
     var toAddr = r.clientEmail||'';
     var _premDisplay = r.premisesName || [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') || '—';
     var _premAddr = r.premisesName ? [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') : '';
-    var subj = 'Emergency Lighting '+certLabel+' — '+r.ref+' — '+_premDisplay;
+    var subj = buildEmailSubject('Emergency Lighting',r.ref||'',_premDisplay||'');
     var body = 'Dear '+(r.clientName||'Sir/Madam')+',\n\nPlease find attached your Emergency Lighting '+certLabel+'.\n\nCertificate Reference: '+r.ref+'\nPremises: '+_premDisplay+(_premAddr?'\nAddress: '+_premAddr:'')+'\nTest Date: '+(r.testDate||'—')+'\nNext Inspection Due: '+(r.nextTestDate||'—')+'\nOutcome: '+(r.outcome||'—')+'\nLuminaires: '+(r.lumTotal||'0')+' total — '+(r.lumPass||'0')+' pass / '+(r.lumFail||'0')+' fail\n\nThis certificate has been produced in accordance with BS 5266-1:2025 and BS EN 50172:2004.\n\nKind regards,\n'+engName+(engPos?'\n'+engPos:'')+'\n'+coName+(coPhone?'\nTel: '+coPhone:''+(coEmail?'\nEmail: '+coEmail:''));
 
     var certHTML = '';
@@ -8297,7 +8319,7 @@ async function saveApplianceRecord(){
         +'<label style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">To</label>'
         +'<input id="el-em-to" type="email" value="'+_escHtml(toAddr)+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--border,#e5e7eb);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface2,#f9fafb);box-sizing:border-box;margin-bottom:10px">'
         +'<label style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">CC</label>'
-        +'<input id="el-em-cc" type="email" placeholder="Optional" style="width:100%;padding:9px 12px;border:1.5px solid var(--border,#e5e7eb);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface2,#f9fafb);box-sizing:border-box;margin-bottom:10px">'
+        +'<input id="el-em-cc" type="text" value="'+_escHtml(getGlobalCC())+'" placeholder="Optional — comma-separated" style="width:100%;padding:9px 12px;border:1.5px solid var(--border,#e5e7eb);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface2,#f9fafb);box-sizing:border-box;margin-bottom:10px">'
         +'<label style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">BCC</label>'
         +'<input id="el-em-bcc" type="email" placeholder="Optional" style="width:100%;padding:9px 12px;border:1.5px solid var(--border,#e5e7eb);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface2,#f9fafb);box-sizing:border-box;margin-bottom:10px">'
         +'<label style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Subject</label>'
@@ -8604,10 +8626,12 @@ async function saveApplianceRecord(){
       var attachB64 = '';
       var attachName = (certRef||'certificate').replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
       try { showOverlay('Preparing PDF…'); attachB64 = await elGeneratePDF(r2,true); } catch(e){ console.warn('PDF attach:',e); } finally{ hideOverlay(); }
-      var subj = 'Emergency Lighting '+certTypeLbl+' — '+(r2.ref||'')+(propParts2.length?' — '+propParts2.join(', '):(r2.premisesName?' — '+r2.premisesName:''));
+      var _elAddr2 = propParts2.length?propParts2.join(', '):(r2.premisesName||'');
+      var subj = buildEmailSubject('Emergency Lighting',r2.ref||'',_elAddr2);
       var bcc = getSetting('email_bcc','');
+      var _elCC2 = getGlobalCC();
       var toName = to.split('@')[0];
-      var result = await sendBrevoEmail(to, toName, subj, htmlBody, attachB64||undefined, attachB64?attachName:undefined, bcc||undefined);
+      var result = await sendBrevoEmail(to, toName, subj, htmlBody, attachB64||undefined, attachB64?attachName:undefined, bcc||undefined, _elCC2||undefined);
       if(autoTriggered) hideOverlay();
       if(result === false) return;
       toast('Certificate emailed to '+to,'success',4000);
