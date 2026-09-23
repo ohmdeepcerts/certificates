@@ -172,6 +172,8 @@ a{color:var(--accent);text-decoration:none}
 .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .stat-card.accent .stat-value{color:var(--accent)}
 .stat-card.success .stat-value{color:var(--success)}
+.skeleton{display:inline-block;background:linear-gradient(90deg,var(--border) 25%,var(--surface) 50%,var(--border) 75%);background-size:200% 100%;animation:_sk 1.5s infinite linear;border-radius:4px;opacity:.7}
+@keyframes _sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .stat-card.warn .stat-value{color:var(--warn)}
 .stat-card.error .stat-value{color:var(--error)}
 
@@ -954,7 +956,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
-      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div></div>
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button></div></div>
       <div class="stat-grid" id="stat-grid">
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
@@ -966,7 +968,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="stat-card success"><div class="stat-label">EL Satisfactory</div><div class="stat-value" id="stat-el-sat">—</div><div class="stat-sub">Issued</div></div>
         <div class="stat-card error"><div class="stat-label">EL Unsatisfactory</div><div class="stat-value" id="stat-el-unsat">—</div><div class="stat-sub">Issued</div></div>
       </div>
-      <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px" id="recent-grids">
+      <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px" id="recent-grids">
         <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
         <div class="card"><div class="card-header"><div class="card-title">Recent Gas Certs</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div></div></div>
       </div>
@@ -989,6 +991,7 @@ a{color:var(--accent);text-decoration:none}
 
       <div id="pat-edit-banner" hidden style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:8px">✏️ EDITING — you are updating an existing certificate. Changes will overwrite the saved record.</div>
       <div id="pat-restore-banner" hidden style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">💾 Unsaved PAT found — restore it?<button type="button" onclick="restorePATAutosave()" style="margin-left:auto;background:#3b82f6;color:#fff;border:none;padding:4px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Restore</button><button type="button" onclick="discardPATAutosave()" style="background:none;color:#6b7280;border:1px solid var(--border);padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">Discard</button></div>
+      <div id="pat-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This certificate has been issued. Edit fields above if a correction is needed, then save as draft or re-complete.</div>
 
       <div class="pat-two-col">
       <div id="pat-main-col">
@@ -1176,6 +1179,7 @@ a{color:var(--accent);text-decoration:none}
           <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save</button>
         </div>
       </div>
+      <div id="gas-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This gas certificate has been issued. Click ✏ Edit to make corrections.</div>
 
       <!-- GAS WIZARD (step-based, all screen sizes) -->
       <div id="mobile-gas-wizard" hidden style="padding-bottom:32px">
@@ -2747,7 +2751,8 @@ function finishEmailProgress(){
   document.getElementById('ovp-step').textContent='Done ✓';
   document.getElementById('ovp-steps').querySelectorAll('div').forEach(d=>{d.style.color='#10b981';d.style.fontWeight='400';d.querySelectorAll('span')[0].textContent='✓';});
 }
-function toast(msg,type='info',duration=3500){
+function toast(msg,type='info',duration=null){
+  if(duration===null)duration=type==='error'?7000:type==='warn'?5000:3500;
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
   t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
@@ -3104,6 +3109,8 @@ async function runSerialGapCheck(){
 
 // ========== DASHBOARD ==========
 async function loadDashboard(){
+  ['stat-pat-total','stat-pat-complete','stat-pat-due','stat-gas-total','stat-gas-complete','stat-gas-due','stat-el-total','stat-el-sat','stat-el-unsat'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<span class="skeleton" style="width:38px;height:22px;vertical-align:middle"></span>';});
+  ['recent-pat-list','recent-gas-list'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=[0,1,2].map(()=>'<div class="skeleton" style="height:36px;border-radius:6px;margin-bottom:8px;display:block;width:100%"></div>').join('');});
   const[{data:pats},{data:gases},{data:els}]=await Promise.all([
     sb.from('pat_reports').select('id,status,test_date,appliances').order('created_at',{ascending:false}),
     sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address').order('created_at',{ascending:false}),
@@ -3143,8 +3150,8 @@ async function loadDashboard(){
   // Recent lists (already ordered by created_at desc, take first 5)
   const recentPat=(pats||[]).slice(0,5);
   const recentGas=(gases||[]).slice(0,5);
-  document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
-  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
+  document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.ref_number||r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
+  document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.ref_number||(r.install_address||'No address').substring(0,40))}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
 }
 
 // ========== PAT - HELPERS ==========
@@ -3477,9 +3484,10 @@ async function loadPATForm(id){
   editingPATId=id;
   patGe('pat-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit PAT Test';
   patGe('pat-form-ref').textContent=r.ref_number||'Draft';
-  patGe('pat-edit-banner').hidden=false;
-  const rb=patGe('pat-restore-banner');if(rb)rb.hidden=true;
   const isDone=r.status==='completed';
+  patGe('pat-edit-banner').hidden=isDone;
+  const _cb=patGe('pat-completed-banner');if(_cb)_cb.hidden=!isDone;
+  const rb=patGe('pat-restore-banner');if(rb)rb.hidden=true;
   patGe('btn-pat-pdf').hidden=false;
   patGe('btn-pat-email').hidden=!isDone;
   patGe('btn-pat-complete').disabled=isDone;
@@ -4757,8 +4765,9 @@ async function loadGasForm(id){
   if(_mwz)_mwz.hidden=true;if(_cwp)_cwp.style.display='';
   if(window._applyCP12Zoom)_applyCP12Zoom();
   const btnC=document.getElementById('btn-gas-complete');
-  if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';}
-  else{btnC.disabled=false;btnC.dataset.completed='';}
+  const _gcb=document.getElementById('gas-completed-banner');
+  if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';if(_gcb)_gcb.hidden=false;}
+  else{btnC.disabled=false;btnC.dataset.completed='';if(_gcb)_gcb.hidden=true;}
   _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
   _setGasViewMode(true);
 }
@@ -6281,7 +6290,7 @@ async function emailGas(autoTriggered=false){
     }).then(({error})=>{if(error)console.warn('email_sends insert:',error.message);});
     toast('Email sent ✓ — '+toEmail,'success',5000);
     await logAppEvent('EMAILED','gas',r.id,r.ref_number,{to:toEmail,brevo_message_id:result.messageId||null});
-  }catch(e){if(!autoTriggered)toast('Email failed: '+e.message,'error');}
+  }catch(e){toast('Email failed: '+e.message,'error');}
   finally{hideOverlay();}
 }
 
