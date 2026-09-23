@@ -8172,7 +8172,7 @@ async function saveApplianceRecord(){
       var isPTCustom = _w.premisesType && PT_ALL.indexOf(_w.premisesType)===-1;
       var moreSelected = PT_MORE.indexOf(_w.premisesType)!==-1;
       var showMore = _w._ptShowMore || moreSelected;
-      function _ptChip(pt){var sel=_w.premisesType===pt;return '<button type="button" onclick="elPickPremType(\''+pt.replace(/'/g,'\\\'')+'\')" style="padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+pt+'</button>';}
+      function _ptChip(pt){var sel=_w.premisesType===pt;return '<button type="button" data-ep="premisesType" data-ev="'+pt.replace(/"/g,'&quot;')+'" data-ab="var(--accent)" data-abg="var(--accent)" data-ac="#fff" data-ib="var(--border)" data-ibg="var(--surface)" data-ic="var(--text)" onclick="elPickPremType(\''+pt.replace(/'/g,'\\\'')+'\')" style="padding:6px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+pt+'</button>';}
       html += '<div class="elwiz-input-label" style="font-size:13px;font-weight:600;margin:16px 0 8px">Premises type <small style="font-weight:400;color:var(--muted)">(optional)</small></div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
       PT_PRIMARY.forEach(function(pt){html+=_ptChip(pt);});
@@ -8197,7 +8197,7 @@ async function saveApplianceRecord(){
       html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">';
       ctAll.forEach(function(t){
         var sel = _w.clientType===t;
-        html += '<button type="button" onclick="elPick(\'clientType\',\''+t.replace(/'/g,'\\\'')+'\')" style="padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+esc(t)+'</button>';
+        html += '<button type="button" data-ep="clientType" data-ev="'+esc(t)+'" data-ab="var(--accent)" data-abg="var(--accent)" data-ac="#fff" data-ib="var(--border)" data-ibg="var(--surface)" data-ic="var(--text)" onclick="elPick(\'clientType\',\''+t.replace(/'/g,'\\\'')+'\')" style="padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface)')+';color:'+(sel?'#fff':'var(--text)')+'">'+esc(t)+'</button>';
       });
       html += '</div>';
       html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">';
@@ -8228,8 +8228,8 @@ async function saveApplianceRecord(){
       html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">';
       Object.keys(stDesc).forEach(function(st){
         var sel = _w.systemType===st;
-        html += '<div onclick="elPick(\'systemType\',\''+st+'\')" style="cursor:pointer;padding:10px 14px;border-radius:8px;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(37,99,235,.06)':'var(--surface)')+';">';
-        html += '<div style="font-weight:600;font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+'">'+st+'</div>';
+        html += '<div data-ep="systemType" data-ev="'+esc(st)+'" data-ab="var(--accent)" data-abg="rgba(37,99,235,.06)" data-ib="var(--border)" data-ibg="var(--surface)" onclick="elPick(\'systemType\',\''+st+'\')" style="cursor:pointer;padding:10px 14px;border-radius:8px;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(37,99,235,.06)':'var(--surface)')+';">';
+        html += '<div data-ct style="font-weight:600;font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+'">'+st+'</div>';
         html += '<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45">'+stDesc[st]+'</div>';
         html += '</div>';
       });
@@ -8243,8 +8243,8 @@ async function saveApplianceRecord(){
       html += '<div style="display:flex;flex-direction:column;gap:6px">';
       Object.keys(mDesc).forEach(function(m){
         var sel = _w.mode===m;
-        html += '<div onclick="elPick(\'mode\',\''+m+'\')" style="cursor:pointer;padding:10px 14px;border-radius:8px;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(37,99,235,.06)':'var(--surface)')+';">';
-        html += '<div style="font-weight:600;font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+'">'+m+'</div>';
+        html += '<div data-ep="mode" data-ev="'+esc(m)+'" data-ab="var(--accent)" data-abg="rgba(37,99,235,.06)" data-ib="var(--border)" data-ibg="var(--surface)" onclick="elPick(\'mode\',\''+m+'\')" style="cursor:pointer;padding:10px 14px;border-radius:8px;border:2px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(37,99,235,.06)':'var(--surface)')+';">';
+        html += '<div data-ct style="font-weight:600;font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+'">'+m+'</div>';
         html += '<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45">'+mDesc[m]+'</div>';
         html += '</div>';
       });
@@ -8258,8 +8258,8 @@ async function saveApplianceRecord(){
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:5px">'
           +'<span style="font-size:13px;color:var(--text)">'+label+'</span>'
           +'<div style="display:flex;gap:4px">'
-            +'<button type="button" onclick="elPick(\''+field+'\',\'✓\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(isChk?'#16a34a':'var(--border)')+';background:'+(isChk?'#dcfce7':'transparent')+';color:'+(isChk?'#166534':'var(--muted)')+'">✓</button>'
-            +'<button type="button" onclick="elPick(\''+field+'\',\'N/A\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(!isChk?'#6366f1':'var(--border)')+';background:'+(!isChk?'#e0e7ff':'transparent')+';color:'+(!isChk?'#3730a3':'var(--muted)')+'">N/A</button>'
+            +'<button type="button" data-ep="'+field+'" data-ev="✓" data-ab="#16a34a" data-abg="#dcfce7" data-ac="#166534" data-ib="var(--border)" data-ibg="transparent" data-ic="var(--muted)" onclick="elPick(\''+field+'\',\'✓\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(isChk?'#16a34a':'var(--border)')+';background:'+(isChk?'#dcfce7':'transparent')+';color:'+(isChk?'#166534':'var(--muted)')+'">✓</button>'
+            +'<button type="button" data-ep="'+field+'" data-ev="N/A" data-ab="#6366f1" data-abg="#e0e7ff" data-ac="#3730a3" data-ib="var(--border)" data-ibg="transparent" data-ic="var(--muted)" onclick="elPick(\''+field+'\',\'N/A\')" style="padding:4px 11px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+(!isChk?'#6366f1':'var(--border)')+';background:'+(!isChk?'#e0e7ff':'transparent')+';color:'+(!isChk?'#3730a3':'var(--muted)')+'">N/A</button>'
           +'</div>'
         +'</div>';
       }
@@ -8281,7 +8281,7 @@ async function saveApplianceRecord(){
       html += '<div class="elwiz-chips">';
       DURATIONS.forEach(function(d){
         var sel = _w.ratedDuration===d?' sel':'';
-        html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'ratedDuration\',\''+d+'\');_w.durationAchieved=\''+d+'\'">'+d+'</div>';
+        html += '<div class="elwiz-chip'+sel+'" data-ep="ratedDuration" data-ev="'+d+'" onclick="elPick(\'ratedDuration\',\''+d+'\')">'+d+'</div>';
       });
       html += '</div>';
     } else if(s===6){
@@ -8308,7 +8308,7 @@ async function saveApplianceRecord(){
         html += '<div class="elwiz-chips">';
         INSPECTION_TYPES.forEach(function(it){
           var sel = _w.inspectionType===it?' sel':'';
-          html += '<div class="elwiz-chip'+sel+'" onclick="elPick(\'inspectionType\',\''+it+'\')">'+it+'</div>';
+          html += '<div class="elwiz-chip'+sel+'" data-ep="inspectionType" data-ev="'+it+'" onclick="elPick(\'inspectionType\',\''+it+'\')">'+it+'</div>';
         });
         html += '</div>';
       }
@@ -8415,13 +8415,14 @@ async function saveApplianceRecord(){
       html += '<div class="elwiz-q">Overall outcome</div>';
       html += '<div class="elwiz-sub">Does the installation satisfy the requirements of BS 5266-1?</div>';
       html += '<div class="elwiz-outcome">';
-      html += '<div class="elwiz-outcome-chip pass'+(_w.outcome==='SATISFACTORY'?' sel':'')+'" onclick="elPick(\'outcome\',\'SATISFACTORY\')">✓ SATISFACTORY</div>';
-      html += '<div class="elwiz-outcome-chip fail'+(_w.outcome==='UNSATISFACTORY'?' sel':'')+'" onclick="elPick(\'outcome\',\'UNSATISFACTORY\')">✗ UNSATISFACTORY</div>';
+      html += '<div class="elwiz-outcome-chip pass'+(_w.outcome==='SATISFACTORY'?' sel':'')+'" data-ep="outcome" data-ev="SATISFACTORY" onclick="elPick(\'outcome\',\'SATISFACTORY\')">✓ SATISFACTORY</div>';
+      html += '<div class="elwiz-outcome-chip fail'+(_w.outcome==='UNSATISFACTORY'?' sel':'')+'" data-ep="outcome" data-ev="UNSATISFACTORY" onclick="elPick(\'outcome\',\'UNSATISFACTORY\')">✗ UNSATISFACTORY</div>';
       html += '</div>';
-      if(_w.outcome==='UNSATISFACTORY'||_w.certType==='EL.2'){
-        html += '<label class="elwiz-input-label">Duration achieved (if less than rated)</label>';
-        html += '<input class="elwiz-input" id="elw-dach" placeholder="e.g. 2hr 15min" value="'+esc(_w.durationAchieved)+'" oninput="elSet(\'durationAchieved\',this.value)" style="max-width:220px">';
-      }
+      var _showDurExtra = _w.outcome==='UNSATISFACTORY'||_w.certType==='EL.2';
+      html += '<div id="elw-dur-extra" style="display:'+(_showDurExtra?'':'none')+'">';
+      html += '<label class="elwiz-input-label">Duration achieved (if less than rated)</label>';
+      html += '<input class="elwiz-input" id="elw-dach" placeholder="e.g. 2hr 15min" value="'+esc(_w.durationAchieved)+'" oninput="elSet(\'durationAchieved\',this.value)" style="max-width:220px">';
+      html += '</div>';
     } else if(s===11){
       html += '<div class="elwiz-q">Observations <span style="font-size:14px;font-weight:400;color:var(--muted)">(optional)</span></div>';
       html += '<div class="elwiz-sub">Add defects or recommendations. C1 = immediate danger · C2 = urgent action · C3 = recommendation · FI = further investigation.</div>';
@@ -8556,6 +8557,17 @@ async function saveApplianceRecord(){
   };
   window.elPickPremType = function(val){
     _w.premisesType = (_w.premisesType === val) ? '' : val;
+    var newVal = _w.premisesType;
+    var nodes = document.querySelectorAll('[data-ep="premisesType"]');
+    if(nodes.length){
+      nodes.forEach(function(nd){
+        var isAct = nd.getAttribute('data-ev') === newVal && newVal !== '';
+        nd.style.borderColor = isAct ? 'var(--accent)' : 'var(--border)';
+        nd.style.background  = isAct ? 'var(--accent)' : 'var(--surface)';
+        nd.style.color       = isAct ? '#fff' : 'var(--text)';
+      });
+      return;
+    }
     elRenderStep();
   };
   window.elToggleMorePremTypes = function(btn){
@@ -8699,13 +8711,34 @@ async function saveApplianceRecord(){
     _w[field] = val;
     if(field === 'certType'){
       if(!_w.baseRef){
-        elUpdateSubtitle(); // show "Reserving ref…" immediately
+        elUpdateSubtitle();
         buildCertRefSeq('','','el').then(function(r){
           _w.ref = r.ref; _w.baseRef = r.baseRef;
           elUpdateSubtitle();
         }).catch(function(){});
       }
       elNext(); return;
+    }
+    if(field === 'ratedDuration') _w.durationAchieved = val;
+    // Targeted DOM update — no full re-render needed for simple toggle actions
+    var nodes = document.querySelectorAll('[data-ep="'+field+'"]');
+    if(nodes.length){
+      nodes.forEach(function(nd){
+        var isAct = nd.getAttribute('data-ev') === String(val);
+        nd.classList.toggle('sel', isAct);
+        if(nd.hasAttribute('data-ib')){
+          nd.style.borderColor = isAct ? (nd.getAttribute('data-ab')||'var(--accent)') : nd.getAttribute('data-ib');
+          nd.style.background  = isAct ? (nd.getAttribute('data-abg')||'var(--accent)') : nd.getAttribute('data-ibg');
+          if(nd.hasAttribute('data-ac')) nd.style.color = isAct ? nd.getAttribute('data-ac') : nd.getAttribute('data-ic');
+        }
+        var ct = nd.querySelector('[data-ct]');
+        if(ct) ct.style.color = isAct ? 'var(--accent)' : 'var(--text)';
+      });
+      if(field === 'outcome'){
+        var ex = document.getElementById('elw-dur-extra');
+        if(ex) ex.style.display = (val==='UNSATISFACTORY'||_w.certType==='EL.2') ? '' : 'none';
+      }
+      return;
     }
     elRenderStep();
   };
