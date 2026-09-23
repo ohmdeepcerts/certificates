@@ -9162,7 +9162,7 @@ async function saveApplianceRecord(){
 
   window.elBuildCertHTML = function(r){
     var sat = r.outcome==='SATISFACTORY';
-    var obBg = sat ? '#15803d' : '#b91c1c';
+    var obBg = sat ? 'linear-gradient(90deg,#093423,#1e7a4c,#093423)' : '#b3452e';
     var obText = sat ? '✓ SATISFACTORY — System satisfies requirements of BS 5266-1:2025' : '⚠ UNSATISFACTORY — Remedial action required';
     var certTitle = r.certType==='EL.1' ? 'Emergency Lighting &middot; Certificate of Completion'
                   : r.certType==='EL.2' ? 'Emergency Lighting &middot; Periodic Inspection and Testing Certificate'
@@ -9248,109 +9248,109 @@ async function saveApplianceRecord(){
 
     var css = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24px 48px;color:#1c1917;}
-.cert-page{background:#fff;width:794px;min-height:1123px;position:relative;margin:0 auto 40px;box-shadow:0 6px 28px rgba(0,0,0,.2);font-size:13px;color:#1c1917;line-height:1.5;display:flex;flex-direction:column;}
+body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24px 48px;color:#182420;}
+.cert-page{background:#fffdf8;width:794px;min-height:1123px;position:relative;margin:0 auto 40px;box-shadow:0 6px 28px rgba(10,25,17,.22);font-size:13px;color:#182420;line-height:1.5;display:flex;flex-direction:column;}
 .cert-page::after{content:'— A4 print boundary —';position:absolute;top:1123px;left:0;right:0;border-top:2px dashed #ef4444;color:#ef4444;font-size:8px;font-weight:700;letter-spacing:.08em;text-align:center;padding-top:3px;pointer-events:none;z-index:10;}
-.cert-top-strip{background:#b91c1c;height:6px;flex-shrink:0;}
-.ch{background:#fff;padding:8px 28px 0;flex-shrink:0;}
-.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1.5px solid #f0ece4;}
+.cert-top-strip{background:linear-gradient(90deg,#093423,#0e4d33 55%,#b08d2e);height:7px;flex-shrink:0;}
+.ch{background:#fffdf8;padding:8px 28px 0;flex-shrink:0;}
+.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1.5px solid #d5e5db;}
 .ch-logo-row{display:flex;align-items:center;gap:12px;}
-.ch-logo{width:40px;height:40px;background:#b91c1c;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.05em;}
-.ch-company{font-size:20px;font-weight:900;color:#1c1917;letter-spacing:-.02em;line-height:1.1;}
-.ch-company-sub{font-size:10px;color:#9a948e;margin-top:2px;}
-.ch-company-sub a{color:#9a948e;text-decoration:none;}
+.ch-logo{width:40px;height:40px;background:linear-gradient(135deg,#0e4d33,#093423);border:1px solid #b08d2e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f4ecd8;flex-shrink:0;letter-spacing:.05em;}
+.ch-company{font-size:20px;font-weight:900;color:#182420;letter-spacing:-.02em;line-height:1.1;}
+.ch-company-sub{font-size:10px;color:#5a6660;margin-top:2px;}
+.ch-company-sub a{color:#5a6660;text-decoration:none;}
 .ch-company-sub a:hover{text-decoration:underline;}
-.niceic-badge{border:1.5px solid #e0dbd0;border-radius:4px;padding:7px 14px;text-align:center;background:#fafaf9;}
-.niceic-badge .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1c1917;}
-.niceic-badge .nb-sub{font-size:8px;color:#9a948e;margin-top:1px;}
-.niceic-badge .nb-no{font-size:12px;font-weight:700;color:#b91c1c;margin-top:3px;font-family:monospace;}
+.niceic-badge{border:1.5px solid #b08d2e;border-radius:4px;padding:7px 14px;text-align:center;background:#f4ecd8;}
+.niceic-badge .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#093423;}
+.niceic-badge .nb-sub{font-size:8px;color:#5a6660;margin-top:1px;}
+.niceic-badge .nb-no{font-size:12px;font-weight:700;color:#b08d2e;margin-top:3px;font-family:monospace;}
 .ch-title-row{padding:6px 0 6px;}
-.ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b91c1c;margin-bottom:4px;}
-.ch-cert-title{font-family:'Crimson Pro',Georgia,serif;font-size:26px;font-weight:700;color:#b91c1c;line-height:1.15;}
-.ch-cert-std{font-size:10px;color:#9a948e;margin-top:6px;line-height:1.6;}
-.ch-ref-bar{background:#b91c1c;padding:8px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-.ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.04em;}
+.ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b08d2e;margin-bottom:4px;}
+.ch-cert-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:30px;font-weight:700;color:#0e4d33;line-height:1.15;}
+.ch-cert-std{font-size:10px;color:#5a6660;margin-top:6px;line-height:1.6;}
+.ch-ref-bar{background:linear-gradient(90deg,#093423,#0e4d33);border-top:1px solid #b08d2e;padding:8px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#f4ecd8;letter-spacing:.04em;}
 .ch-date{font-size:12px;color:rgba(255,255,255,.85);}
-.addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid #b91c1c;flex-shrink:0;}
+.addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid #b08d2e;flex-shrink:0;}
 .addr-col{padding:10px 28px 10px;}
-.addr-col-left{border-right:1px solid #e8e4dc;}
-.addr-col-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;padding-bottom:7px;border-bottom:1px solid #fee2e2;margin-bottom:10px;}
-.addr-name{font-size:16px;font-weight:700;color:#1c1917;margin-bottom:3px;}
-.addr-line{font-size:12.5px;color:#44403c;line-height:1.75;}
-.addr-sub{font-size:11px;color:#9a948e;margin-top:6px;}
+.addr-col-left{border-right:1px solid #e2e6e0;}
+.addr-col-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b08d2e;padding-bottom:7px;border-bottom:1px solid #d5e5db;margin-bottom:10px;}
+.addr-name{font-size:16px;font-weight:700;color:#182420;margin-bottom:3px;}
+.addr-line{font-size:12.5px;color:#5a6660;line-height:1.75;}
+.addr-sub{font-size:11px;color:#8b968f;margin-top:6px;}
 .addr-detail-row{display:flex;gap:8px;align-items:baseline;margin-top:7px;}
-.addr-detail-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;flex-shrink:0;}
-.addr-detail-val{font-size:12.5px;color:#1c1917;font-weight:500;}
-.addr-engineer-name{font-size:15px;font-weight:600;color:#1c1917;margin-bottom:3px;}
-.purp-panel{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e8e4dc;flex-shrink:0;}
+.addr-detail-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8b968f;flex-shrink:0;}
+.addr-detail-val{font-size:12.5px;color:#182420;font-weight:500;}
+.addr-engineer-name{font-size:15px;font-weight:600;color:#182420;margin-bottom:3px;}
+.purp-panel{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e2e6e0;flex-shrink:0;}
 .purp-col{padding:10px 28px 12px;}
-.purp-col-left{border-right:1px solid #e8e4dc;}
-.purp-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;padding-bottom:9px;border-bottom:1px solid #fee2e2;margin-bottom:10px;}
-.purp-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f4f1eb;}
+.purp-col-left{border-right:1px solid #e2e6e0;}
+.purp-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b08d2e;padding-bottom:9px;border-bottom:1px solid #d5e5db;margin-bottom:10px;}
+.purp-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #eef5f0;}
 .purp-row:last-child{border-bottom:none;}
-.purp-check{width:20px;height:20px;min-width:20px;border:2px solid #d0ccc6;border-radius:2px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-.purp-check-on{border-color:#b91c1c;background:#b91c1c;}
-.purp-check-on::after{content:'✓';color:#fff;font-size:12px;font-weight:700;line-height:1;}
-.purp-text{font-size:12px;color:#6b6560;line-height:1.55;}
-.purp-text-on{color:#1c1917;font-weight:600;}
-.purp-extent{font-size:12.5px;color:#44403c;line-height:1.75;margin-top:6px;}
+.purp-check{width:20px;height:20px;min-width:20px;border:2px solid #d5e5db;border-radius:2px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.purp-check-on{border-color:#0e4d33;background:#0e4d33;}
+.purp-check-on::after{content:'✓';color:#f4ecd8;font-size:12px;font-weight:700;line-height:1;}
+.purp-text{font-size:12px;color:#5a6660;line-height:1.55;}
+.purp-text-on{color:#182420;font-weight:600;}
+.purp-extent{font-size:12.5px;color:#5a6660;line-height:1.75;margin-top:6px;}
 .outcome-band{padding:11px 28px;text-align:center;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#fff;flex-shrink:0;}
-.ch-cont{background:#1c1917;padding:16px 28px 14px;flex-shrink:0;}
+.ch-cont{background:#093423;border-bottom:2px solid #b08d2e;padding:16px 28px 14px;flex-shrink:0;}
 .ch-cont-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
-.ch-cont-eyebrow{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:4px;}
-.ch-cont-title{font-family:'Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#fff;line-height:1.2;}
+.ch-cont-eyebrow{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#b08d2e;margin-bottom:4px;}
+.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#fff;line-height:1.2;}
 .ch-cont-right{text-align:right;flex-shrink:0;}
 .ch-cont-company{font-size:11.5px;font-weight:600;color:#fff;}
-.ch-cont-ref{font-family:monospace;font-size:12.5px;font-weight:700;color:#b91c1c;display:block;margin-top:3px;}
-.ch-cont-niceic{font-size:10px;color:#9a948e;margin-top:2px;}
+.ch-cont-ref{font-family:monospace;font-size:12.5px;font-weight:700;color:#b08d2e;display:block;margin-top:3px;}
+.ch-cont-niceic{font-size:10px;color:rgba(255,255,255,.55);margin-top:2px;}
 .cb{padding:20px 28px;flex:1;display:flex;flex-direction:column;}
-.sec-head{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b91c1c;padding-bottom:6px;border-bottom:2px solid #b91c1c;margin-bottom:14px;margin-top:22px;flex-shrink:0;}
+.sec-head{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0e4d33;padding-bottom:6px;border-bottom:2px solid #b08d2e;margin-bottom:14px;margin-top:22px;flex-shrink:0;}
 .sec-head:first-child{margin-top:0;}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;}
 .fg-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px;}
 .fg-full{grid-column:1/-1;}
-.field{padding-bottom:11px;border-bottom:1px solid #e8e4dc;margin-bottom:11px;}
-.fl{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:3px;}
-.fv{font-size:13px;font-weight:600;color:#1c1917;}
-.fv-green{font-size:13px;font-weight:600;color:#15803d;}
-.fv-red{font-size:13px;font-weight:600;color:#b91c1c;}
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1.5px solid #e0dbd0;border-radius:4px;overflow:hidden;margin:10px 0 12px;flex-shrink:0;}
-.stat-cell{padding:18px 10px;text-align:center;border-right:1px solid #e0dbd0;}
+.field{padding-bottom:11px;border-bottom:1px solid #e2e6e0;margin-bottom:11px;}
+.fl{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8b968f;margin-bottom:3px;}
+.fv{font-size:13px;font-weight:600;color:#182420;}
+.fv-green{font-size:13px;font-weight:600;color:#1e7a4c;}
+.fv-red{font-size:13px;font-weight:600;color:#b3452e;}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #b08d2e;border-radius:5px;overflow:hidden;margin:10px 0 12px;flex-shrink:0;background:#fffdf8;}
+.stat-cell{padding:18px 10px;text-align:center;border-right:1px solid #e2e6e0;}
 .stat-cell:last-child{border-right:none;}
-.stat-num{font-family:'Crimson Pro',Georgia,serif;font-size:40px;font-weight:700;line-height:1;display:block;}
-.stat-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;display:block;margin-top:6px;}
-.stat-pass .stat-num{color:#15803d;}
-.stat-fail .stat-num{color:#b91c1c;}
-.stat-tested .stat-num{color:#1c1917;}
-.obs-box{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #b91c1c;border-radius:3px;padding:9px 14px;margin-bottom:10px;}
-.obs-box .ob-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b91c1c;margin-bottom:5px;}
-.obs-box .ob-item{font-size:11.5px;color:#7f1d1d;padding-left:14px;position:relative;margin-bottom:4px;line-height:1.5;}
-.obs-box .ob-item::before{content:'▸';position:absolute;left:0;color:#b91c1c;}
-.note-box{background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #15803d;border-radius:3px;padding:9px 14px;margin-bottom:10px;}
-.note-box .nb-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#15803d;margin-bottom:5px;}
-.note-box p{font-size:11.5px;color:#14532d;margin:0;line-height:1.55;}
+.stat-num{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:42px;font-weight:700;line-height:1;display:block;}
+.stat-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8b968f;display:block;margin-top:6px;}
+.stat-pass .stat-num{color:#1e7a4c;}
+.stat-fail .stat-num{color:#b3452e;}
+.stat-tested .stat-num{color:#0e4d33;}
+.obs-box{background:#fbeeea;border:1px solid #f0d2c8;border-left:4px solid #b3452e;border-radius:3px;padding:9px 14px;margin-bottom:10px;}
+.obs-box .ob-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b3452e;margin-bottom:5px;}
+.obs-box .ob-item{font-size:11.5px;color:#b3452e;padding-left:14px;position:relative;margin-bottom:4px;line-height:1.5;}
+.obs-box .ob-item::before{content:'▸';position:absolute;left:0;color:#b3452e;}
+.note-box{background:#e9f5ee;border:1px solid #bfe0cc;border-left:4px solid #1e7a4c;border-radius:3px;padding:9px 14px;margin-bottom:10px;}
+.note-box .nb-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1e7a4c;margin-bottom:5px;}
+.note-box p{font-size:11.5px;color:#093423;margin:0;line-height:1.55;}
 .ltbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;}
-.ltbl th{background:#1c1917;color:#fff;padding:9px 10px;text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
-.ltbl td{padding:8px 10px;border-bottom:1px solid #e8e4dc;vertical-align:middle;}
-.ltbl tr:nth-child(even) td{background:#fafaf9;}
-.ltbl .total-row td{background:#1c1917;color:#fff;font-weight:700;font-size:10.5px;padding:9px 10px;}
-.chip-pass{display:inline-block;background:#dcfce7;color:#166534;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:2px;}
-.chip-fail{display:inline-block;background:#fee2e2;color:#991b1b;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:2px;}
-.chip-na{display:inline-block;background:#f3f4f6;color:#6b7280;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:2px;}
+.ltbl th{background:#093423;color:#fff;padding:9px 10px;text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
+.ltbl td{padding:8px 10px;border-bottom:1px solid #e2e6e0;vertical-align:middle;}
+.ltbl tr:nth-child(even) td{background:#eef5f0;}
+.ltbl .total-row td{background:#093423;color:#fff;font-weight:700;font-size:10.5px;padding:9px 10px;}
+.chip-pass{display:inline-block;background:#1e7a4c;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
+.chip-fail{display:inline-block;background:#b3452e;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
+.chip-na{display:inline-block;background:#f4ecd8;color:#093423;border:1px solid #b08d2e;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:99px;}
 .sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:18px;}
-.sig-block{border:1px solid #e0dbd0;border-radius:4px;overflow:hidden;}
-.sig-block-head{background:#1c1917;padding:11px 16px;}
-.sig-block-head .sbh-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.sig-block{border:1px solid #b08d2e;border-radius:4px;overflow:hidden;}
+.sig-block-head{background:#093423;padding:11px 16px;}
+.sig-block-head .sbh-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b08d2e;}
 .sig-block-body{padding:14px 16px;}
 .sig-field{margin-bottom:12px;}
-.sig-field .sfl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9a948e;margin-bottom:3px;}
-.sig-field .sfv{font-size:13px;font-weight:600;color:#1c1917;border-bottom:1px solid #d0ccc6;padding-bottom:3px;}
-.sig-area{height:72px;border:1.5px dashed #d0ccc6;border-radius:3px;margin-top:12px;display:flex;align-items:center;justify-content:center;color:#c0bab2;font-size:10px;font-style:italic;}
-.decl-text{font-size:12px;color:#44403c;line-height:1.75;margin-bottom:18px;padding:16px 18px;background:#f9f6f0;border-radius:4px;border-left:3px solid #d0ccc6;}
-.cert-footer{background:#1c1917;border-top:2px solid #b91c1c;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:auto;flex-shrink:0;}
-.cf-left{font-size:10.5px;color:#9a948e;}
-.cf-right{font-size:10.5px;color:#9a948e;text-align:right;}
-.cf-ref{font-family:monospace;font-size:10.5px;font-weight:700;color:#b91c1c;}
+.sig-field .sfl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8b968f;margin-bottom:3px;}
+.sig-field .sfv{font-size:13px;font-weight:600;color:#182420;border-bottom:1px solid #d5e5db;padding-bottom:3px;}
+.sig-area{height:72px;border:1.5px dashed #d5e5db;border-radius:3px;margin-top:12px;display:flex;align-items:center;justify-content:center;color:#8b968f;font-size:10px;font-style:italic;}
+.decl-text{font-size:12px;color:#5a6660;line-height:1.75;margin-bottom:18px;padding:16px 18px;background:#eef5f0;border-radius:4px;border-left:3px solid #b08d2e;}
+.cert-footer{background:#093423;border-top:2px solid #b08d2e;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:auto;flex-shrink:0;}
+.cf-left{font-size:10.5px;color:rgba(255,255,255,.55);}
+.cf-right{font-size:10.5px;color:rgba(255,255,255,.55);text-align:right;}
+.cf-ref{font-family:monospace;font-size:10.5px;font-weight:700;color:#b08d2e;}
 @media print{body{background:#fff;padding:0;margin:0} .cert-page{width:210mm;min-height:297mm;box-shadow:none;margin:0;page-break-after:always;break-after:page;} .cert-page::after{display:none;}}
 @media(max-width:480px){.fg,.fg-3,.sig-grid,.addr-panel{grid-template-columns:1fr;} .stats-bar{grid-template-columns:1fr 1fr;}}
 `;
@@ -9428,7 +9428,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
       +'<div class="addr-panel">'
         +'<div class="addr-col addr-col-left" style="padding:0">'
           +'<div style="display:flex;height:100%">'
-            +'<div style="flex:1;padding:16px 18px 20px 28px;border-right:1px solid #fee2e2">'
+            +'<div style="flex:1;padding:16px 18px 20px 28px;border-right:1px solid #d5e5db">'
               +'<div class="addr-col-label">Client</div>'
               +(cName!=='—'?'<div class="addr-name">'+cName+'</div>':'')
               +(cAddr?'<div class="addr-line">'+cAddr.replace(/, /g,'<br>')+'</div>':'')
@@ -9474,7 +9474,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           )+'</div>'
         +'</div>'
       +'</div>'
-      +'<div class="outcome-band" style="background:'+obBg+'">'+obText+'</div>'
+      +'<div class="outcome-band" style="background:'+obBg+';border-top:1px solid #b08d2e;border-bottom:1px solid #b08d2e">'+obText+'</div>'
       +'<div class="cb">'
         +'<div class="sec-head">System Summary</div>'
         +'<div class="stats-bar">'
@@ -9484,12 +9484,12 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div class="stat-cell"><span class="stat-num" style="font-size:22px;margin-top:8px">'+rated+'</span><span class="stat-lbl">Rated Duration</span></div>'
         +'</div>'
         +(nextInsp
-          ?'<div style="display:flex;align-items:center;justify-content:space-between;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:4px;padding:11px 18px;margin-bottom:16px">'
+          ?'<div style="display:flex;align-items:center;justify-content:space-between;background:#f4ecd8;border:1.5px solid #b08d2e;border-radius:4px;padding:11px 18px;margin-bottom:16px">'
             +'<div>'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#92400e;margin-bottom:2px">Next Inspection Due</div>'
-              +'<div style="font-size:11px;color:#78350f">Periodic inspection must be completed by this date to maintain BS 5266-1 compliance.</div>'
+              +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#093423;margin-bottom:2px">Next Inspection Due</div>'
+              +'<div style="font-size:11px;color:#5a6660">Periodic inspection must be completed by this date to maintain BS 5266-1 compliance.</div>'
             +'</div>'
-            +'<div style="font-size:18px;font-weight:800;color:#92400e;white-space:nowrap;margin-left:20px">'+nextInsp+'</div>'
+            +'<div style="font-size:18px;font-weight:800;color:#093423;white-space:nowrap;margin-left:20px">'+nextInsp+'</div>'
           +'</div>'
           :'')
         +'<div class="fg-3">'
@@ -9510,13 +9510,13 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     var declText = r.certType==='EL.1'
       ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
       : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
-    var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#16a34a;font-size:14px">✓</span>':'<span style="font-size:10px;color:#9a948e;font-weight:600">N/A</span>';};
-    var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #ede9e4"><div style="flex:1;padding:6px 10px;font-size:11px;color:#44403c">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #ede9e4">'+_pv(val||'N/A')+'</div></div>';};
+    var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#1e7a4c;font-size:14px">✓</span>':'<span style="font-size:10px;color:#8b968f;font-weight:600">N/A</span>';};
+    var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #d5e5db"><div style="flex:1;padding:6px 10px;font-size:11px;color:#5a6660">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #d5e5db">'+_pv(val||'N/A')+'</div></div>';};
     var p2b = '<div class="cert-page">'
       +contHead(r.certType, 2, totalPages, 'System Purpose &amp; Test Instruments', ref, nic, coName)
       +'<div class="cb">'
         +'<div class="sec-head">Purpose of Installed Emergency Lighting System</div>'
-        +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
+        +'<div style="border:1px solid #d5e5db;border-radius:4px;overflow:hidden;margin-bottom:14px">'
           +'<div style="display:grid;grid-template-columns:1fr 1fr">'
             +_pr('Emergency escape lighting',r.purpEscape||'✓')
             +_pr('Standby lighting',r.purpStandby||'N/A')
@@ -9527,7 +9527,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'</div>'
         +'</div>'
         +'<div class="sec-head">Emergency Lighting Installation Arrangement</div>'
-        +'<div style="border:1px solid #ede9e4;border-radius:4px;overflow:hidden;margin-bottom:14px">'
+        +'<div style="border:1px solid #d5e5db;border-radius:4px;overflow:hidden;margin-bottom:14px">'
           +'<div style="display:grid;grid-template-columns:1fr 1fr">'
             +_pr('Self-contained emergency luminaire',r.arSelfContained||'N/A')
             +_pr('Standby generator system',r.arGenerator||'N/A')
@@ -9549,49 +9549,49 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<tr><td colspan="3" style="font-size:10px;color:#6b6560;font-style:italic;padding:5px 10px;background:#fafaf9">Where periodic requirement P2 is carried out by measurement, details of instruments MUST be recorded</td></tr>'
         +'</table>'
         +'<div class="sec-head">Competent Person Declaration</div>'
-        +'<div style="border:1px solid #d0ccc6;border-radius:4px;overflow:hidden;font-size:11.5px">'
-          +'<div style="display:flex;border-bottom:1px solid #d0ccc6">'
-            +'<div style="padding:7px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d0ccc6;flex-shrink:0">Trading Title</div>'
-            +'<div style="padding:7px 10px;font-weight:600;color:#1c1917;flex:1">'+coName+'</div>'
+        +'<div style="border:1px solid #d5e5db;border-radius:4px;overflow:hidden;font-size:11.5px">'
+          +'<div style="display:flex;border-bottom:1px solid #d5e5db">'
+            +'<div style="padding:7px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d5e5db;flex-shrink:0">Trading Title</div>'
+            +'<div style="padding:7px 10px;font-weight:600;color:#182420;flex:1">'+coName+'</div>'
           +'</div>'
           +(coAddr
-            ?'<div style="display:flex;border-bottom:1px solid #d0ccc6">'
-              +'<div style="padding:7px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d0ccc6;flex-shrink:0">Contractor Address</div>'
-              +'<div style="padding:7px 10px;color:#1c1917;flex:1">'+coAddr+'</div>'
+            ?'<div style="display:flex;border-bottom:1px solid #d5e5db">'
+              +'<div style="padding:7px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d5e5db;flex-shrink:0">Contractor Address</div>'
+              +'<div style="padding:7px 10px;color:#182420;flex:1">'+coAddr+'</div>'
             +'</div>'
           :'')
-          +'<div style="padding:9px 10px;border-bottom:1px solid #d0ccc6;color:#44403c;line-height:1.6;font-size:11px">'+declText+'</div>'
+          +'<div style="padding:9px 10px;border-bottom:1px solid #d5e5db;color:#5a6660;line-height:1.6;font-size:11px">'+declText+'</div>'
           +'<div style="display:flex">'
-            +'<div style="flex:1;border-right:1px solid #d0ccc6">'
-              +'<div style="display:flex;border-bottom:1px solid #d0ccc6">'
-                +'<div style="padding:10px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d0ccc6;flex-shrink:0">Name (capitals)</div>'
-                +'<div style="padding:10px 10px;flex:1;font-size:14px;font-weight:700;color:#1c1917">'+eng+'</div>'
+            +'<div style="flex:1;border-right:1px solid #d5e5db">'
+              +'<div style="display:flex;border-bottom:1px solid #d5e5db">'
+                +'<div style="padding:10px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d5e5db;flex-shrink:0">Name (capitals)</div>'
+                +'<div style="padding:10px 10px;flex:1;font-size:14px;font-weight:700;color:#182420">'+eng+'</div>'
               +'</div>'
-              +'<div style="display:flex;border-bottom:1px solid #d0ccc6">'
-                +'<div style="padding:7px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d0ccc6;flex-shrink:0">Post</div>'
+              +'<div style="display:flex;border-bottom:1px solid #d5e5db">'
+                +'<div style="padding:7px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d5e5db;flex-shrink:0">Post</div>'
                 +'<div style="padding:7px 10px;flex:1">'+engPos+'</div>'
               +'</div>'
               +'<div style="display:flex">'
-                +'<div style="padding:7px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d0ccc6;flex-shrink:0">Date</div>'
+                +'<div style="padding:7px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #d5e5db;flex-shrink:0">Date</div>'
                 +'<div style="padding:7px 10px;flex:1">'+tDate+'</div>'
               +'</div>'
             +'</div>'
             +'<div style="padding:8px 12px;flex-shrink:0;width:190px">'
               +'<div style="font-weight:700;font-size:10px;margin-bottom:6px">Inspector\'s Signature</div>'
               +(sigImg
-                ?'<div style="border:1px solid #e8e4dc;border-radius:3px;background:#fafaf9;padding:4px 6px;display:inline-block"><img src="'+elSigData+'" style="max-height:50px;max-width:160px;object-fit:contain;display:block"></div>'
-                :'<div style="height:50px;border:1.5px dashed #d0ccc6;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#c0bab2;font-size:9px;font-style:italic">Signature</div>'
+                ?'<div style="border:1px solid #d5e5db;border-radius:3px;background:#eef5f0;padding:4px 6px;display:inline-block"><img src="'+elSigData+'" style="max-height:50px;max-width:160px;object-fit:contain;display:block"></div>'
+                :'<div style="height:50px;border:1.5px dashed #d5e5db;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#8b968f;font-size:9px;font-style:italic">Signature</div>'
               )
             +'</div>'
           +'</div>'
-          +'<div style="display:flex;border-top:1px solid #d0ccc6">'
-            +'<div style="padding:7px 10px;background:#f5f4f0;font-weight:700;font-size:11.5px;width:28%;border-right:1px solid #d0ccc6;flex-shrink:0">NICEIC Enrolment No.</div>'
-            +'<div style="padding:7px 10px;flex:1;color:#c0262b;font-weight:700;letter-spacing:0.04em">'+nic+'</div>'
+          +'<div style="display:flex;border-top:1px solid #d5e5db">'
+            +'<div style="padding:7px 10px;background:#eef5f0;font-weight:700;font-size:11.5px;width:28%;border-right:1px solid #d5e5db;flex-shrink:0">NICEIC Enrolment No.</div>'
+            +'<div style="padding:7px 10px;flex:1;color:#b08d2e;font-weight:700;letter-spacing:0.04em">'+nic+'</div>'
           +'</div>'
         +'</div>'
-        +'<div style="margin-top:16px;padding:10px 14px;background:#f8f7f5;border:1px solid #e0dbd4;border-left:3px solid #b91c1c;border-radius:3px">'
-          +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a948e;margin-bottom:5px">About This Certificate</div>'
-          +'<div style="font-size:10.5px;color:#6b6560;line-height:1.55">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025. It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client. For queries contact '+coName+' on '+coTel+'.</div>'
+        +'<div style="margin-top:16px;padding:10px 14px;background:#eef5f0;border:1px solid #d5e5db;border-left:3px solid #b08d2e;border-radius:3px">'
+          +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8b968f;margin-bottom:5px">About This Certificate</div>'
+          +'<div style="font-size:10.5px;color:#5a6660;line-height:1.55">This certificate is issued under the '+bodyLabel+' Approved Contractor scheme in accordance with BS 5266-1:2025. It covers the '+(r.certType==='EL.1'?'new installation and commissioning':'periodic inspection and testing')+' of the emergency lighting system at the premises identified above. This document should be retained by the responsible person and made available to the enforcing authority on request. The original must be kept safe; copies may be issued to the client. For queries contact '+coName+' on '+coTel+'.</div>'
         +'</div>'
       +'</div>'
       +footer(pName, ref, 2, totalPages)
@@ -9635,7 +9635,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
             var rows='';
             for(var i=0;i<P_CERT_ITEMS.length;i++){
               var itm=P_CERT_ITEMS[i];
-              rows+='<tr><td style="padding:4px 8px;font-weight:700;font-size:10px;color:#78716c">'+itm[1]+'</td>'
+              rows+='<tr><td style="padding:4px 8px;font-weight:700;font-size:10px;color:#8b968f">'+itm[1]+'</td>'
                 +'<td style="padding:4px 8px;font-size:10.5px">'+itm[2]+'</td>'
                 +'<td style="text-align:center;padding:4px 8px">'+_pChip(_pi[itm[0]]||'✓')+'</td></tr>';
             }
@@ -9643,7 +9643,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           })()
         +'</table>'
         +'<div class="sec-head" style="margin-top:10px">Notes</div>'
-        +'<div style="border:1px solid #e8e4dc;border-radius:4px;padding:12px 14px;font-size:10.5px;color:#1c1917;min-height:120px;background:#fafaf9;line-height:1.6">'
+        +'<div style="border:1px solid #e2e6e0;border-radius:4px;padding:12px 14px;font-size:10.5px;color:#182420;min-height:120px;background:#eef5f0;line-height:1.6">'
           +(r.checklistNotes?esc(r.checklistNotes):'<span style="color:#a8a29e;font-style:italic">None</span>')
         +'</div>'
       +'</div>'
@@ -9739,7 +9739,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=794,initial-scale=1,maximum-scale=5,user-scalable=yes">'
       +'<title>'+r.certType+' Certificate — '+r.ref+'</title>'
-      +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
+      +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">'
       +'<style>'+css+'</style></head><body>'
       +p1+p2b+p3+p4+p4extra
       +'</body></html>';
