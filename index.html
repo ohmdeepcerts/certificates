@@ -962,6 +962,9 @@ a{color:var(--accent);text-decoration:none}
         <div class="stat-card accent"><div class="stat-label">Total Gas</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">Gas Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
         <div class="stat-card error"><div class="stat-label">Gas Renewals Due</div><div class="stat-value" id="stat-gas-due">—</div><div class="stat-sub">Next 30 days</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total EL Certs</div><div class="stat-value" id="stat-el-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">EL Satisfactory</div><div class="stat-value" id="stat-el-sat">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card error"><div class="stat-label">EL Unsatisfactory</div><div class="stat-value" id="stat-el-unsat">—</div><div class="stat-sub">Issued</div></div>
       </div>
       <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px" id="recent-grids">
         <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
@@ -2261,6 +2264,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // ========== STATE ==========
 let currentUser = null, currentProfile = null, currentView = 'dashboard';
 let _settingsDirty = false, _pendingNav = null, _inPasswordRecovery = false;
+let _patDirty = false, _gasDirty = false, _elDirty = false;
 let editingPATId = null, editingGasId = null, _gasCertLoading = false;
 let _cachedNextGasSerial = null, _cachedNextPATSerial = null;
 let patReports = [], gasReports = [], appSettings = {};
@@ -2426,6 +2430,9 @@ function leaveWithoutSaving(){_settingsDirty=false;const v=_pendingNav;_pendingN
 // ========== NAVIGATION ==========
 function navigate(view){
   if(currentView==='settings'&&_settingsDirty&&view!=='settings'){_pendingNav=view;showSettingsLeaveModal();return;}
+  if(_patDirty&&currentView==='pat-new'&&view!=='pat-new'){if(!confirm('You have unsaved PAT form changes. Leave without saving?'))return;_patDirty=false;}
+  if(_gasDirty&&currentView==='gas-new'&&view!=='gas-new'){if(!confirm('You have unsaved Gas cert changes. Leave without saving?'))return;_gasDirty=false;}
+  if(_elDirty&&currentView==='el-new'&&view!=='el-new'){if(!confirm('You have unsaved EL cert changes. Leave without saving?'))return;_elDirty=false;}
   _doNavigate(view);
 }
 function _doNavigate(view){
@@ -2437,6 +2444,7 @@ function _doNavigate(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const viewEl=document.getElementById(`view-${view}`);
   if(viewEl){viewEl.classList.add('active');viewEl.scrollTop=0;}
+  else{const fb=document.getElementById('view-dashboard');if(fb){fb.classList.add('active');currentView='dashboard';}}
   document.getElementById('content-area').scrollTop=0;
   closeSidebar();
   // Load view data
@@ -2957,7 +2965,10 @@ async function saveSettings(){
     ['pat_cop',document.getElementById('s-pat-cop').value],
     ['pat_cert_notes',document.getElementById('s-pat-cert-notes').value],
   ];
-  for(const[k,v]of pairs)await upsertSetting(k,v);
+  const _now=new Date().toISOString();
+  const{error:_settErr}=await sb.from('app_config').upsert(pairs.map(([key,val])=>({key,value:val,updated_at:_now})),{onConflict:'key'});
+  if(!_settErr){pairs.forEach(([k,v])=>{appSettings[k]=v;});}
+  else{for(const[k,v]of pairs)await upsertSetting(k,v);}
   // Save profile
   const profileUpdate={full_name:document.getElementById('s-profile-name').value,gas_safe_no:document.getElementById('s-profile-gas').value,licence_no:document.getElementById('s-profile-licence').value};
   await sb.from('profiles').update(profileUpdate).eq('id',currentUser.id);
@@ -3093,9 +3104,10 @@ async function runSerialGapCheck(){
 
 // ========== DASHBOARD ==========
 async function loadDashboard(){
-  const[{data:pats},{data:gases}]=await Promise.all([
-    sb.from('pat_reports').select('id,status,test_date,appliances'),
-    sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address')
+  const[{data:pats},{data:gases},{data:els}]=await Promise.all([
+    sb.from('pat_reports').select('id,status,test_date,appliances').order('created_at',{ascending:false}),
+    sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address').order('created_at',{ascending:false}),
+    sb.from('el_certs').select('id,data,created_at').order('created_at',{ascending:false})
   ]);
   const today=new Date();const in30=new Date(today);in30.setDate(in30.getDate()+30);
   const patTotal=pats?.length||0;
@@ -3117,12 +3129,20 @@ async function loadDashboard(){
   document.getElementById('stat-gas-total').textContent=gasTotal;
   document.getElementById('stat-gas-complete').textContent=gasDone;
   document.getElementById('stat-gas-due').textContent=gasDue;
+  // EL stats
+  const elCerts=(els||[]).map(r=>({...(r.data||{}),id:r.id}));
+  const elTotal=elCerts.length;
+  const elSat=elCerts.filter(r=>r.outcome==='SATISFACTORY').length;
+  const elUnsat=elCerts.filter(r=>r.outcome==='UNSATISFACTORY').length;
+  const _elTot=document.getElementById('stat-el-total');if(_elTot)_elTot.textContent=elTotal;
+  const _elSat=document.getElementById('stat-el-sat');if(_elSat)_elSat.textContent=elSat;
+  const _elUns=document.getElementById('stat-el-unsat');if(_elUns)_elUns.textContent=elUnsat;
   // Update unified compliance badge
   const compBadge=document.getElementById('compliance-badge');
   if(compBadge){const tot=patDue+gasDue;compBadge.textContent=tot;compBadge.hidden=tot===0;}
-  // Recent lists
-  const recentPat=(pats||[]).slice(-5).reverse();
-  const recentGas=(gases||[]).slice(-5).reverse();
+  // Recent lists (already ordered by created_at desc, take first 5)
+  const recentPat=(pats||[]).slice(0,5);
+  const recentGas=(gases||[]).slice(0,5);
   document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
   document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.install_address||'No address').substring(0,30)}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
 }
@@ -3350,7 +3370,7 @@ function delPATRow(i){patApps.splice(i,1);renderPATRows();updatePatRef();doPatPr
 function clearPATForm(){if(!confirm('Clear all form data?'))return;newPAT();}
 
 function populatePATForm(r){
-  patCurrentBaseRef=r.base_ref||(r.ref_number||'').split(' / ')[0].replace(/0\d+$/,'').trim();
+  patCurrentBaseRef=r.base_ref||(r.ref_number||'').split(' / ')[0].replace(/\d+$/,'').trim();
   const refEl=patGe('pat-ref');
   refEl.value=r.ref_number||'';
   refEl.dataset.manual='true';
@@ -3387,7 +3407,7 @@ function populatePATForm(r){
 function getPATFormData(){
   return{
     ref_number:patGv('pat-ref'),
-    base_ref:patCurrentBaseRef||patGv('pat-ref').split(' / ')[0].replace(/0\d+$/,'').trim(),
+    base_ref:patCurrentBaseRef||patGv('pat-ref').split(' / ')[0].replace(/\d+$/,'').trim(),
     status:patGv('pat-status'),
     test_date:patGv('pat-date'),
     engineer:patGv('pat-eng'),
@@ -3404,7 +3424,7 @@ function getPATFormData(){
 
 function startNewPAT(){editingPATId=null;_offlineQueueId=null;navigate('pat-new');}
 async function newPAT(){
-  editingPATId=null;_offlineQueueId=null;patApps=[];
+  editingPATId=null;_offlineQueueId=null;patApps=[];_patDirty=false;
   _cachedNextPATSerial=null;
   patGe('pat-edit-banner').hidden=true;
   patGe('pat-form-title').textContent='New PAT Test';
@@ -3453,6 +3473,7 @@ async function loadPATForm(id){
   const{data:r,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
   hideOverlay();
   if(error){toast('Error loading report','error');return;}
+  _patDirty=false;
   editingPATId=id;
   patGe('pat-form-title').textContent=r.ref_number?`Edit — ${r.ref_number}`:'Edit PAT Test';
   patGe('pat-form-ref').textContent=r.ref_number||'Draft';
@@ -3612,7 +3633,7 @@ async function savePAT(){
   }
   hideOverlay();
   if(err){toast('Save failed: '+err.message,'error');}
-  else{toast('Saved ✓','success');}
+  else{toast('Saved ✓','success');_patDirty=false;}
 }
 async function completePAT(){
   const d=getPATFormData();
@@ -3665,6 +3686,7 @@ async function loadPATHistory(){
   showOverlay('Loading…');
   const{data,error}=await sb.from('pat_reports').select('*').order('created_at',{ascending:false});
   hideOverlay();
+  if(error){toast('Failed to load PAT reports: '+error.message,'error');return;}
   patReports=data||[];
   renderPATList(patReports);
 }
@@ -3763,7 +3785,8 @@ function filterPATList(){
 }
 async function deletePAT(id){
   confirm2('Delete PAT Test','This will permanently delete this report. Are you sure?',async()=>{
-    await sb.from('pat_reports').delete().eq('id',id);
+    const{error:delErr}=await sb.from('pat_reports').delete().eq('id',id);
+    if(delErr){toast('Delete failed: '+delErr.message,'error');return;}
     toast('Deleted','warn');loadPATHistory();
   });
 }
@@ -3941,7 +3964,7 @@ function updatePatSidePanel(){
   const fails=patApps.filter(a=>a.result==='Fail').length;
   const rate=total>0?Math.round(passes/total*100):0;
   // Status card
-  const sc=document.getElementById('sw-cert-status');
+  const sc=document.getElementById('sw-status');
   if(sc){sc.className='sw-cert-status '+(status==='completed'?'complete':'draft');sc.textContent=status==='completed'?'✅ Complete':'📝 Draft';}
   // Address
   const sa=document.getElementById('sw-prop-addr');if(sa)sa.textContent=addr||'—';
@@ -3952,7 +3975,7 @@ function updatePatSidePanel(){
   const cr=document.getElementById('sw-rate');if(cr)cr.textContent=rate+'%';
   // Ring
   const ring=document.getElementById('sw-ring-pass');
-  if(ring){const offset=282-(282*(rate/100));ring.style.strokeDashoffset=offset;}
+  if(ring){const offset=163.4-(163.4*(rate/100));ring.style.strokeDashoffset=offset;}
   // Pages dots
   const pagesEl=document.getElementById('sw-pages-dots');
   if(pagesEl){
@@ -4079,7 +4102,8 @@ function renderScanResults(items){
   const count=document.getElementById('scan-count');
   if(!items.length){toast('No appliances detected','warn');wrap.style.display='none';return;}
   count.textContent=items.length+' found';
-  list.innerHTML=items.map((it,i)=>`<div class="scan-results-item"><input type="checkbox" id="sck${i}" checked style="margin-right:8px"><label for="sck${i}" style="flex:1;cursor:pointer"><strong>${it.assetId||''}</strong> — ${it.description||''}</label></div>`).join('');
+  const _sesc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  list.innerHTML=items.map((it,i)=>`<div class="scan-results-item"><input type="checkbox" id="sck${i}" checked style="margin-right:8px"><label for="sck${i}" style="flex:1;cursor:pointer"><strong>${_sesc(it.assetId||'')}</strong> — ${_sesc(it.description||'')}</label></div>`).join('');
   wrap.style.display='block';
   document.getElementById('scan-status').textContent='Review and add to form';
   // store for addPatScanResults
@@ -4127,7 +4151,7 @@ async function openPATPDF(id){
   if(r)generatePATPDFFromData(r);
 }
 let _patPreviewTimer=null;
-function doPatPreview(){clearTimeout(_patPreviewTimer);_patPreviewTimer=setTimeout(_doPatPreviewNow,280);}
+function doPatPreview(){_patDirty=true;clearTimeout(_patPreviewTimer);_patPreviewTimer=setTimeout(_doPatPreviewNow,280);}
 function doPatPreviewImmediate(){_doPatPreviewNow();}
 async function generatePATPDF(){
   const d=getPATFormData();
@@ -4162,14 +4186,26 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
       const pw=clone.offsetWidth||794;
       const ph=clone.offsetHeight||1123;
       const canvas=await html2canvas(clone,{
-        scale:returnB64?2:4,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
+        scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
         width:pw,height:ph,windowWidth:pw,scrollX:0,scrollY:0,logging:false,
         imageTimeout:5000
       });
       const imgH=(canvas.height/canvas.width)*210;
       const imgData=returnB64?canvas.toDataURL('image/jpeg',0.85):canvas.toDataURL('image/png');
       const imgFmt=returnB64?'JPEG':'PNG';
-      doc.addImage(imgData,imgFmt,0,0,210,imgH);
+      if(imgH<=297){
+        doc.addImage(imgData,imgFmt,0,0,210,imgH);
+      }else{
+        const _r=canvas.width/210;let _y=0;let _first=true;
+        while(_y<imgH){
+          if(!_first)doc.addPage('a4','portrait');_first=false;
+          const _sh=Math.min(297,imgH-_y);const _sp=Math.round(_sh*_r);const _yp=Math.round(_y*_r);
+          const _tc=document.createElement('canvas');_tc.width=canvas.width;_tc.height=_sp;
+          _tc.getContext('2d').drawImage(canvas,0,_yp,canvas.width,_sp,0,0,canvas.width,_sp);
+          doc.addImage(_tc.toDataURL(imgFmt==='JPEG'?'image/jpeg':'image/png',0.85),imgFmt,0,0,210,_sh);
+          _y+=297;
+        }
+      }
     }
     document.body.removeChild(shell);
 
@@ -4265,11 +4301,11 @@ async function emailPATFromList(id,autoTriggered=false){
   let r;
   try{
     const{data,error}=await sb.from('pat_reports').select('*').eq('id',id).single();
-    if(error||!data){if(!autoTriggered)toast('Could not load certificate','error');hideOverlay();return;}
+    if(error||!data){toast('Could not load certificate','error');hideOverlay();return;}
     r=data;
-  }catch(e){if(!autoTriggered)toast('Error: '+e.message,'error');hideOverlay();return;}
+  }catch(e){toast('Error: '+e.message,'error');hideOverlay();return;}
   const toEmail=(r.email_address||'').trim()||getSetting('email_fallback','');
-  if(!toEmail){if(!autoTriggered)toast('No email address on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
+  if(!toEmail){toast('No email address on this certificate. Add a Fallback Email in Settings → Email → Email Defaults','warn');hideOverlay();return;}
   const bcc=getSetting('email_bcc','');
   const co=getSetting('pat_co_name',getSetting('company_name','OHM Electrical Engineering Ltd'));
   const coPhone=getSetting('pat_co_phone','');
@@ -4281,7 +4317,7 @@ async function emailPATFromList(id,autoTriggered=false){
   const pass=apps.filter(a=>(a.result||'').toLowerCase()==='pass').length;
   const fail=total-pass;
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const addrHtml=(r.property_address||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const addrHtml=(r.property_address||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   const client=r.landlord_name||r.client_name||'Customer';
   // earliest next test
   const nxtDates=apps.map(a=>a.nextTest||a.next_test||'').filter(Boolean).sort();
@@ -4663,7 +4699,7 @@ function syncSettingsToCP12Form(){
 
 // ========== CP12 - FORM LIFECYCLE ==========
 function newGasCert(){
-  editingGasId=null;
+  editingGasId=null;_gasDirty=false;
   _cachedNextGasSerial=null;
   document.getElementById('gas-form-title').textContent='New Gas';
   document.getElementById('gas-form-ref').textContent='';
@@ -4706,6 +4742,7 @@ async function loadGasForm(id){
   showOverlay('Loading…');
   const{data:r,error}=await sb.from('gas_certs').select('*').eq('id',id).single();
   hideOverlay();if(error){toast('Error loading','error');return;}
+  _gasDirty=false;
   editingGasId=id;
   document.getElementById('gas-form-title').textContent=r.ref_number?`View — ${r.ref_number}`:'View Gas';
   document.getElementById('gas-form-ref').textContent=r.ref_number||'Draft';
@@ -5293,6 +5330,7 @@ function freezeGasPage(srcId){
   return clone;
 }
 function doGasPreview(){
+  _gasDirty=true;
   const wrap=document.getElementById('gas-cert-pages');
   if(!wrap)return;
   wrap.innerHTML='';
@@ -5389,7 +5427,7 @@ async function saveGas(_fromMgw){
   }
   hideOverlay();
   if(err){toast('Save failed: '+err.message,'error');return false;}
-  toast('Saved ✓','success');
+  _gasDirty=false;toast('Saved ✓','success');
   if(editingGasId){
     const ref=document.getElementById('gas-form-ref').textContent||'Draft';
     document.getElementById('gas-form-title').textContent=`View — ${ref}`;
@@ -5907,8 +5945,8 @@ function gwAutoFlue(i,typeVal){
   if(!ft||!_gw.appliances[i])return;
   var changed=_gw.appliances[i].flueType!==ft;
   _gw.appliances[i].flueType=ft;
-  if(ft==='RS'&&(_gw.appliances[i].combustionReading==='N/A'||!_gw.appliances[i].combustionReading)){
-    _gw.appliances[i].combustionReading=Math.random()<0.5?'0.0008':'0.0009';changed=true;
+  if(ft==='RS'&&_gw.appliances[i].combustionReading==='N/A'){
+    _gw.appliances[i].combustionReading='';changed=true;
   }else if(ft==='FL'){
     _gw.appliances[i].combustionReading='N/A';changed=true;
   }
@@ -6020,8 +6058,9 @@ async function gwSaveDraft(){
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
   showOverlay('Loading…');
-  const{data}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false});
+  const{data,error}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false});
   hideOverlay();
+  if(error){toast('Failed to load Gas certs: '+error.message,'error');return;}
   gasReports=data||[];renderGasList(gasReports);
 }
 function renderGasList(reports){
@@ -6092,7 +6131,8 @@ function filterGasList(){
 }
 async function deleteGas(id){
   confirm2('Delete Gas Cert','This will permanently delete this certificate.',async()=>{
-    await sb.from('gas_certs').delete().eq('id',id);
+    const{error:delErr}=await sb.from('gas_certs').delete().eq('id',id);
+    if(delErr){toast('Delete failed: '+delErr.message,'error');return;}
     toast('Deleted','warn');loadGasHistory();
   });
 }
@@ -6157,7 +6197,7 @@ function _buildCP12EmailHtml(r){
   const fmtDate=s=>{if(!s)return'—';const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;};
   const _mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
   const fmtDateExp=s=>{if(!s)return'—';const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${_mon[parseInt(m[2],10)-1]}/${m[1]}`:s;};
-  const addrHtml=(r.install_address||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const addrHtml=(r.install_address||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   const co=getSetting('gas_co_name','OHM Electrical Engineering Ltd');
   const coPhone=getSetting('gas_co_phone','');
   const coEmail=getSetting('gas_co_email','');
@@ -6210,11 +6250,11 @@ function _buildCP12EmailHtml(r){
 </body></html>`;
 }
 async function emailGas(autoTriggered=false){
-  if(!editingGasId){if(!autoTriggered)toast('No certificate loaded','warn');return;}
+  if(!editingGasId){toast('No certificate loaded','warn');return;}
   const{data:r}=await sb.from('gas_certs').select('*').eq('id',editingGasId).single();
-  if(!r){if(!autoTriggered)toast('Not found','error');return;}
+  if(!r){toast('Not found','error');return;}
   const toEmail=(r.recipient_email||'').trim()||r.business_email||getSetting('gas_co_email')||getSetting('email_fallback','');
-  if(!toEmail){if(!autoTriggered)toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
+  if(!toEmail){toast('No recipient email — add one in the Landlord section (Email) or Settings → Email','warn');return;}
   const toName=(r.sig_received_name||'').trim();
   let _gasRef2=r.ref_number||'';if(_gasRef2&&_gasRef2.trim().startsWith('{')){try{const _p=JSON.parse(_gasRef2);_gasRef2=_p.ref||_p.baseRef||'';}catch(e){}}
   const subject=`Gas Safety Certificate — ${_gasRef2||r.install_address||''}`;
@@ -7464,6 +7504,7 @@ async function saveApplianceRecord(){
   }
 
   window.startNewEL = function(){
+    _elDirty = false;
     _w = {
       step: 0,
       certType: '',
@@ -7521,6 +7562,7 @@ async function saveApplianceRecord(){
   };
 
   window.elRenderStep = function(){
+    if(_w && _w.step > 0) _elDirty = true;
     var body = document.getElementById('el-wizard-body');
     if(!body) return;
     var s = _w.step;
@@ -7955,7 +7997,7 @@ async function saveApplianceRecord(){
   // Observation row helpers
   function elAutoOutcomeFromObs(){
     var rows = _w.observationRows||[];
-    if(rows.some(function(r){ return r.code==='C1'||r.code==='C2'||r.code==='C3'; })) _w.outcome='UNSATISFACTORY';
+    if(rows.some(function(r){ return r.code==='C1'||r.code==='C2'; })) _w.outcome='UNSATISFACTORY';
   }
   window.elAddObsRow = function(code, text){
     if(!_w.observationRows) _w.observationRows=[];
@@ -8094,6 +8136,7 @@ async function saveApplianceRecord(){
     }
     hideOverlay();
     if(err){ toast('Save failed: '+err.message,'error'); return; }
+    _elDirty = false;
     rec.id = savedId;
     toast((isEdit?'Certificate updated — ':'EL Certificate issued — ')+rec.ref,'success',3000);
     var _admin = currentProfile && currentProfile.role === 'admin';
@@ -8108,6 +8151,7 @@ async function saveApplianceRecord(){
   };
 
   window.elEditCert = function(r){
+    _elDirty = false;
     _w = Object.assign({}, r, {step: 0, _editId: r.id});
     navigate('el-new');
   };
@@ -9270,7 +9314,19 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         page.style.cssText = savedStyle;
         var imgH = (canvas.height/canvas.width)*210;
         var imgData = canvas.toDataURL('image/jpeg',0.88);
-        doc.addImage(imgData,'JPEG',0,0,210,imgH);
+        if(imgH<=297){
+          doc.addImage(imgData,'JPEG',0,0,210,imgH);
+        }else{
+          var _r2=canvas.width/210;var _y2=0;var _f2=true;
+          while(_y2<imgH){
+            if(!_f2)doc.addPage('a4','portrait');_f2=false;
+            var _sh2=Math.min(297,imgH-_y2);var _sp2=Math.round(_sh2*_r2);var _yp2=Math.round(_y2*_r2);
+            var _tc2=document.createElement('canvas');_tc2.width=canvas.width;_tc2.height=_sp2;
+            _tc2.getContext('2d').drawImage(canvas,0,_yp2,canvas.width,_sp2,0,0,canvas.width,_sp2);
+            doc.addImage(_tc2.toDataURL('image/jpeg',0.88),'JPEG',0,0,210,_sh2);
+            _y2+=297;
+          }
+        }
       }
       if(returnB64) return doc.output('datauristring').split(',')[1];
       var fname = (r.ref||r.ref_number||'certificate').replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
