@@ -8101,6 +8101,28 @@ async function saveApplianceRecord(){
     navigate('el-new');
   };
 
+  // Updates the header subtitle live — called from elRenderStep and address oninput
+  window.elUpdateSubtitle = function(){
+    var hs = document.getElementById('elwiz-header-sub');
+    if(!hs) return;
+    var addr1 = (_w.premAddr1||'').trim();
+    var pc    = (_w.premPostcode||'').trim();
+    var addrStr = [addr1, pc].filter(Boolean).join(', ');
+    if(_w.baseRef && addrStr){
+      var yy    = String(new Date().getFullYear()).slice(-2);
+      var score = _pcScore(pc);
+      var aPart = _refAddrPart(addr1);
+      _w.ref = _w.baseRef + yy + score + ' / ' + aPart;
+      hs.textContent = _w.baseRef + ' · ' + addrStr;
+    } else if(_w.baseRef){
+      hs.textContent = (_w.certType||'EL') + ' · ' + _w.baseRef + ' · Awaiting address…';
+    } else if(_w.certType){
+      hs.textContent = _w.certType + ' · Reserving ref…';
+    } else {
+      hs.textContent = 'BS 5266-1 Emergency Lighting';
+    }
+  };
+
   window.elRenderStep = function(){
     if(_w && _w.step > 0) _elDirty = true;
     if(_w && (_w.step > 0 || _w.certType)){try{var _ws=Object.assign({},_w);delete _ws._savedDraft;localStorage.setItem('el_autosave',JSON.stringify(_ws));}catch(e){}}
@@ -8110,19 +8132,7 @@ async function saveApplianceRecord(){
     var total = STEPS.length;
     var pct = Math.round((s/total)*100);
 
-    // Update page subtitle: show ref once generated, else address once entered
-    (function(){
-      var _hs = document.getElementById('elwiz-header-sub');
-      if(!_hs) return;
-      var _addr = [_w.premAddr1, _w.premPostcode].filter(Boolean).join(', ');
-      if(_w.ref && _w.ref !== 'Generating…'){
-        _hs.textContent = _w.ref + (_addr ? ' · ' + _addr : '');
-      } else if(_addr){
-        _hs.textContent = (_w.certType ? _w.certType + ' · ' : '') + _addr;
-      } else {
-        _hs.textContent = 'BS 5266-1 Emergency Lighting';
-      }
-    })();
+    elUpdateSubtitle();
 
     var html = '<div class="elwiz-progress"><div class="elwiz-progress-bar" style="width:'+pct+'%"></div></div>';
     html += '<div class="elwiz-step">';
@@ -8149,13 +8159,13 @@ async function saveApplianceRecord(){
       html += '<label class="elwiz-input-label">Premises / site name <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pname" placeholder="e.g. Sunrise Care Home, Flat 3" value="'+esc(_w.premisesName)+'" oninput="elSet(\'premisesName\',this.value)">';
       html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>';
-      html += '<input class="elwiz-input" id="elw-pa1" placeholder="Street / building" value="'+esc(_w.premAddr1)+'" oninput="elSet(\'premAddr1\',this.value)">';
+      html += '<input class="elwiz-input" id="elw-pa1" placeholder="Street / building" value="'+esc(_w.premAddr1)+'" oninput="elSet(\'premAddr1\',this.value);elUpdateSubtitle()">';
       html += '<label class="elwiz-input-label">Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pa2" placeholder="Area / district" value="'+esc(_w.premAddr2)+'" oninput="elSet(\'premAddr2\',this.value)">';
       html += '<label class="elwiz-input-label">Address line 3 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pa3" placeholder="Town / city" value="'+esc(_w.premAddr3)+'" oninput="elSet(\'premAddr3\',this.value)">';
       html += '<label class="elwiz-input-label">Postcode <span style="color:var(--error,#b91c1c)">*</span></label>';
-      html += '<input class="elwiz-input" id="elw-papc" placeholder="e.g. LS1 5HD" style="max-width:160px;text-transform:uppercase" value="'+esc(_w.premPostcode)+'" oninput="elSet(\'premPostcode\',this.value.toUpperCase())">';
+      html += '<input class="elwiz-input" id="elw-papc" placeholder="e.g. LS1 5HD" style="max-width:160px;text-transform:uppercase" value="'+esc(_w.premPostcode)+'" oninput="elSet(\'premPostcode\',this.value.toUpperCase());elUpdateSubtitle()">';
       var PT_PRIMARY = ['House','Flat / Apartment','HMO','Commercial Office','Retail / Shop'];
       var PT_MORE    = ['Care Home','School / College','Warehouse','Hotel','Restaurant / Café'];
       var PT_ALL     = PT_PRIMARY.concat(PT_MORE);
@@ -8459,9 +8469,16 @@ async function saveApplianceRecord(){
       html += '<label class="elwiz-input-label">NICEIC scheme number (from settings if blank)</label>';
       html += '<input class="elwiz-input" id="elw-niceic" placeholder="e.g. 12345678" value="'+esc(_w.niceicNo)+'" oninput="elSet(\'niceicNo\',this.value)">';
     } else if(s===13){
-      if(!_w.ref){
-        _w.ref='Generating…';
-        (function(){var _a=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');buildCertRefSeq(_a,_w.premPostcode,'el').then(function(r){_w.ref=r.ref;_w.baseRef=r.baseRef;elRenderStep();}).catch(function(){_w.ref=genRef(_w.certType||'EL');elRenderStep();});})();
+      if(!_w.ref || _w.ref==='Generating…'){
+        if(_w.baseRef){
+          // Serial already reserved — rebuild full ref now address is known
+          var _ra=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');
+          var _ryy=String(new Date().getFullYear()).slice(-2);
+          _w.ref=_w.baseRef+_ryy+_pcScore(_w.premPostcode||'')+' / '+_refAddrPart(_ra);
+        } else {
+          _w.ref='Generating…';
+          (function(){var _a=[_w.premAddr1,_w.premAddr2,_w.premAddr3].filter(Boolean).join(', ');buildCertRefSeq(_a,_w.premPostcode,'el').then(function(r){_w.ref=r.ref;_w.baseRef=r.baseRef;elRenderStep();}).catch(function(){_w.ref=genRef(_w.certType||'EL');elRenderStep();});})();
+        }
       }
       html += '<div class="elwiz-q">Review &amp; Issue</div>';
       html += '<div class="elwiz-sub">Check the summary below then issue the certificate.</div>';
@@ -8680,7 +8697,16 @@ async function saveApplianceRecord(){
 
   window.elPick = function(field, val){
     _w[field] = val;
-    if(field === 'certType'){ elNext(); return; }
+    if(field === 'certType'){
+      if(!_w.baseRef){
+        elUpdateSubtitle(); // show "Reserving ref…" immediately
+        buildCertRefSeq('','','el').then(function(r){
+          _w.ref = r.ref; _w.baseRef = r.baseRef;
+          elUpdateSubtitle();
+        }).catch(function(){});
+      }
+      elNext(); return;
+    }
     elRenderStep();
   };
 
