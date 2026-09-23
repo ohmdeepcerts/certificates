@@ -4074,10 +4074,9 @@ async function completePAT(){
 
 // ========== PAT - HISTORY ==========
 async function loadPATHistory(){
-  showOverlay('Loading…');
+  const _pl=document.getElementById('pat-list');if(_pl)_pl.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
   let{data,error}=await sb.from('pat_reports').select('*').is('deleted_at',null).order('created_at',{ascending:false});
   if(error&&(error.message||'').includes('deleted_at')){({data,error}=await sb.from('pat_reports').select('*').order('created_at',{ascending:false}));}
-  hideOverlay();
   if(error){toast('Failed to load PAT reports: '+error.message,'error');return;}
   patReports=data||[];
   renderPATList(patReports);
@@ -6519,10 +6518,9 @@ async function gwSaveDraft(){
 
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
-  showOverlay('Loading…');
+  const _gl=document.getElementById('gas-list');if(_gl)_gl.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
   let{data,error}=await sb.from('gas_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
   if(error&&(error.message||'').includes('deleted_at')){({data,error}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false}));}
-  hideOverlay();
   if(error){toast('Failed to load Gas certs: '+error.message,'error');return;}
   gasReports=data||[];renderGasList(gasReports);
 }
@@ -9773,10 +9771,9 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
   window.loadELHistory = async function(){
     _elAllCerts = [];
-    showOverlay('Loading…');
+    var _ehl=document.getElementById('el-history-list');if(_ehl)_ehl.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
     var res = await sb.from('el_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
     if(res.error&&(res.error.message||'').includes('deleted_at')){res=await sb.from('el_certs').select('*').order('created_at',{ascending:false});}
-    hideOverlay();
     if(res.error){ toast('Load failed: '+res.error.message,'error'); return; }
     _elAllCerts = (res.data||[]).map(function(row){
       return Object.assign({}, row.data||{}, {id: row.id, cert_type: row.cert_type, test_date: row.test_date, outcome: row.outcome, ref_number: row.ref_number, premises_name: row.premises_name, deleted_at: row.deleted_at});
