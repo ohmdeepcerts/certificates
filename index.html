@@ -961,6 +961,7 @@ a{color:var(--accent);text-decoration:none}
         <input id="global-search" class="search-input" placeholder="🔍  Search all certificates — PAT, Gas, EL by address, ref, client…" oninput="globalSearch(this.value)" onfocus="document.getElementById('gs-results').hidden=false" onblur="setTimeout(()=>{const r=document.getElementById('gs-results');if(r)r.hidden=true;},200)" style="width:100%;box-sizing:border-box;font-size:14px;padding:11px 16px">
         <div id="gs-results" hidden style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;max-height:380px;overflow-y:auto"></div>
       </div>
+      <div id="expiry-reminder-banner" hidden style="background:var(--warn-bg,#fef3c7);border:1px solid var(--warn-border,#f59e0b);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px"></div>
       <div class="stat-grid" id="stat-grid">
         <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
@@ -1533,6 +1534,15 @@ a{color:var(--accent);text-decoration:none}
           <div class="form-section-title">✉ Email Subject Template</div>
           <div class="field-grid">
             <div class="field-group" style="grid-column:1/-1"><label>Subject Line Template</label><input type="text" id="s-email-subject-tmpl" placeholder="{cert_type} Certificate — {ref} — {address}"><div style="font-size:11px;color:var(--muted);margin-top:3px">Tokens: <strong>{cert_type}</strong> PAT/Gas/EL · <strong>{ref}</strong> reference number · <strong>{address}</strong> property address · <strong>{company}</strong> your company name. Leave blank for default.</div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔔 Expiry Reminders</div>
+          <div class="field-grid">
+            <div class="field-group"><label>In-App Reminders</label>
+              <select id="s-reminder-enabled"><option value="on">On — show on dashboard login</option><option value="off">Off — disabled</option></select>
+            </div>
+            <div class="field-group"><label>Remind days before expiry</label><input type="number" id="s-reminder-days" placeholder="30" min="1" max="365"><div style="font-size:11px;color:var(--muted);margin-top:3px">Show a reminder banner this many days before a certificate expires</div></div>
           </div>
         </div>
       </div>
@@ -2970,6 +2980,8 @@ function loadSettingsUI(){
   document.getElementById('s-bcc-email').value=getSetting('email_bcc','');
   document.getElementById('s-cc-email').value=getSetting('email_cc','');
   document.getElementById('s-email-subject-tmpl').value=getSetting('email_subject_tmpl','');
+  const _remEl=document.getElementById('s-reminder-enabled');if(_remEl)_remEl.value=getSetting('reminder_enabled','on');
+  const _remDEl=document.getElementById('s-reminder-days');if(_remDEl)_remDEl.value=getSetting('reminder_days','30');
   // PAT
   document.getElementById('s-pat-ref-prefix').value=getSetting('pat_ref_prefix','PAT');
   document.getElementById('s-pat-ref-start').value=getSetting('pat_ref_start','1');
@@ -3050,6 +3062,8 @@ async function saveSettings(){
     ['email_bcc',document.getElementById('s-bcc-email').value],
     ['email_cc',document.getElementById('s-cc-email').value],
     ['email_subject_tmpl',document.getElementById('s-email-subject-tmpl').value],
+    ['reminder_enabled',(document.getElementById('s-reminder-enabled')||{value:'on'}).value],
+    ['reminder_days',(document.getElementById('s-reminder-days')||{value:'30'}).value||'30'],
     ['app_name',document.getElementById('s-app-name').value],
     ['pat_ref_prefix',(document.getElementById('s-pat-ref-prefix').value||'PAT').toUpperCase()],
     ['pat_ref_start',document.getElementById('s-pat-ref-start').value||'1'],
@@ -3286,6 +3300,35 @@ async function loadDashboard(){
   const recentGas=(gases||[]).slice(0,5);
   document.getElementById('recent-pat-list').innerHTML=recentPat.length?recentPat.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.ref_number||r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
   document.getElementById('recent-gas-list').innerHTML=recentGas.length?recentGas.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.ref_number||(r.install_address||'No address').substring(0,40))}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date)||'No date'}</div></div><span class="badge badge-${r.status==='completed'?'done':'draft'}">${r.status}</span></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
+  // Expiry reminders
+  try{
+    const _remEnabled=getSetting('reminder_enabled','on');
+    if(_remEnabled!=='off'){
+      const _remDays=parseInt(getSetting('reminder_days','30'))||30;
+      const _remCutoff=new Date(today);_remCutoff.setDate(_remCutoff.getDate()+_remDays);
+      const _expItems=[];
+      // PAT appliance renewals
+      (pats||[]).filter(r=>r.status==='completed').forEach(r=>{
+        (r.appliances||[]).forEach(a=>{const nt=a.nextTest||a.next_test;if(nt){const d=new Date(nt);if(d>=today&&d<=_remCutoff)_expItems.push({type:'PAT',label:`PAT — ${r.ref_number||r.id.slice(-6).toUpperCase()}`,date:nt,days:Math.round((d-today)/86400000)});}});
+      });
+      // Gas next check
+      (gases||[]).filter(r=>r.status==='completed'&&r.next_check_date).forEach(r=>{
+        const d=parseGasDate(r.next_check_date);if(d&&d>=today&&d<=_remCutoff){const addr=(r.install_address||'').substring(0,30);_expItems.push({type:'Gas',label:`Gas CP12 — ${addr||r.id.slice(-6).toUpperCase()}`,date:r.next_check_date,days:Math.round((d-today)/86400000)});}
+      });
+      // EL — next inspection dates from data
+      elCerts.filter(r=>r.nextInspDate).forEach(r=>{
+        const d=new Date(r.nextInspDate);if(d&&d>=today&&d<=_remCutoff){_expItems.push({type:'EL',label:`EL — ${r.address1||r.premAddr1||r.id||''}`.substring(0,40),date:r.nextInspDate,days:Math.round((d-today)/86400000)});}
+      });
+      const _banner=document.getElementById('expiry-reminder-banner');
+      if(_banner){
+        if(_expItems.length){
+          _expItems.sort((a,b)=>a.days-b.days);
+          _banner.hidden=false;
+          _banner.innerHTML='<strong>🔔 Expiry Reminders</strong> — '+_expItems.length+' certificate'+(1===_expItems.length?'':'s')+' expiring within '+_remDays+' days:<ul style="margin:8px 0 0;padding-left:20px">'+_expItems.slice(0,8).map(i=>`<li style="margin-bottom:3px">${i.label} <span style="color:${i.days<=7?'var(--error)':'var(--muted)'}">(${i.days===0?'today':i.days+' day'+(1===i.days?'':'s')})</span></li>`).join('')+(_expItems.length>8?`<li>…and ${_expItems.length-8} more</li>`:'')+`</ul><button onclick="this.closest('#expiry-reminder-banner').hidden=true" style="margin-top:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0">Dismiss</button>`;
+        }else{_banner.hidden=true;}
+      }
+    }
+  }catch(e){}
 }
 
 // ========== PAT - HELPERS ==========
@@ -3740,6 +3783,13 @@ async function _syncQueue(){
           } else {
             const{data:created}=await sb.from('pat_reports').insert({...d,created_by:item.userId}).select().single();
             if(created&&completed)await sb.from('pat_reports').update({status:'completed',ref_number:refNum,base_ref:baseRef,completed_at:completedAt}).eq('id',created.id);
+          }
+        } else if(item.type==='el_upsert'){
+          const d={...item.form};
+          if(item.supabaseId){
+            await sb.from('el_certs').update({...d,updated_at:new Date().toISOString()}).eq('id',item.supabaseId);
+          } else {
+            await sb.from('el_certs').insert({...d,created_by:item.userId}).select().single();
           }
         }
         await _idbRemove(item.localId);
@@ -7439,7 +7489,7 @@ function _dirForm(type,rec,pf=''){
   if(type==='agents')return row(inp('agency_name','Agency / Company Name','text',true),inp('contact_name','Contact Person'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('cc_emails','CC Emails (comma-separated)'),inp('phone','Telephone','tel'))+row(inp('mobile','Mobile','tel'),inp('addr1','Address Line 1'))+row(inp('addr2','Address Line 2'),inp('town','Town / City'))+row(inp('county','County'),inp('postcode','Postcode'))+ta('notes','Notes');
   if(type==='landlords')return row(inp('landlord_name','Landlord Name','text',true),inp('company_name','Company Name'))+row(inp('email','Email','email'),inp('email2','Secondary Email','email'))+row(inp('cc_emails','CC Emails (comma-separated)'),inp('phone','Telephone','tel'))+row(inp('mobile','Mobile','tel'),inp('addr1','Address Line 1'))+row(inp('addr2','Address Line 2'),inp('town','Town / City'))+row(inp('county','County'),inp('postcode','Postcode'))+ta('notes','Notes');
   if(type==='contacts')return row(inp('name','Full Name','text',true),inp('company','Company'))+row(inp('role','Role / Title'),inp('email','Email','email'))+row(inp('phone','Telephone','tel'),inp('mobile','Mobile','tel'))+ta('notes','Notes');
-  if(type==='properties')return row(inp('addr1','Address Line 1','text',true),inp('addr2','Address Line 2'))+row(inp('town','Town / City'),inp('county','County'))+row(inp('postcode','Postcode','text',true),inp('property_ref','Property Ref (optional)'))+'<div class="field-grid"><div class="field-group"><label>Linked Landlord</label><select id="de-landlord_id" class="form-control"><option value="">— None —</option></select></div><div class="field-group"><label>Linked Agent</label><select id="de-agent_id" class="form-control"><option value="">— None —</option></select></div></div>'+ta('access_notes','Access Notes')+ta('keysafe','Keysafe / Entry Code',1)+ta('notes','Notes');
+  if(type==='properties')return row(inp('addr1','Address Line 1','text',true),inp('addr2','Address Line 2'))+row(inp('town','Town / City'),inp('county','County'))+row(inp('postcode','Postcode','text',true),inp('property_ref','Property Ref (optional)'))+'<div class="field-grid"><div class="field-group"><label>Linked Landlord</label><select id="de-landlord_id" class="form-control"><option value="">— None —</option></select></div><div class="field-group"><label>Linked Agent</label><select id="de-agent_id" class="form-control"><option value="">— None —</option></select></div></div>'+'<div class="field-grid"><div class="field-group"><label>Expiry Reminders</label><select id="de-expiry_reminder" class="form-control"><option value="">Use global setting</option><option value="on">On — always remind</option><option value="off">Off — never remind</option></select><div style="font-size:11px;color:var(--muted);margin-top:3px">Override global reminder setting for this property only</div></div></div>'+ta('access_notes','Access Notes')+ta('keysafe','Keysafe / Entry Code',1)+ta('notes','Notes');
   return'';
 }
 
@@ -7457,6 +7507,8 @@ async function _populateDirSelects(){
     const o=document.createElement('option');o.value=r.id;o.textContent=r.agency_name||r.contact_name||'—';
     if(rec&&rec.agent_id===r.id)o.selected=true;if(as)as.appendChild(o);
   });
+  const erSel=document.getElementById('de-expiry_reminder');
+  if(erSel&&rec&&rec.expiry_reminder)erSel.value=rec.expiry_reminder;
 }
 
 async function saveDirRecord(){
@@ -7465,7 +7517,7 @@ async function saveDirRecord(){
   let data={},pk='';
   if(type==='agents'){pk='agency_name';data={agency_name:gv('agency_name'),contact_name:gv('contact_name'),email:gv('email'),email2:gv('email2'),cc_emails:gv('cc_emails'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
   else if(type==='landlords'){pk='landlord_name';data={landlord_name:gv('landlord_name'),company_name:gv('company_name'),email:gv('email'),email2:gv('email2'),cc_emails:gv('cc_emails'),phone:gv('phone'),mobile:gv('mobile'),addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),notes:gv('notes')};}
-  else if(type==='properties'){pk='addr1';data={addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),property_ref:gv('property_ref'),landlord_id:gv('landlord_id')||null,agent_id:gv('agent_id')||null,access_notes:gv('access_notes'),keysafe:gv('keysafe'),notes:gv('notes')};}
+  else if(type==='properties'){pk='addr1';data={addr1:gv('addr1'),addr2:gv('addr2'),town:gv('town'),county:gv('county'),postcode:gv('postcode').toUpperCase(),property_ref:gv('property_ref'),landlord_id:gv('landlord_id')||null,agent_id:gv('agent_id')||null,expiry_reminder:gv('expiry_reminder')||null,access_notes:gv('access_notes'),keysafe:gv('keysafe'),notes:gv('notes')};}
   else if(type==='contacts'){pk='name';data={name:gv('name'),company:gv('company'),role:gv('role'),email:gv('email'),phone:gv('phone'),mobile:gv('mobile'),notes:gv('notes')};}
   if(!data[pk]){toast('Required field missing','warn');return;}
   // Duplicate check
@@ -7877,6 +7929,7 @@ async function saveApplianceRecord(){
     } else if(s===1){
       html += '<div class="elwiz-q">Premises details</div>';
       html += '<div class="elwiz-sub">Name and address of the property being certified.</div>';
+      html += '<button type="button" onclick="elPickFromDirectory()" style="margin-bottom:12px;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)">📋 Pick from Property Directory</button>';
       html += '<label class="elwiz-input-label">Premises / site name <small style="font-weight:400;color:var(--muted)">(optional)</small></label>';
       html += '<input class="elwiz-input" id="elw-pname" placeholder="e.g. Sunrise Care Home, Flat 3" value="'+esc(_w.premisesName)+'" oninput="elSet(\'premisesName\',this.value)">';
       html += '<label class="elwiz-input-label" style="margin-top:10px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>';
@@ -8238,6 +8291,36 @@ async function saveApplianceRecord(){
 
   window.elSet = function(field, val){ _w[field] = val; };
 
+  window.elPickFromDirectory = async function(){
+    if(!_dir||!_dir.properties){
+      showOverlay('Loading directory…');
+      try{const{data}=await sb.from('properties').select('*').order('addr1').limit(200);_dir.properties=data||[];}
+      catch(e){_dir.properties=[];}
+      finally{hideOverlay();}
+    }
+    var props = (_dir.properties||[]).filter(function(p){return p.is_active!==false;});
+    if(!props.length){toast('No properties in directory yet','warn');return;}
+    var modal = document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9900;display:flex;align-items:center;justify-content:center;padding:16px';
+    var inner = document.createElement('div');
+    inner.style.cssText='background:var(--surface);border-radius:12px;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;box-sizing:border-box';
+    var esc=function(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    inner.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:12px">Pick a Property</div>'
+      +'<input id="dir-pick-search" placeholder="Search address…" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;background:var(--surface2);color:var(--text)" oninput="this.nextElementSibling.querySelectorAll(\'[data-search]\').forEach(function(r){r.style.display=r.dataset.search.toLowerCase().includes(this.value.toLowerCase())?\'\':\'none\';}.bind(this))">'
+      +'<div id="dir-pick-list">'+props.map(function(p){
+        var addr=[p.addr1,p.addr2,p.town,p.postcode].filter(Boolean).join(', ');
+        return '<div data-search="'+esc(addr)+'" onclick="window._elDirPick('+JSON.stringify(p).replace(/</g,'\\u003c').replace(/"/g,'&quot;')+')" style="padding:10px 14px;border-radius:8px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'"><strong>'+esc(p.addr1)+'</strong><span style="color:var(--muted);margin-left:6px">'+esc(p.postcode)+'</span></div>';
+      }).join('')+'</div>'
+      +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="margin-top:12px;padding:8px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">Cancel</button>';
+    modal.appendChild(inner);
+    document.body.appendChild(modal);
+    window._elDirPick = function(p){
+      _w.premAddr1 = p.addr1||''; _w.premAddr2 = p.addr2||''; _w.premAddr3 = p.town||''; _w.premPostcode = p.postcode||'';
+      if(p.notes) _w.premisesName = _w.premisesName || p.addr1;
+      modal.remove(); delete window._elDirPick;
+      elRenderStep();
+    };
+  };
   window.elPickPremType = function(val){
     _w.premisesType = (_w.premisesType === val) ? '' : val;
     elRenderStep();
@@ -8415,6 +8498,17 @@ async function saveApplianceRecord(){
       updated_at:    new Date().toISOString(),
       data:          rec
     };
+    // Offline path — queue in IndexedDB
+    if(!navigator.onLine){
+      row.created_by = row.created_by || currentUser.id;
+      await _idbEnqueue({type:'el_upsert',form:row,supabaseId:editId||null,userId:currentUser.id,ts:Date.now()});
+      _refreshSyncBadge();
+      _elDirty = false;
+      try{localStorage.removeItem('el_autosave');}catch(e){}
+      toast('Saved offline — will sync when online','success');
+      navigate('el-history');
+      return;
+    }
     showOverlay(isEdit ? 'Updating…' : 'Issuing certificate…');
     var savedId, err;
     if(isEdit && editId){
