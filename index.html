@@ -8870,126 +8870,142 @@ async function saveApplianceRecord(){
           calUrl2='https://www.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(_calTitle)+'&dates='+_cf(_rem)+'/'+_cf(_rem2)+'&details='+encodeURIComponent(_calDetails)+'&location='+encodeURIComponent(_loc);
         }
       }catch(_e){}}
+      var _oc = isGood ? '#1e7a4c' : '#b3452e';
+      var _ob = isGood ? '#e6f4ec' : '#faeae7';
+      var _ob2= isGood ? '#c4dfc9' : '#f0c9c0';
       var htmlBody = '<!DOCTYPE html>'
         +'<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-        +'<style>@media only screen and (max-width:600px){.ec-outer{padding:0!important}.ec-card{border-radius:0!important}.ec-two td{display:block!important;width:100%!important;padding-right:0!important;padding-left:0!important;padding-bottom:8px!important}}</style>'
-        +'</head><body style="margin:0;padding:0;background:#e8f0e8;font-family:Arial,Helvetica,sans-serif;color:#1e293b">'
-        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-outer" style="background:#e8f0e8;padding:20px 16px"><tr><td align="center">'
-        +'<table width="600" cellpadding="0" cellspacing="0" border="0" class="ec-card" style="max-width:600px;width:100%;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.13)">'
-        // HEADER
-        +'<tr><td style="padding:20px 26px 18px;border-bottom:3px solid #166534">'
+        +'<style>@media only screen and (max-width:600px){.ec-outer{padding:0!important}.ec-card{border-radius:0!important}.ec-two td{display:block!important;width:100%!important;padding-right:0!important;padding-left:0!important;padding-bottom:6px!important}}</style>'
+        +'</head><body style="margin:0;padding:0;background:#1a2420;font-family:Arial,Helvetica,sans-serif;color:#1e293b">'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-outer" style="background:#1a2420;padding:32px 16px"><tr><td align="center">'
+        +'<table width="600" cellpadding="0" cellspacing="0" border="0" class="ec-card" style="max-width:600px;width:100%;background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.45)">'
+
+        // TOP ACCENT STRIP
+        +'<tr><td style="background:linear-gradient(90deg,#093423,#0e4d33 55%,#b08d2e);height:5px;font-size:0;line-height:0">&nbsp;</td></tr>'
+
+        // HEADER — dark emerald
+        +'<tr><td style="background:#0e4d33;padding:22px 28px 20px">'
           +'<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
-            +'<td style="vertical-align:middle"><div style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:2px">'+_escHtml(coName)+'</div>'
-            +'<div style="font-size:11px;color:#64748b">Emergency Lighting '+certTypeLbl+' · BS 5266-1:2025</div></td>'
-            +'<td align="right" style="vertical-align:middle;padding-left:12px;white-space:nowrap">'
-              +'<span style="display:inline-block;background:#dcfce7;border:1.5px solid #86efac;color:#166534;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;letter-spacing:.04em">&#10003; Certificate Issued</span>'
+            +'<td style="vertical-align:middle">'
+              +'<div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b08d2e;margin-bottom:5px">Emergency Lighting Certificate</div>'
+              +'<div style="font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;margin-bottom:3px">'+_escHtml(coName)+'</div>'
+              +'<div style="font-size:11px;color:rgba(255,255,255,.5)">'+certTypeLbl+' &nbsp;·&nbsp; BS 5266-1:2025</div>'
+            +'</td>'
+            +'<td align="right" style="vertical-align:middle;padding-left:16px;white-space:nowrap">'
+              +'<span style="display:inline-block;background:transparent;border:1.5px solid #b08d2e;color:#b08d2e;font-size:10px;font-weight:700;padding:7px 14px;border-radius:2px;letter-spacing:.08em;text-transform:uppercase">&#10003;&nbsp; Issued</span>'
             +'</td>'
           +'</tr></table>'
         +'</td></tr>'
-        // REF BAR
-        +'<tr><td style="background:#f0fdf4;border-bottom:1px solid #dcfce7;padding:10px 26px">'
+
+        // REF BAR — deep charcoal
+        +'<tr><td style="background:#093423;border-top:1px solid #b08d2e;padding:9px 28px">'
           +'<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
-            +'<td style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#86efac">Certificate Reference</td>'
-            +'<td align="right" style="font-size:14px;font-weight:700;color:#166534;font-family:Courier New,monospace">'+_escHtml(certRef)+'</td>'
+            +'<td style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Certificate Reference</td>'
+            +'<td align="right" style="font-size:13px;font-weight:700;color:#b08d2e;font-family:Courier New,monospace;letter-spacing:.04em">'+_escHtml(certRef)+'</td>'
           +'</tr></table>'
         +'</td></tr>'
-        // BODY
-        +'<tr><td style="padding:22px 26px 0">'
-          +'<p style="font-size:15px;color:#334155;margin:0 0 16px 0">Dear <strong style="color:#0f172a">'+_escHtml(r2.clientName||'Sir/Madam')+'</strong>, your emergency lighting certificate is ready.</p>'
-          // details grid
-          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-two" style="margin-bottom:6px">'
+
+        // GREETING
+        +'<tr><td style="padding:24px 28px 0;border-top:3px solid #b08d2e">'
+          +'<p style="font-size:15px;color:#374151;margin:0 0 20px 0;line-height:1.6">Dear <strong style="color:#0e4d33">'+_escHtml(r2.clientName||'Sir/Madam')+'</strong>,<br>your emergency lighting certificate has been issued and is attached to this email.</p>'
+
+          // DETAIL GRID
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" class="ec-two" style="margin-bottom:4px">'
             +'<tr>'
-              +'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top">'
-                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px">'
-                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Property</div>'
-                  +'<div style="font-size:13px;font-weight:600;color:#1e293b;line-height:1.45">'+(propNameHtml?propNameHtml+'<br>':'')+(propAddrHtml||'—')+'</div>'
+              +'<td width="50%" style="padding-right:4px;padding-bottom:6px;vertical-align:top">'
+                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faf9;border:1px solid #d5e5db;border-left:3px solid #0e4d33;border-radius:2px"><tr><td style="padding:12px 14px">'
+                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0e4d33;margin-bottom:5px">Property</div>'
+                  +'<div style="font-size:13px;font-weight:600;color:#111827;line-height:1.5">'+(propNameHtml?propNameHtml+'<br>':'')+(propAddrHtml||'—')+'</div>'
                 +'</td></tr></table>'
               +'</td>'
-              +'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top">'
-                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px">'
-                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Type</div>'
-                  +'<div style="font-size:13px;font-weight:600;color:#1e293b;line-height:1.45">'+certTypeLbl+'</div>'
+              +'<td width="50%" style="padding-left:4px;padding-bottom:6px;vertical-align:top">'
+                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faf9;border:1px solid #d5e5db;border-left:3px solid #b08d2e;border-radius:2px"><tr><td style="padding:12px 14px">'
+                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b08d2e;margin-bottom:5px">Certificate Type</div>'
+                  +'<div style="font-size:13px;font-weight:600;color:#111827;line-height:1.5">'+certTypeLbl+'</div>'
                 +'</td></tr></table>'
               +'</td>'
             +'</tr>'
             +'<tr>'
-              +'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top">'
-                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px">'
-                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Test Date</div>'
-                  +'<div style="font-size:13px;font-weight:600;color:#1e293b">'+testDtDisp+'</div>'
+              +'<td width="50%" style="padding-right:4px;padding-bottom:6px;vertical-align:top">'
+                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faf9;border:1px solid #d5e5db;border-left:3px solid #0e4d33;border-radius:2px"><tr><td style="padding:12px 14px">'
+                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0e4d33;margin-bottom:5px">Test Date</div>'
+                  +'<div style="font-size:13px;font-weight:600;color:#111827">'+testDtDisp+'</div>'
                 +'</td></tr></table>'
               +'</td>'
-              +'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top">'
-                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid '+(isGood?'#86efac':'#fca5a5')+';background:'+(isGood?'#f0fdf4':'#fef2f2')+';border-radius:7px"><tr><td style="padding:12px 14px">'
-                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:'+(isGood?'#166534':'#b91c1c')+';margin-bottom:4px">Outcome</div>'
-                  +'<div style="font-size:14px;font-weight:700;color:'+(isGood?'#166534':'#b91c1c')+'">&#10003; '+_escHtml(r2.outcome||outcomeRaw)+'</div>'
+              +'<td width="50%" style="padding-left:4px;padding-bottom:6px;vertical-align:top">'
+                +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:'+_ob+';border:1px solid '+_ob2+';border-left:3px solid '+_oc+';border-radius:2px"><tr><td style="padding:12px 14px">'
+                  +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:'+_oc+';margin-bottom:5px">Outcome</div>'
+                  +'<div style="font-size:14px;font-weight:800;color:'+_oc+'">'+( isGood?'&#10003;':'&#9888;' )+' '+_escHtml(r2.outcome||outcomeRaw)+'</div>'
                 +'</td></tr></table>'
               +'</td>'
             +'</tr>'
             +((sysDisp||engDisp)?
             '<tr>'
-              +(sysDisp?'<td width="50%" style="padding-right:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">System</div><div style="font-size:13px;font-weight:600;color:#1e293b">'+sysDisp+'</div></td></tr></table></td>':'<td width="50%"></td>')
-              +(engDisp?'<td width="50%" style="padding-left:5px;padding-bottom:8px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Engineer</div><div style="font-size:13px;font-weight:600;color:#1e293b">'+engDisp+(niceic?' <span style="font-size:11px;background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:2px 7px;border-radius:10px;font-weight:700">NICEIC</span>':'')+'</div></td></tr></table></td>':'<td width="50%"></td>')
+              +(sysDisp?'<td width="50%" style="padding-right:4px;padding-bottom:6px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faf9;border:1px solid #d5e5db;border-left:3px solid #0e4d33;border-radius:2px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0e4d33;margin-bottom:5px">System</div><div style="font-size:13px;font-weight:600;color:#111827">'+sysDisp+'</div></td></tr></table></td>':'<td width="50%"></td>')
+              +(engDisp?'<td width="50%" style="padding-left:4px;padding-bottom:6px;vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8faf9;border:1px solid #d5e5db;border-left:3px solid #b08d2e;border-radius:2px"><tr><td style="padding:12px 14px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b08d2e;margin-bottom:5px">Engineer</div><div style="font-size:13px;font-weight:600;color:#111827">'+engDisp+(niceic?' <span style="font-size:10px;background:#093423;color:#b08d2e;padding:2px 8px;border-radius:2px;font-weight:700;letter-spacing:.04em">NICEIC</span>':'')+'</div></td></tr></table></td>':'<td width="50%"></td>')
             +'</tr>':'')
           +'</table>'
-          // stat tiles
+
+          // STAT TILES — dark
           +(lumTot2?
-          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px"><tr>'
-            +'<td width="33%" style="padding-right:5px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:7px"><tr><td style="padding:14px 8px">'
-              +'<div style="font-size:30px;font-weight:700;color:#0f172a;line-height:1">'+lumTot2+'</div>'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-top:4px">Total</div>'
+          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:18px;margin-top:6px"><tr>'
+            +'<td width="33%" style="padding-right:4px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e4d33;border-radius:2px"><tr><td style="padding:16px 8px">'
+              +'<div style="font-size:34px;font-weight:800;color:#ffffff;line-height:1">'+lumTot2+'</div>'
+              +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:5px">Total</div>'
             +'</td></tr></table></td>'
-            +'<td width="33%" style="padding:0 2px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #86efac;background:#f0fdf4;border-radius:7px"><tr><td style="padding:14px 8px">'
-              +'<div style="font-size:30px;font-weight:700;color:#16a34a;line-height:1">'+lumPass2+'</div>'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#16a34a;margin-top:4px">Passed</div>'
+            +'<td width="33%" style="padding:0 2px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#1e7a4c;border-radius:2px"><tr><td style="padding:16px 8px">'
+              +'<div style="font-size:34px;font-weight:800;color:#ffffff;line-height:1">'+lumPass2+'</div>'
+              +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:5px">Passed</div>'
             +'</td></tr></table></td>'
-            +'<td width="33%" style="padding-left:5px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #fca5a5;background:#fef2f2;border-radius:7px"><tr><td style="padding:14px 8px">'
-              +'<div style="font-size:30px;font-weight:700;color:#ef4444;line-height:1">'+lumFail2+'</div>'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#ef4444;margin-top:4px">Failed</div>'
+            +'<td width="33%" style="padding-left:4px;text-align:center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:'+(lumFail2?'#b3452e':'#4b5563')+';border-radius:2px"><tr><td style="padding:16px 8px">'
+              +'<div style="font-size:34px;font-weight:800;color:#ffffff;line-height:1">'+lumFail2+'</div>'
+              +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:5px">Failed</div>'
             +'</td></tr></table></td>'
           +'</tr></table>':'')
-          // next test due
+
+          // NEXT TEST DUE
           +(nextDtDisp?
-          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #166534;border-radius:8px;background:#f0fdf4;margin-bottom:16px"><tr><td style="padding:16px 20px">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#166534;margin-bottom:4px">Next Test Due</div>'
-            +'<div style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:3px">'+nextDtDisp+'</div>'
-            +'<div style="font-size:12px;color:#475569;margin-bottom:12px">Must be retested by this date — BS 5266-1:2025 compliance</div>'
-            +'<a href="'+calUrl2+'" style="display:inline-block;background:#166534;color:#fff;font-size:12px;font-weight:700;padding:10px 18px;border-radius:6px;text-decoration:none">&#128197; Add to Google Calendar</a>'
+          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#093423;border-radius:2px;margin-bottom:18px"><tr><td style="padding:18px 22px">'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b08d2e;margin-bottom:6px">Next Inspection Due</div>'
+            +'<div style="font-size:24px;font-weight:800;color:#ffffff;margin-bottom:4px">'+nextDtDisp+'</div>'
+            +'<div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:14px">Statutory retest required by this date — BS 5266-1:2025</div>'
+            +'<a href="'+calUrl2+'" style="display:inline-block;background:#b08d2e;color:#fff;font-size:11px;font-weight:700;padding:10px 20px;border-radius:2px;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">&#128197;&nbsp; Add to Calendar</a>'
           +'</td></tr></table>':'')
-          // attachment
-          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc;margin-bottom:20px"><tr>'
-            +'<td style="padding:12px 18px;font-size:22px;vertical-align:middle;width:44px">&#128206;</td>'
-            +'<td style="padding:12px 18px 12px 0;vertical-align:middle;border-left:1px solid #e2e8f0">'
-              +'<div style="font-size:13px;font-weight:600;color:#1e293b">PDF certificate attached</div>'
-              +'<div style="font-size:11px;color:#475569;margin-top:2px">Share with your fire risk assessor, letting agent, or local authority as required.</div>'
+
+          // ATTACHMENT NOTICE
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f6f4;border:1px solid #d5e5db;border-left:3px solid #0e4d33;border-radius:2px;margin-bottom:22px"><tr>'
+            +'<td style="padding:14px 18px;font-size:20px;vertical-align:middle;width:42px;color:#0e4d33">&#128206;</td>'
+            +'<td style="padding:14px 18px 14px 0;vertical-align:middle">'
+              +'<div style="font-size:13px;font-weight:700;color:#111827">PDF certificate attached</div>'
+              +'<div style="font-size:11px;color:#6b7280;margin-top:2px">Share with your fire risk assessor, letting agent, or local authority.</div>'
             +'</td>'
           +'</tr></table>'
-          // contact
-          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;margin-bottom:22px"><tr><td style="padding:16px 18px">'
-            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px">Questions? Contact Us</div>'
-            +'<div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:10px">'+_escHtml(coName)+'</div>'
+
+          // CONTACT BLOCK
+          +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e4d33;border-radius:2px;margin-bottom:24px"><tr><td style="padding:18px 22px">'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b08d2e;margin-bottom:8px">Questions? Contact Us</div>'
+            +'<div style="font-size:16px;font-weight:700;color:#ffffff;margin-bottom:12px">'+_escHtml(coName)+'</div>'
             +(coPhone?
-              '<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px"><tr>'
-                +'<td style="vertical-align:middle;font-size:13px;color:#475569;padding-right:14px">&#128222;&nbsp; <strong style="color:#1e293b">'+_escHtml(coPhone)+'</strong></td>'
-                +'<td style="vertical-align:middle"><a href="tel:'+_escHtml(coPhone.replace(/\s/g,''))+'" style="display:inline-block;background:#166534;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:6px;text-decoration:none;white-space:nowrap">&#128222; Call Now</a></td>'
+              '<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px"><tr>'
+                +'<td style="vertical-align:middle;font-size:13px;color:rgba(255,255,255,.6);padding-right:16px">'+_escHtml(coPhone)+'</td>'
+                +'<td style="vertical-align:middle"><a href="tel:'+_escHtml(coPhone.replace(/\s/g,''))+'" style="display:inline-block;background:#b08d2e;color:#fff;font-size:11px;font-weight:700;padding:9px 18px;border-radius:2px;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Call Now</a></td>'
               +'</tr></table>':'')
-            +(coEmail?'<div style="font-size:13px;color:#475569">&#9993;&nbsp; <a href="mailto:'+_escHtml(coEmail)+'" style="color:#166534;font-weight:600;text-decoration:none">'+_escHtml(coEmail)+'</a></div>':'')
+            +(coEmail?'<div style="font-size:12px;color:rgba(255,255,255,.5)"><a href="mailto:'+_escHtml(coEmail)+'" style="color:#b08d2e;font-weight:600;text-decoration:none">'+_escHtml(coEmail.toUpperCase())+'</a></div>':'')
           +'</td></tr></table>'
+
         +'</td></tr>'
+
         // FOOTER
-        +'<tr><td style="border-top:1px solid #e2e8f0">'
-          +'<table width="100%" cellpadding="0" cellspacing="0" border="0">'
-            +'<tr><td style="background:#f1f5f9;padding:14px 26px 16px">'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Ownership</div>'
-              +'<div style="font-size:11px;color:#94a3b8;line-height:1.7;margin-bottom:10px">This certificate remains the property of '+_escHtml(coName)+' until payment for the associated works has been received in full.</div>'
-              +'<div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:4px">Certificate Integrity</div>'
-              +'<div style="font-size:11px;color:#94a3b8;line-height:1.7">Forging, altering or reproducing this certificate without written permission is unlawful and may result in prosecution.</div>'
-            +'</td></tr>'
-            +'<tr><td style="padding:12px 26px 16px;text-align:center;font-size:10px;color:#94a3b8;line-height:1.8">'
-              +_escHtml(coName)+'<br>This email was generated automatically upon certificate completion.'
-            +'</td></tr>'
-          +'</table>'
+        +'<tr><td style="background:#093423;border-top:1px solid #b08d2e;padding:16px 28px 12px">'
+          +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b08d2e;margin-bottom:3px">Certificate Ownership</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.35);line-height:1.7;margin-bottom:10px">This certificate remains the property of '+_escHtml(coName)+' until payment for the associated works has been received in full.</div>'
+          +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b08d2e;margin-bottom:3px">Certificate Integrity</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.35);line-height:1.7">Forging, altering or reproducing this certificate without written permission is unlawful and may result in prosecution.</div>'
         +'</td></tr>'
+        +'<tr><td style="background:#061a10;padding:12px 28px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);line-height:1.8">'
+          +_escHtml(coName)+' &nbsp;·&nbsp; Generated automatically upon certificate completion.'
+        +'</td></tr>'
+
         +'</table></td></tr></table>'
         +'</body></html>';
 
