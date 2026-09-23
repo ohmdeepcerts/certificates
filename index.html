@@ -1433,6 +1433,7 @@ a{color:var(--accent);text-decoration:none}
           <div class="sig-modal-hint">Use your finger or mouse to sign in the box below</div>
           <canvas id="sigModalCanvas" width="700" height="200"></canvas>
           <div class="sig-modal-actions">
+            <button class="btn btn-secondary btn-sm" onclick="undoCP12SigModal()">↩ Undo</button>
             <button class="btn btn-secondary btn-sm" onclick="clearCP12SigModal()">Clear</button>
             <button class="btn btn-secondary btn-sm" onclick="closeCP12SigModal()">Cancel</button>
             <button class="btn btn-primary btn-sm" onclick="confirmCP12SigModal()">Confirm Signature</button>
@@ -3880,6 +3881,7 @@ function _doPatPreviewNow(){
   const coPhone=getSetting('pat_co_phone',''),coEmail=getSetting('pat_co_email','');
   const coAddr=getSetting('pat_co_address',''),coWeb=getSetting('pat_co_website','');
   const coVat=getSetting('pat_co_vat',''),coReg=getSetting('pat_co_regno','');
+  const niceic=getSetting('niceic_no','');
   const certTitle=getSetting('pat_cert_title','PORTABLE APPLIANCE TEST REPORT');
   const regText=getSetting('pat_reg_text','Electricity at Work Regulations 1989');
   const cop=getSetting('pat_cop','IET Code of Practice (5th Edition)');
@@ -3930,7 +3932,8 @@ function _doPatPreviewNow(){
         +`<div class="a4-meta">${leftColHtml}`
         +`<div class="a4-box"><div class="a4-key">Testing Company</div>`
         +`<div class="a4-val" style="font-weight:700;margin-bottom:2px">${patEsc(coName)}</div>`
-        +`<div style="font-size:.78rem;color:#64748b;white-space:pre-line;margin-bottom:5px">${patEsc(coAddr)}</div>`
+        +`<div style="font-size:.78rem;color:#64748b;white-space:pre-line;margin-bottom:${niceic?'2px':'5px'}">${patEsc(coAddr)}</div>`
+        +`${niceic?`<div style="font-size:.72rem;font-weight:700;color:#1e3a5f;margin-bottom:4px;letter-spacing:.3px">NICEIC: ${patEsc(niceic)}</div>`:''}`
         +`<div style="display:flex;gap:6px;margin-top:2px">`
         +`<div style="flex:1;border:1px solid #cbd5e1;border-radius:4px;background:rgba(255,255,255,.55);padding:6px 8px">`
         +`<div style="font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:6px">Supervisor</div>`
@@ -4446,15 +4449,22 @@ function oneYearMinusOneDayUK(val){
 function initCP12SigPad(canvas){
   if(!canvas||canvas._cp12Init)return;
   canvas._cp12Init=true;
+  canvas._sigHistory=[];
   const ctx=canvas.getContext('2d');let drawing=false,lx=0,ly=0;
   ctx.strokeStyle='#1e3a5f';ctx.lineWidth=2;ctx.lineCap='round';
   const pos=e=>{const r=canvas.getBoundingClientRect();const cl=e.touches?e.touches[0]:e;return{x:(cl.clientX-r.left)*(canvas.width/r.width),y:(cl.clientY-r.top)*(canvas.height/r.height)};};
-  canvas.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);lx=p.x;ly=p.y;});
+  const _snap=()=>{if(canvas._sigHistory.length>=20)canvas._sigHistory.shift();canvas._sigHistory.push(ctx.getImageData(0,0,canvas.width,canvas.height));};
+  canvas.addEventListener('mousedown',e=>{_snap();drawing=true;const p=pos(e);lx=p.x;ly=p.y;});
   canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;});
   canvas.addEventListener('mouseup',()=>drawing=false);
-  canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);lx=p.x;ly=p.y;},{passive:false});
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();_snap();drawing=true;const p=pos(e);lx=p.x;ly=p.y;},{passive:false});
   canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;},{passive:false});
   canvas.addEventListener('touchend',()=>drawing=false);
+}
+function undoCP12SigModal(){
+  const mc=document.getElementById('sigModalCanvas');
+  if(!mc||!mc._sigHistory||!mc._sigHistory.length)return;
+  mc.getContext('2d').putImageData(mc._sigHistory.pop(),0,0);
 }
 let cp12SigModalField=null;
 function openCP12SigModal(fieldKey,titleText){
@@ -5598,14 +5608,20 @@ function mgwSetToggle(mgwKey,val){
 function mgwOnTypeChange(slot){
   const el=document.getElementById(`mgw-a${slot}-type`);
   if(!el)return;
-  const type=el.value.toLowerCase();
-  const isCookerHob=/cooker|hob/.test(type);
-  if(isCookerHob){
+  const t=el.value.toLowerCase();
+  const isCooker=/cooker|hob|range|dryer/.test(t);
+  const isOpenFlue=/fire|back\s*boiler/.test(t);
+  const isRS=/combi|system\s*boiler|condensing|warm\s*air|water\s*heater|boiler/.test(t)&&!isOpenFlue;
+  if(isCooker){
     mgwSetToggle(`a${slot}-co-fitted`,'N/A');
     mgwSetToggle(`a${slot}-co-date`,'N/A');
     mgwSetToggle(`a${slot}-co-test`,'N/A');
     mgwSetToggle(`a${slot}-flueflow`,'N/A');
     mgwSetToggle(`a${slot}-vent`,'N/A');
+  }else if(isRS){
+    mgwSetToggle(`a${slot}-flue-type`,'RS');
+  }else if(isOpenFlue){
+    mgwSetToggle(`a${slot}-flue-type`,'OF');
   }
 }
 
@@ -5948,16 +5964,18 @@ function gwSetPipe(i,v){_gw.pipework[i]=v;gwRender();}
 function gwSetApp(i,f,v){if(_gw.appliances[i])_gw.appliances[i][f]=v;}
 function gwAutoFlue(i,typeVal){
   var t=(typeVal||'').toLowerCase();
-  var ft=null;
-  if(/boiler/.test(t))ft='RS';
-  else if(/cooker|hob/.test(t))ft='FL';
+  var ft=null,combN_A=false;
+  if(/back\s*boiler/.test(t)){ft='OF';combN_A=false;}
+  else if(/combi|system\s*boiler|condensing|warm\s*air|water\s*heater|boiler/.test(t)){ft='RS';combN_A=false;}
+  else if(/fire|open\s*fire/.test(t)){ft='OF';combN_A=false;}
+  else if(/cooker|hob|range|dryer/.test(t)){ft='FL';combN_A=true;}
   if(!ft||!_gw.appliances[i])return;
-  var changed=_gw.appliances[i].flueType!==ft;
-  _gw.appliances[i].flueType=ft;
-  if(ft==='RS'&&_gw.appliances[i].combustionReading==='N/A'){
-    _gw.appliances[i].combustionReading='';changed=true;
-  }else if(ft==='FL'){
-    _gw.appliances[i].combustionReading='N/A';changed=true;
+  var changed=false;
+  if(_gw.appliances[i].flueType!==ft){_gw.appliances[i].flueType=ft;changed=true;}
+  if(combN_A){
+    if(_gw.appliances[i].combustionReading!=='N/A'){_gw.appliances[i].combustionReading='N/A';changed=true;}
+  }else{
+    if(_gw.appliances[i].combustionReading==='N/A'){_gw.appliances[i].combustionReading='';changed=true;}
   }
   if(changed)gwRender();
 }
@@ -7514,8 +7532,10 @@ async function saveApplianceRecord(){
 
   window.startNewEL = function(){
     _elDirty = false;
+    var _prevSaved = null;
+    try{var _ps=localStorage.getItem('el_autosave');if(_ps){_prevSaved=JSON.parse(_ps);if(!_prevSaved||!_prevSaved.certType)_prevSaved=null;}}catch(e){}
     _w = {
-      step: 0,
+      step: 0, _savedDraft: _prevSaved || null,
       certType: '',
       premisesName: '',
       premisesAddress: '',
@@ -7572,6 +7592,7 @@ async function saveApplianceRecord(){
 
   window.elRenderStep = function(){
     if(_w && _w.step > 0) _elDirty = true;
+    if(_w && (_w.step > 0 || _w.certType)){try{var _ws=Object.assign({},_w);delete _ws._savedDraft;localStorage.setItem('el_autosave',JSON.stringify(_ws));}catch(e){}}
     var body = document.getElementById('el-wizard-body');
     if(!body) return;
     var s = _w.step;
@@ -7580,6 +7601,10 @@ async function saveApplianceRecord(){
 
     var html = '<div class="elwiz-progress"><div class="elwiz-progress-bar" style="width:'+pct+'%"></div></div>';
     html += '<div class="elwiz-step">';
+
+    if(s===0 && _w._savedDraft){
+      html += '<div style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:700;color:#1e40af;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">💾 Unsaved EL cert found — restore it?<button onclick="elRestoreAutosave()" style="margin-left:auto;background:#3b82f6;color:#fff;border:none;padding:4px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Restore</button><button onclick="elDiscardAutosave()" style="background:none;color:#6b7280;border:1px solid #d1d5db;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">Discard</button></div>';
+    }
 
     if(s===0){
       html += '<div class="elwiz-q">Which type of certificate?</div>';
@@ -8146,6 +8171,7 @@ async function saveApplianceRecord(){
     hideOverlay();
     if(err){ toast('Save failed: '+err.message,'error'); return; }
     _elDirty = false;
+    try{localStorage.removeItem('el_autosave');}catch(e){}
     rec.id = savedId;
     toast((isEdit?'Certificate updated — ':'EL Certificate issued — ')+rec.ref,'success',3000);
     var _admin = currentProfile && currentProfile.role === 'admin';
@@ -8157,6 +8183,15 @@ async function saveApplianceRecord(){
     var rec = Object.assign({}, _w, {id:'preview_'+Date.now(), savedAt: new Date().toISOString()});
     delete rec._editId;
     elOpenCert(rec);
+  };
+
+  window.elRestoreAutosave = function(){
+    if(_w._savedDraft){_w=Object.assign({},_w._savedDraft,{step:0});_elDirty=true;elRenderStep();}
+  };
+  window.elDiscardAutosave = function(){
+    try{localStorage.removeItem('el_autosave');}catch(e){}
+    _w._savedDraft=null;
+    elRenderStep();
   };
 
   window.elEditCert = function(r){
