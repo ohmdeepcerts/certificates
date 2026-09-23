@@ -1117,7 +1117,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- PAT HISTORY -->
     <div class="view" id="view-pat-history">
-      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div>
+      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportPATCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div></div>
       <div class="list-controls">
         <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
         <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
@@ -1141,6 +1141,7 @@ a{color:var(--accent);text-decoration:none}
           <option value="">All Types</option>
           <option value="pat">PAT Only</option>
           <option value="gas">Gas Only</option>
+          <option value="el">EL Only</option>
         </select>
         <select id="comp-urgency" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="60">Due in 60 days</option>
@@ -1446,7 +1447,7 @@ a{color:var(--accent);text-decoration:none}
 
     <!-- GAS HISTORY -->
     <div class="view" id="view-gas-history">
-      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New Gas</button></div>
+      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportGasCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New Gas</button></div></div>
       <div class="list-controls">
         <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
         <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
@@ -2016,8 +2017,13 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
 
     <!-- AUDIT -->
     <div class="view" id="view-audit">
-      <div class="view-header"><div><div class="view-title">Audit Log</div><div class="view-subtitle">All system activity</div></div></div>
+      <div class="view-header"><div><div class="view-title">Audit Log</div><div class="view-subtitle" id="audit-subtitle">All system activity</div></div></div>
       <div id="audit-list"><div class="empty-state"><div class="empty-icon">📄</div><p>Loading…</p></div></div>
+      <div id="audit-pagination" hidden style="display:flex;align-items:center;gap:10px;justify-content:center;padding:16px 0;font-size:13px">
+        <button class="btn btn-secondary btn-sm" id="audit-prev-btn" onclick="prevAuditPage()">← Prev</button>
+        <span id="audit-page-label" style="color:var(--muted)"></span>
+        <button class="btn btn-secondary btn-sm" id="audit-next-btn" onclick="nextAuditPage()">Next →</button>
+      </div>
     </div>
 
     <!-- STAFF -->
@@ -2091,7 +2097,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
     <div class="view" id="view-el-history">
       <div class="view-header">
         <div><div class="view-title">EL Certificates</div><div class="view-subtitle">Emergency Lighting history</div></div>
-        <button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportELCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button></div>
       </div>
       <div class="list-controls">
         <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList()">
@@ -3807,9 +3813,10 @@ async function loadCompliance(){
   if(el)el.innerHTML='<div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div>';
   const today=new Date();
   const items=[];
-  const[{data:pats},{data:gases}]=await Promise.all([
+  const[{data:pats},{data:gases},{data:els}]=await Promise.all([
     sb.from('pat_reports').select('id,ref_number,property_address,appliances,engineer').eq('status','completed'),
-    sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer,cert_date').eq('status','completed')
+    sb.from('gas_certs').select('id,ref_number,install_address,next_check_date,engineer,cert_date').eq('status','completed'),
+    sb.from('el_certs').select('id,ref_number,data,created_at').order('created_at',{ascending:false})
   ]);
   (pats||[]).forEach(r=>{
     const dates=(r.appliances||[]).map(a=>{const nd=a.nextTest||a.next_test;return nd?new Date(nd):null;}).filter(Boolean);
@@ -3822,6 +3829,13 @@ async function loadCompliance(){
     if(!r.next_check_date)return;
     const d=parseGasDate(r.next_check_date);if(!d)return;
     items.push({type:'gas',id:r.id,ref:r.ref_number||'—',address:r.install_address||'—',engineer:r.engineer||'—',label:'Annual Gas Safety Check',assetId:'',certDate:r.cert_date||'',due:d,overdue:d<today,daysLeft:Math.round((d-today)/86400000)});
+  });
+  (els||[]).forEach(r=>{
+    const d=r.data||{};const nd=d.nextTestDate||'';if(!nd)return;
+    const parts=nd.split('/');if(parts.length!==3)return;
+    const due=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));if(isNaN(due))return;
+    const addr=[d.premAddr1,d.premAddr2,d.premAddr3,d.premPostcode].filter(Boolean).join(', ')||d.premisesAddress||'—';
+    items.push({type:'el',id:r.id,ref:r.ref_number||d.ref||'—',address:addr,engineer:d.engineerName||'—',label:(d.certType||'EL')+' Certificate',assetId:'',certDate:d.testDate||'',due,overdue:due<today,daysLeft:Math.round((due-today)/86400000)});
   });
   _compAll=items;
   const compBadge=document.getElementById('compliance-badge');
@@ -3849,7 +3863,7 @@ function filterCompliance(){
   const thisWeek=items.filter(i=>!i.overdue&&i.daysLeft<=7).length;
   const thisMonth=items.filter(i=>!i.overdue&&i.daysLeft>7&&i.daysLeft<=30).length;
   const sub=document.getElementById('comp-subtitle');
-  if(sub)sub.textContent=`${_compAll.length} total items across PAT and Gas · ${_compAll.filter(i=>i.overdue).length} overdue`;
+  if(sub)sub.textContent=`${_compAll.length} total items across PAT, Gas & EL · ${_compAll.filter(i=>i.overdue).length} overdue`;
   const summary=document.getElementById('comp-summary');
   if(summary&&items.length){
     summary.innerHTML=`<span style="color:var(--error);font-weight:600">⚠ ${overdue} overdue</span><span style="color:#92400e;font-weight:600">⏰ ${thisWeek} this week</span><span style="color:var(--muted)">📅 ${thisMonth} this month</span><span style="color:var(--muted);margin-left:auto">${items.length} shown</span>`;
@@ -3860,9 +3874,9 @@ function filterCompliance(){
     const dStr=i.due.toLocaleDateString('en-GB');
     const urgClass=i.overdue?'overdue':i.daysLeft<=7?'urgent':'due';
     const urgLabel=i.overdue?`OVERDUE ${Math.abs(i.daysLeft)}d ago`:i.daysLeft===0?'TODAY':i.daysLeft===1?'Tomorrow':'Due '+dStr;
-    const typeBadge=i.type==='pat'?`<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">📋 PAT</span>`:`<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">🔥 Gas</span>`;
-    const meta=i.type==='pat'?`${i.label}${i.assetId?' · Asset: '+i.assetId:''}`:i.certDate?`Last cert: ${i.certDate}`:'Annual Gas Safety Check';
-    const action=i.type==='pat'?`<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>`:`<button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New Gas</button>`;
+    const typeBadge=i.type==='pat'?`<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">📋 PAT</span>`:i.type==='el'?`<span style="background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">⚡ EL</span>`:`<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">🔥 Gas</span>`;
+    const meta=i.type==='pat'?`${i.label}${i.assetId?' · Asset: '+i.assetId:''}`:i.certDate?`Last cert: ${i.certDate}`:i.label||'Annual Safety Check';
+    const action=i.type==='pat'?`<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>`:i.type==='el'?`<button class="btn btn-primary btn-sm" onclick="startNewEL()">New EL</button>`:`<button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">New Gas</button>`;
     return`<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${typeBadge}<span class="cert-ref">${i.ref}</span><span class="badge badge-${urgClass}">${urgLabel}</span></div><div class="cert-address">${i.address}</div><div class="cert-meta">${meta} · Engineer: ${i.engineer}</div></div>${action}</div>`;
   }).join('');
 }
@@ -6329,6 +6343,34 @@ function clearSig(canvasId){const canvas=document.getElementById(canvasId);if(ca
 function getCanvasDataURL(canvasId){const c=document.getElementById(canvasId);if(!c)return null;const ctx=c.getContext('2d');const imageData=ctx.getImageData(0,0,c.width,c.height);const hasContent=imageData.data.some((v,i)=>i%4!==3&&v!==0);return hasContent?c.toDataURL('image/png'):null;}
 function restoreSig(canvasId,dataUrl){if(!dataUrl)return;const canvas=document.getElementById(canvasId);if(!canvas)return;const img=new Image();img.onload=()=>canvas.getContext('2d').drawImage(img,0,0);img.src=dataUrl;}
 
+// ========== CSV EXPORT ==========
+function _csvEsc(v){const s=String(v??'');return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;}
+function _csvDownload(filename,rows){
+  const blob=new Blob([rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+function exportPATCSV(){
+  if(!patReports||!patReports.length){toast('No PAT records to export','warn');return;}
+  const rows=[['Ref','Status','Test Date','Engineer','Property Address','Appliances','Next Due'].map(_csvEsc).join(',')];
+  patReports.forEach(r=>{
+    const due=(r.appliances||[]).map(a=>a.nextTest||a.next_test||'').filter(Boolean).sort()[0]||'';
+    rows.push([r.ref_number||'',r.status||'',r.test_date||'',r.engineer||'',r.property_address||'',(r.appliances||[]).length,due].map(_csvEsc).join(','));
+  });
+  _csvDownload('pat-history-'+(new Date().toISOString().slice(0,10))+'.csv',rows);
+}
+function exportGasCSV(){
+  if(!gasReports||!gasReports.length){toast('No Gas records to export','warn');return;}
+  const rows=[['Ref','Status','Cert Date','Engineer','Install Address','Next Check Date'].map(_csvEsc).join(',')];
+  gasReports.forEach(r=>{rows.push([r.ref_number||'',r.status||'',r.cert_date||'',r.engineer||'',r.install_address||'',r.next_check_date||''].map(_csvEsc).join(','));});
+  _csvDownload('gas-history-'+(new Date().toISOString().slice(0,10))+'.csv',rows);
+}
+function exportELCSV(){
+  if(!_elAllCerts||!_elAllCerts.length){toast('No EL records to export','warn');return;}
+  const rows=[['Ref','Type','Test Date','Outcome','Premises','Engineer'].map(_csvEsc).join(',')];
+  _elAllCerts.forEach(r=>{rows.push([(r.data&&r.data.ref)||r.ref_number||'',(r.data&&r.data.certType)||r.cert_type||'',(r.data&&r.data.testDate)||r.test_date||'',(r.data&&r.data.outcome)||r.outcome||'',(r.data&&r.data.premAddr1)||r.premises_name||'',(r.data&&r.data.engineerName)||''].map(_csvEsc).join(','));});
+  _csvDownload('el-history-'+(new Date().toISOString().slice(0,10))+'.csv',rows);
+}
+
 // ========== AUDIT LOG ==========
 async function logAppEvent(eventType,certType,certId,certRef,extra={}){
   try{
@@ -6346,13 +6388,25 @@ async function logAppEvent(eventType,certType,certId,certRef,extra={}){
     if(error)console.warn('[audit]',eventType,error.message);
   }catch(e){console.warn('[audit]',eventType,e);}
 }
+let _auditAll=[],_auditPage=0;
+const _AUDIT_PER_PAGE=50;
 async function loadAuditLog(){
-  const{data,error}=await sb.from('audit_events').select('*').order('created_at',{ascending:false}).limit(500);
   const el=document.getElementById('audit-list');
+  if(el)el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>Loading…</p></div>';
+  const{data,error}=await sb.from('audit_events').select('*').order('created_at',{ascending:false}).limit(1000);
   if(error){el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠</div><p>${error.message}</p></div>`;return;}
   if(!data||!data.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📄</div><p>No audit entries yet</p></div>';return;}
+  _auditAll=data;_auditPage=0;
+  renderAuditPage();
+}
+function renderAuditPage(){
+  const el=document.getElementById('audit-list');if(!el)return;
+  const total=_auditAll.length,pages=Math.ceil(total/_AUDIT_PER_PAGE);
+  const start=_auditPage*_AUDIT_PER_PAGE;
+  const data=_auditAll.slice(start,start+_AUDIT_PER_PAGE);
   const colors={CREATED:'#10b981',UPDATED_DRAFT:'#6366f1',ISSUED:'#f59e0b',SUPERSEDED:'#8b5cf6',DELETED:'#ef4444',PDF_DOWNLOADED:'#3b82f6',EMAILED:'#06b6d4',SERIAL_GAP_NOTED:'#f97316'};
-  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+  el.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Showing ${start+1}–${Math.min(start+data.length,total)} of ${total} events</div>`
+    +`<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="border-bottom:2px solid var(--border)">
       <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Time</th>
       <th style="text-align:left;padding:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Event</th>
@@ -6376,7 +6430,17 @@ async function loadAuditLog(){
       </tr>`;
     }).join('')}</tbody>
   </table>`;
+  const pg=document.getElementById('audit-pagination');
+  const lbl=document.getElementById('audit-page-label');
+  const prev=document.getElementById('audit-prev-btn');
+  const next=document.getElementById('audit-next-btn');
+  if(pg){pg.hidden=pages<=1;pg.style.display=pages>1?'flex':'';}
+  if(lbl)lbl.textContent=`Page ${_auditPage+1} of ${pages}`;
+  if(prev)prev.disabled=_auditPage===0;
+  if(next)next.disabled=_auditPage>=pages-1;
 }
+function prevAuditPage(){if(_auditPage>0){_auditPage--;renderAuditPage();document.getElementById('audit-list').scrollIntoView({behavior:'smooth'});}}
+function nextAuditPage(){if(_auditPage<Math.ceil(_auditAll.length/_AUDIT_PER_PAGE)-1){_auditPage++;renderAuditPage();document.getElementById('audit-list').scrollIntoView({behavior:'smooth'});}}
 
 // ========== UTILITIES ==========
 function _fmtGasDate(s){if(!s)return'';const p=parseGasDate(s);if(!p||isNaN(p))return s;return p.toLocaleDateString('en-GB');}
@@ -9192,8 +9256,9 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     hideOverlay();
     if(res.error){ toast('Load failed: '+res.error.message,'error'); return; }
     _elAllCerts = (res.data||[]).map(function(row){
-      return Object.assign({}, row.data||{}, {id: row.id});
+      return Object.assign({}, row.data||{}, {id: row.id, cert_type: row.cert_type, test_date: row.test_date, outcome: row.outcome, ref_number: row.ref_number, premises_name: row.premises_name});
     });
+    window._elAllCerts = _elAllCerts;
     renderELList(_elAllCerts);
   };
 
