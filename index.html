@@ -926,6 +926,7 @@ a{color:var(--accent);text-decoration:none}
       <div class="nav-section">
         <div class="nav-section-label">Compliance</div>
         <div class="nav-item" data-view="compliance" onclick="navigate('compliance')"><span class="nav-icon">⚠</span>Renewals &amp; Expiry <span id="compliance-badge" class="nav-badge" hidden>0</span></div>
+        <div class="nav-item" data-view="analytics" onclick="navigate('analytics')"><span class="nav-icon">📊</span>Analytics</div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Coming Soon</div>
@@ -939,6 +940,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="nav-item" data-view="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</div>
         <div class="nav-item" id="audit-nav" data-view="audit" onclick="navigate('audit')" style="display:none"><span class="nav-icon">📄</span>Audit Log</div>
         <div class="nav-item" id="staff-nav" data-view="staff" onclick="navigate('staff')" style="display:none"><span class="nav-icon">👥</span>Staff</div>
+        <div class="nav-item" id="recycle-nav" data-view="recycle-bin" onclick="navigate('recycle-bin')" style="display:none"><span class="nav-icon">🗑️</span>Recycle Bin</div>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -1925,6 +1927,20 @@ a{color:var(--accent);text-decoration:none}
           <div id="backfill-result" style="margin-top:12px;font-size:13px"></div>
         </div>
 
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">👥 Sub-Account Defaults</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Default role for new sign-ups</label>
+              <select id="s-default-role" class="form-control"><option value="engineer">Engineer (standard access)</option><option value="admin">Admin (full access)</option><option value="readonly">Read-only</option></select>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">When a new user requests access, they are assigned this role on approval</div>
+            </div>
+            <div class="field-group"><label>Default permissions for new engineers</label>
+              <select id="s-default-permissions" class="form-control"><option value="">All certificates (PAT, Gas, EL)</option><option value="pat">PAT only</option><option value="gas">Gas only</option><option value="el">EL only</option><option value="pat,gas">PAT + Gas</option><option value="pat,el">PAT + EL</option><option value="gas,el">Gas + EL</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveSubAccountDefaults()">Save Defaults</button>
+        </div>
+
         <div class="form-section" style="margin-top:16px" id="staff-sql-section">
           <div class="form-section-title">👥 Staff Setup — One-Time SQL Migration</div>
           <div style="background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.6">
@@ -2007,7 +2023,12 @@ CREATE POLICY "Admin update requests" ON public.staff_requests
 
 -- Step 7: Drop role check constraint + add permissions column (run if upgrading)
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL DEFAULT '';</pre>
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL DEFAULT '';
+
+-- Step 8: Soft-delete support — add deleted_at to all certificate tables
+ALTER TABLE public.pat_reports ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.gas_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pre>
             <button class="btn btn-secondary btn-sm" onclick="copyStaffSQL()" style="position:absolute;top:10px;right:10px;font-size:11px" id="copy-sql-btn">📋 Copy</button>
           </div>
         </div>
@@ -2082,6 +2103,24 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL D
         <div id="pending-requests-list"></div>
       </div>
       <div id="staff-list"><div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- RECYCLE BIN (admin only) -->
+    <div class="view" id="view-recycle-bin">
+      <div class="view-header">
+        <div><div class="view-title">Recycle Bin</div><div class="view-subtitle">Soft-deleted certificates — restore or permanently purge</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadRecycleBin()">↺ Refresh</button>
+      </div>
+      <div id="recycle-bin-list"><div class="empty-state"><div class="empty-icon">🗑️</div><p>Recycle Bin is empty</p></div></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="view" id="view-analytics">
+      <div class="view-header">
+        <div><div class="view-title">Analytics</div><div class="view-subtitle">Certificate volumes, completion rates and trends</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadAnalytics()">↺ Refresh</button>
+      </div>
+      <div id="analytics-content"><div class="empty-state"><div class="empty-icon">📊</div><p>Loading…</p></div></div>
     </div>
 
     <!-- DIRECTORY -->
@@ -2477,6 +2516,7 @@ function applySidebarPermissions(role){
   secVis('System',hasFull);
   document.getElementById('audit-nav').style.display=isAdmin?'flex':'none';
   document.getElementById('staff-nav').style.display=isAdmin?'flex':'none';
+  const _rnEl=document.getElementById('recycle-nav');if(_rnEl)_rnEl.style.display=isAdmin?'flex':'none';
 }
 function canNavigate(view){
   if(!currentProfile)return true;
@@ -2531,6 +2571,8 @@ function _doNavigate(view){
   else if(view==='settings')loadSettingsUI();
   else if(view==='audit')loadAuditLog();
   else if(view==='staff')loadStaff();
+  else if(view==='recycle-bin')loadRecycleBin();
+  else if(view==='analytics')loadAnalytics();
   else if(view==='directory')renderDirectoryPage();
   else if(view==='appliances')renderAppliancesPage();
   else if(view==='el-new'){elRenderStep();}
@@ -2762,7 +2804,15 @@ function approveRequest(requestId,name,email){
   // Pre-fill Add Staff modal with requester's details
   document.getElementById('add-staff-name').value=name;
   document.getElementById('add-staff-email').value=email;
-  document.getElementById('add-staff-role').value='engineer';
+  // Apply default role/permissions from sub-account defaults
+  const defRole=getSetting('default_new_role','engineer');
+  const defPerm=getSetting('default_new_permissions','');
+  document.getElementById('add-staff-role').value=defRole;
+  if(defRole==='engineer'&&defPerm){
+    const ps=defPerm.split(',');
+    const pe=document.getElementById('add-perm-pat');const pg=document.getElementById('add-perm-gas');const pl=document.getElementById('add-perm-el');
+    if(pe)pe.checked=ps.includes('pat');if(pg)pg.checked=ps.includes('gas');if(pl)pl.checked=ps.includes('el');
+  }
   document.getElementById('add-staff-pw').value='';
   document.getElementById('add-staff-error').textContent='';
   // Tag the modal with the request ID so doAddStaff can mark it approved
@@ -2830,6 +2880,27 @@ function toast(msg,type='info',duration=null){
 }
 function openModal(id){document.getElementById(id).classList.remove('hidden');}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function _isAdminUser(){return (currentProfile?.role||'engineer')==='admin';}
+async function _softDelete(tbl,id,afterFn){
+  const isAdmin=_isAdminUser();
+  const ts=new Date().toISOString();
+  if(isAdmin){
+    // Hard delete immediately
+    const{error}=await sb.from(tbl).delete().eq('id',id);
+    if(error){toast('Delete failed: '+error.message,'error');return;}
+    toast('Permanently deleted','warn');
+  } else {
+    // Soft delete — mark deleted_at
+    const{error}=await sb.from(tbl).update({deleted_at:ts,updated_at:ts}).eq('id',id);
+    if(error){
+      // Fallback: hard delete if column doesn't exist yet
+      const{error:hErr}=await sb.from(tbl).delete().eq('id',id);
+      if(hErr){toast('Delete failed: '+hErr.message,'error');return;}
+    }
+    toast('Moved to Recycle Bin','warn');
+  }
+  if(afterFn)afterFn();
+}
 function confirm2(title,msg,cb){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-msg').textContent=msg;
@@ -3013,6 +3084,8 @@ function loadSettingsUI(){
   document.getElementById('s-profile-gas').value=currentProfile?.gas_safe_no||'';
   document.getElementById('s-profile-licence').value=currentProfile?.licence_no||'';
   document.getElementById('s-app-name').value=getSetting('app_name','');
+  const _drEl=document.getElementById('s-default-role');if(_drEl)_drEl.value=getSetting('default_new_role','engineer');
+  const _dpEl=document.getElementById('s-default-permissions');if(_dpEl)_dpEl.value=getSetting('default_new_permissions','');
   // Highlight active theme button
   const _at=localStorage.getItem('app_theme')||'system';
   ['system','light','dark'].forEach(m=>{const b=document.getElementById('theme-btn-'+m);if(b){b.style.background=m===_at?'var(--accent)':'';b.style.color=m===_at?'#fff':'';b.style.borderColor=m===_at?'var(--accent)':'';}});
@@ -3226,6 +3299,118 @@ async function runSerialGapCheck(){
 }
 
 // ========== GLOBAL SEARCH ==========
+async function saveSubAccountDefaults(){
+  const role=(document.getElementById('s-default-role')||{value:'engineer'}).value||'engineer';
+  const perm=(document.getElementById('s-default-permissions')||{value:''}).value||'';
+  await Promise.all([upsertSetting('default_new_role',role),upsertSetting('default_new_permissions',perm)]);
+  toast('Sub-account defaults saved','success');
+}
+
+// ========== RECYCLE BIN ==========
+async function loadRecycleBin(){
+  if(!_isAdminUser()){toast('Admin access required','warn');return;}
+  const el=document.getElementById('recycle-bin-list');
+  if(!el)return;
+  el.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+  try{
+    const[{data:pats},{data:gases},{data:els}]=await Promise.all([
+      sb.from('pat_reports').select('id,ref_number,status,test_date,client_name,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false}),
+      sb.from('gas_certs').select('id,ref_number,status,cert_date,install_address,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false}),
+      sb.from('el_certs').select('id,ref_number,premises_name,deleted_at,created_at').not('deleted_at','is',null).order('deleted_at',{ascending:false})
+    ]);
+    const items=[
+      ...(pats||[]).map(r=>({tbl:'pat_reports',type:'PAT',id:r.id,label:r.ref_number||r.id.slice(-6).toUpperCase(),sub:r.client_name||patFd(r.test_date),deleted_at:r.deleted_at})),
+      ...(gases||[]).map(r=>({tbl:'gas_certs',type:'Gas CP12',id:r.id,label:r.ref_number||(r.install_address||'').slice(0,40)||r.id.slice(-6).toUpperCase(),sub:patFd(r.cert_date),deleted_at:r.deleted_at})),
+      ...(els||[]).map(r=>({tbl:'el_certs',type:'EL',id:r.id,label:r.ref_number||r.premises_name||r.id.slice(-6).toUpperCase(),sub:'',deleted_at:r.deleted_at}))
+    ].sort((a,b)=>new Date(b.deleted_at)-new Date(a.deleted_at));
+    if(!items.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🗑️</div><p>Recycle Bin is empty</p></div>';return;}
+    el.innerHTML=`<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">${items.length} deleted item${items.length===1?'':'s'} — restore or permanently purge below.</div>`
+      +items.map(i=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;background:var(--surface)">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">${i.label} <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:999px;margin-left:4px">${i.type}</span></div>
+          ${i.sub?`<div style="font-size:12px;color:var(--muted)">${i.sub}</div>`:''}
+          <div style="font-size:11px;color:var(--muted)">Deleted ${new Date(i.deleted_at).toLocaleDateString('en-GB')}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="recycleBinRestore('${i.tbl}','${i.id}')">↩ Restore</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="recycleBinPurge('${i.tbl}','${i.id}')">🗑 Purge</button>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<div class="empty-state"><p>Error: '+e.message+'</p></div>';}
+}
+async function recycleBinRestore(tbl,id){
+  const{error}=await sb.from(tbl).update({deleted_at:null}).eq('id',id);
+  if(error){toast('Restore failed: '+error.message,'error');return;}
+  toast('Restored','success');loadRecycleBin();
+}
+async function recycleBinPurge(tbl,id){
+  confirm2('Permanently Purge','This cannot be undone. Delete forever?',async()=>{
+    const{error}=await sb.from(tbl).delete().eq('id',id);
+    if(error){toast('Purge failed: '+error.message,'error');return;}
+    toast('Permanently deleted','warn');loadRecycleBin();
+  });
+}
+
+// ========== ANALYTICS ==========
+async function loadAnalytics(){
+  const el=document.getElementById('analytics-content');
+  if(!el)return;
+  el.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+  try{
+    const now=new Date();
+    const months=[];
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleString('default',{month:'short',year:'2-digit'}),ym:d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')});}
+    const cutoff=new Date(now.getFullYear(),now.getMonth()-5,1).toISOString();
+    const[{data:pats},{data:gases},{data:els}]=await Promise.all([
+      sb.from('pat_reports').select('id,status,test_date,created_at').gte('created_at',cutoff).is('deleted_at',null),
+      sb.from('gas_certs').select('id,status,cert_date,created_at').gte('created_at',cutoff).is('deleted_at',null),
+      sb.from('el_certs').select('id,outcome,created_at').gte('created_at',cutoff).is('deleted_at',null)
+    ]);
+    const mkBuckets=()=>Object.fromEntries(months.map(m=>[m.ym,0]));
+    const patM=mkBuckets(),patDoneM=mkBuckets(),gasM=mkBuckets(),gasDoneM=mkBuckets(),elM=mkBuckets(),elSatM=mkBuckets();
+    const ym=d=>{const dt=new Date(d);return dt.getFullYear()+'-'+(dt.getMonth()+1).toString().padStart(2,'0');};
+    (pats||[]).forEach(r=>{const k=ym(r.created_at);if(k in patM){patM[k]++;if(r.status==='completed')patDoneM[k]++;}});
+    (gases||[]).forEach(r=>{const k=ym(r.created_at);if(k in gasM){gasM[k]++;if(r.status==='completed')gasDoneM[k]++;}});
+    (els||[]).forEach(r=>{const k=ym(r.created_at);if(k in elM){elM[k]++;if(r.outcome==='SATISFACTORY')elSatM[k]++;}});
+    const maxVal=Math.max(1,...months.map(m=>patM[m.ym]+gasM[m.ym]+elM[m.ym]));
+    const bar=(v,total,color)=>{const pct=Math.round((v/maxVal)*100);return `<div title="${v}" style="height:${pct}%;min-height:${v?3:0}px;background:${color};border-radius:3px 3px 0 0;transition:height .3s"></div>`;};
+    const totPat=(pats||[]).length,totPDone=(pats||[]).filter(r=>r.status==='completed').length;
+    const totGas=(gases||[]).length,totGDone=(gases||[]).filter(r=>r.status==='completed').length;
+    const totEl=(els||[]).length,totElSat=(els||[]).filter(r=>r.outcome==='SATISFACTORY').length;
+    el.innerHTML=`
+    <div class="stat-grid" style="margin-bottom:24px">
+      <div class="stat-card accent"><div class="stat-label">PAT (6 months)</div><div class="stat-value">${totPat}</div><div class="stat-sub">${totPDone} completed</div></div>
+      <div class="stat-card success"><div class="stat-label">Gas CP12 (6 months)</div><div class="stat-value">${totGas}</div><div class="stat-sub">${totGDone} completed</div></div>
+      <div class="stat-card" style="background:var(--surface2)"><div class="stat-label">EL (6 months)</div><div class="stat-value">${totEl}</div><div class="stat-sub">${totElSat} satisfactory</div></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:16px">Monthly Volume — Last 6 Months</div>
+      <div style="display:flex;align-items:flex-end;gap:12px;height:140px;padding-bottom:24px;position:relative">
+        ${months.map(m=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+          <div style="width:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px">
+            ${bar(patM[m.ym],maxVal,'#3b82f6')}
+            ${bar(gasM[m.ym],maxVal,'#f59e0b')}
+            ${bar(elM[m.ym],maxVal,'#8b5cf6')}
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;white-space:nowrap">${m.label}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:8px">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border-radius:2px;margin-right:4px"></span>PAT</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:4px"></span>Gas</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#8b5cf6;border-radius:2px;margin-right:4px"></span>EL</span>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:12px">Completion Rates (6 months)</div>
+      ${[{label:'PAT',done:totPDone,total:totPat,color:'#3b82f6'},{label:'Gas CP12',done:totGDone,total:totGas,color:'#f59e0b'},{label:'EL',done:totElSat,total:totEl,color:'#8b5cf6'}].map(({label,done,total,color})=>{
+        const pct=total?Math.round((done/total)*100):0;
+        return `<div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${label}</span><span style="font-weight:600">${pct}% <span style="color:var(--muted);font-weight:400">(${done}/${total})</span></span></div>
+          <div style="height:8px;background:var(--surface2);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:width .4s"></div></div>
+        </div>`;}).join('')}
+    </div>`;
+  }catch(e){el.innerHTML='<div class="empty-state"><p>Error: '+e.message+'</p></div>';}
+}
+
 let _gsTimer=null;
 async function globalSearch(q){
   const box=document.getElementById('gs-results');if(!box)return;
@@ -3878,7 +4063,7 @@ async function completePAT(){
 // ========== PAT - HISTORY ==========
 async function loadPATHistory(){
   showOverlay('Loading…');
-  const{data,error}=await sb.from('pat_reports').select('*').order('created_at',{ascending:false});
+  const{data,error}=await sb.from('pat_reports').select('*').is('deleted_at',null).order('created_at',{ascending:false});
   hideOverlay();
   if(error){toast('Failed to load PAT reports: '+error.message,'error');return;}
   patReports=data||[];
@@ -3979,10 +4164,9 @@ function filterPATList(){
   renderPATList(list);
 }
 async function deletePAT(id){
-  confirm2('Delete PAT Test','This will permanently delete this report. Are you sure?',async()=>{
-    const{error:delErr}=await sb.from('pat_reports').delete().eq('id',id);
-    if(delErr){toast('Delete failed: '+delErr.message,'error');return;}
-    toast('Deleted','warn');loadPATHistory();
+  const isAdmin=_isAdminUser();
+  confirm2('Delete PAT Test',isAdmin?'Permanently delete this report?':'Move to Recycle Bin? Admins can restore it.',async()=>{
+    await _softDelete('pat_reports',id,loadPATHistory);
   });
 }
 async function copyPAT(id){
@@ -6323,7 +6507,7 @@ async function gwSaveDraft(){
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
   showOverlay('Loading…');
-  const{data,error}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false});
+  const{data,error}=await sb.from('gas_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
   hideOverlay();
   if(error){toast('Failed to load Gas certs: '+error.message,'error');return;}
   gasReports=data||[];renderGasList(gasReports);
@@ -6396,10 +6580,9 @@ function filterGasList(){
   renderGasList(list);
 }
 async function deleteGas(id){
-  confirm2('Delete Gas Cert','This will permanently delete this certificate.',async()=>{
-    const{error:delErr}=await sb.from('gas_certs').delete().eq('id',id);
-    if(delErr){toast('Delete failed: '+delErr.message,'error');return;}
-    toast('Deleted','warn');loadGasHistory();
+  const isAdmin=_isAdminUser();
+  confirm2('Delete Gas Cert',isAdmin?'Permanently delete this certificate?':'Move to Recycle Bin? Admins can restore it.',async()=>{
+    await _softDelete('gas_certs',id,loadGasHistory);
   });
 }
 async function copyGas(id){
@@ -9541,11 +9724,11 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
   window.loadELHistory = async function(){
     _elAllCerts = [];
     showOverlay('Loading…');
-    var res = await sb.from('el_certs').select('*').order('created_at',{ascending:false});
+    var res = await sb.from('el_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
     hideOverlay();
     if(res.error){ toast('Load failed: '+res.error.message,'error'); return; }
     _elAllCerts = (res.data||[]).map(function(row){
-      return Object.assign({}, row.data||{}, {id: row.id, cert_type: row.cert_type, test_date: row.test_date, outcome: row.outcome, ref_number: row.ref_number, premises_name: row.premises_name});
+      return Object.assign({}, row.data||{}, {id: row.id, cert_type: row.cert_type, test_date: row.test_date, outcome: row.outcome, ref_number: row.ref_number, premises_name: row.premises_name, deleted_at: row.deleted_at});
     });
     window._elAllCerts = _elAllCerts;
     renderELList(_elAllCerts);
@@ -9570,11 +9753,9 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
   window.deleteELCert = function(id, e){
     e.stopPropagation();
-    confirm2('Delete EL Certificate','This will permanently delete this certificate and cannot be undone.', async function(){
-      var res = await sb.from('el_certs').delete().eq('id', id);
-      if(res.error){ toast('Delete failed: '+res.error.message,'error'); return; }
-      toast('Certificate deleted','warn');
-      loadELHistory();
+    var isAdmin=_isAdminUser();
+    confirm2('Delete EL Certificate',isAdmin?'Permanently delete this certificate?':'Move to Recycle Bin? Admins can restore it.', async function(){
+      await _softDelete('el_certs',id,loadELHistory);
     });
   };
   window.copyELCert = async function(id){
