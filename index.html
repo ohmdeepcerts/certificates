@@ -2895,9 +2895,13 @@ async function _softDelete(tbl,id,afterFn){
     // Soft delete — mark deleted_at
     const{error}=await sb.from(tbl).update({deleted_at:ts,updated_at:ts}).eq('id',id);
     if(error){
-      // Fallback: hard delete if column doesn't exist yet
-      const{error:hErr}=await sb.from(tbl).delete().eq('id',id);
-      if(hErr){toast('Delete failed: '+hErr.message,'error');return;}
+      if((error.message||'').includes('deleted_at')){
+        // Column not yet created — run the SQL migration in Settings → Backend
+        toast('Recycle Bin not set up yet — run SQL migration in Settings → Backend','warn',5000);
+      } else {
+        toast('Delete failed: '+error.message,'error');
+      }
+      return;
     }
     toast('Moved to Recycle Bin','warn');
   }
@@ -3315,6 +3319,12 @@ async function loadRecycleBin(){
   if(!el)return;
   el.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
   try{
+    // Test if deleted_at column exists
+    const _colCheck=await sb.from('pat_reports').select('deleted_at').limit(1);
+    if(_colCheck.error&&(_colCheck.error.message||'').includes('deleted_at')){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">⚙️</div><p style="max-width:400px">Recycle Bin requires a one-time database migration.<br><br>Go to <strong>Settings → Backend → Staff Setup</strong>, copy the SQL, and run Step 8 in your <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/sql/new" target="_blank" style="color:var(--accent)">Supabase SQL Editor</a>.</p></div>';
+      return;
+    }
     const[{data:pats},{data:gases},{data:els}]=await Promise.all([
       sb.from('pat_reports').select('id,ref_number,status,test_date,client_name,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false}),
       sb.from('gas_certs').select('id,ref_number,status,cert_date,install_address,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false}),
@@ -3361,10 +3371,11 @@ async function loadAnalytics(){
     const months=[];
     for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleString('default',{month:'short',year:'2-digit'}),ym:d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')});}
     const cutoff=new Date(now.getFullYear(),now.getMonth()-5,1).toISOString();
+    const _aFallback=async(q,qFb)=>{const r=await q;return(r.error&&(r.error.message||'').includes('deleted_at'))?qFb:r;};
     const[{data:pats},{data:gases},{data:els}]=await Promise.all([
-      sb.from('pat_reports').select('id,status,test_date,created_at').gte('created_at',cutoff).is('deleted_at',null),
-      sb.from('gas_certs').select('id,status,cert_date,created_at').gte('created_at',cutoff).is('deleted_at',null),
-      sb.from('el_certs').select('id,outcome,created_at').gte('created_at',cutoff).is('deleted_at',null)
+      _aFallback(sb.from('pat_reports').select('id,status,test_date,created_at').gte('created_at',cutoff).is('deleted_at',null),sb.from('pat_reports').select('id,status,test_date,created_at').gte('created_at',cutoff)),
+      _aFallback(sb.from('gas_certs').select('id,status,cert_date,created_at').gte('created_at',cutoff).is('deleted_at',null),sb.from('gas_certs').select('id,status,cert_date,created_at').gte('created_at',cutoff)),
+      _aFallback(sb.from('el_certs').select('id,outcome,created_at').gte('created_at',cutoff).is('deleted_at',null),sb.from('el_certs').select('id,outcome,created_at').gte('created_at',cutoff))
     ]);
     const mkBuckets=()=>Object.fromEntries(months.map(m=>[m.ym,0]));
     const patM=mkBuckets(),patDoneM=mkBuckets(),gasM=mkBuckets(),gasDoneM=mkBuckets(),elM=mkBuckets(),elSatM=mkBuckets();
@@ -4065,7 +4076,8 @@ async function completePAT(){
 // ========== PAT - HISTORY ==========
 async function loadPATHistory(){
   showOverlay('Loading…');
-  const{data,error}=await sb.from('pat_reports').select('*').is('deleted_at',null).order('created_at',{ascending:false});
+  let{data,error}=await sb.from('pat_reports').select('*').is('deleted_at',null).order('created_at',{ascending:false});
+  if(error&&(error.message||'').includes('deleted_at')){({data,error}=await sb.from('pat_reports').select('*').order('created_at',{ascending:false}));}
   hideOverlay();
   if(error){toast('Failed to load PAT reports: '+error.message,'error');return;}
   patReports=data||[];
@@ -6509,7 +6521,8 @@ async function gwSaveDraft(){
 // ========== GAS - HISTORY ==========
 async function loadGasHistory(){
   showOverlay('Loading…');
-  const{data,error}=await sb.from('gas_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
+  let{data,error}=await sb.from('gas_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
+  if(error&&(error.message||'').includes('deleted_at')){({data,error}=await sb.from('gas_certs').select('*').order('created_at',{ascending:false}));}
   hideOverlay();
   if(error){toast('Failed to load Gas certs: '+error.message,'error');return;}
   gasReports=data||[];renderGasList(gasReports);
@@ -9736,6 +9749,7 @@ body{background:#e0dbd3;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     _elAllCerts = [];
     showOverlay('Loading…');
     var res = await sb.from('el_certs').select('*').is('deleted_at',null).order('created_at',{ascending:false});
+    if(res.error&&(res.error.message||'').includes('deleted_at')){res=await sb.from('el_certs').select('*').order('created_at',{ascending:false});}
     hideOverlay();
     if(res.error){ toast('Load failed: '+res.error.message,'error'); return; }
     _elAllCerts = (res.data||[]).map(function(row){
