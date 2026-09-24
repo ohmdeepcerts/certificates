@@ -9102,7 +9102,7 @@ async function saveApplianceRecord(){
     var _premDisplay = r.premisesName || [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') || '—';
     var _premAddr = r.premisesName ? [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join(', ') : '';
     var subj = buildEmailSubject('Emergency Lighting',r.ref||'',_premDisplay||'');
-    var body = 'Dear '+(r.clientName||'Sir/Madam')+',\n\nPlease find attached your Emergency Lighting '+certLabel+'.\n\nCertificate Reference: '+r.ref+'\nPremises: '+_premDisplay+(_premAddr?'\nAddress: '+_premAddr:'')+'\nTest Date: '+(r.testDate||'—')+'\nNext Inspection Due: '+(r.nextTestDate||'—')+'\nOutcome: '+(r.outcome||'—')+'\nLuminaires: '+(r.lumTotal||'0')+' total — '+(r.lumPass||'0')+' pass / '+(r.lumFail||'0')+' fail\n\nThis certificate has been produced in accordance with BS 5266-1:2025 and BS EN 50172:2004.\n\nKind regards,\n'+engName+(engPos?'\n'+engPos:'')+'\n'+coName+(coPhone?'\nTel: '+coPhone:''+(coEmail?'\nEmail: '+coEmail:''));
+    var body = 'Dear '+(r.clientName||'Sir/Madam')+',\n\nPlease find attached your Emergency Lighting '+certLabel+'.\n\nCertificate Reference: '+r.ref+'\nPremises: '+_premDisplay+(_premAddr?'\nAddress: '+_premAddr:'')+'\nTest Date: '+(r.testDate||'—')+'\nNext Inspection Due: '+(r.nextTestDate||'—')+'\nOutcome: '+(r.outcome||'—')+'\nLuminaires: '+(r.lumTotal||'0')+' total — '+(r.lumPass||'0')+' pass / '+(r.lumFail||'0')+' fail\n\nThis certificate has been produced in accordance with BS 5266-1:2025 and BS EN 50172:2024.\n\nKind regards,\n'+engName+(engPos?'\n'+engPos:'')+'\n'+coName+(coPhone?'\nTel: '+coPhone:''+(coEmail?'\nEmail: '+coEmail:''));
 
     var certHTML = '';
     try { certHTML = elBuildCertHTML(r); } catch(e){}
@@ -9771,7 +9771,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         +'</div>'
         +'<div class="ch-title-row">'
           +'<div class="ch-cert-title">'+certTitle+'</div>'
-          +'<div class="ch-cert-std">BS 5266-1:2025 &nbsp;&middot;&nbsp; BS EN 50172:2004 &nbsp;&middot;&nbsp; BS EN 1838:2013</div>'
+          +'<div class="ch-cert-std">BS 5266-1:2025 &nbsp;&middot;&nbsp; BS EN 50172:2024 &nbsp;&middot;&nbsp; BS EN 1838:2024</div>'
         +'</div>'
       +'</div>'
       +'<div class="addr-panel">'
@@ -9866,8 +9866,8 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     /* PAGE 2 — System Purpose, Arrangement & Test Instruments */
     (function(){})(); // scope marker
     var declText = r.certType==='EL.1'
-      ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be SATISFACTORY on the date of issue.'
-      : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2004, and was found to be '+(r.outcome||'—')+' on the date of issue.';
+      ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the emergency lighting system has been installed and commissioned in accordance with BS 5266-1:2025 and BS EN 50172:2024, and was found to be SATISFACTORY on the date of issue.'
+      : 'I, the undersigned, being the competent person who carried out the periodic inspection and testing described in this certificate, declare that the system has been inspected and tested in accordance with BS 5266-1:2025 and BS EN 50172:2024, and was found to be '+(r.outcome||'—')+' on the date of issue.';
     var _pv=function(v){return v==='✓'?'<span style="font-weight:800;color:#1e7a4c;font-size:14px">✓</span>':'<span style="font-size:10px;color:#8b968f;font-weight:600">N/A</span>';};
     var _pr=function(label,val){return '<div style="display:flex;align-items:center;border-bottom:1px solid #d5e5db"><div style="flex:1;padding:6px 10px;font-size:11px;color:#5a6660">'+label+'</div><div style="width:70px;padding:6px 10px;text-align:center;border-left:1px solid #d5e5db">'+_pv(val||'N/A')+'</div></div>';};
     var p2b = '<div class="cert-page">'
@@ -10009,7 +10009,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
     +'</div>';
 
     /* PAGE 4+ — Defects & Luminaire Schedule (fully paginated) */
-    var _lumSatNote  = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2013. No further action required.</p></div>';
+    var _lumSatNote  = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2024. No further action required.</p></div>';
     var _lumFailNote = '<div class="obs-box"><div class="ob-lbl">Failures Noted — Remedial Action Required</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. Refer to defects above for full details and recommended remedial action.</div></div>';
     var _lumTotalRow = '<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested &middot; '+lumPass+' pass &middot; '+lumFail+' fail</td></tr>';
     var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#78716c;font-style:italic;font-weight:400">Continued on next page&hellip;</td></tr>';
