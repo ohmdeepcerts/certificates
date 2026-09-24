@@ -1175,19 +1175,13 @@ a{color:var(--accent);text-decoration:none}
       <div class="view-header no-print">
         <div><div class="view-title" id="gas-form-title">New Gas</div><div class="view-subtitle" id="gas-form-ref"></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="navigate('gas-history')">← Back</button>
-          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)">⬇ PDF</button>
-          <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="printGasCertificate()">🖨 Print</button>
-          <span id="cp12-zoom-ctrl" class="no-print" style="display:inline-flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface)">
-            <button onclick="adjustCP12Zoom(-10)" style="border:none;background:none;padding:0 9px;height:30px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;line-height:1" title="Zoom out">−</button>
-            <span id="cp12-zoom-label" style="font-size:11px;font-weight:700;color:var(--muted);min-width:38px;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);height:30px;line-height:30px">100%</span>
-            <button onclick="adjustCP12Zoom(10)" style="border:none;background:none;padding:0 9px;height:30px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;line-height:1" title="Zoom in">+</button>
-          </span>
-          <button class="btn btn-secondary btn-sm" id="btn-gas-toggle-view" onclick="toggleGasView()">📄 A4 Form</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)" hidden>⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="printGasCertificate()" hidden>🖨 Print</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-toggle-view" onclick="toggleGasView()" hidden>📄 A4 Form</button>
           <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
           <button class="btn btn-primary btn-sm" id="btn-gas-edit" onclick="enterGasEditMode()" hidden>✏ Edit</button>
-          <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()">✓ Complete</button>
-          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()">💾 Save</button>
+          <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()" hidden>✓ Complete</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()" hidden>💾 Save</button>
         </div>
       </div>
       <div id="gas-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This gas certificate has been issued. Click ✏ Edit to make corrections.</div>
@@ -5136,6 +5130,13 @@ function toggleGasView(){
     wizard.hidden=true;wrap.style.display='';
     if(btn)btn.textContent='📱 Wizard';
     toast('Wizard data synced to A4 form','info',3000);
+    // Admin: show complete/save in A4 mode
+    if(_isAdminUser()){
+      const btnC=document.getElementById('btn-gas-complete');
+      const btnS=document.getElementById('btn-gas-save');
+      if(btnC)btnC.hidden=false;
+      if(btnS)btnS.hidden=false;
+    }
   } else {
     // Switch back to wizard — warn A4 changes may not be reflected
     if(_gasDirty){
@@ -5143,6 +5144,11 @@ function toggleGasView(){
     }
     wrap.style.display='none';wizard.hidden=false;gwRender();
     if(btn)btn.textContent='📄 A4 Form';
+    // Hide complete/save (wizard handles these)
+    const btnC=document.getElementById('btn-gas-complete');
+    const btnS=document.getElementById('btn-gas-save');
+    if(btnC)btnC.hidden=true;
+    if(btnS)btnS.hidden=true;
   }
 }
 function newGasCert(){
@@ -5184,7 +5190,7 @@ function newGasCert(){
     wizard.hidden=false;
     gwRender();
   }
-  const _tvb2=document.getElementById('btn-gas-toggle-view');if(_tvb2)_tvb2.textContent='📄 A4 Form';
+  const _tvb2=document.getElementById('btn-gas-toggle-view');if(_tvb2){_tvb2.textContent='📄 A4 Form';_tvb2.hidden=!_isAdminUser();}
   const _ginNewEl=document.getElementById('gas-internal-notes');if(_ginNewEl)_ginNewEl.value='';
 }
 async function loadGasForm(id){
@@ -5208,8 +5214,13 @@ async function loadGasForm(id){
   if(window._applyCP12Zoom)_applyCP12Zoom();
   const btnC=document.getElementById('btn-gas-complete');
   const _gcb=document.getElementById('gas-completed-banner');
-  if(r.status==='completed'){btnC.disabled=true;btnC.dataset.completed='1';if(_gcb)_gcb.hidden=false;}
-  else{btnC.disabled=false;btnC.dataset.completed='';if(_gcb)_gcb.hidden=true;}
+  if(r.status==='completed'){
+    btnC.disabled=true;btnC.dataset.completed='1';if(_gcb)_gcb.hidden=false;
+    const _loadAdm=_isAdminUser();
+    document.getElementById('btn-gas-pdf').hidden=!_loadAdm;
+    document.getElementById('btn-gas-print').hidden=!_loadAdm;
+    document.getElementById('btn-gas-email').hidden=false;
+  }else{btnC.disabled=false;btnC.dataset.completed='';if(_gcb)_gcb.hidden=true;}
   const _ginEl=document.getElementById('gas-internal-notes');if(_ginEl)_ginEl.value=r.internal_notes||'';
   _gasCertLoading=true;navigate('gas-new');_gasCertLoading=false;
   _setGasViewMode(true);
@@ -5220,18 +5231,20 @@ function _setGasViewMode(isView){
   const btnEdit=document.getElementById('btn-gas-edit');
   const btnSave=document.getElementById('btn-gas-save');
   const btnComplete=document.getElementById('btn-gas-complete');
+  const btnToggle=document.getElementById('btn-gas-toggle-view');
   if(!wrap||!btnEdit||!btnSave||!btnComplete)return;
+  const isAdm=_isAdminUser();
+  if(btnToggle)btnToggle.hidden=!isAdm;
   if(isView){
     wrap.style.pointerEvents='none';
-    btnEdit.hidden=false;
+    btnEdit.hidden=!isAdm;
     btnSave.hidden=true;
     btnComplete.hidden=true;
   }else{
     wrap.style.pointerEvents='';
     btnEdit.hidden=true;
-    btnSave.hidden=false;
-    btnComplete.hidden=false;
-    // Re-disable Complete for already-completed certs
+    btnSave.hidden=!isAdm;
+    btnComplete.hidden=!isAdm;
     if(editingGasId&&document.getElementById('btn-gas-complete').dataset.completed==='1')
       btnComplete.disabled=true;
   }
@@ -5901,7 +5914,9 @@ async function completeGas(){
   if(error){toast('Error issuing: '+error.message,'error');return;}
   document.getElementById('gas-form-ref').textContent=refNum;
   document.getElementById('gas-form-title').textContent=`View — ${refNum}`;
-  document.getElementById('btn-gas-pdf').hidden=false;
+  const _isAdm=_isAdminUser();
+  document.getElementById('btn-gas-pdf').hidden=!_isAdm;
+  document.getElementById('btn-gas-print').hidden=!_isAdm;
   document.getElementById('btn-gas-email').hidden=false;
   setCP12Field('cert_ref',refNum);setCP12Field('cert_ref_p2',refNum);
   toast(`Gas cert issued: ${refNum}`,'success',5000);
@@ -6155,6 +6170,136 @@ function mgwSyncToDesktopForm(){
 async function mgwSaveDraft(){mgwSyncToDesktopForm();await saveGas(true);}
 async function mgwComplete(){mgwSyncToDesktopForm();await completeGas();}
 
+// ========== GAS WIZARD HELPERS ==========
+function _gwDrumPickerHTML(baseId,dateStr){
+  var parts=(dateStr||'01/01/'+new Date().getFullYear()).split('/');
+  var dd=parseInt(parts[0])||1,mm=parseInt(parts[1])||1,yyyy=parseInt(parts[2])||new Date().getFullYear();
+  var IH=36,VIS=5,H=IH*VIS;
+  var days=[];for(var _d=1;_d<=31;_d++)days.push(String(_d).padStart(2,'0'));
+  var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var ty=new Date().getFullYear(),years=[];for(var _y=ty-2;_y<=ty+3;_y++)years.push(String(_y));
+  var di=dd-1,mi=mm-1,yi=years.indexOf(String(yyyy));if(yi<0)yi=2;
+  function col(id,items,si){
+    var c='<div style="flex:1;position:relative;overflow:hidden;height:'+H+'px">';
+    c+='<div style="position:absolute;top:0;left:0;right:0;height:'+(IH*2)+'px;background:linear-gradient(to bottom,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
+    c+='<div style="position:absolute;bottom:0;left:0;right:0;height:'+(IH*2)+'px;background:linear-gradient(to top,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
+    c+='<div style="position:absolute;top:'+((H-IH)/2)+'px;left:6px;right:6px;height:'+IH+'px;background:rgba(37,99,235,.07);border-radius:6px;pointer-events:none;z-index:1"></div>';
+    c+='<div id="'+id+'" data-gw-drum="'+baseId+'" data-init-idx="'+si+'" style="height:'+H+'px;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-snap-stop:always;-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-padding-top:'+(IH*2)+'px" onscroll="_gwDrumScrolled(this)">';
+    c+='<div style="height:'+(IH*2)+'px"></div>';
+    items.forEach(function(item,i){
+      var isSel=i===si;
+      c+='<div data-idx="'+i+'" data-val="'+item+'" style="height:'+IH+'px;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;font-size:'+(isSel?'17':'13')+'px;font-weight:'+(isSel?'700':'400')+';color:'+(isSel?'var(--accent)':'var(--text)')+';user-select:none">'+item+'</div>';
+    });
+    c+='<div style="height:'+(IH*2)+'px"></div></div></div>';
+    return c;
+  }
+  var html='<div id="'+baseId+'-drum" style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)">';
+  html+=col(baseId+'-dd',days,di)+'<div style="width:1px;background:var(--border)"></div>';
+  html+=col(baseId+'-mm',mNames,mi)+'<div style="width:1px;background:var(--border)"></div>';
+  html+=col(baseId+'-yy',years,yi)+'</div>';
+  return html;
+}
+function _gwInitDrums(){
+  document.querySelectorAll('[data-gw-drum]').forEach(function(el){
+    el.scrollTop=parseInt(el.getAttribute('data-init-idx')||'0')*36;
+  });
+}
+window._gwDrumScrolled=function(el){
+  var IH=36,nearIdx=Math.round(el.scrollTop/IH);
+  el.querySelectorAll('[data-idx]').forEach(function(item){
+    var isSel=parseInt(item.getAttribute('data-idx'))===nearIdx;
+    item.style.fontSize=isSel?'17px':'13px';item.style.fontWeight=isSel?'700':'400';
+    item.style.color=isSel?'var(--accent)':'var(--text)';
+  });
+  clearTimeout(el._st);el._st=setTimeout(function(){_gwDrumDone(el);},120);
+};
+window._gwDrumDone=function(el){
+  var IH=36,idx=Math.round(el.scrollTop/IH),baseId=el.getAttribute('data-gw-drum');
+  function getColVal(sfx){
+    var d=document.getElementById(baseId+sfx);if(!d)return null;
+    var i=Math.round(d.scrollTop/IH),found=null;
+    d.querySelectorAll('[data-idx]').forEach(function(x){if(parseInt(x.getAttribute('data-idx'))===i)found=x;});
+    return found?found.getAttribute('data-val'):null;
+  }
+  var ddV=getColVal('-dd'),mmV=getColVal('-mm'),yyV=getColVal('-yy');if(!ddV||!mmV||!yyV)return;
+  var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dateStr=ddV+'/'+String(mNames.indexOf(mmV)+1).padStart(2,'0')+'/'+yyV;
+  if(baseId==='gw-cert-date'){
+    gwSet('certDate',dateStr);var nx=oneYearMinusOneDayUK(dateStr);gwSet('nextCheckDate',nx);
+    _gwSetDrum('gw-ncd',nx);var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+  }else if(baseId==='gw-ncd'){
+    gwSet('nextCheckDate',dateStr);var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+dateStr;
+  }
+};
+window._gwSetDrum=function(baseId,dateStr){
+  var parts=(dateStr||'').split('/');if(parts.length!==3)return;
+  var dd=parseInt(parts[0])||1,mm=parseInt(parts[1])||1,yyyy=parseInt(parts[2])||new Date().getFullYear();
+  var IH=36,ty=new Date().getFullYear(),years=[];for(var _y=ty-2;_y<=ty+3;_y++)years.push(String(_y));
+  var ddD=document.getElementById(baseId+'-dd'),mmD=document.getElementById(baseId+'-mm'),yyD=document.getElementById(baseId+'-yy');
+  if(ddD)ddD.scrollTop=(dd-1)*IH;if(mmD)mmD.scrollTop=(mm-1)*IH;
+  if(yyD){var yi=years.indexOf(String(yyyy));yyD.scrollTop=(yi<0?2:yi)*IH;}
+};
+window._gwDateAdjust=function(baseId,delta){
+  var cur=baseId==='gw-cert-date'?_gw.certDate:_gw.nextCheckDate;
+  var parts=(cur||'').split('/');if(parts.length!==3)return;
+  var d=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));if(isNaN(d.getTime()))return;
+  d.setDate(d.getDate()+delta);
+  var nd=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  if(baseId==='gw-cert-date'){
+    gwSet('certDate',nd);var nx=oneYearMinusOneDayUK(nd);gwSet('nextCheckDate',nx);
+    _gwSetDrum('gw-cert-date',nd);_gwSetDrum('gw-ncd',nx);
+    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+  }else{
+    gwSet('nextCheckDate',nd);_gwSetDrum('gw-ncd',nd);
+    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nd;
+  }
+};
+window._gwDateToday=function(baseId){
+  var t=new Date(),nd=String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();
+  if(baseId==='gw-cert-date'){
+    gwSet('certDate',nd);var nx=oneYearMinusOneDayUK(nd);gwSet('nextCheckDate',nx);
+    _gwSetDrum('gw-cert-date',nd);_gwSetDrum('gw-ncd',nx);
+    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+  }else{gwSet('nextCheckDate',nd);_gwSetDrum('gw-ncd',nd);}
+};
+window._gwDateSetNcd12m=function(){
+  var cd=_gw.certDate;if(!cd||cd.length!==10)return;
+  var nx=oneYearMinusOneDayUK(cd);gwSet('nextCheckDate',nx);_gwSetDrum('gw-ncd',nx);
+  var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+};
+function _gwUpdateTitle(){
+  var refEl=document.getElementById('gas-form-ref');if(!refEl||editingGasId)return;
+  var addr=(_gw.installAddr1||'').trim(),pc=(_gw.installPostcode||'').trim();
+  refEl.textContent=[addr,pc].filter(Boolean).join(' · ');
+}
+window.gwSetAppFlue=function(i,ft){
+  gwSetApp(i,'flueType',ft);
+  var card=document.querySelector('[data-gw-app="'+i+'"]');
+  if(!card){gwRender();return;}
+  card.querySelectorAll('[data-gw-flue]').forEach(function(chip){chip.classList.toggle('sel',chip.getAttribute('data-gw-flue')===ft);});
+};
+window.gwSetAppCO=function(i,field,v){
+  gwSetApp(i,field,v);
+  var card=document.querySelector('[data-gw-app="'+i+'"]');
+  if(!card){gwRender();return;}
+  var chips=card.querySelectorAll('[data-gw-co-field="'+field+'"]');
+  if(!chips.length){gwRender();return;}
+  chips.forEach(function(chip){chip.classList.toggle('sel',chip.getAttribute('data-gw-co-val')===v);});
+};
+function _gwFillAppliance(i,rec){
+  if(!_gw.appliances[i])return;
+  gwSetApp(i,'type',rec.name||'');
+  if(rec.manufacturer)gwSetApp(i,'make',rec.manufacturer);
+  if(rec.model)gwSetApp(i,'model',rec.model);
+  var card=document.querySelector('[data-gw-app="'+i+'"]');
+  if(!card){gwRender();return;}
+  var typeEl=card.querySelector('[data-gw-type]');var makeEl=card.querySelector('[data-gw-make]');var modelEl=card.querySelector('[data-gw-model]');
+  if(typeEl)typeEl.value=rec.name||'';
+  if(makeEl&&rec.manufacturer)makeEl.value=rec.manufacturer;
+  if(modelEl&&rec.model)modelEl.value=rec.model;
+  gwAutoFlue(i,rec.name||'');_fillToast('Appliance');
+}
+
 // ========== GAS WIZARD ==========
 var _gw={};
 var _GW_STEPS=['Dates','Property','Landlord','Appliances','Work & Defects','Review'];
@@ -6197,14 +6342,24 @@ function gwRender(){
     html+='<div class="elwiz-q">Certificate dates</div>'
     +'<div class="elwiz-sub">When was the inspection carried out?</div>'
     +'<label class="elwiz-input-label">Date of inspection</label>'
-    +'<input class="elwiz-input fast-date" id="gw-cert-date" type="text" maxlength="10" inputmode="numeric" placeholder="DD/MM/YYYY" value="'+esc(_gw.certDate)+'" oninput="gwSet(\'certDate\',this.value);if(this.value.length===10){var nx=oneYearMinusOneDayUK(this.value);gwSet(\'nextCheckDate\',nx);var e=document.getElementById(\'gw-ncd\');if(e)e.value=nx;}">'
-    +'<label class="elwiz-input-label" style="margin-top:14px">Next inspection due</label>'
-    +'<div class="elwiz-chips" style="margin-bottom:8px"><div class="elwiz-chip sel" onclick="var d=document.getElementById(\'gw-cert-date\');if(d&&d.value.length===10){var nx=oneYearMinusOneDayUK(d.value);gwSet(\'nextCheckDate\',nx);var e=document.getElementById(\'gw-ncd\');if(e)e.value=nx;}">12 months</div></div>'
-    +'<input class="elwiz-input fast-date" id="gw-ncd" type="text" maxlength="10" inputmode="numeric" placeholder="DD/MM/YYYY" value="'+esc(_gw.nextCheckDate)+'" oninput="gwSet(\'nextCheckDate\',this.value)">';
+    +'<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
+    +'<button type="button" class="elwiz-chip sel" onclick="_gwDateToday(\'gw-cert-date\')" style="padding:5px 11px;font-size:12px">Today</button>'
+    +'<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-cert-date\',-1)" style="padding:5px 11px;font-size:12px">← Prev</button>'
+    +'<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-cert-date\',1)" style="padding:5px 11px;font-size:12px">Next →</button>'
+    +'</div>'
+    +_gwDrumPickerHTML('gw-cert-date',_gw.certDate)
+    +'<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: '+esc(_gw.nextCheckDate)+'</div>'
+    +'<label class="elwiz-input-label">Next inspection due</label>'
+    +'<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
+    +'<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:5px 11px;font-size:12px">12 months</button>'
+    +'<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-ncd\',-1)" style="padding:5px 11px;font-size:12px">← Prev</button>'
+    +'<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-ncd\',1)" style="padding:5px 11px;font-size:12px">Next →</button>'
+    +'</div>'
+    +_gwDrumPickerHTML('gw-ncd',_gw.nextCheckDate);
   }else if(s===1){
     html+='<div class="elwiz-q">Installation address</div>'
     +'<div class="elwiz-sub">Start typing in Address line 1 to search the Directory, or enter manually.</div>'
-    +'<label class="elwiz-input-label">Address line 1</label>'
+    +'<label class="elwiz-input-label">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>'
     +'<input class="elwiz-input" id="gw-install-a1" placeholder="Street / building" value="'+esc(_gw.installAddr1||'')+'" oninput="gwSet(\'installAddr1\',this.value)">'
     +'<label class="elwiz-input-label">Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>'
     +'<input class="elwiz-input" id="gw-install-a2" placeholder="Area / district" value="'+esc(_gw.installAddr2||'')+'" oninput="gwSet(\'installAddr2\',this.value)">'
@@ -6231,14 +6386,14 @@ function gwRender(){
     }
     html+='<label class="elwiz-input-label">Name</label>'
     +'<input class="elwiz-input" id="gw-landlord-name" placeholder="e.g. John Smith / ABC Properties" value="'+esc(_gw.landlordName||'')+'" oninput="gwSet(\'landlordName\',this.value)">'
-    +'<label class="elwiz-input-label" style="margin-top:12px">Address line 1</label>'
+    +'<label class="elwiz-input-label" style="margin-top:12px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>'
     +'<input class="elwiz-input" id="gw-landlord-a1" placeholder="Street / building" value="'+esc(_gw.landlordAddr1||'')+'" oninput="gwSet(\'landlordAddr1\',this.value)">'
     +'<label class="elwiz-input-label">Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>'
     +'<input class="elwiz-input" id="gw-landlord-a2" placeholder="Area / district" value="'+esc(_gw.landlordAddr2||'')+'" oninput="gwSet(\'landlordAddr2\',this.value)">'
     +'<label class="elwiz-input-label">Town / City <small style="font-weight:400;color:var(--muted)">(optional)</small></label>'
     +'<input class="elwiz-input" id="gw-landlord-a3" placeholder="Town / city" value="'+esc(_gw.landlordAddr3||'')+'" oninput="gwSet(\'landlordAddr3\',this.value)">'
     +'<button type="button" onclick="gwCopyPropToLandlord()" style="margin-top:8px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--muted);cursor:pointer;font-size:12px">📋 Same as installation address</button>'
-    +'<label class="elwiz-input-label" style="margin-top:12px">Postcode</label>'
+    +'<label class="elwiz-input-label" style="margin-top:12px">Postcode <span style="color:var(--error,#b91c1c)">*</span></label>'
     +'<input class="elwiz-input" id="gw-landlord-pc" placeholder="e.g. M1 1AA" style="text-transform:uppercase;max-width:160px" value="'+esc(_gw.landlordPostcode)+'" oninput="gwSet(\'landlordPostcode\',this.value.toUpperCase())">'
     +'<label class="elwiz-input-label" style="margin-top:12px">Email <span style="color:var(--muted);font-weight:400">(cert sent here)</span></label>'
     +'<input class="elwiz-input" id="gw-recipient-email" type="email" placeholder="landlord@email.com" value="'+esc(_gw.recipientEmail)+'" oninput="gwSet(\'recipientEmail\',this.value)">';
@@ -6246,27 +6401,41 @@ function gwRender(){
     html+='<div class="elwiz-q">Appliances</div>'
     +'<div class="elwiz-sub">Add each gas appliance inspected.</div>';
     (_gw.appliances||[]).forEach(function(app,i){
-      html+='<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'
+      var _isCookerHob=/cooker|hob|range|dryer/i.test(app.type||'');
+      var _isBoiler=/boiler/i.test(app.type||'')&&!_isCookerHob;
+      // Auto-fill combustion for boilers
+      if(_isBoiler&&(!app.combustionReading||app.combustionReading==='N/A'||app.combustionReading==='')){
+        var _lc=localStorage.getItem('gw_last_comb')||'0.0008';
+        _gw.appliances[i].combustionReading=parseFloat(_lc)<0.00085?'0.0009':'0.0008';
+        app=_gw.appliances[i];
+      }
+      html+='<div data-gw-app="'+i+'" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
       +'<span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)">Appliance '+(i+1)+'</span>'
       +(i>0?'<span onclick="gwRemoveApp('+i+')" style="cursor:pointer;color:var(--muted);font-size:22px;line-height:1">&times;</span>':'')
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-      +'<div><label class="elwiz-input-label">Location</label><input class="elwiz-input" style="margin:0" placeholder="e.g. Kitchen" list="mgw-app-types" value="'+esc(app.location||'')+'" oninput="gwSetApp('+i+',\'location\',this.value)"></div>'
-      +'<div><label class="elwiz-input-label">Type</label><input class="elwiz-input" style="margin:0" placeholder="e.g. Combi Boiler" list="mgw-app-types" value="'+esc(app.type||'')+'" oninput="gwSetApp('+i+',\'type\',this.value);gwAutoFlue('+i+',this.value)"></div>'
+      +'<div><label class="elwiz-input-label">Location</label><input class="elwiz-input" style="margin:0" placeholder="e.g. Kitchen" value="'+esc(app.location||'')+'" oninput="gwSetApp('+i+',\'location\',this.value)"></div>'
+      +'<div><label class="elwiz-input-label">Type</label><input data-gw-type class="elwiz-input" style="margin:0" placeholder="e.g. Combi Boiler" value="'+esc(app.type||'')+'" oninput="gwSetApp('+i+',\'type\',this.value);gwAutoFlue('+i+',this.value)"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      +'<div><label class="elwiz-input-label">Manufacturer</label><input class="elwiz-input" style="margin:0" placeholder="e.g. Vaillant" value="'+esc(app.make||'')+'" oninput="gwSetApp('+i+',\'make\',this.value)"></div>'
-      +'<div><label class="elwiz-input-label">Model</label><input class="elwiz-input" style="margin:0" placeholder="e.g. ecoTec Pro" value="'+esc(app.model||'')+'" oninput="gwSetApp('+i+',\'model\',this.value)"></div>'
+      +'<div><label class="elwiz-input-label">Manufacturer</label><input data-gw-make class="elwiz-input" style="margin:0" placeholder="e.g. Vaillant" value="'+esc(app.make||'')+'" oninput="gwSetApp('+i+',\'make\',this.value)"></div>'
+      +'<div><label class="elwiz-input-label">Model</label><input data-gw-model class="elwiz-input" style="margin:0" placeholder="e.g. ecoTec Pro" value="'+esc(app.model||'')+'" oninput="gwSetApp('+i+',\'model\',this.value)"></div>'
       +'</div>'
       +'<div style="margin-bottom:10px"><label class="elwiz-input-label">Flue type</label><div class="elwiz-chips" style="flex-wrap:wrap">';
       _GW_FLUE.forEach(function(ft){
-        html+='<div class="elwiz-chip'+((app.flueType||'RS')===ft?' sel':'')+'" onclick="gwSetApp('+i+',\'flueType\',\''+ft+'\');gwRender()">'+ft+'</div>';
+        html+='<div class="elwiz-chip'+((app.flueType||'RS')===ft?' sel':'')+'" data-gw-flue="'+ft+'" onclick="gwSetAppFlue('+i+',\''+ft+'\')">'+ft+'</div>';
       });
       html+='</div></div>';
-      if(/boiler/i.test(app.type||'')){
-        html+='<div style="margin-bottom:10px"><label class="elwiz-input-label">Combustion analyser reading</label>'
-        +'<input class="elwiz-input" id="gw-comb-'+i+'" placeholder="e.g. 0.0008" style="max-width:140px" value="'+esc(app.combustionReading||'')+'" oninput="gwSetApp('+i+',\'combustionReading\',this.value)"></div>';
+      if(_isBoiler){
+        var _lc2=localStorage.getItem('gw_last_comb')||'0.0008';
+        var _nextC=parseFloat(_lc2)<0.00085?'0.0009':'0.0008';
+        html+='<div data-gw-comb style="margin-bottom:10px"><label class="elwiz-input-label">Combustion analyser reading</label>'
+        +'<input class="elwiz-input" id="gw-comb-'+i+'" placeholder="e.g. 0.0008" style="max-width:140px" value="'+esc(app.combustionReading||'')+'" oninput="gwSetApp('+i+',\'combustionReading\',this.value)">'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last used: '+esc(_lc2)+' · This cert: '+esc(_nextC)+'</div>'
+        +'</div>';
+      } else {
+        html+='<div data-gw-comb style="display:none"></div>';
       }
       html+='<div><label class="elwiz-input-label" style="margin-bottom:6px">CO alarm</label>'
       +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px">';
@@ -6274,7 +6443,7 @@ function gwRender(){
         var lbl=info[0],field=info[1],cur=app[field]||'Yes';
         html+='<span style="font-size:11px;color:var(--muted);padding:0 2px">'+lbl+':</span>';
         ['Yes','No','N/A'].forEach(function(v){
-          html+='<div class="elwiz-chip'+(cur===v?' sel':'')+'" onclick="gwSetApp('+i+',\''+field+'\',\''+v+'\');gwRender()" style="padding:3px 7px;font-size:11px">'+v+'</div>';
+          html+='<div class="elwiz-chip'+(cur===v?' sel':'')+'" data-gw-co-field="'+field+'" data-gw-co-val="'+v+'" onclick="gwSetAppCO('+i+',\''+field+'\',\''+v+'\')" style="padding:3px 7px;font-size:11px">'+v+'</div>';
         });
         html+='<span style="width:6px"></span>';
       });
@@ -6330,6 +6499,7 @@ function gwRender(){
   }
   html+='</div>';
   body.innerHTML=html;
+  if(s===0)setTimeout(_gwInitDrums,0);
   var wiz=document.getElementById('mobile-gas-wizard');
   if(wiz)wiz.scrollTop=0;
   gwAttachAC();
@@ -6344,6 +6514,13 @@ function gwAttachAC(){
     var la=document.getElementById('gw-landlord-a1');
     if(ni)attachDirAC(ni,'landlords',_gwFillLandlord);
     if(la)attachDirAC(la,'landlords',_gwFillLandlord);
+  }else if(_gw.step===3){
+    (_gw.appliances||[]).forEach(function(_,i){
+      var card=document.querySelector('[data-gw-app="'+i+'"]');
+      if(!card)return;
+      var typeEl=card.querySelector('[data-gw-type]');
+      if(typeEl)attachApplianceAC(typeEl,function(rec){_gwFillAppliance(i,rec);});
+    });
   }
 }
 function _gwInstallAddr(){return[_gw.installAddr1,_gw.installAddr2,_gw.installAddr3].filter(Boolean).join('\n');}
@@ -6370,7 +6547,6 @@ function _gwFillLandlord(rec){
 }
 function gwCopyPropToLandlord(){
   if(!(_gw.installAddr1||_gw.installAddr2||_gw.installAddr3))return;
-  if(!(_gw.landlordName||'').trim())gwSet('landlordName','Dear Client');
   gwSet('landlordAddr1',_gw.installAddr1||'');
   gwSet('landlordAddr2',_gw.installAddr2||'');
   gwSet('landlordAddr3',_gw.installAddr3||'');
@@ -6393,25 +6569,47 @@ function _gwPickDir(type,id){
   }
 }
 
-function gwSet(f,v){_gw[f]=v;}
+function gwSet(f,v){_gw[f]=v;_gwUpdateTitle();}
 function gwSetPipe(i,v){_gw.pipework[i]=v;gwRender();}
 function gwSetApp(i,f,v){if(_gw.appliances[i])_gw.appliances[i][f]=v;}
 function gwAutoFlue(i,typeVal){
   var t=(typeVal||'').toLowerCase();
-  var ft=null,combN_A=false;
-  if(/back\s*boiler/.test(t)){ft='OF';combN_A=false;}
-  else if(/combi|system\s*boiler|condensing|warm\s*air|water\s*heater|boiler/.test(t)){ft='RS';combN_A=false;}
-  else if(/fire|open\s*fire/.test(t)){ft='OF';combN_A=false;}
-  else if(/cooker|hob|range|dryer/.test(t)){ft='FL';combN_A=true;}
+  var ft=null,isCookerHob=false,isBoiler=false;
+  if(/back\s*boiler/.test(t)){ft='OF';}
+  else if(/combi|system\s*boiler|condensing|warm\s*air|water\s*heater|boiler/.test(t)){ft='RS';isBoiler=true;}
+  else if(/fire|open\s*fire/.test(t)){ft='OF';}
+  else if(/cooker|hob|range|dryer/.test(t)){ft='FL';isCookerHob=true;}
   if(!ft||!_gw.appliances[i])return;
-  var changed=false;
-  if(_gw.appliances[i].flueType!==ft){_gw.appliances[i].flueType=ft;changed=true;}
-  if(combN_A){
-    if(_gw.appliances[i].combustionReading!=='N/A'){_gw.appliances[i].combustionReading='N/A';changed=true;}
-  }else{
-    if(_gw.appliances[i].combustionReading==='N/A'){_gw.appliances[i].combustionReading='';changed=true;}
+  // Set flue state
+  _gw.appliances[i].flueType=ft;
+  // Set combustion reading
+  if(isCookerHob){
+    _gw.appliances[i].combustionReading='N/A';
+  }else if(isBoiler&&(_gw.appliances[i].combustionReading==='N/A'||!_gw.appliances[i].combustionReading)){
+    var _lc=localStorage.getItem('gw_last_comb')||'0.0008';
+    _gw.appliances[i].combustionReading=parseFloat(_lc)<0.00085?'0.0009':'0.0008';
   }
-  if(changed)gwRender();
+  // Targeted DOM update — no gwRender, no jitter
+  var card=document.querySelector('[data-gw-app="'+i+'"]');
+  if(!card){gwRender();return;}
+  // Update flue chips
+  card.querySelectorAll('[data-gw-flue]').forEach(function(chip){
+    chip.classList.toggle('sel',chip.getAttribute('data-gw-flue')===ft);
+  });
+  // Update combustion section visibility and value
+  var combDiv=card.querySelector('[data-gw-comb]');
+  if(combDiv){
+    if(isBoiler){
+      combDiv.style.display='';
+      var inp=combDiv.querySelector('input');
+      if(inp)inp.value=_gw.appliances[i].combustionReading||'';
+      var _lc2=localStorage.getItem('gw_last_comb')||'0.0008';
+      var hint=combDiv.querySelector('div');
+      if(hint)hint.textContent='Last used: '+_lc2+' · This cert: '+_gw.appliances[i].combustionReading;
+    }else{
+      combDiv.style.display='none';
+    }
+  }
 }
 function gwSetDefect(i,f,v){if(_gw.defects[i])_gw.defects[i][f]=v;}
 function gwAddApp(){if((_gw.appliances||[]).length>=5)return;_gw.appliances.push({location:'',type:'',make:'',model:'',flueType:'RS',combustionReading:'N/A',coFitted:'Yes',coInDate:'Yes',coTest:'Yes'});gwRender();}
@@ -6419,7 +6617,14 @@ function gwRemoveApp(i){_gw.appliances.splice(i,1);gwRender();}
 function gwAddDefect(){_gw.defects.push({text:'',warn:'N/A'});gwRender();}
 function gwRemoveDefect(i){_gw.defects.splice(i,1);gwRender();}
 function gwNext(){
-  if(_gw.step===1&&!(_gw.installPostcode||'').trim()){toast('Postcode is required','warn');return;}
+  if(_gw.step===1){
+    if(!(_gw.installAddr1||'').trim()){toast('Installation address line 1 is required','warn');return;}
+    if(!(_gw.installPostcode||'').trim()){toast('Installation postcode is required','warn');return;}
+  }
+  if(_gw.step===2){
+    if(!(_gw.landlordAddr1||'').trim()){toast('Landlord address line 1 is required','warn');return;}
+    if(!(_gw.landlordPostcode||'').trim()){toast('Landlord postcode is required','warn');return;}
+  }
   if(_gw.step<_GW_STEPS.length-1){_gw.step++;gwRender();}
 }
 function gwBack(){if(_gw.step>0){_gw.step--;gwRender();}}
@@ -6458,8 +6663,9 @@ function gwSyncToCP12(){
       setCP12Field('app'+n+'_inspected','Yes');
       setCP12Field('app'+n+'_safety_dev','Pass');
       setCP12Field('app'+n+'_vent','Pass');
-      setCP12Field('app'+n+'_visual','Pass');
-      setCP12Field('app'+n+'_flue_flow','Pass');
+      var _appIsCH=/cooker|hob|range|dryer/i.test(app.type||'');
+      setCP12Field('app'+n+'_visual',_appIsCH?'N/A':'Pass');
+      setCP12Field('app'+n+'_flue_flow',_appIsCH?'N/A':'Pass');
       setCP12Field('app'+n+'_serviced','No');
       setCP12Field('app'+n+'_combustion',/boiler/i.test(app.type||'')?app.combustionReading||'N/A':'N/A');
       setCP12Field('app'+n+'_safe_to_use','Yes');
@@ -6503,9 +6709,7 @@ async function gwSaveDraft(){
   let _z=parseInt(localStorage.getItem('cp12_preview_zoom')||'100',10);
   function _applyZoom(){
     const wrap=document.getElementById('cp12Wrap');
-    const lbl=document.getElementById('cp12-zoom-label');
     if(wrap)wrap.style.zoom=(_z/100);
-    if(lbl)lbl.textContent=_z+'%';
   }
   window.adjustCP12Zoom=function(delta){
     _z=Math.min(200,Math.max(60,_z+delta));
@@ -6514,6 +6718,27 @@ async function gwSaveDraft(){
   };
   window._applyCP12Zoom=_applyZoom;
   document.addEventListener('DOMContentLoaded',_applyZoom);
+  // Ctrl + scroll wheel zoom on CP12 preview
+  document.addEventListener('wheel',function(e){
+    if(!e.ctrlKey)return;
+    const wrap=document.getElementById('cp12Wrap');
+    if(!wrap||wrap.style.display==='none')return;
+    e.preventDefault();
+    adjustCP12Zoom(e.deltaY<0?10:-10);
+  },{passive:false});
+  // Pinch-to-zoom
+  var _pd=null;
+  document.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;_pd=Math.hypot(dx,dy);}
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(e.touches.length===2&&_pd!=null){
+      var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;
+      var dist=Math.hypot(dx,dy),delta=dist-_pd;
+      if(Math.abs(delta)>5){adjustCP12Zoom(delta>0?5:-5);_pd=dist;}
+    }
+  },{passive:true});
+  document.addEventListener('touchend',function(){_pd=null;});
 })();
 
 // ========== GAS - HISTORY ==========
