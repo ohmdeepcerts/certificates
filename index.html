@@ -6596,16 +6596,23 @@ function gwAutoFlue(i,typeVal){
   card.querySelectorAll('[data-gw-flue]').forEach(function(chip){
     chip.classList.toggle('sel',chip.getAttribute('data-gw-flue')===ft);
   });
-  // Update combustion section visibility and value
+  // Update combustion section — inject full HTML if not yet populated
   var combDiv=card.querySelector('[data-gw-comb]');
   if(combDiv){
     if(isBoiler){
-      combDiv.style.display='';
-      var inp=combDiv.querySelector('input');
-      if(inp)inp.value=_gw.appliances[i].combustionReading||'';
       var _lc2=localStorage.getItem('gw_last_comb')||'0.0008';
-      var hint=combDiv.querySelector('div');
-      if(hint)hint.textContent='Last used: '+_lc2+' · This cert: '+_gw.appliances[i].combustionReading;
+      var _cv=_gw.appliances[i].combustionReading||'';
+      if(!combDiv.querySelector('input')){
+        combDiv.innerHTML='<label class="elwiz-input-label">Combustion analyser reading</label>'
+          +'<input class="elwiz-input" id="gw-comb-'+i+'" placeholder="e.g. 0.0008" style="max-width:140px" value="'+_cv+'" oninput="gwSetApp('+i+',\'combustionReading\',this.value)">'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last used: '+_lc2+' · This cert: '+_cv+'</div>';
+      }else{
+        var inp=combDiv.querySelector('input');
+        if(inp)inp.value=_cv;
+        var hint=combDiv.querySelector('div');
+        if(hint)hint.textContent='Last used: '+_lc2+' · This cert: '+_cv;
+      }
+      combDiv.style.display='';
     }else{
       combDiv.style.display='none';
     }
