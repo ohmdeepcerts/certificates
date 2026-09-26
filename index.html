@@ -492,13 +492,14 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .logo-zone.has-logo .logo-placeholder{display:none}
 .cp12-form-wrap .logo-zone input[type="file"]{display:none}
 .cp12-form-wrap .header-content{min-width:0;display:flex;flex-direction:column;background:#1e3a5f}
-.cp12-form-wrap .top-bar{display:grid;grid-template-columns:.9fr .85fr .9fr 1.55fr;background:#f59e0b;padding:3px 5px;gap:4px;align-items:center;flex-shrink:0}
+.cp12-form-wrap .top-bar{display:grid;grid-template-columns:.9fr .85fr .9fr 2.4fr;background:#f59e0b;padding:3px 5px;gap:4px;align-items:center;flex-shrink:0}
 .cp12-form-wrap .top-item{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:3px;font-size:8pt}
 .cp12-form-wrap .top-item label{background:transparent;color:#1e3a5f;font-weight:700;padding:0;font-size:7.5pt;line-height:1.05;white-space:nowrap;border-radius:0}
 .cp12-form-wrap .top-item.gas-number-item{gap:2px}
 .cp12-form-wrap .top-item.gas-number-item label{font-size:6.8pt;line-height:1.0}
 .cp12-form-wrap .top-item input{min-width:0;width:100%;height:18px;background:#fff;border:1px solid rgba(30,58,95,.25);border-radius:2px;padding:1px 4px;font-size:9pt;font-weight:600;color:#111827;font-family:inherit}
 .cp12-form-wrap .auto-reference[readonly]{cursor:default;background:#fff!important;color:#111827!important;font-weight:700}
+.cp12-form-wrap .top-item.wide input{height:22px;font-size:7.8pt}
 .cp12-form-wrap .title-box{flex:1;background:#1e3a5f;color:#fff;text-align:left;padding:2px 9px 3px;display:flex;flex-direction:column;justify-content:center;min-height:39px}
 .cp12-form-wrap .title-box .company-input{width:100%;height:20px;background:transparent;border:1px solid transparent;border-radius:2px;color:#fff;font-family:inherit;font-size:16.5pt;font-weight:800;line-height:1;text-align:left;outline:none;margin:0 0 1px;padding:0}
 .cp12-form-wrap .title-box .company-input::placeholder{color:rgba(255,255,255,.6)}
@@ -1785,6 +1786,16 @@ a{color:var(--accent);text-decoration:none}
           </div>
           <div style="font-size:12px;color:var(--muted);margin-top:8px">EL certs will be: <strong id="el-ref-eg" style="color:var(--text);font-family:monospace">EL1001 / 5 EXAMPLE RD</strong></div>
         </div>
+        <div class="form-section">
+          <div class="form-section-title">🔬 Test Instruments</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Pre-filled in every new EL certificate — no need to enter them in the wizard each time.</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Instrument 1 — Brand</label><input type="text" id="s-el-inst1-brand" placeholder="e.g. Megger"></div>
+            <div class="field-group"><label>Instrument 1 — Model</label><input type="text" id="s-el-inst1-model" placeholder="e.g. LTW325"></div>
+            <div class="field-group"><label>Instrument 2 — Brand <small style="font-weight:400;color:var(--muted)">(if any)</small></label><input type="text" id="s-el-inst2-brand" placeholder="Optional"></div>
+            <div class="field-group"><label>Instrument 2 — Model</label><input type="text" id="s-el-inst2-model" placeholder="Optional"></div>
+          </div>
+        </div>
         <div class="settings-section">
           <div class="settings-section-title">Default Client Email</div>
           <div class="settings-section-desc">Pre-filled in the wizard when creating a new EL certificate. Can be overridden per certificate.</div>
@@ -3035,6 +3046,10 @@ function loadSettingsUI(){
   document.getElementById('s-el-ref-prefix').value=getSetting('el_ref_prefix','EL');
   document.getElementById('s-el-ref-start').value=getSetting('el_ref_start','1001');
   document.getElementById('s-el-client-email-default').value=getSetting('el_client_email_default','gbelectricalcertificates@hotmail.com');
+  document.getElementById('s-el-inst1-brand').value=getSetting('el_inst1_brand','');
+  document.getElementById('s-el-inst1-model').value=getSetting('el_inst1_model','');
+  document.getElementById('s-el-inst2-brand').value=getSetting('el_inst2_brand','');
+  document.getElementById('s-el-inst2-model').value=getSetting('el_inst2_model','');
   // EL logos/sig previews
   const elLogoFields=[['el_logo_data','pr-el-logo'],['el_body_logo_data','pr-el-body-logo'],['el_sig_data','pr-el-sig']];
   elLogoFields.forEach(([key,previewId])=>{const d=getSetting(key,'');if(d){const el=document.getElementById(previewId);if(el)el.innerHTML=`<img src="${d}" style="max-height:70px;object-fit:contain">`;}});
@@ -3125,6 +3140,10 @@ async function saveSettings(){
     ['el_ref_prefix',(document.getElementById('s-el-ref-prefix').value||'EL').toUpperCase()],
     ['el_ref_start',document.getElementById('s-el-ref-start').value||'1001'],
     ['el_client_email_default',document.getElementById('s-el-client-email-default').value||''],
+    ['el_inst1_brand',document.getElementById('s-el-inst1-brand').value],
+    ['el_inst1_model',document.getElementById('s-el-inst1-model').value],
+    ['el_inst2_brand',document.getElementById('s-el-inst2-brand').value],
+    ['el_inst2_model',document.getElementById('s-el-inst2-model').value],
     ['email_method',document.getElementById('s-email-method').value],
     ['email_script_url',document.getElementById('s-script-url').value],
     ['brevo_api_key',document.getElementById('s-brevo-key').value],
@@ -8296,7 +8315,7 @@ async function saveApplianceRecord(){
       // Installation arrangement (step 4)
       arSelfContained: 'N/A', arGenerator: 'N/A', arCentral: 'N/A', arCombined: 'N/A',
       // Test instruments (step 8)
-      inst1Model: '', inst1Serial: '', inst2Model: '', inst2Serial: '',
+      inst1Brand: getSetting('el_inst1_brand',''), inst1Model: getSetting('el_inst1_model',''), inst2Brand: getSetting('el_inst2_brand',''), inst2Model: getSetting('el_inst2_model',''),
       // P1-P23 compliance checklist (step 9)
       pItems: {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',
                p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',
@@ -8586,16 +8605,16 @@ async function saveApplianceRecord(){
       html += '<div class="elwiz-q">Test instruments</div>';
       html += '<div class="elwiz-sub">Record the instruments used. Where P2 measurement is carried out, instruments must be recorded.</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">';
+      html += '<div><label class="elwiz-input-label">Instrument 1 — Brand</label>';
+      html += '<input class="elwiz-input" placeholder="e.g. Megger" value="'+esc(_w.inst1Brand)+'" oninput="elSet(\'inst1Brand\',this.value)"></div>';
       html += '<div><label class="elwiz-input-label">Instrument 1 — Model</label>';
-      html += '<input class="elwiz-input" placeholder="e.g. Megger LTW325" value="'+esc(_w.inst1Model)+'" oninput="elSet(\'inst1Model\',this.value)"></div>';
-      html += '<div><label class="elwiz-input-label">Instrument 1 — Serial No.</label>';
-      html += '<input class="elwiz-input" placeholder="e.g. SN123456" value="'+esc(_w.inst1Serial)+'" oninput="elSet(\'inst1Serial\',this.value)"></div>';
+      html += '<input class="elwiz-input" placeholder="e.g. LTW325" value="'+esc(_w.inst1Model)+'" oninput="elSet(\'inst1Model\',this.value)"></div>';
       html += '</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-      html += '<div><label class="elwiz-input-label">Instrument 2 — Model <small style="font-weight:400;color:var(--muted)">(if any)</small></label>';
+      html += '<div><label class="elwiz-input-label">Instrument 2 — Brand <small style="font-weight:400;color:var(--muted)">(if any)</small></label>';
+      html += '<input class="elwiz-input" placeholder="Optional" value="'+esc(_w.inst2Brand)+'" oninput="elSet(\'inst2Brand\',this.value)"></div>';
+      html += '<div><label class="elwiz-input-label">Instrument 2 — Model</label>';
       html += '<input class="elwiz-input" placeholder="Optional" value="'+esc(_w.inst2Model)+'" oninput="elSet(\'inst2Model\',this.value)"></div>';
-      html += '<div><label class="elwiz-input-label">Instrument 2 — Serial No.</label>';
-      html += '<input class="elwiz-input" placeholder="Optional" value="'+esc(_w.inst2Serial)+'" oninput="elSet(\'inst2Serial\',this.value)"></div>';
       html += '</div>';
     } else if(s===9){
       // COMPLIANCE CHECKLIST P1-P23
@@ -9895,14 +9914,14 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
         +'</div>'
         +'<div class="sec-head">Test Instruments Used</div>'
         +'<table class="ltbl">'
-          +'<tr><th>Instrument</th><th>Model</th><th style="width:160px">Serial No.</th></tr>'
+          +'<tr><th>Instrument</th><th>Brand</th><th style="width:160px">Model</th></tr>'
           +'<tr><td style="padding:7px 10px">Instrument 1 (light meter)</td>'
-            +'<td>'+(r.inst1Model?esc(r.inst1Model):'<span style="color:#9a948e;font-style:italic">Not recorded</span>')+'</td>'
-            +'<td>'+(r.inst1Serial?esc(r.inst1Serial):'—')+'</td></tr>'
-          +(r.inst2Model||r.inst2Serial
+            +'<td>'+(r.inst1Brand?esc(r.inst1Brand):'<span style="color:#9a948e;font-style:italic">Not recorded</span>')+'</td>'
+            +'<td>'+(r.inst1Model?esc(r.inst1Model):'—')+'</td></tr>'
+          +(r.inst2Brand||r.inst2Model
             ?'<tr><td style="padding:7px 10px">Instrument 2</td>'
-              +'<td>'+(r.inst2Model?esc(r.inst2Model):'—')+'</td>'
-              +'<td>'+(r.inst2Serial?esc(r.inst2Serial):'—')+'</td></tr>'
+              +'<td>'+(r.inst2Brand?esc(r.inst2Brand):'—')+'</td>'
+              +'<td>'+(r.inst2Model?esc(r.inst2Model):'—')+'</td></tr>'
             :'')
           +'<tr><td colspan="3" style="font-size:10px;color:#6b6560;font-style:italic;padding:5px 10px;background:#fafaf9">Where periodic requirement P2 is carried out by measurement, details of instruments MUST be recorded</td></tr>'
         +'</table>'
