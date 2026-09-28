@@ -5196,7 +5196,8 @@ function newGasCert(){
   buildCertRefSeq('','','gas').then(function(r){
     var m=(r.baseRef||'').match(/^[A-Za-z]+(\d+)$/);
     if(m){_cachedNextGasSerial=parseInt(m[1]);_gwUpdateTitle();}
-  }).catch(function(){document.getElementById('gas-form-ref').textContent='CP12 · Draft';});
+    else{var re=document.getElementById('gas-form-ref');if(re&&re.textContent==='CP12 · Loading ref…')re.textContent='CP12 · Draft';}
+  }).catch(function(){var re=document.getElementById('gas-form-ref');if(re&&re.textContent==='CP12 · Loading ref…')re.textContent='CP12 · Draft';});
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
     else el.value='';
@@ -6614,7 +6615,7 @@ function _gwAttachColAC(inputEl,col,onPick){
     _acDD._type='';_acCurInput=inputEl;_acIdx=-1;
     _posAcDD(inputEl);
   });
-  inputEl.addEventListener('keydown',_acKeyDown);
+  inputEl.addEventListener('keydown',_acKbd);
 }
 function _gwInstallAddr(){return[_gw.installAddr1,_gw.installAddr2,_gw.installAddr3].filter(Boolean).join('\n');}
 function _gwFillProperty(rec){
