@@ -5192,7 +5192,11 @@ function newGasCert(){
   editingGasId=null;_gasDirty=false;
   _cachedNextGasSerial=null;
   document.getElementById('gas-form-title').textContent='New Gas';
-  document.getElementById('gas-form-ref').textContent='CP12 · Draft';
+  document.getElementById('gas-form-ref').textContent='CP12 · Loading ref…';
+  buildCertRefSeq('','','gas').then(function(r){
+    var m=(r.baseRef||'').match(/^[A-Za-z]+(\d+)$/);
+    if(m){_cachedNextGasSerial=parseInt(m[1]);_gwUpdateTitle();}
+  }).catch(function(){document.getElementById('gas-form-ref').textContent='CP12 · Draft';});
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
     else el.value='';
@@ -6330,7 +6334,15 @@ function _gwFmtDateWithDay(dateStr){
 function _gwUpdateTitle(){
   var refEl=document.getElementById('gas-form-ref');if(!refEl||editingGasId)return;
   var addr=(_gw.installAddr1||'').trim(),pc=(_gw.installPostcode||'').trim();
-  refEl.textContent=[addr,pc].filter(Boolean).join(' · ')||'CP12 · Draft';
+  if(_cachedNextGasSerial){
+    var s=_refSettings('gas');
+    var yy=String(new Date().getFullYear()).slice(-2);
+    var score=_pcScore(pc);
+    var addrPart=addr?_refAddrPart(addr):'';
+    refEl.textContent=s.prefix+_cachedNextGasSerial+yy+(score?score:'')+(addrPart?' / '+addrPart:'');
+  }else{
+    refEl.textContent=[addr,pc].filter(Boolean).join(' · ')||'CP12 · Draft';
+  }
 }
 window.gwSetAppFlue=function(i,ft){
   gwSetApp(i,'flueType',ft);
