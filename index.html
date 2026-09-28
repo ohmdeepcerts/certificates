@@ -6279,9 +6279,10 @@ window._gwSetDrum=function(baseId,dateStr){
 window._gwDrumWheel=function(e,el){
   e.preventDefault();e.stopPropagation();
   var IH=30,dir=e.deltaY>0?1:-1;
+  var steps=Math.max(1,Math.min(5,Math.round(Math.abs(e.deltaY)/40)));
   var cur=Math.round(el.scrollTop/IH);
   var max=el.querySelectorAll('[data-idx]').length-1;
-  var next=Math.max(0,Math.min(max,cur+dir));
+  var next=Math.max(0,Math.min(max,cur+dir*steps));
   el.scrollTo({top:next*IH,behavior:'smooth'});
 };
 window._gwDrumClickItem=function(itemEl){
