@@ -1243,7 +1243,10 @@ a{color:var(--accent);text-decoration:none}
               <div class="info-box-header">Landlord / Customer Details</div>
               <div class="info-box-body">
                 <div class="compact-address has-copy-action">
-                  <textarea class="address-main" data-field="landlord_address" placeholder="Landlord / customer name and address&#10;Including postcode" rows="4"></textarea>
+                  <div data-field="landlord_address" data-composite="ll" style="border:1px solid #e5e7eb;border-radius:2px;padding:0;background:#fff">
+                    <input type="text" id="cp12-ll-name" placeholder="Name" style="font-weight:700;font-size:12.27px;color:#111827;display:block;width:100%;border:none;border-bottom:1px solid #f3f4f6;padding:3px 38px 3px 5px;background:transparent;outline:none;font-family:inherit;box-sizing:border-box">
+                    <textarea class="address-main-ll" placeholder="Address including postcode" rows="3" style="border:none;outline:none;resize:none;width:100%;padding:2px 38px 2px 5px;font-size:12.27px;color:#111827;background:transparent;font-family:inherit;box-sizing:border-box;display:block"></textarea>
+                  </div>
                   <button type="button" class="copy-address-btn no-print" title="Copy from installation address" onclick="copyInstallationToLandlord()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                   </button>
@@ -4959,16 +4962,31 @@ function copyInstallationToLandlord(){
   const lp=document.querySelector('[data-field="landlord_postcode"]');
   const ia=document.querySelector('[data-field="install_address"]');
   const ip=document.querySelector('[data-field="install_postcode"]');
-  if(la&&ia)la.value=ia.value;if(lp&&ip)lp.value=ip.value;
+  if(la&&ia){
+    if(la.dataset.composite==='ll'){var ni=la.querySelector('#cp12-ll-name');var ta=la.querySelector('textarea');if(ni)ni.value='';if(ta){ta.value=ia.value||'';_cp12ResizeTA(ta);}}
+    else la.value=ia.value;
+  }
+  if(lp&&ip)lp.value=ip.value;
 }
 function cp12Field(f){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return'';
-  return el.tagName==='BUTTON'?el.dataset.current||'':el.value||'';
+  if(el.tagName==='BUTTON')return el.dataset.current||'';
+  if(el.dataset.composite==='ll'){
+    var nm=(el.querySelector('#cp12-ll-name')||{}).value||'';
+    var addr=(el.querySelector('textarea')||{}).value||'';
+    return nm&&addr?nm+'\n'+addr:nm||addr;
+  }
+  return el.value||'';
 }
 function _cp12ResizeTA(el,fromUser){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';const _cs=getComputedStyle(el);const _maxH=parseFloat(_cs.maxHeight)||9999;const _padV=parseFloat(_cs.paddingTop)+parseFloat(_cs.paddingBottom);const _contentH=el.scrollHeight-_padV;if(fromUser&&_contentH>_maxH){el.value=el._cp12Prev!=null?el._cp12Prev:'';el.style.height='auto';}else{if(_contentH<=_maxH)el._cp12Prev=el.value;}const _finalH=el.scrollHeight-_padV;const _h=Math.min(_finalH,_maxH);el.style.height=_h+'px';const _cell=el.closest('.appliance-value-cell');if(_cell)_cell.style.minHeight=(_h+_padV)+'px';}
 function setCP12Field(f,v){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
   if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
+  else if(el.dataset.composite==='ll'){
+    var lns=(v||'').split('\n');var nm=lns[0]||'',addr=lns.slice(1).join('\n');
+    var ni=el.querySelector('#cp12-ll-name');if(ni)ni.value=nm;
+    var ta=el.querySelector('textarea');if(ta){ta.value=addr;_cp12ResizeTA(ta);}
+  }
   else{el.value=v||'';
     if(el.tagName==='TEXTAREA')_cp12ResizeTA(el);
     // If hidden input used by a data-group button, refresh button text
@@ -6203,11 +6221,11 @@ function _gwDrumPickerHTML(baseId,dateStr){
     c+='<div style="position:absolute;top:0;left:0;right:0;height:'+(IH*2)+'px;background:linear-gradient(to bottom,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
     c+='<div style="position:absolute;bottom:0;left:0;right:0;height:'+(IH*2)+'px;background:linear-gradient(to top,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
     c+='<div style="position:absolute;top:'+((H-IH)/2)+'px;left:6px;right:6px;height:'+IH+'px;background:rgba(37,99,235,.07);border-radius:6px;pointer-events:none;z-index:1"></div>';
-    c+='<div id="'+id+'" data-gw-drum="'+baseId+'" data-init-idx="'+si+'" style="height:'+H+'px;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-snap-stop:always;-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-padding-top:'+(IH*2)+'px" onscroll="_gwDrumScrolled(this)">';
+    c+='<div id="'+id+'" data-gw-drum="'+baseId+'" data-init-idx="'+si+'" style="height:'+H+'px;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-snap-stop:always;-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-padding-top:'+(IH*2)+'px" onscroll="_gwDrumScrolled(this)" onwheel="_gwDrumWheel(event,this)">';
     c+='<div style="height:'+(IH*2)+'px"></div>';
     items.forEach(function(item,i){
       var isSel=i===si;
-      c+='<div data-idx="'+i+'" data-val="'+item+'" style="height:'+IH+'px;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;font-size:'+(isSel?'17':'13')+'px;font-weight:'+(isSel?'700':'400')+';color:'+(isSel?'var(--accent)':'var(--text)')+';user-select:none">'+item+'</div>';
+      c+='<div data-idx="'+i+'" data-val="'+item+'" onclick="_gwDrumClickItem(this)" style="height:'+IH+'px;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;font-size:'+(isSel?'17':'13')+'px;font-weight:'+(isSel?'700':'400')+';color:'+(isSel?'var(--accent)':'var(--text)')+';user-select:none;cursor:pointer">'+item+'</div>';
     });
     c+='<div style="height:'+(IH*2)+'px"></div></div></div>';
     return c;
@@ -6257,6 +6275,19 @@ window._gwSetDrum=function(baseId,dateStr){
   var ddD=document.getElementById(baseId+'-dd'),mmD=document.getElementById(baseId+'-mm'),yyD=document.getElementById(baseId+'-yy');
   if(ddD)ddD.scrollTop=(dd-1)*IH;if(mmD)mmD.scrollTop=(mm-1)*IH;
   if(yyD){var yi=years.indexOf(String(yyyy));yyD.scrollTop=(yi<0?2:yi)*IH;}
+};
+window._gwDrumWheel=function(e,el){
+  e.preventDefault();e.stopPropagation();
+  var IH=30,dir=e.deltaY>0?1:-1;
+  var cur=Math.round(el.scrollTop/IH);
+  var max=el.querySelectorAll('[data-idx]').length-1;
+  var next=Math.max(0,Math.min(max,cur+dir));
+  el.scrollTo({top:next*IH,behavior:'smooth'});
+};
+window._gwDrumClickItem=function(itemEl){
+  var col=itemEl.parentElement;if(!col)return;
+  var idx=parseInt(itemEl.getAttribute('data-idx'));
+  col.scrollTo({top:idx*30,behavior:'smooth'});
 };
 window._gwDateAdjust=function(baseId,delta){
   var cur=baseId==='gw-cert-date'?_gw.certDate:_gw.nextCheckDate;
@@ -6554,17 +6585,17 @@ function _gwAttachColAC(inputEl,col,onPick){
     props.forEach(function(r){
       var v=(col==='addr2'?r.addr2:r.town)||'';
       v=v.trim();
-      if(!v||!v.toLowerCase().includes(q.toLowerCase()))return;
+      if(!v||!v.toLowerCase().startsWith(q.toLowerCase()))return;
       if(seen.has(v.toLowerCase()))return;
       seen.add(v.toLowerCase());
       items.push({_colVal:v});
     });
     if(!items.length){_hideAcDD();return;}
     _acItems=items.slice(0,8);
-    var html=_acItems.map(function(item,idx){
+    var html='<div style="padding:4px 14px;text-align:right;border-bottom:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>';
+    html+=_acItems.map(function(item,idx){
       return '<div class="ac-item" data-idx="'+idx+'" onclick="_acPick('+idx+')" style="padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text)">'+_hlText(item._colVal,q)+'</div>';
     }).join('');
-    html+='<div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>';
     _acDD.innerHTML=html;
     _acDD._onSelect=function(item){onPick(item._colVal);};
     _acDD._type='';_acCurInput=inputEl;_acIdx=-1;
@@ -7435,7 +7466,7 @@ function _dirMatchScore(type,r,ql){
     type==='appliances'?[r.name,r.manufacturer,r.model,r.category]:[];
   for(const f of fields){
     if(!f)continue;const fl=f.toLowerCase();
-    if(fl.startsWith(ql))s+=3;else if(fl.includes(ql))s+=1;
+    if(fl.startsWith(ql))s+=3;
   }
   return s;
 }
@@ -7524,16 +7555,16 @@ function _hlText(s,q){
 
 function _renderAcDD(items,type,inputEl,q,onSelect){
   _acItems=items;_acCurInput=inputEl;
+  const _closeBtn=`<div style="padding:4px 14px;text-align:right;border-bottom:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
   if(!items.length&&q.length>=2){
-    _acDD.innerHTML=`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div><div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
+    _acDD.innerHTML=_closeBtn+`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div>`;
     _posAcDD(inputEl);return;
   }
   if(!items.length){_hideAcDD();return;}
-  let html=items.map((item,idx)=>`<div class="ac-item" data-idx="${idx}" onclick="_acPick(${idx})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)">
+  let html=_closeBtn+items.map((item,idx)=>`<div class="ac-item" data-idx="${idx}" onclick="_acPick(${idx})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)">
     <div style="font-size:13px;font-weight:500;color:var(--text)">${_hlText(_dirName(type,item),q)}</div>
     ${_dirSub(type,item)?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${_hlText(_dirSub(type,item),q)}</div>`:''}
   </div>`).join('');
-  html+=`<div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
   _acDD.innerHTML=html;
   _acDD._onSelect=onSelect;_acDD._type=type;_acDD._q=q;
   _acIdx=-1;_posAcDD(inputEl);
