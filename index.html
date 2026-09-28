@@ -5174,7 +5174,7 @@ function newGasCert(){
   editingGasId=null;_gasDirty=false;
   _cachedNextGasSerial=null;
   document.getElementById('gas-form-title').textContent='New Gas';
-  document.getElementById('gas-form-ref').textContent='';
+  document.getElementById('gas-form-ref').textContent='CP12 · Draft';
   document.querySelectorAll('#cp12Wrap [data-field]').forEach(el=>{
     if(el.tagName==='BUTTON'){const o=(el.dataset.options||'').split(',');el.dataset.current=o[0]||'';el.textContent=o[0]||'';}
     else el.value='';
@@ -6193,7 +6193,7 @@ async function mgwComplete(){mgwSyncToDesktopForm();await completeGas();}
 function _gwDrumPickerHTML(baseId,dateStr){
   var parts=(dateStr||'01/01/'+new Date().getFullYear()).split('/');
   var dd=parseInt(parts[0])||1,mm=parseInt(parts[1])||1,yyyy=parseInt(parts[2])||new Date().getFullYear();
-  var IH=36,VIS=5,H=IH*VIS;
+  var IH=30,VIS=5,H=IH*VIS;
   var days=[];for(var _d=1;_d<=31;_d++)days.push(String(_d).padStart(2,'0'));
   var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var ty=new Date().getFullYear(),years=[];for(var _y=ty-2;_y<=ty+3;_y++)years.push(String(_y));
@@ -6220,11 +6220,11 @@ function _gwDrumPickerHTML(baseId,dateStr){
 }
 function _gwInitDrums(){
   document.querySelectorAll('[data-gw-drum]').forEach(function(el){
-    el.scrollTop=parseInt(el.getAttribute('data-init-idx')||'0')*36;
+    el.scrollTop=parseInt(el.getAttribute('data-init-idx')||'0')*30;
   });
 }
 window._gwDrumScrolled=function(el){
-  var IH=36,nearIdx=Math.round(el.scrollTop/IH);
+  var IH=30,nearIdx=Math.round(el.scrollTop/IH);
   el.querySelectorAll('[data-idx]').forEach(function(item){
     var isSel=parseInt(item.getAttribute('data-idx'))===nearIdx;
     item.style.fontSize=isSel?'17px':'13px';item.style.fontWeight=isSel?'700':'400';
@@ -6233,7 +6233,7 @@ window._gwDrumScrolled=function(el){
   clearTimeout(el._st);el._st=setTimeout(function(){_gwDrumDone(el);},120);
 };
 window._gwDrumDone=function(el){
-  var IH=36,idx=Math.round(el.scrollTop/IH),baseId=el.getAttribute('data-gw-drum');
+  var IH=30,idx=Math.round(el.scrollTop/IH),baseId=el.getAttribute('data-gw-drum');
   function getColVal(sfx){
     var d=document.getElementById(baseId+sfx);if(!d)return null;
     var i=Math.round(d.scrollTop/IH),found=null;
@@ -6245,7 +6245,7 @@ window._gwDrumDone=function(el){
   var dateStr=ddV+'/'+String(mNames.indexOf(mmV)+1).padStart(2,'0')+'/'+yyV;
   if(baseId==='gw-cert-date'){
     gwSet('certDate',dateStr);var nx=oneYearMinusOneDayUK(dateStr);gwSet('nextCheckDate',nx);
-    _gwSetDrum('gw-ncd',nx);var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+    _gwSetDrum('gw-ncd',nx);var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;var cd=document.getElementById('gw-cert-date-display');if(cd)cd.textContent=_gwFmtDateWithDay(dateStr);
   }else if(baseId==='gw-ncd'){
     gwSet('nextCheckDate',dateStr);var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+dateStr;
   }
@@ -6253,7 +6253,7 @@ window._gwDrumDone=function(el){
 window._gwSetDrum=function(baseId,dateStr){
   var parts=(dateStr||'').split('/');if(parts.length!==3)return;
   var dd=parseInt(parts[0])||1,mm=parseInt(parts[1])||1,yyyy=parseInt(parts[2])||new Date().getFullYear();
-  var IH=36,ty=new Date().getFullYear(),years=[];for(var _y=ty-2;_y<=ty+3;_y++)years.push(String(_y));
+  var IH=30,ty=new Date().getFullYear(),years=[];for(var _y=ty-2;_y<=ty+3;_y++)years.push(String(_y));
   var ddD=document.getElementById(baseId+'-dd'),mmD=document.getElementById(baseId+'-mm'),yyD=document.getElementById(baseId+'-yy');
   if(ddD)ddD.scrollTop=(dd-1)*IH;if(mmD)mmD.scrollTop=(mm-1)*IH;
   if(yyD){var yi=years.indexOf(String(yyyy));yyD.scrollTop=(yi<0?2:yi)*IH;}
@@ -6267,7 +6267,7 @@ window._gwDateAdjust=function(baseId,delta){
   if(baseId==='gw-cert-date'){
     gwSet('certDate',nd);var nx=oneYearMinusOneDayUK(nd);gwSet('nextCheckDate',nx);
     _gwSetDrum('gw-cert-date',nd);_gwSetDrum('gw-ncd',nx);
-    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;var cd=document.getElementById('gw-cert-date-display');if(cd)cd.textContent=_gwFmtDateWithDay(nd);
   }else{
     gwSet('nextCheckDate',nd);_gwSetDrum('gw-ncd',nd);
     var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nd;
@@ -6278,7 +6278,7 @@ window._gwDateToday=function(baseId){
   if(baseId==='gw-cert-date'){
     gwSet('certDate',nd);var nx=oneYearMinusOneDayUK(nd);gwSet('nextCheckDate',nx);
     _gwSetDrum('gw-cert-date',nd);_gwSetDrum('gw-ncd',nx);
-    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
+    var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;var cd=document.getElementById('gw-cert-date-display');if(cd)cd.textContent=_gwFmtDateWithDay(nd);
   }else{gwSet('nextCheckDate',nd);_gwSetDrum('gw-ncd',nd);}
 };
 window._gwDateSetNcd12m=function(){
@@ -6286,10 +6286,19 @@ window._gwDateSetNcd12m=function(){
   var nx=oneYearMinusOneDayUK(cd);gwSet('nextCheckDate',nx);_gwSetDrum('gw-ncd',nx);
   var ex=document.getElementById('gw-expiry-display');if(ex)ex.textContent='Next due: '+nx;
 };
+function _gwFmtDateWithDay(dateStr){
+  if(!dateStr||dateStr.length<8)return dateStr||'';
+  var p=dateStr.split('/');if(p.length!==3)return dateStr;
+  var d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+  if(isNaN(d.getTime()))return dateStr;
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var mns=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return days[d.getDay()]+', '+parseInt(p[0])+' '+mns[d.getMonth()]+' '+p[2];
+}
 function _gwUpdateTitle(){
   var refEl=document.getElementById('gas-form-ref');if(!refEl||editingGasId)return;
   var addr=(_gw.installAddr1||'').trim(),pc=(_gw.installPostcode||'').trim();
-  refEl.textContent=[addr,pc].filter(Boolean).join(' · ');
+  refEl.textContent=[addr,pc].filter(Boolean).join(' · ')||'CP12 · Draft';
 }
 window.gwSetAppFlue=function(i,ft){
   gwSetApp(i,'flueType',ft);
@@ -6367,7 +6376,8 @@ function gwRender(){
     +'<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-cert-date\',1)" style="padding:5px 11px;font-size:12px">Next →</button>'
     +'</div>'
     +_gwDrumPickerHTML('gw-cert-date',_gw.certDate)
-    +'<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: '+esc(_gw.nextCheckDate)+'</div>'
+    +'<div id="gw-cert-date-display" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:6px;padding:5px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">'+_gwFmtDateWithDay(_gw.certDate)+'</div>'
+    +'<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:4px;margin-bottom:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: '+esc(_gw.nextCheckDate)+'</div>'
     +'<label class="elwiz-input-label">Next inspection due</label>'
     +'<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
     +'<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:5px 11px;font-size:12px">12 months</button>'
@@ -6391,18 +6401,6 @@ function gwRender(){
     var _la=(_dir&&_dir.agents||[]).filter(function(r){return r.agency_name||r.contact_name;}).slice(0,6);
     html+='<div class="elwiz-q">Landlord / Customer</div>'
     +'<div class="elwiz-sub">Pick from Directory or enter manually.</div>';
-    if(_ll.length){
-      html+='<div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Landlords</div>'
-      +'<div class="elwiz-chips" style="flex-wrap:wrap;margin-bottom:10px">';
-      _ll.forEach(function(r){html+='<div class="elwiz-chip" onclick="_gwPickDir(\'landlord\',\''+r.id+'\')">'+esc((r.landlord_name||r.company_name||'').substring(0,28))+'</div>';});
-      html+='</div>';
-    }
-    if(_la.length){
-      html+='<div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Agents</div>'
-      +'<div class="elwiz-chips" style="flex-wrap:wrap;margin-bottom:10px">';
-      _la.forEach(function(r){html+='<div class="elwiz-chip" onclick="_gwPickDir(\'agent\',\''+r.id+'\')">'+esc((r.agency_name||r.contact_name||'').substring(0,28))+'</div>';});
-      html+='</div>';
-    }
     html+='<label class="elwiz-input-label">Name</label>'
     +'<input class="elwiz-input" id="gw-landlord-name" placeholder="e.g. John Smith / ABC Properties" value="'+esc(_gw.landlordName||'')+'" oninput="gwSet(\'landlordName\',this.value)">'
     +'<label class="elwiz-input-label" style="margin-top:12px">Address line 1 <span style="color:var(--error,#b91c1c)">*</span></label>'
@@ -6425,7 +6423,7 @@ function gwRender(){
       // Auto-fill combustion for boilers
       if(_isBoiler&&(!app.combustionReading||app.combustionReading==='N/A'||app.combustionReading==='')){
         var _lc=localStorage.getItem('gw_last_comb')||'0.0008';
-        _gw.appliances[i].combustionReading=parseFloat(_lc)<0.00085?'0.0009':'0.0008';
+        _gw.appliances[i].combustionReading=_lc;
         app=_gw.appliances[i];
       }
       html+='<div data-gw-app="'+i+'" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'
@@ -6448,10 +6446,9 @@ function gwRender(){
       html+='</div></div>';
       if(_isBoiler){
         var _lc2=localStorage.getItem('gw_last_comb')||'0.0008';
-        var _nextC=parseFloat(_lc2)<0.00085?'0.0009':'0.0008';
         html+='<div data-gw-comb style="margin-bottom:10px"><label class="elwiz-input-label">Combustion analyser reading</label>'
         +'<input class="elwiz-input" id="gw-comb-'+i+'" placeholder="e.g. 0.0008" style="max-width:140px" value="'+esc(app.combustionReading||'')+'" oninput="gwSetApp('+i+',\'combustionReading\',this.value)">'
-        +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last used: '+esc(_lc2)+' · This cert: '+esc(_nextC)+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last recorded: '+esc(_lc2)+'</div>'
         +'</div>';
       } else {
         html+='<div data-gw-comb style="display:none"></div>';
@@ -6528,6 +6525,10 @@ function gwAttachAC(){
   if(_gw.step===1){
     var ia=document.getElementById('gw-install-a1');
     if(ia)attachDirAC(ia,'properties',_gwFillProperty);
+    var ia2=document.getElementById('gw-install-a2');
+    var ia3=document.getElementById('gw-install-a3');
+    if(ia2)_gwAttachColAC(ia2,'addr2',function(v){gwSet('installAddr2',v);ia2.value=v;});
+    if(ia3)_gwAttachColAC(ia3,'town',function(v){gwSet('installAddr3',v);ia3.value=v;});
   }else if(_gw.step===2){
     var ni=document.getElementById('gw-landlord-name');
     var la=document.getElementById('gw-landlord-a1');
@@ -6541,6 +6542,35 @@ function gwAttachAC(){
       if(typeEl)attachApplianceAC(typeEl,function(rec){_gwFillAppliance(i,rec);});
     });
   }
+}
+function _gwAttachColAC(inputEl,col,onPick){
+  if(!_acDD)_initAcDD();
+  if(inputEl._acColAttached)return;inputEl._acColAttached=true;
+  inputEl.addEventListener('input',function(){
+    var q=(inputEl.value||'').trim();
+    if(q.length<2){_hideAcDD();return;}
+    var props=(_dir&&_dir.properties)||[];
+    var seen=new Set(),items=[];
+    props.forEach(function(r){
+      var v=(col==='addr2'?r.addr2:r.town)||'';
+      v=v.trim();
+      if(!v||!v.toLowerCase().includes(q.toLowerCase()))return;
+      if(seen.has(v.toLowerCase()))return;
+      seen.add(v.toLowerCase());
+      items.push({_colVal:v});
+    });
+    if(!items.length){_hideAcDD();return;}
+    _acItems=items.slice(0,8);
+    var html=_acItems.map(function(item,idx){
+      return '<div class="ac-item" data-idx="'+idx+'" onclick="_acPick('+idx+')" style="padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text)">'+_hlText(item._colVal,q)+'</div>';
+    }).join('');
+    html+='<div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>';
+    _acDD.innerHTML=html;
+    _acDD._onSelect=function(item){onPick(item._colVal);};
+    _acDD._type='';_acCurInput=inputEl;_acIdx=-1;
+    _posAcDD(inputEl);
+  });
+  inputEl.addEventListener('keydown',_acKeyDown);
 }
 function _gwInstallAddr(){return[_gw.installAddr1,_gw.installAddr2,_gw.installAddr3].filter(Boolean).join('\n');}
 function _gwFillProperty(rec){
@@ -6605,8 +6635,7 @@ function gwAutoFlue(i,typeVal){
   if(isCookerHob){
     _gw.appliances[i].combustionReading='N/A';
   }else if(isBoiler&&(_gw.appliances[i].combustionReading==='N/A'||!_gw.appliances[i].combustionReading)){
-    var _lc=localStorage.getItem('gw_last_comb')||'0.0008';
-    _gw.appliances[i].combustionReading=parseFloat(_lc)<0.00085?'0.0009':'0.0008';
+    _gw.appliances[i].combustionReading=localStorage.getItem('gw_last_comb')||'0.0008';
   }
   // Targeted DOM update — no gwRender, no jitter
   var card=document.querySelector('[data-gw-app="'+i+'"]');
@@ -6624,12 +6653,12 @@ function gwAutoFlue(i,typeVal){
       if(!combDiv.querySelector('input')){
         combDiv.innerHTML='<label class="elwiz-input-label">Combustion analyser reading</label>'
           +'<input class="elwiz-input" id="gw-comb-'+i+'" placeholder="e.g. 0.0008" style="max-width:140px" value="'+_cv+'" oninput="gwSetApp('+i+',\'combustionReading\',this.value)">'
-          +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last used: '+_lc2+' · This cert: '+_cv+'</div>';
+          +'<div style="font-size:11px;color:var(--muted);margin-top:3px">Last recorded: '+_lc2+'</div>';
       }else{
         var inp=combDiv.querySelector('input');
         if(inp)inp.value=_cv;
         var hint=combDiv.querySelector('div');
-        if(hint)hint.textContent='Last used: '+_lc2+' · This cert: '+_cv;
+        if(hint)hint.textContent='Last recorded: '+_lc2;
       }
       combDiv.style.display='';
     }else{
@@ -6694,6 +6723,7 @@ function gwSyncToCP12(){
       setCP12Field('app'+n+'_flue_flow',_appIsCH?'N/A':'Pass');
       setCP12Field('app'+n+'_serviced','No');
       setCP12Field('app'+n+'_combustion',/boiler/i.test(app.type||'')?app.combustionReading||'N/A':'N/A');
+      if(/boiler/i.test(app.type||'')&&app.combustionReading&&app.combustionReading!=='N/A')localStorage.setItem('gw_last_comb',app.combustionReading);
       setCP12Field('app'+n+'_safe_to_use','Yes');
       setCP12Field('app'+n+'_co_fitted',app.coFitted||'Yes');
       setCP12Field('app'+n+'_co_in_date',app.coInDate||'Yes');
@@ -7495,7 +7525,7 @@ function _hlText(s,q){
 function _renderAcDD(items,type,inputEl,q,onSelect){
   _acItems=items;_acCurInput=inputEl;
   if(!items.length&&q.length>=2){
-    _acDD.innerHTML=`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div>`;
+    _acDD.innerHTML=`<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches for "${q}"</div><div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
     _posAcDD(inputEl);return;
   }
   if(!items.length){_hideAcDD();return;}
@@ -7503,6 +7533,7 @@ function _renderAcDD(items,type,inputEl,q,onSelect){
     <div style="font-size:13px;font-weight:500;color:var(--text)">${_hlText(_dirName(type,item),q)}</div>
     ${_dirSub(type,item)?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${_hlText(_dirSub(type,item),q)}</div>`:''}
   </div>`).join('');
+  html+=`<div style="padding:5px 14px;text-align:right;border-top:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
   _acDD.innerHTML=html;
   _acDD._onSelect=onSelect;_acDD._type=type;_acDD._q=q;
   _acIdx=-1;_posAcDD(inputEl);
