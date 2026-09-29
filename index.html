@@ -3557,7 +3557,7 @@ function patFd(d){if(!d)return'—';const p=d.split('-');if(p.length===3)return 
 function patCalcNext(dateStr,months){
   if(!dateStr)return'';
   const m=parseInt(months)||12;
-  const d=new Date(dateStr);d.setMonth(d.getMonth()+m);
+  const d=new Date(dateStr);d.setMonth(d.getMonth()+m);d.setDate(d.getDate()-1);
   return d.toISOString().split('T')[0];
 }
 function patWrapTxt(text,maxCh){
@@ -3798,7 +3798,7 @@ function populatePATForm(r){
     testInstrument:a.testInstrument||a.test_instrument||a.instrument||'',
     date:a.date||r.test_date||'',
     retestPeriod:(()=>{const _rp=a.retestPeriod||a.retest_period||'12 Months';return /^\d+$/.test(_rp.trim())?_rp.trim()+' Months':_rp;})(),
-    nextTest:a.nextTest||a.next_test||'',
+    nextTest:(()=>{const _d=a.date||r.test_date||'';const _p=(a.retestPeriod||a.retest_period||'12 Months');return _d?patCalcNext(_d,parseInt(_p)):a.nextTest||a.next_test||'';})(),
     result:a.result==='PASS'?'Pass':a.result==='FAIL'?'Fail':(a.result||'Pass')
   }));
   if(!patApps.length){addPATRow();addPATRow();}else{renderPATRows();}
