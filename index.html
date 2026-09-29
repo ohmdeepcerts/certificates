@@ -5688,6 +5688,10 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         display:cs.display,verticalAlign:cs.verticalAlign
       };
     });
+    // Snapshot composite landlord field inner elements (not caught by data-field loop above)
+    function _snapEl(el){const cs=window.getComputedStyle(el),r=el.getBoundingClientRect();return{value:el.value||'',isTA:el.tagName==='TEXTAREA',w:r.width,h:r.height,fontFamily:cs.fontFamily,fontSize:cs.fontSize,fontWeight:cs.fontWeight,color:cs.color,background:cs.backgroundColor,ptop:cs.paddingTop,pright:cs.paddingRight,pbottom:cs.paddingBottom,pleft:cs.paddingLeft,lineHeight:cs.lineHeight,textAlign:cs.textAlign,btop:cs.borderTop,bright:cs.borderRight,bbottom:cs.borderBottom,bleft:cs.borderLeft,display:cs.display,verticalAlign:cs.verticalAlign};}
+    const _llName=livePage.querySelector('#cp12-ll-name');if(_llName)fieldSnap['__ll_name']=_snapEl(_llName);
+    const _llAddr=livePage.querySelector('.address-main-ll');if(_llAddr)fieldSnap['__ll_addr']=_snapEl(_llAddr);
     // Snapshot signature canvases from live DOM before cloning
     const sigSnap={};
     livePage.querySelectorAll('canvas.sig-canvas').forEach(c=>{
@@ -5748,6 +5752,14 @@ async function _buildCP12PdfFromHTML(returnB64=false){
           div.textContent=d.value;
           el.parentNode.replaceChild(div,el);
         });
+        // 5. Fix composite landlord field (input + textarea without data-field)
+        function _mkDiv(clonedDoc,d){
+          const div=clonedDoc.createElement('div');
+          div.style.cssText=[`font-family:${d.fontFamily}`,`font-size:${d.fontSize}`,`font-weight:${d.fontWeight}`,`color:${d.color}`,`background:${d.background}`,`padding-top:${d.ptop}`,`padding-right:${d.pright}`,`padding-bottom:${d.pbottom}`,`padding-left:${d.pleft}`,`width:${d.w}px`,`height:${d.h}px`,`line-height:${d.lineHeight}`,`text-align:${d.textAlign}`,`border-top:${d.btop}`,`border-right:${d.bright}`,`border-bottom:${d.bbottom}`,`border-left:${d.bleft}`,`box-sizing:border-box`,`white-space:${d.isTA?'pre-wrap':'nowrap'}`,`word-wrap:break-word`,`overflow:hidden`,`display:block`,`vertical-align:top`].join(';');
+          div.textContent=d.value;return div;
+        }
+        const _llNC=clonedEl.querySelector('#cp12-ll-name');if(_llNC&&fieldSnap['__ll_name'])_llNC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_name']),_llNC);
+        const _llAC=clonedEl.querySelector('.address-main-ll');if(_llAC&&fieldSnap['__ll_addr'])_llAC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_addr']),_llAC);
       }
     });
     const q=returnB64?0.88:0.97;
