@@ -4627,8 +4627,9 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
         imageTimeout:5000
       });
       const imgH=(canvas.height/canvas.width)*210;
-      const imgData=returnB64?canvas.toDataURL('image/jpeg',0.85):canvas.toDataURL('image/png');
-      const imgFmt=returnB64?'JPEG':'PNG';
+      const imgQuality=returnB64?0.85:0.92;
+      const imgData=canvas.toDataURL('image/jpeg',imgQuality);
+      const imgFmt='JPEG';
       if(imgH<=297){
         doc.addImage(imgData,imgFmt,0,0,210,imgH);
       }else{
@@ -4638,7 +4639,7 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
           const _sh=Math.min(297,imgH-_y);const _sp=Math.round(_sh*_r);const _yp=Math.round(_y*_r);
           const _tc=document.createElement('canvas');_tc.width=canvas.width;_tc.height=_sp;
           _tc.getContext('2d').drawImage(canvas,0,_yp,canvas.width,_sp,0,0,canvas.width,_sp);
-          doc.addImage(_tc.toDataURL(imgFmt==='JPEG'?'image/jpeg':'image/png',0.85),imgFmt,0,0,210,_sh);
+          doc.addImage(_tc.toDataURL('image/jpeg',imgQuality),imgFmt,0,0,210,_sh);
           _y+=297;
         }
       }
