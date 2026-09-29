@@ -5755,7 +5755,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
             `box-sizing:border-box`,
             `white-space:${d.isTA?'pre-wrap':'nowrap'}`,
             `word-wrap:break-word`,`overflow:hidden`,
-            `display:block`,`vertical-align:top`
+            ...(d.isTA?[`display:block`,`vertical-align:top`]:[`display:flex`,`align-items:center`])
           ].join(';');
           div.textContent=d.value;
           el.parentNode.replaceChild(div,el);
@@ -5763,7 +5763,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         // 5. Fix composite landlord field (input + textarea without data-field)
         function _mkDiv(clonedDoc,d){
           const div=clonedDoc.createElement('div');
-          div.style.cssText=[`font-family:${d.fontFamily}`,`font-size:${d.fontSize}`,`font-weight:${d.fontWeight}`,`color:${d.color}`,`background:${d.background}`,`padding-top:${d.ptop}`,`padding-right:${d.pright}`,`padding-bottom:${d.pbottom}`,`padding-left:${d.pleft}`,`width:${d.w}px`,`height:${d.h}px`,`line-height:${d.lineHeight}`,`text-align:${d.textAlign}`,`border-top:${d.btop}`,`border-right:${d.bright}`,`border-bottom:${d.bbottom}`,`border-left:${d.bleft}`,`box-sizing:border-box`,`white-space:${d.isTA?'pre-wrap':'nowrap'}`,`word-wrap:break-word`,`overflow:hidden`,`display:block`,`vertical-align:top`].join(';');
+          div.style.cssText=[`font-family:${d.fontFamily}`,`font-size:${d.fontSize}`,`font-weight:${d.fontWeight}`,`color:${d.color}`,`background:${d.background}`,`padding-top:${d.ptop}`,`padding-right:${d.pright}`,`padding-bottom:${d.pbottom}`,`padding-left:${d.pleft}`,`width:${d.w}px`,`height:${d.h}px`,`line-height:${d.lineHeight}`,`text-align:${d.textAlign}`,`border-top:${d.btop}`,`border-right:${d.bright}`,`border-bottom:${d.bbottom}`,`border-left:${d.bleft}`,`box-sizing:border-box`,`white-space:${d.isTA?'pre-wrap':'nowrap'}`,`word-wrap:break-word`,`overflow:hidden`,...(d.isTA?[`display:block`,`vertical-align:top`]:[`display:flex`,`align-items:center`])].join(';');
           div.textContent=d.value;if(!d.isTA&&!(d.value||'').trim()){div.style.cssText+=';height:0;overflow:hidden;padding:0;border:none';}return div;
         }
         const _llNC=clonedEl.querySelector('#cp12-ll-name');if(_llNC&&fieldSnap['__ll_name'])_llNC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_name']),_llNC);
