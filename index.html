@@ -5668,7 +5668,14 @@ async function _buildCP12PdfFromHTML(returnB64=false){
   if(!window.jspdf)throw new Error('PDF library not loaded');
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  // Ensure pages are visible and at 100% zoom so getBoundingClientRect is accurate.
+  // In wizard mode cp12Wrap is display:none; if zoom != 100% content is captured at wrong scale.
+  const _pdfWrap=document.getElementById('cp12Wrap');
+  const _pdfPrevZoom=_pdfWrap?_pdfWrap.style.zoom:'';
+  const _pdfWasHidden=_pdfWrap&&_pdfWrap.style.display==='none';
+  if(_pdfWrap){_pdfWrap.style.zoom='1';if(_pdfWasHidden){_pdfWrap.style.display='';void _pdfWrap.offsetHeight;}}
   const pageIds=['page1','page2'];
+  try{
   for(let i=0;i<pageIds.length;i++){
     if(i>0)doc.addPage('a4','landscape');
     const livePage=document.getElementById(pageIds[i]);
@@ -5797,6 +5804,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
     const q=returnB64?0.88:0.97;
     doc.addImage(canvas.toDataURL('image/jpeg',q),'JPEG',0,0,297,210);
   }
+  }finally{if(_pdfWrap){if(_pdfWasHidden)_pdfWrap.style.display='none';_pdfWrap.style.zoom=_pdfPrevZoom;}}
   return doc;
 }
 async function buildCP12PdfBase64(){
