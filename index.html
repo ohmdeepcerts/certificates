@@ -5735,6 +5735,9 @@ async function _buildCP12PdfFromHTML(returnB64=false){
           '.no-print,.copy-address-btn,.sig-clear-btn,.inline-history-section,'+
           '.fast-date-drum,input[type="file"],button,.co-hanger'
         ).forEach(el=>el.remove());
+        // Remove hidden inputs inside choice-groups — html2canvas renders them despite type="hidden"
+        // and step 4 would create a 0×0 div whose overflow text appears as an artifact mark
+        clonedEl.querySelectorAll('.choice-group input[type="hidden"]').forEach(inp=>inp.remove());
         // 3. Replace signature canvases with img or empty span
         clonedEl.querySelectorAll('canvas.sig-canvas').forEach(c=>{
           const f=c.dataset.sigField;const s=sigSnap[f];
