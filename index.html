@@ -4983,7 +4983,10 @@ function setCP12Field(f,v){
   const el=document.querySelector(`[data-field="${f}"]`);if(!el)return;
   if(el.tagName==='BUTTON'){el.dataset.current=v;el.textContent=v;}
   else if(el.dataset.composite==='ll'){
-    var lns=(v||'').split('\n');var nm=lns[0]||'',addr=lns.slice(1).join('\n');
+    var lns=(v||'').split('\n');var fl=(lns[0]||'').trim();
+    var nm='',addr='';
+    if(fl&&!(/^\d/.test(fl)||/^flat\s/i.test(fl)||/^apt\s/i.test(fl))){nm=fl;addr=lns.slice(1).join('\n');}
+    else{nm='';addr=v||'';}
     var ni=el.querySelector('#cp12-ll-name');if(ni)ni.value=nm;
     var ta=el.querySelector('textarea');if(ta){ta.value=addr;_cp12ResizeTA(ta);}
   }
@@ -5412,7 +5415,7 @@ async function buildCP12PdfDoc(){
   // Box 1: Landlord
   const B1X=PL;
   infoBox(B1X,INFO_Y,INFO_CW,INFO_H,'Landlord / Customer Details');
-  (function(){var la=(d.landlord_address||'').trim();var lns=la.split('\n');var lName=lns[0]||'';var lAddr=lns.slice(1).join('\n');var ly=INFO_Y+IBOX_HDR+4;if(lName){txt(lName,B1X+IPAD,ly+3.5,7.5,DARK,true);ly+=6;}if(lAddr)wrapTxt(lAddr,B1X+IPAD,ly,INFO_CW-6,7,DARK,false,3.4);})();
+  (function(){var la=(d.landlord_address||'').trim();var lns=la.split('\n');var fl=(lns[0]||'').trim();var lName='',lAddr='';if(fl&&!(/^\d/.test(fl)||/^flat\s/i.test(fl)||/^apt\s/i.test(fl))){lName=fl;lAddr=lns.slice(1).join('\n');}else{lName='';lAddr=la;}var ly=INFO_Y+IBOX_HDR+4;if(lName){txt(lName,B1X+IPAD,ly+3.5,7.5,DARK,true);ly+=6;}if(lAddr)wrapTxt(lAddr,B1X+IPAD,ly,INFO_CW-6,7,DARK,false,3.4);})();
   if(d.landlord_postcode){
     txt('Postcode',B1X+IPAD,INFO_Y+INFO_H-5.5,5.8,MED,true);
     txt(d.landlord_postcode,B1X+IPAD+19,INFO_Y+INFO_H-4,7.5,DARK,true);
@@ -5756,7 +5759,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         function _mkDiv(clonedDoc,d){
           const div=clonedDoc.createElement('div');
           div.style.cssText=[`font-family:${d.fontFamily}`,`font-size:${d.fontSize}`,`font-weight:${d.fontWeight}`,`color:${d.color}`,`background:${d.background}`,`padding-top:${d.ptop}`,`padding-right:${d.pright}`,`padding-bottom:${d.pbottom}`,`padding-left:${d.pleft}`,`width:${d.w}px`,`height:${d.h}px`,`line-height:${d.lineHeight}`,`text-align:${d.textAlign}`,`border-top:${d.btop}`,`border-right:${d.bright}`,`border-bottom:${d.bbottom}`,`border-left:${d.bleft}`,`box-sizing:border-box`,`white-space:${d.isTA?'pre-wrap':'nowrap'}`,`word-wrap:break-word`,`overflow:hidden`,`display:block`,`vertical-align:top`].join(';');
-          div.textContent=d.value;return div;
+          div.textContent=d.value;if(!d.isTA&&!(d.value||'').trim()){div.style.cssText+=';height:0;overflow:hidden;padding:0;border:none';}return div;
         }
         const _llNC=clonedEl.querySelector('#cp12-ll-name');if(_llNC&&fieldSnap['__ll_name'])_llNC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_name']),_llNC);
         const _llAC=clonedEl.querySelector('.address-main-ll');if(_llAC&&fieldSnap['__ll_addr'])_llAC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_addr']),_llAC);
