@@ -266,6 +266,9 @@ a{color:var(--accent);text-decoration:none}
 /* ---- MOBILE ---- */
 .mobile-header{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;align-items:center;gap:12px}
 .hamburger{background:none;border:none;color:var(--text);font-size:22px;padding:4px;cursor:pointer}
+.mobile-net-pill{display:inline-flex;align-items:center;border-radius:999px;font-size:11px;font-weight:700;padding:3px 10px;white-space:nowrap;flex-shrink:0;letter-spacing:.02em;transition:background .3s,color .3s}
+.mobile-net-pill.net-online{background:rgba(34,197,94,.13);color:#15803d;border:1px solid rgba(34,197,94,.35)}
+.mobile-net-pill.net-offline{background:#f97316;color:#fff;border:1px solid transparent}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50}
 
 .form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
@@ -891,8 +894,8 @@ a{color:var(--accent);text-decoration:none}
   <div class="mobile-header">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <span style="font-weight:700;color:var(--accent)">OHM Certificates</span>
-    <span id="offline-pill-mobile" class="offline-pill" style="margin-left:auto">⚡ Offline</span>
-    <button onclick="hardRefresh()" title="Hard refresh" style="margin-left:8px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">↺</button>
+    <span id="mobile-net-pill" class="mobile-net-pill net-online" style="margin-left:auto">● Live</span>
+    <button onclick="hardRefresh()" title="Hard refresh" style="margin-left:6px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">↺</button>
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
   <span id="offline-pill-desktop" class="offline-pill">⚡ Offline — changes sync on reconnect</span>
@@ -3943,11 +3946,21 @@ async function _idbPatchById(localId,fields){
     req.onerror=e=>rej(e.target.error);
   });
 }
+let _lastSyncTime=null;
+function _relTime(ts){if(!ts)return'';const d=Math.floor((Date.now()-ts)/1000);if(d<60)return'just now';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h ago';return Math.floor(d/86400)+'d ago';}
 function _setOfflinePills(offline){
-  ['offline-pill-mobile','offline-pill-desktop'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.style.display=offline?'inline-flex':'none';
-  });
+  const desk=document.getElementById('offline-pill-desktop');
+  if(desk)desk.style.display=offline?'inline-flex':'none';
+  const pill=document.getElementById('mobile-net-pill');
+  if(!pill)return;
+  if(offline){
+    pill.className='mobile-net-pill net-offline';
+    const ago=_lastSyncTime?' · Synced '+_relTime(_lastSyncTime):'';
+    pill.textContent='⚡ Offline'+ago;
+  }else{
+    pill.className='mobile-net-pill net-online';
+    pill.textContent='● Live';
+  }
 }
 let _syncBadgeTimer=null;
 function _setSyncBadge(pending,total,syncing){
@@ -4016,6 +4029,7 @@ async function _syncQueue(){
     _dirCerts=null;
     const remaining=await _idbGetAll();
     _setSyncBadge(remaining.length,total,false);
+    if(!remaining.length)_lastSyncTime=Date.now();
   }catch(e){}
   _syncing=false;
 }
@@ -7338,8 +7352,9 @@ async function init(){
   // Service worker
   if('serviceWorker' in navigator){navigator.serviceWorker.register('/certificates/sw.js').catch(()=>{});}
   // Online / offline events
-  window.addEventListener('online',()=>{_setOfflinePills(false);_syncQueue();});
-  window.addEventListener('offline',()=>{_setOfflinePills(true);_refreshSyncBadge();});
+  let _netPillTick=null;
+  window.addEventListener('online',()=>{_lastSyncTime=Date.now();clearInterval(_netPillTick);_setOfflinePills(false);_syncQueue();});
+  window.addEventListener('offline',()=>{_setOfflinePills(true);_refreshSyncBadge();_netPillTick=setInterval(()=>{if(!navigator.onLine)_setOfflinePills(true);else clearInterval(_netPillTick);},30000);});
   if(!navigator.onLine)_setOfflinePills(true);
 }
 init();
