@@ -5708,6 +5708,12 @@ async function _buildCP12PdfFromHTML(returnB64=false){
       const hasInk=Array.from(id.data).some((v,j)=>j%4!==3&&v!==0);
       sigSnap[f]={dataUrl:hasInk?c.toDataURL('image/png'):null,className:c.className,style:c.style.cssText};
     });
+    // Snapshot choice-cycle button text + styles before cloning
+    const ccSnap={};
+    livePage.querySelectorAll('.choice-cycle[data-group]').forEach(btn=>{
+      const cs=window.getComputedStyle(btn);
+      ccSnap[btn.dataset.group]={text:btn.textContent,fontSize:cs.fontSize,fontWeight:cs.fontWeight,color:cs.color,fontFamily:cs.fontFamily};
+    });
     const canvas=await html2canvas(livePage,{
       scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
       logging:false,imageTimeout:5000,
@@ -5715,11 +5721,16 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         // 1. Remove screen-only / interactive elements
         clonedEl.querySelectorAll(
           '.no-print,.copy-address-btn,.sig-clear-btn,.inline-history-section,'+
-          '.fast-date-drum,input[type="file"],button:not(.choice-cycle),.co-hanger'
+          '.fast-date-drum,input[type="file"],button,.co-hanger'
         ).forEach(el=>el.remove());
-        // 2. Freeze choice-cycle buttons (keep them visible but non-interactive)
-        clonedEl.querySelectorAll('.choice-cycle').forEach(btn=>{
-          btn.style.pointerEvents='none';btn.style.cursor='default';
+        // 2. Replace choice-cycle buttons with plain spans (no browser button rendering artifacts)
+        Object.entries(ccSnap).forEach(([grp,snap])=>{
+          const btn=clonedEl.querySelector(`.choice-cycle[data-group="${grp}"]`);
+          if(!btn)return;
+          const span=clonedDoc.createElement('span');
+          span.textContent=snap.text;
+          span.style.cssText=`font-size:${snap.fontSize};font-weight:${snap.fontWeight};color:${snap.color};font-family:${snap.fontFamily};display:inline-block;text-align:center;`;
+          btn.parentNode.replaceChild(span,btn);
         });
         // 3. Replace signature canvases with img or empty span
         clonedEl.querySelectorAll('canvas.sig-canvas').forEach(c=>{
