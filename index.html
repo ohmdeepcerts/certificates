@@ -5359,7 +5359,7 @@ async function buildCP12PdfDoc(){
     doc.setFont('helvetica',bold?'bold':'normal');
     doc.setFontSize(size);doc.setTextColor(...(color||DARK));
     const lh=lineH||(size*0.3528+1.2);
-    const lines=doc.splitTextToSize(String(s),w);
+    const lines=String(s).split('\n').flatMap(seg=>doc.splitTextToSize(seg||' ',w));
     lines.forEach((l,i)=>doc.text(l,x,y+i*lh));
     return lines.length*lh;
   }
