@@ -5712,26 +5712,29 @@ async function _buildCP12PdfFromHTML(returnB64=false){
     const ccSnap={};
     livePage.querySelectorAll('.choice-cycle[data-group]').forEach(btn=>{
       const cs=window.getComputedStyle(btn);
-      ccSnap[btn.dataset.group]={text:btn.textContent,fontSize:cs.fontSize,fontWeight:cs.fontWeight,color:cs.color,fontFamily:cs.fontFamily};
+      ccSnap[btn.dataset.group]={text:btn.textContent.trim(),fontSize:cs.fontSize,fontWeight:cs.fontWeight,color:cs.color,fontFamily:cs.fontFamily};
     });
+    // Snapshot appliance number inputs (no data-field, need separate handling)
+    const appNumSnaps=[];
+    livePage.querySelectorAll('input.appliance-number-input').forEach(inp=>{appNumSnaps.push({value:inp.value,snap:_snapEl(inp)});});
     const canvas=await html2canvas(livePage,{
       scale:3,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',
       logging:false,imageTimeout:5000,
       onclone:(clonedDoc,clonedEl)=>{
-        // 1. Remove screen-only / interactive elements
-        clonedEl.querySelectorAll(
-          '.no-print,.copy-address-btn,.sig-clear-btn,.inline-history-section,'+
-          '.fast-date-drum,input[type="file"],button,.co-hanger'
-        ).forEach(el=>el.remove());
-        // 2. Replace choice-cycle buttons with plain spans (no browser button rendering artifacts)
+        // 1. Replace choice-cycle buttons with plain spans FIRST (must happen before step 2 removes all buttons)
         Object.entries(ccSnap).forEach(([grp,snap])=>{
           const btn=clonedEl.querySelector(`.choice-cycle[data-group="${grp}"]`);
           if(!btn)return;
           const span=clonedDoc.createElement('span');
           span.textContent=snap.text;
-          span.style.cssText=`font-size:${snap.fontSize};font-weight:${snap.fontWeight};color:${snap.color};font-family:${snap.fontFamily};display:inline-block;text-align:center;`;
+          span.style.cssText=`font-size:${snap.fontSize};font-weight:${snap.fontWeight};color:${snap.color};font-family:${snap.fontFamily};display:inline-block;text-align:center;white-space:nowrap;`;
           btn.parentNode.replaceChild(span,btn);
         });
+        // 2. Remove screen-only / interactive elements (choice-cycle are now spans, not buttons)
+        clonedEl.querySelectorAll(
+          '.no-print,.copy-address-btn,.sig-clear-btn,.inline-history-section,'+
+          '.fast-date-drum,input[type="file"],button,.co-hanger'
+        ).forEach(el=>el.remove());
         // 3. Replace signature canvases with img or empty span
         clonedEl.querySelectorAll('canvas.sig-canvas').forEach(c=>{
           const f=c.dataset.sigField;const s=sigSnap[f];
@@ -5779,6 +5782,14 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         }
         const _llNC=clonedEl.querySelector('#cp12-ll-name');if(_llNC&&fieldSnap['__ll_name'])_llNC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_name']),_llNC);
         const _llAC=clonedEl.querySelector('.address-main-ll');if(_llAC&&fieldSnap['__ll_addr'])_llAC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_addr']),_llAC);
+        // 6. Replace appliance number inputs (readonly, no data-field) with styled divs
+        [...clonedEl.querySelectorAll('input.appliance-number-input')].forEach((inp,i)=>{
+          const s=appNumSnaps[i];if(!s)return;
+          const div=clonedDoc.createElement('div');
+          div.textContent=s.value;
+          div.style.cssText=`font-family:${s.snap.fontFamily};font-size:${s.snap.fontSize};font-weight:${s.snap.fontWeight};color:${s.snap.color};background:transparent;width:${s.snap.w}px;height:${s.snap.h}px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;`;
+          inp.parentNode.replaceChild(div,inp);
+        });
       }
     });
     const q=returnB64?0.88:0.97;
