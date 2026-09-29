@@ -528,6 +528,7 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .compact-address .pc-line.no-print{grid-column:1;grid-row:2;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px}
 .cp12-form-wrap .compact-address .pc-line label,.cp12-form-wrap .business-grid label{font-size:7pt;font-weight:700;color:#374151;white-space:nowrap;line-height:1}
 .cp12-form-wrap .compact-address .pc-line input,.cp12-form-wrap .business-grid input{width:100%;min-width:0;height:22px;border:1px solid #d1d5db;border-radius:2px;font-family:inherit;font-size:8.8pt;outline:none;color:#111827;padding:2px 4px}
+#cp12Wrap.is-view #cp12-ll-name:placeholder-shown{display:none!important}
 .cp12-form-wrap .business-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(115px,.9fr);grid-template-rows:67px auto;gap:3px 7px;align-items:stretch}
 .cp12-form-wrap .business-grid .business-details{grid-column:1;grid-row:1;width:100%;height:67px;min-height:67px;border:1px solid #e5e7eb;border-radius:2px;resize:none;font-family:inherit;font-size:9.2pt;line-height:1.18;outline:none;color:#111827;padding:3px 5px}
 .cp12-form-wrap .business-grid .business-phone,.cp12-form-wrap .business-grid .business-email,.cp12-form-wrap .business-grid .business-postcode{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px;min-width:0}
@@ -5281,11 +5282,13 @@ function _setGasViewMode(isView){
   const isAdm=_isAdminUser();
   if(btnToggle)btnToggle.hidden=!isAdm;
   if(isView){
+    wrap.classList.add('is-view');
     wrap.style.pointerEvents='none';
     btnEdit.hidden=!isAdm;
     btnSave.hidden=true;
     btnComplete.hidden=true;
   }else{
+    wrap.classList.remove('is-view');
     wrap.style.pointerEvents='';
     btnEdit.hidden=true;
     btnSave.hidden=!isAdm;
