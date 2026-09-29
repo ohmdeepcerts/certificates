@@ -4648,14 +4648,12 @@ async function generatePATPDFFromData(r,{returnB64=false}={}){
 
     const ref=(r.ref_number||r.id||'PAT').toString().replace(/[^\w-]/g,'_');
     if(returnB64){hideOverlay();return doc.output('datauristring').split(',')[1];}
-    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-    if(isIOS){
-      const blob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
-      window.open(URL.createObjectURL(blob),'_blank');
-      toast('PDF ready — tap Share → Save to Files','info',7000);
-    } else {
-      doc.save(`PAT_${ref}.pdf`);toast('PDF downloaded ✓','success');
-    }
+    const _patPdfBlob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
+    const _patPdfName=`PAT_${ref}.pdf`;
+    if(navigator.canShare&&navigator.canShare({files:[new File([_patPdfBlob],_patPdfName,{type:'application/pdf'})]})){
+      try{await navigator.share({files:[new File([_patPdfBlob],_patPdfName,{type:'application/pdf'})],title:_patPdfName});}
+      catch(e){if(e.name!=='AbortError'){doc.save(_patPdfName);toast('PDF downloaded ✓','success');}}
+    }else{doc.save(_patPdfName);toast('PDF downloaded ✓','success');}
     await logAppEvent('PDF_DOWNLOADED','pat',editingPATId,r.ref_number||'');
   } catch(e){toast('PDF error: '+e.message,'error');}
   finally{hideOverlay();}
@@ -5813,9 +5811,11 @@ async function downloadCP12PDF(btn){
     const doc=await _buildCP12PdfFromHTML(false);
     const ref=cp12Field('cert_ref')||'DRAFT';
     const filename=`Gas_${ref.replace(/[^\w-]/g,'_')}.pdf`;
-    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-    if(isIOS)window.open(URL.createObjectURL(new Blob([doc.output('arraybuffer')],{type:'application/pdf'})),'_blank'),toast('PDF ready — tap Share → Save to Files','info',7000);
-    else doc.save(filename),toast('PDF downloaded ✓','success');
+    const _gasPdfBlob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[new File([_gasPdfBlob],filename,{type:'application/pdf'})]})){
+      try{await navigator.share({files:[new File([_gasPdfBlob],filename,{type:'application/pdf'})],title:filename});}
+      catch(e){if(e.name!=='AbortError'){doc.save(filename);toast('PDF downloaded ✓','success');}}
+    }else{doc.save(filename);toast('PDF downloaded ✓','success');}
     if(editingGasId)await logAppEvent('PDF_DOWNLOADED','gas',editingGasId,ref);
   }catch(e){toast('PDF error: '+e.message,'error');}
   finally{hideOverlay();if(btn)btn.disabled=false;}
@@ -10361,15 +10361,11 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
       }
       if(returnB64) return doc.output('datauristring').split(',')[1];
       var fname = (r.ref||r.ref_number||'certificate').replace(/\s*\/\s*/g,' - ').replace(/[\\:*?"<>|]/g,'').trim()+'.pdf';
-      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-      if(isIOS){
-        var blob = new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
-        window.open(URL.createObjectURL(blob),'_blank');
-        toast('PDF ready — tap Share → Save to Files','info',7000);
-      } else {
-        doc.save(fname);
-        toast('Downloaded: '+fname,'success',3000);
-      }
+      var _elPdfBlob=new Blob([doc.output('arraybuffer')],{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[new File([_elPdfBlob],fname,{type:'application/pdf'})]})){
+        try{await navigator.share({files:[new File([_elPdfBlob],fname,{type:'application/pdf'})],title:fname});}
+        catch(e){if(e.name!=='AbortError'){doc.save(fname);toast('Downloaded: '+fname,'success',3000);}}
+      }else{doc.save(fname);toast('Downloaded: '+fname,'success',3000);}
     } finally {
       document.body.removeChild(liveWrap);
       var ts = document.getElementById('el-pdf-tmp-style');
