@@ -3797,7 +3797,7 @@ function populatePATForm(r){
     description:a.description||'',
     testInstrument:a.testInstrument||a.test_instrument||a.instrument||'',
     date:a.date||r.test_date||'',
-    retestPeriod:a.retestPeriod||a.retest_period||'12 Months',
+    retestPeriod:(()=>{const _rp=a.retestPeriod||a.retest_period||'12 Months';return /^\d+$/.test(_rp.trim())?_rp.trim()+' Months':_rp;})(),
     nextTest:a.nextTest||a.next_test||'',
     result:a.result==='PASS'?'Pass':a.result==='FAIL'?'Fail':(a.result||'Pass')
   }));
@@ -4555,7 +4555,7 @@ function addPatScanResults(){
   items.forEach((it,i)=>{
     const cb=document.getElementById(`sck${i}`);
     if(!cb||!cb.checked)return;
-    patApps.push({assetId:it.assetId||'',description:it.description||'',testInstrument:defaultInstrument,date:today,retestPeriod:defaultPeriod,nextTest:patCalcNext(today,parseInt(defaultPeriod)),result:defaultResult,notes:''});
+    patApps.push({assetId:it.assetId||'',description:it.description||'',testInstrument:defaultInstrument,date:today,retestPeriod:defaultPeriod+' Months',nextTest:patCalcNext(today,parseInt(defaultPeriod)),result:defaultResult,notes:''});
   });
   renderPATRows();doPatPreview();closeScanModal();
   toast(items.filter((_,i)=>{const cb=document.getElementById(`sck${i}`);return cb&&cb.checked;}).length+' appliances added','success');
