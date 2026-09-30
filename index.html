@@ -532,6 +532,8 @@ a{color:var(--accent);text-decoration:none}
 .cp12-form-wrap .compact-address .pc-line label,.cp12-form-wrap .business-grid label{font-size:7pt;font-weight:700;color:#374151;white-space:nowrap;line-height:1}
 .cp12-form-wrap .compact-address .pc-line input,.cp12-form-wrap .business-grid input{width:100%;min-width:0;height:22px;border:1px solid #d1d5db;border-radius:2px;font-family:inherit;font-size:8.8pt;outline:none;color:#111827;padding:2px 4px}
 #cp12Wrap.is-view #cp12-ll-name:placeholder-shown{display:none!important}
+.cp12-form-wrap .compact-address [data-composite="ll"]{grid-column:1/-1;grid-row:1;display:flex;flex-direction:column;width:100%;min-width:0}
+.cp12-form-wrap .compact-address [data-composite="ll"] .address-main-ll{flex:1;height:100%;min-height:0;width:100%;box-sizing:border-box}
 .cp12-form-wrap .business-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(115px,.9fr);grid-template-rows:67px auto;gap:3px 7px;align-items:stretch}
 .cp12-form-wrap .business-grid .business-details{grid-column:1;grid-row:1;width:100%;height:67px;min-height:67px;border:1px solid #e5e7eb;border-radius:2px;resize:none;font-family:inherit;font-size:9.2pt;line-height:1.18;outline:none;color:#111827;padding:3px 5px}
 .cp12-form-wrap .business-grid .business-phone,.cp12-form-wrap .business-grid .business-email,.cp12-form-wrap .business-grid .business-postcode{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px;min-width:0}
@@ -1014,7 +1016,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
           <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
           <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
-          <div class="field-group"><label>Engineer *</label><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()"></div>
+          <div class="field-group"><label>Engineer *</label><div style="display:flex;gap:6px;align-items:center"><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,'pat')" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div></div>
         </div>
         <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
           <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
@@ -1249,9 +1251,9 @@ a{color:var(--accent);text-decoration:none}
               <div class="info-box-header">Landlord / Customer Details</div>
               <div class="info-box-body">
                 <div class="compact-address has-copy-action">
-                  <div data-field="landlord_address" data-composite="ll" style="border:1px solid #e5e7eb;border-radius:2px;padding:0;background:#fff">
+                  <div data-field="landlord_address" data-composite="ll" style="grid-column:1/-1;grid-row:1;display:flex;flex-direction:column;border:1px solid #e5e7eb;border-radius:2px;padding:0;background:#fff;min-width:0;width:100%">
                     <input type="text" id="cp12-ll-name" placeholder="Name" style="font-weight:700;font-size:12.27px;color:#111827;display:block;width:100%;border:none;border-bottom:1px solid #f3f4f6;padding:3px 38px 3px 5px;background:transparent;outline:none;font-family:inherit;box-sizing:border-box">
-                    <textarea class="address-main-ll" placeholder="Address including postcode" rows="3" style="border:none;outline:none;resize:none;width:100%;padding:2px 38px 2px 5px;font-size:12.27px;color:#111827;background:transparent;font-family:inherit;box-sizing:border-box;display:block"></textarea>
+                    <textarea class="address-main-ll" placeholder="Address including postcode" rows="3" style="flex:1;border:none;outline:none;resize:none;width:100%;padding:2px 38px 2px 5px;font-size:12.27px;color:#111827;background:transparent;font-family:inherit;box-sizing:border-box;display:block"></textarea>
                   </div>
                   <button type="button" class="copy-address-btn no-print" title="Copy from installation address" onclick="copyInstallationToLandlord()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -2936,6 +2938,84 @@ async function upsertSetting(key,value){
   await sb.from('app_config').upsert({key,value,updated_at:new Date().toISOString()},{onConflict:'key'});
   appSettings[key]=value;
 }
+
+// ── Engineer picker ───────────────────────────────────────────────────────────
+var _engineerCache = null;
+async function _loadEngineers() {
+  if (_engineerCache) return _engineerCache;
+  try {
+    var res = await sb.from('engineers').select('id,name,cert_types,gas_safe_number,gas_licence,niceic_number').eq('is_active',true).order('is_primary',{ascending:false}).order('name');
+    _engineerCache = res.data || [];
+  } catch(e) { _engineerCache = []; }
+  return _engineerCache;
+}
+function _showEngineerPicker(anchorEl, certType) {
+  var old = document.getElementById('_eng-picker');
+  if (old) { var wasSame = old._anchor === anchorEl; old.remove(); if (wasSame) return; }
+  var picker = document.createElement('div');
+  picker.id = '_eng-picker';
+  picker._anchor = anchorEl;
+  picker.style.cssText = 'position:fixed;z-index:9999;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:240px;max-width:320px;overflow:hidden';
+  picker.innerHTML = '<div style="padding:9px 12px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)">Select engineer</div>'
+    + '<div id="_eng-picker-list" style="max-height:260px;overflow-y:auto"><div style="padding:14px;text-align:center;color:var(--muted);font-size:12px">Loading…</div></div>';
+  document.body.appendChild(picker);
+  var r = anchorEl.getBoundingClientRect();
+  var top = r.bottom + 4;
+  if (top + 280 > window.innerHeight) top = Math.max(8, r.top - 280);
+  picker.style.top = top + 'px';
+  picker.style.left = Math.min(r.left, window.innerWidth - 330) + 'px';
+  var defaultName = certType === 'gas' ? getSetting('gas_default_engineer','')
+                  : certType === 'pat' ? getSetting('pat_default_engineer','')
+                  : getSetting('el_engineer', getSetting('default_engineer',''));
+  _loadEngineers().then(function(engineers) {
+    var list = document.getElementById('_eng-picker-list');
+    if (!list) return;
+    var filtered = engineers.filter(function(e) {
+      return !certType || !(e.cert_types && e.cert_types.length) || e.cert_types.indexOf(certType) !== -1;
+    });
+    var html = '';
+    if (defaultName) {
+      html += '<div onclick="_engPickDefault(\''+certType+'\')" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);font-size:13px">'
+        + '<span style="font-size:15px">⚙️</span><div><div style="font-weight:600">'+defaultName+'</div>'
+        + '<div style="font-size:11px;color:var(--muted)">Saved default (from Settings)</div></div></div>';
+    }
+    filtered.forEach(function(eng) {
+      var sub = certType==='gas' ? (eng.gas_safe_number?'Gas Safe: '+eng.gas_safe_number:'') : (eng.niceic_number?'NICEIC: '+eng.niceic_number:'');
+      html += '<div onclick="_engPickFromDB(\''+eng.id+'\',\''+certType+'\')" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;border-bottom:1px solid var(--border)">'
+        + '<span style="font-size:16px">👤</span><div><div style="font-weight:600">'+eng.name+'</div>'
+        + (sub?'<div style="font-size:11px;color:var(--muted)">'+sub+'</div>':'')+'</div></div>';
+    });
+    if (!html) html = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No engineers found.<br>Add them in Settings → Engineers.</div>';
+    list.innerHTML = html;
+    list.querySelectorAll('div[onclick]').forEach(function(row) {
+      row.addEventListener('mouseenter', function() { row.style.background='var(--surface2)'; });
+      row.addEventListener('mouseleave', function() { row.style.background=''; });
+    });
+  });
+  setTimeout(function() {
+    document.addEventListener('click', function _cp(e) {
+      if (!picker.contains(e.target) && e.target !== anchorEl) { picker.remove(); document.removeEventListener('click',_cp); }
+    });
+  }, 10);
+}
+function _engPickDefault(certType) {
+  var picker = document.getElementById('_eng-picker'); if (picker) picker.remove();
+  var name = certType==='gas' ? getSetting('gas_default_engineer','')
+           : certType==='pat' ? getSetting('pat_default_engineer','')
+           : getSetting('el_engineer', getSetting('default_engineer',''));
+  if (certType==='pat') { var el=document.getElementById('pat-eng'); if(el){el.value=name;doPatPreview();} }
+  else if (certType==='gas') { _gw.engineerName=name; _gw.gasSafeNo=getSetting('gas_safe_no',''); _gw.licenceNo=getSetting('gas_licence',''); gwRender(); }
+  else if (certType==='el') { elSet('engineerName',name); var el=document.getElementById('elw-eng'); if(el)el.value=name; }
+}
+function _engPickFromDB(id, certType) {
+  var picker = document.getElementById('_eng-picker'); if (picker) picker.remove();
+  var eng = (_engineerCache||[]).find(function(e){return e.id===id;}); if(!eng) return;
+  if (certType==='pat') { var el=document.getElementById('pat-eng'); if(el){el.value=eng.name;doPatPreview();} }
+  else if (certType==='gas') { _gw.engineerName=eng.name; _gw.gasSafeNo=eng.gas_safe_number||''; _gw.licenceNo=eng.gas_licence||''; gwRender(); }
+  else if (certType==='el') { elSet('engineerName',eng.name); var el=document.getElementById('elw-eng'); if(el)el.value=eng.name; }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function setEmailMethod(m){
   document.getElementById('s-email-method').value=m;
   toggleEmailMethod();
@@ -5719,7 +5799,7 @@ async function _buildCP12PdfFromHTML(returnB64=false){
     // Snapshot composite landlord field inner elements (not caught by data-field loop above)
     function _snapEl(el){const cs=window.getComputedStyle(el),r=el.getBoundingClientRect();return{value:el.value||'',isTA:el.tagName==='TEXTAREA',w:r.width,h:r.height,fontFamily:cs.fontFamily,fontSize:cs.fontSize,fontWeight:cs.fontWeight,color:cs.color,background:cs.backgroundColor,ptop:cs.paddingTop,pright:cs.paddingRight,pbottom:cs.paddingBottom,pleft:cs.paddingLeft,lineHeight:cs.lineHeight,textAlign:cs.textAlign,btop:cs.borderTop,bright:cs.borderRight,bbottom:cs.borderBottom,bleft:cs.borderLeft,display:cs.display,verticalAlign:cs.verticalAlign};}
     const _llName=livePage.querySelector('#cp12-ll-name');if(_llName)fieldSnap['__ll_name']=_snapEl(_llName);
-    const _llAddr=livePage.querySelector('.address-main-ll');if(_llAddr)fieldSnap['__ll_addr']=_snapEl(_llAddr);
+    const _llAddr=livePage.querySelector('.address-main-ll');if(_llAddr){const _llS=_snapEl(_llAddr);_llS.h=Math.max(_llS.h,_llAddr.scrollHeight);fieldSnap['__ll_addr']=_llS;}
     // Snapshot signature canvases from live DOM before cloning
     const sigSnap={};
     livePage.querySelectorAll('canvas.sig-canvas').forEach(c=>{
@@ -5805,6 +5885,8 @@ async function _buildCP12PdfFromHTML(returnB64=false){
         }
         const _llNC=clonedEl.querySelector('#cp12-ll-name');if(_llNC&&fieldSnap['__ll_name'])_llNC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_name']),_llNC);
         const _llAC=clonedEl.querySelector('.address-main-ll');if(_llAC&&fieldSnap['__ll_addr'])_llAC.parentNode.replaceChild(_mkDiv(clonedDoc,fieldSnap['__ll_addr']),_llAC);
+        // Allow the landlord composite wrapper to grow beyond the 67px grid row so all address lines are visible
+        const _llWrap=clonedEl.querySelector('[data-composite="ll"]');if(_llWrap){_llWrap.style.height='auto';_llWrap.style.overflow='visible';}
         // 6. Replace appliance number inputs (readonly, no data-field) with styled divs
         [...clonedEl.querySelectorAll('input.appliance-number-input')].forEach((inp,i)=>{
           const s=appNumSnaps[i];if(!s)return;
@@ -6610,6 +6692,7 @@ function gwRender(){
     +'<b>Landlord:</b> '+esc(_gw.landlordName||_gw.landlordAddr1||'—')+'<br>'
     +'<b>Appliances:</b> '+appCount+'<br>'
     +'<b>Defects:</b> '+(defCount||'None')+'<br>'
+    +'<b>Engineer:</b> '+esc(_gw.engineerName||getSetting('gas_default_engineer','(from settings)'))+' <button type="button" onclick="_showEngineerPicker(this,\'gas\')" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);cursor:pointer;margin-left:4px">👤 Change</button><br>'
     +'</div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
     +'<button class="elwiz-next" style="flex:2;min-width:160px;background:var(--success,#16a34a)" onclick="gwIssue()">✓ Issue Gas Certificate</button>'
@@ -8862,7 +8945,7 @@ async function saveApplianceRecord(){
       html += '<div class="elwiz-q">Engineer details</div>';
       html += '<div class="elwiz-sub">The competent person who carried out the inspection.</div>';
       html += '<label class="elwiz-input-label">Engineer name</label>';
-      html += '<input class="elwiz-input" id="elw-eng" placeholder="Full name" value="'+esc(_w.engineerName)+'" oninput="elSet(\'engineerName\',this.value)">';
+      html += '<div style="display:flex;gap:8px;align-items:center"><input class="elwiz-input" id="elw-eng" placeholder="Full name" value="'+esc(_w.engineerName)+'" oninput="elSet(\'engineerName\',this.value)" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,\'el\')" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div>';
       html += '<label class="elwiz-input-label">NICEIC scheme number (from settings if blank)</label>';
       html += '<input class="elwiz-input" id="elw-niceic" placeholder="e.g. 12345678" value="'+esc(_w.niceicNo)+'" oninput="elSet(\'niceicNo\',this.value)">';
     } else if(s===13){
