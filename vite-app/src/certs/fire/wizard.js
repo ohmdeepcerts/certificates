@@ -84,6 +84,7 @@ export function startNewFire() {
     defectsOverall: '', defectsNotes: '',
     // outcome
     outcome: '', nextInspDate: '', worksCarried: '', sysOperational: '',
+    _clientAddrPrefilled: false,
     // engineer
     engineerName: getSetting('fa_engineer', getSetting('default_engineer','')),
     engineerQual: getSetting('fa_engineer_qual', ''),
@@ -132,7 +133,7 @@ export function fireRenderStep() {
   if (s === 0) {
     html += `<h2 class="wiz-title">Select Certificate Type</h2>`;
     if (_w._savedDraft) {
-      html += `<div class="wiz-restore-bar"><span>Unsaved draft found (${_w._savedDraft.certType||'FA'})</span><button onclick="fireRestoreAutosave()" class="btn-sm btn-accent">Restore</button><button onclick="fireDiscardAutosave()" class="btn-sm">Discard</button></div>`;
+      html += `<div class="wiz-restore-bar"><span>Unsaved draft found (${_w._savedDraft.certType||'FA'})</span><button onclick="fireRestoreAutosave()" style="padding:4px 14px;border-radius:20px;border:none;background:var(--primary,#0e4d33);color:#fff;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap">Restore</button><button onclick="fireDiscardAutosave()" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap">Discard</button></div>`;
     }
     html += `<div class="wiz-cat-label"><i class="fa-solid fa-house"></i> Domestic &nbsp;·&nbsp; BS 5839-6</div>`;
     html += `<div class="wiz-cards">`;
@@ -165,17 +166,24 @@ export function fireRenderStep() {
 
   // ── Step 2: Client ────────────────────────────────────────────────────────
   } else if (s === 2) {
+    // Auto-prefill client address from premises on first visit to this step
+    if (!_w.clientAddr1 && !_w.clientAddr2 && !_w.clientAddr3 && !_w.clientPostcode && (_w.premAddr1 || _w.premPostcode)) {
+      _w.clientAddr1 = _w.premAddr1; _w.clientAddr2 = _w.premAddr2;
+      _w.clientAddr3 = _w.premAddr3; _w.clientPostcode = _w.premPostcode;
+      _w._clientAddrPrefilled = true;
+    }
     var cTypes = ['Building Owner','Landlord','Tenant','Facilities Manager','Managing Agent','Main Contractor'];
     html += `<h2 class="wiz-title">Client Details</h2>`;
-    html += `<div class="wiz-field"><label>Client Name *</label><input value="${esc(_w.clientName)}" oninput="fireSet('clientName',this.value)" placeholder="Full name or company"></div>`;
+    html += `<div class="wiz-field"><label>Client Name <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.clientName)}" oninput="fireSet('clientName',this.value)" placeholder="Full name or company"></div>`;
     html += `<div class="wiz-field"><label>Responsible Person <span class="lbl-opt">(on-site contact)</span></label><input value="${esc(_w.responsiblePerson)}" oninput="fireSet('responsiblePerson',this.value)" placeholder="Name of person responsible for premises"></div>`;
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
     cTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="fireSet('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `</div></div>`;
-    html += `<div class="wiz-field"><label>Client Address Line 1</label><input id="fa-caddr1" value="${esc(_w.clientAddr1)}" oninput="fireSet('clientAddr1',this.value)" placeholder="(if different from premises)"></div>`;
+    var addrNote = _w._clientAddrPrefilled ? `<span style="font-size:11px;color:#15803d;font-weight:400;margin-left:6px"><i class="fa-solid fa-clone"></i> Copied from premises — click to change</span>` : '';
+    html += `<div class="wiz-field"><label>Client Address Line 1 *${addrNote}</label><div class="aac-wrap"><input id="fa-caddr1" value="${esc(_w.clientAddr1)}" oninput="fireSet('clientAddr1',this.value)" onfocus="fireClientAddrFocus()" placeholder="House no. &amp; street"><div class="aac-drop" style="display:none"></div></div></div>`;
     html += `<div class="wiz-field"><label>Address Line 2</label><input value="${esc(_w.clientAddr2)}" oninput="fireSet('clientAddr2',this.value)"></div>`;
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.clientAddr3)}" oninput="fireSet('clientAddr3',this.value)"></div>`;
-    html += `<div class="wiz-field"><label>Postcode</label><input value="${esc(_w.clientPostcode)}" oninput="fireSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
+    html += `<div class="wiz-field"><label>Postcode *</label><input value="${esc(_w.clientPostcode)}" oninput="fireSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Client Email (for auto-send)</label><input type="email" value="${esc(_w.clientEmail)}" oninput="fireSet('clientEmail',this.value)" placeholder="client@example.com"></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -243,7 +251,7 @@ export function fireRenderStep() {
   // ── Step 5: Testing results ───────────────────────────────────────────────
   } else if (s === 5) {
     html += `<h2 class="wiz-title">Testing Results</h2>`;
-    html += `<div class="wiz-field"><label>Test Date</label><input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:160px"></div>`;
+    html += `<div class="wiz-field"><label>Test Date</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireAdjTestDate(-1)" title="Previous day"><i class="fa-solid fa-chevron-left"></i> Prev</button><button class="chip${_w.testDate===todayStr()?' on':''}" onclick="fireAdjTestDate(0)">Today</button><button class="chip" onclick="fireAdjTestDate(1)" title="Next day">Next <i class="fa-solid fa-chevron-right"></i></button><input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:120px"></div></div>`;
     if (!_isComm()) {
       // Domestic tests
       html += _testRow('Functional test (each device activates alarm)', 'tFunctional', ['PASS','FAIL','N/A']);
@@ -271,7 +279,7 @@ export function fireRenderStep() {
     html += `<h2 class="wiz-title">Defects & Recommendations</h2>`;
     html += `<div class="wiz-field"><label>Overall system condition</label><div class="chip-row">`;
     ['No defects found','Minor defects (no immediate action)','Defects requiring attention'].forEach(v => {
-      html += `<button class="chip${_w.defectsOverall===v?' on':''}" onclick="fireSet('defectsOverall','${esc(v)}')">${esc(v)}</button>`;
+      html += `<button class="chip${_w.defectsOverall===v?' on':''}" onclick="firePick('defectsOverall','${esc(v)}')">${esc(v)}</button>`;
     });
     html += `</div></div>`;
     if ((_w.defects||[]).length) {
@@ -317,7 +325,8 @@ export function fireRenderStep() {
     var nextMonths = _isComm() ? 6 : 12;
     var autoNext = _addMonths(_w.testDate, nextMonths);
     if (!_w.nextInspDate && autoNext) { _w.nextInspDate = autoNext; }
-    html += `<div class="wiz-field"><label>Next inspection due (${_isComm()?'6 months':'12 months'})</label><input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:160px"></div>`;
+    html += `<div class="wiz-field"><label>Next inspection due</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireSetNextInsp(6)">6 months</button><button class="chip" onclick="fireSetNextInsp(12)">1 year</button><input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
+    if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 8: Engineer ──────────────────────────────────────────────────────
@@ -391,7 +400,7 @@ export function fireRenderStep() {
 // ── Live preview ─────────────────────────────────────────────────────────────
 function _schedulePreview() {
   if (_previewTimer) clearTimeout(_previewTimer);
-  _previewTimer = setTimeout(_updateLivePreview, 500);
+  _previewTimer = setTimeout(_updateLivePreview, 50);
 }
 
 function _updateLivePreview() {
@@ -439,7 +448,11 @@ function _testRow(label, key, options) {
 }
 
 // ── Exported wizard actions (called from HTML onclick) ────────────────────────
-export function firePick(key, val) { _w[key] = val; fireRenderStep(); }
+export function firePick(key, val) {
+  _w[key] = val;
+  if (key === 'defectsOverall' && !(_w.defectsNotes||'').trim()) _w.defectsNotes = val;
+  fireRenderStep();
+}
 export function fireSet(key, val)  { _w[key] = val; _schedulePreview(); }
 export function fireJumpStep(i) {
   if (i >= 0 && i < STEPS.length && i <= _w.step) { _w.step = i; fireRenderStep(); }
@@ -478,7 +491,10 @@ export function fireNext() {
     if (!(_w.premAddr1||'').trim()) { toast('Address Line 1 is required','error'); return; }
     if (!(_w.premPostcode||'').trim()) { toast('Postcode is required','error'); return; }
   }
-  if (s === 2 && !(_w.clientName||'').trim()) { toast('Client name is required','error'); return; }
+  if (s === 2) {
+    if (!(_w.clientAddr1||'').trim()) { toast('Client address line 1 is required','error'); return; }
+    if (!(_w.clientPostcode||'').trim()) { toast('Client postcode is required','error'); return; }
+  }
   if (s === 4 && !(_w.detectors||[]).length) { toast('Add at least one detector','error'); return; }
   if (s === 7 && !_w.outcome) { toast('Please select an outcome','error'); return; }
   _w.step = s + 1;
@@ -698,4 +714,29 @@ export async function exportFireCSV() {
   a.href = 'data:text/csv,' + encodeURIComponent(csv);
   a.download = 'fire-certs-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+export function fireClientAddrFocus() {
+  if (_w._clientAddrPrefilled) {
+    _w.clientAddr1 = ''; _w.clientAddr2 = ''; _w.clientAddr3 = ''; _w.clientPostcode = '';
+    _w._clientAddrPrefilled = false;
+    _fireDirty = true;
+    fireRenderStep();
+    setTimeout(function() { var el = document.getElementById('fa-caddr1'); if (el) el.focus(); }, 10);
+  }
+}
+
+export function fireAdjTestDate(delta) {
+  var parts = (_w.testDate||'').split('/');
+  var d = (parts.length===3) ? new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0])) : new Date();
+  if (delta === 0) { d = new Date(); } else { d.setDate(d.getDate()+delta); }
+  _w.testDate = d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+  _fireDirty = true;
+  fireRenderStep();
+}
+
+export function fireSetNextInsp(months) {
+  _w.nextInspDate = _addMonths(_w.testDate, months);
+  _fireDirty = true;
+  fireRenderStep();
 }
