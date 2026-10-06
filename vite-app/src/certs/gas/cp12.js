@@ -461,7 +461,7 @@ export async function loadGasForm(id) {
   } else { btnC.disabled = false; btnC.dataset.completed = ''; if (_gcb) _gcb.hidden = true; }
   const _ginEl = document.getElementById('gas-internal-notes');
   if (_ginEl) _ginEl.value = r.internal_notes || '';
-  state.gasCertLoading = true; navigate('gas-new'); state.gasCertLoading = false;
+  navigate('gas-new');
   _setGasViewMode(true);
 }
 

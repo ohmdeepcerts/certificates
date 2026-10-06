@@ -102,7 +102,7 @@ export function _doNavigate(view) {
   if (view === 'gas-history' || view === 'gas-new') {
     import('../certs/gas/history.js').then(m => { if (view === 'gas-history') m.loadGasHistory(); });
     import('../certs/gas/cp12.js').then(m => {
-      if (view === 'gas-new') { if (!state.gasCertLoading) m.newGasCert(); if (window._applyCP12Zoom) window._applyCP12Zoom(); }
+      if (view === 'gas-new') { if (!state.editingGasId) m.newGasCert(); if (window._applyCP12Zoom) window._applyCP12Zoom(); }
     });
   }
   if (view === 'el-history' || view === 'el-new') {
