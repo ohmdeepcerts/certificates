@@ -1492,37 +1492,37 @@ async function elGeneratePDF(rec, returnBlob) {
     throw new Error('jsPDF not loaded');
   }
   var certHtml = elBuildCertHTML(rec);
-  // Parse as a full document so <head>/<style> are properly separated from body
-  var parsed = (new DOMParser()).parseFromString(certHtml, 'text/html');
-  var container = document.createElement('div');
-  container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;';
-  // Import <style> blocks from parsed <head> so they apply to the cloned elements
-  parsed.head.querySelectorAll('style').forEach(function(s) {
-    container.appendChild(document.importNode(s, true));
+  // Render in a hidden iframe so the full HTML document (head/style/body) is
+  // parsed correctly — same approach as elOpenCert but off-screen.
+  var iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;height:6000px;border:none;';
+  document.body.appendChild(iframe);
+  await new Promise(function(resolve) {
+    iframe.addEventListener('load', resolve, {once:true});
+    iframe.srcdoc = certHtml;
   });
-  // Import body children (.cert-page divs) into the container
-  Array.from(parsed.body.children).forEach(function(el) {
-    container.appendChild(document.importNode(el, true));
-  });
-  document.body.appendChild(container);
-  // Two rAF ticks so styles are computed before html2canvas reads them
-  await new Promise(function(res) { requestAnimationFrame(function() { requestAnimationFrame(res); }); });
+  // Give layout and any inline resources a moment to settle
+  await new Promise(function(res) { setTimeout(res, 250); });
   try {
+    var iDoc = iframe.contentDocument || iframe.contentWindow.document;
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
     var pdf = new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-    var pages = container.querySelectorAll('.cert-page');
-    if (!pages.length) throw new Error('No certificate pages found');
+    var pages = iDoc.querySelectorAll('.cert-page');
+    if (!pages.length) { document.body.removeChild(iframe); throw new Error('No certificate pages found'); }
     for (var i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage();
-      var canvas = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, backgroundColor:'#fff', logging:false});
+      var canvas = await html2canvas(pages[i], {
+        scale:2, useCORS:true, allowTaint:true, backgroundColor:'#ffffff',
+        logging:false, windowWidth:794, scrollX:0, scrollY:0
+      });
       var imgData = canvas.toDataURL('image/jpeg', 0.92);
       pdf.addImage(imgData,'JPEG',0,0,210,297);
     }
-    document.body.removeChild(container);
+    document.body.removeChild(iframe);
     if (returnBlob) return pdf.output('blob');
     pdf.save('EL_'+(rec.ref||'certificate')+'.pdf');
   } catch(e) {
-    try { document.body.removeChild(container); } catch(ee) {}
+    try { document.body.removeChild(iframe); } catch(ee) {}
     throw e;
   }
 }
