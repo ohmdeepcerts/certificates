@@ -1,0 +1,1655 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificates | DeepFlow Software</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DeepFlow">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen">
+  <!-- Left dark panel: DeepFlow branding + particles -->
+  <div class="auth-right">
+    <canvas id="auth-particles"></canvas>
+    <div class="auth-right-inner">
+      <div class="df-badge">DEEPFLOW SOFTWARE</div>
+      <div class="df-wordmark"><span class="df-w1">Deep</span><span class="df-w2">Flow</span></div>
+      <div class="df-tagline">Field Certification Platform</div>
+      <p class="df-desc">Professional-grade certificates for PAT testing and gas safety records — built for contractors who care about quality.</p>
+      <div class="df-grid">
+        <div class="df-card live">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fbf010" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-pulse"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <h4>PAT Test <span class="df-tag live">LIVE</span></h4>
+          <p>Portable appliance testing with automated certificates</p>
+        </div>
+        <div class="df-card live">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fbf010" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-flicker"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 14.5c-2.5 0-4.5-2-4.5-4.5S9.5 7.5 12 7.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5z"/></svg></div>
+          <h4>Gas CP12 <span class="df-tag live">LIVE</span></h4>
+          <p>Gas safety records and landlord certificates</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ico-float"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <h4>EICR / EL <span class="df-tag live">LIVE</span></h4>
+          <p>Electrical installation, periodic inspection &amp; minor works</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg></div>
+          <h4>Fire Alarm <span class="df-tag">SOON</span></h4>
+          <p>Fire safety inspection and test records</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+          <h4>Emerg. Lighting <span class="df-tag live">LIVE</span></h4>
+          <p>Emergency lighting test documentation</p>
+        </div>
+        <div class="df-card">
+          <div class="df-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <h4>Job Management <span class="df-tag">SOON</span></h4>
+          <p>Schedule, invoice and track all your jobs</p>
+        </div>
+      </div>
+      <div class="df-footer">DeepFlow Software &mdash; <b>deepflowsoftware.co.uk</b></div>
+    </div>
+  </div>
+  <!-- Right login card -->
+  <div class="auth-left">
+    <div class="auth-wrap">
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <div class="auth-icon"><i class="fa-solid fa-certificate"></i></div>
+          <div>
+            <div class="auth-name">DeepFlow <span>Certificates</span></div>
+            <div class="auth-sub">Part of DeepFlow Software</div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-welcome">Welcome back</div>
+      <div class="auth-welcome-sub">Sign in to your account to continue</div>
+      <div id="auth-err" class="auth-err"></div>
+      <!-- Tab bar (login / register only) -->
+      <div class="auth-tabs" id="auth-tab-bar">
+        <button class="auth-tab on" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">Request Access</button>
+      </div>
+      <!-- Login -->
+      <div id="auth-login" class="auth-panel on">
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="form-group">
+          <label>PASSWORD</label>
+          <div class="auth-pw-wrap">
+            <input class="form-control" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button class="auth-pw-eye" onclick="toggleAuthPw('login-pass',this)" type="button"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <span class="auth-forgot" onclick="switchAuthTab('forgot')">Forgot password?</span>
+        <button class="btn btn-primary btn-block btn-lg" style="margin-top:10px" onclick="doLogin()"><i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:6px"></i>Sign In</button>
+      </div>
+      <!-- Request Access -->
+      <div id="auth-register" class="auth-panel">
+        <p style="font-size:.84rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">You cannot create an account directly. Submit a request and an admin will review it and add you to the system.</p>
+        <div class="form-group"><label>FULL NAME</label><input class="form-control" id="reg-name" type="text" placeholder="Your full name" autocomplete="name"></div>
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="form-group"><label>MESSAGE <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input class="form-control" id="reg-msg" type="text" placeholder="e.g. I'm a new engineer joining the team"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doRequestAccess()"><i class="fa-solid fa-paper-plane" style="margin-right:6px"></i>Send Access Request</button>
+      </div>
+      <!-- Forgot -->
+      <div id="auth-forgot" class="auth-panel">
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Enter your email address and we'll send you a link to reset your password.</p>
+        <div class="form-group"><label>EMAIL</label><input class="form-control" id="forgot-email" type="email" placeholder="you@example.com"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doForgot()">Send Reset Email</button>
+        <div class="auth-link" style="margin-top:14px"><a href="#" onclick="switchAuthTab('login');return false">← Back to sign in</a></div>
+      </div>
+      <!-- Reset password -->
+      <div id="auth-reset" class="auth-panel">
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px;">Set New Password</div>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:18px;">Choose a strong password for your account.</p>
+        <div class="form-group"><label>NEW PASSWORD</label><input class="form-control" id="reset-pass" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
+        <div class="form-group"><label>CONFIRM PASSWORD</label><input class="form-control" id="reset-pass2" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="doSetNewPassword()">Set Password &amp; Sign In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span style="font-weight:700;color:var(--accent)">OHM Certificates</span>
+    <span id="mobile-net-pill" class="mobile-net-pill net-online" style="margin-left:auto">● Live</span>
+    <button onclick="hardRefresh()" title="Hard refresh" style="margin-left:6px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">↺</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <span id="offline-pill-desktop" class="offline-pill">⚡ Offline — changes sync on reconnect</span>
+  <div id="sync-badge"></div>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-header" onclick="toggleDesktopSidebar()" title="Collapse sidebar">
+      <span class="sidebar-logo">OHM</span>
+      <span class="sidebar-title">Certificates</span>
+      <span class="sidebar-collapse-icon">‹</span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">⊞</span>Dashboard</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">PAT Testing</div>
+        <div class="nav-item" data-view="pat-history" onclick="navigate('pat-history')"><span class="nav-icon">⚡</span>PAT Certificates</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Gas Safety</div>
+        <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">🔥</span>Gas Certificates</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Emergency Lighting</div>
+        <div class="nav-item" data-view="el-history" onclick="navigate('el-history')"><span class="nav-icon">⚡</span>EL Certificates</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Fire Safety</div>
+        <div class="nav-item" data-view="fire-history" onclick="navigate('fire-history')"><span class="nav-icon">🔴</span>Fire Alarm Certs</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Library</div>
+        <div class="nav-item" data-view="directory" onclick="navigate('directory')"><span class="nav-icon"><i class="fa-solid fa-address-book"></i></span>Directory</div>
+        <div class="nav-item" data-view="appliances" onclick="navigate('appliances')"><span class="nav-icon"><i class="fa-solid fa-wrench"></i></span>Appliances</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Compliance</div>
+        <div class="nav-item" data-view="compliance" onclick="navigate('compliance')"><span class="nav-icon">⚠</span>Renewals &amp; Expiry <span id="compliance-badge" class="nav-badge" hidden>0</span></div>
+        <div class="nav-item" data-view="analytics" onclick="navigate('analytics')"><span class="nav-icon">📊</span>Analytics</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Upcoming</div>
+        <div class="nav-item disabled"><span class="nav-icon">🌀</span>AOV Panel<span class="nav-coming">Soon</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">System</div>
+        <div class="nav-item" data-view="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</div>
+        <div class="nav-item" id="audit-nav" data-view="audit" onclick="navigate('audit')" style="display:none"><span class="nav-icon">📄</span>Audit Log</div>
+        <div class="nav-item" id="staff-nav" data-view="staff" onclick="navigate('staff')" style="display:none"><span class="nav-icon">👥</span>Staff</div>
+        <div class="nav-item" id="recycle-nav" data-view="recycle-bin" onclick="navigate('recycle-bin')" style="display:none"><span class="nav-icon">🗑️</span>Recycle Bin</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info"><div class="user-name" id="user-name-display">Loading…</div><div class="user-role" id="user-role-display">engineer</div></div>
+        <button class="btn-logout" onclick="doLogout()" title="Sign out">⏻</button>
+      </div>
+    </div>
+  </nav>
+  <button id="sidebar-expand-btn" onclick="toggleDesktopSidebar()" title="Expand sidebar">›</button>
+
+  <!-- Content -->
+  <main id="content-area">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button></div></div>
+      <div style="position:relative;margin-bottom:20px">
+        <input id="global-search" class="search-input" placeholder="🔍  Search all certificates — PAT, Gas, EL by address, ref, client…" oninput="globalSearch(this.value)" onfocus="document.getElementById('gs-results').hidden=false" onblur="setTimeout(()=>{const r=document.getElementById('gs-results');if(r)r.hidden=true;},200)" style="width:100%;box-sizing:border-box;font-size:14px;padding:11px 16px">
+        <div id="gs-results" hidden style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;max-height:380px;overflow-y:auto"></div>
+      </div>
+      <div id="expiry-reminder-banner" hidden style="background:var(--warn-bg,#fef3c7);border:1px solid var(--warn-border,#f59e0b);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px"></div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card warn"><div class="stat-label">PAT Renewals Due</div><div class="stat-value" id="stat-pat-due">—</div><div class="stat-sub">Next 30 days</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total Gas</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">Gas Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card error"><div class="stat-label">Gas Renewals Due</div><div class="stat-value" id="stat-gas-due">—</div><div class="stat-sub">Next 30 days</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total EL Certs</div><div class="stat-value" id="stat-el-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card success"><div class="stat-label">EL Satisfactory</div><div class="stat-value" id="stat-el-sat">—</div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card error"><div class="stat-label">EL Unsatisfactory</div><div class="stat-value" id="stat-el-unsat">—</div><div class="stat-sub">Issued</div></div>
+      </div>
+      <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px" id="recent-grids">
+        <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Recent Gas Certs</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAT NEW/EDIT -->
+    <div class="view" id="view-pat-new">
+      <div class="view-header">
+        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref">Test Date applies to all rows · Ctrl+S = Draft</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="navigate('pat-history')">← Back</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearPATForm()">🗑 Clear</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-pdf" onclick="generatePATPDF()">⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-print" onclick="printPATCertificate()">🖨 Print</button>
+          <button class="btn btn-secondary btn-sm" id="btn-pat-email" onclick="emailPAT()" hidden>✉ Email</button>
+          <button class="btn btn-success btn-sm" id="btn-pat-complete" onclick="completePAT()">✓ Complete</button>
+          <button class="btn btn-primary btn-sm" id="btn-pat-save" onclick="savePAT()">💾 Draft</button>
+        </div>
+      </div>
+
+      <div id="pat-edit-banner" hidden style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:8px">✏️ EDITING — you are updating an existing certificate. Changes will overwrite the saved record.</div>
+      <div id="pat-restore-banner" hidden style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">💾 Unsaved PAT found — restore it?<button type="button" onclick="restorePATAutosave()" style="margin-left:auto;background:#3b82f6;color:#fff;border:none;padding:4px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Restore</button><button type="button" onclick="discardPATAutosave()" style="background:none;color:#6b7280;border:1px solid var(--border);padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">Discard</button></div>
+      <div id="pat-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This certificate has been issued. Edit fields above if a correction is needed, then save as draft or re-complete.</div>
+
+      <div class="pat-two-col">
+      <div id="pat-main-col">
+
+      <!-- Report Details -->
+      <div class="form-section">
+        <div class="form-section-title">Report Details</div>
+        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+          <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
+          <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
+          <div class="field-group"><label>Engineer *</label><div style="display:flex;gap:6px;align-items:center"><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,'pat')" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
+          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
+          <button type="button" onclick="applyPATDatesToAll()" style="flex-shrink:0;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">Apply to All Appliances →</button>
+        </div>
+      </div>
+
+      <!-- Property & Client -->
+      <div class="form-section">
+        <div class="form-section-title">Property &amp; Client</div>
+        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+          <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
+          <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
+          <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode <span style="color:#ef4444">*</span></label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:#ef4444;font-weight:600">Required — do NOT put postcode in the address box above</span></div></div>
+          <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
+          <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title" style="color:var(--muted)">🔒 Internal Notes</div>
+        <textarea id="pat-internal-notes" placeholder="Private notes — not printed on the certificate or emailed to clients" style="width:100%;box-sizing:border-box;height:72px;resize:vertical;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--muted);font-family:inherit"></textarea>
+      </div>
+
+      <!-- Appliances -->
+      <div class="form-section">
+        <div class="pat-app-header">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="form-section-title" style="margin:0">Appliances</div>
+            <span id="pat-app-sum" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+          </div>
+          <div class="pat-app-header-btns">
+            <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+            <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+          </div>
+        </div>
+        <div class="appliance-table-wrap">
+          <table class="appliance-table" id="pat-app-table">
+            <thead><tr>
+              <th style="width:65px">Asset #</th>
+              <th>Description</th>
+              <th style="width:75px">Instrument</th>
+              <th style="width:110px">Date</th>
+              <th style="width:65px">Period</th>
+              <th style="width:100px">Next Due</th>
+              <th style="width:76px">Result</th>
+              <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
+            </tr></thead>
+            <tbody id="pat-app-body"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="savePAT()">💾 Save Draft</button>
+        <button class="btn btn-success" id="btn-pat-complete2" onclick="completePAT()">✓ Complete &amp; Issue</button>
+        <button class="btn btn-secondary" onclick="navigate('pat-history')">Cancel</button>
+      </div>
+
+      <!-- Live Certificate Preview -->
+      <div id="pat-preview-wrap" style="margin-top:16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <span>Live Certificate Preview</span>
+          <span style="font-size:11px">Use ⬇ PDF above for exact A4 output</span>
+        </div>
+        <div class="pat-cert-scroll" id="pat-cert-pages"></div>
+      </div>
+
+      </div><!-- /pat-main-col -->
+
+      <!-- RIGHT SIDE PANEL: Live Stats -->
+      <div id="pat-side-col">
+        <div class="sw-title">Cert Status</div>
+        <div id="sw-status" class="sw-cert-status empty"><span id="sw-status-dot">◯</span>&nbsp;<span id="sw-status-lbl">No data yet</span></div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Property</div>
+          <div id="sw-prop-addr" style="font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:3px">—</div>
+          <div id="sw-prop-client" style="font-size:.74rem;color:var(--muted)">—</div>
+        </div>
+
+        <div class="sw-card">
+          <div style="text-align:center;padding:6px 0 2px">
+            <div id="sw-app-count" style="font-size:2rem;font-weight:800;letter-spacing:-1px;line-height:1">0</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Appliances</div>
+          </div>
+          <svg width="64" height="64" viewBox="0 0 64 64" style="display:block;margin:8px auto;transform:rotate(-90deg)">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"/>
+            <circle id="sw-ring-pass" cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="7" stroke-dasharray="163.4" stroke-dashoffset="163.4" stroke-linecap="round"/>
+          </svg>
+          <div class="sw-kv"><span class="sw-k">✅ Pass</span><span id="sw-pass-count" class="sw-v green">0</span></div>
+          <div class="sw-kv"><span class="sw-k">❌ Fail</span><span id="sw-fail-count" class="sw-v red">0</span></div>
+          <div class="sw-kv"><span class="sw-k">Pass rate</span><span id="sw-rate" class="sw-v">—</span></div>
+        </div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Pages</div>
+          <div id="sw-pages-dots" class="sw-pages-dots"></div>
+        </div>
+
+        <div class="sw-card">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Required Fields</div>
+          <div id="sw-fields" class="sw-field-status"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+          <button class="btn btn-secondary btn-sm" onclick="addPATRow()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-plus"></i> Add appliance row</button>
+          <button class="btn btn-sm" onclick="openScanModal()" style="justify-content:flex-start;width:100%;background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+          <button class="btn btn-secondary btn-sm" onclick="generatePATPDF()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+        </div>
+      </div><!-- /pat-side-col -->
+
+      </div><!-- /pat-two-col -->
+    </div>
+
+    <!-- PAT HISTORY -->
+    <div class="view" id="view-pat-history">
+      <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportPATCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div></div>
+      <div class="list-controls">
+        <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
+        <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
+        <button id="pat-sort-exp-btn" onclick="togglePatExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
+        <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="cert-list" id="pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- COMPLIANCE -->
+    <div class="view" id="view-compliance">
+      <div class="view-header">
+        <div><div class="view-title">Compliance</div><div class="view-subtitle" id="comp-subtitle">PAT &amp; Gas renewals in one place</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadCompliance()">↻ Refresh</button>
+      </div>
+      <div class="list-controls" style="flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <input class="search-input" id="comp-search" placeholder="Search address, ref, appliance…" oninput="filterCompliance()" style="min-width:200px;flex:1">
+        <select id="comp-type" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Types</option>
+          <option value="pat">PAT Only</option>
+          <option value="gas">Gas Only</option>
+          <option value="el">EL Only</option>
+        </select>
+        <select id="comp-urgency" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="60">Due in 60 days</option>
+          <option value="overdue">Overdue only</option>
+          <option value="7">Due this week</option>
+          <option value="30">Due this month</option>
+          <option value="all">All upcoming</option>
+        </select>
+        <select id="comp-sort" onchange="filterCompliance()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="date-asc">Soonest first</option>
+          <option value="date-desc">Latest first</option>
+          <option value="address">Address A–Z</option>
+          <option value="type">Type</option>
+        </select>
+      </div>
+      <div id="comp-summary" style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap"></div>
+      <div class="cert-list" id="comp-list"><div class="empty-state"><div class="empty-icon">⏰</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- GAS NEW/EDIT -->
+    <div class="view" id="view-gas-new">
+      <div class="view-header no-print">
+        <div><div class="view-title" id="gas-form-title">New Gas</div><div class="view-subtitle" id="gas-form-ref"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" id="btn-gas-pdf" onclick="downloadCP12PDF(this)" hidden>⬇ PDF</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-print" onclick="printGasCertificate()" hidden>🖨 Print</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-toggle-view" onclick="toggleGasView()" hidden>📄 A4 Form</button>
+          <button class="btn btn-secondary btn-sm" id="btn-gas-email" onclick="emailGas()" hidden>✉ Email</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-edit" onclick="enterGasEditMode()" hidden>✏ Edit</button>
+          <button class="btn btn-success btn-sm" id="btn-gas-complete" onclick="completeGas()" hidden>✓ Complete</button>
+          <button class="btn btn-primary btn-sm" id="btn-gas-save" onclick="saveGas()" hidden>💾 Save</button>
+        </div>
+      </div>
+      <div id="gas-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This gas certificate has been issued. Click ✏ Edit to make corrections.</div>
+      <details style="margin-bottom:12px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;user-select:none">🔒 Internal Notes (private — not printed)</summary><textarea id="gas-internal-notes" placeholder="Private notes — not included on certificate or emails" style="width:100%;box-sizing:border-box;height:64px;resize:vertical;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:13px;color:var(--muted);font-family:inherit;margin-top:6px"></textarea></details>
+
+      <!-- GAS WIZARD (step-based, all screen sizes) -->
+      <div id="mobile-gas-wizard" hidden style="padding-bottom:32px">
+        <datalist id="mgw-app-types">
+          <option value="Combi Boiler"><option value="System Boiler"><option value="Back Boiler"><option value="Regular Boiler"><option value="Gas Fire"><option value="Gas Cooker"><option value="Gas Hob"><option value="Gas Range Cooker"><option value="Warm Air Unit"><option value="Water Heater"><option value="Gas Tumble Dryer">
+        </datalist>
+        <div id="gw-body"></div>
+      </div>
+
+      <!-- CP12 AUTHENTIC FORM WRAP -->
+      <div class="cp12-form-wrap" id="cp12Wrap">
+        <input type="hidden" id="cp12LogoData">
+
+        <!-- ===== PAGE 1 ===== -->
+        <div class="page" id="page1">
+
+          <!-- HEADER -->
+          <div class="merged-header">
+            <div class="logo-zone" id="logoZone" onclick="document.getElementById('logoFileInput').click()" title="Click to add company logo">
+              <img id="logoImg" src="" alt="Company logo">
+              <div class="logo-placeholder">Click to<br>add logo</div>
+              <input type="file" id="logoFileInput" accept="image/*" onchange="handleCP12LogoUpload(event)">
+            </div>
+            <div class="header-content">
+              <div class="top-bar">
+                <div class="top-item">
+                  <label for="f_cert_date">Date Issued</label>
+                  <input id="f_cert_date" type="text" data-field="cert_date" class="fast-date" placeholder="DD/MM/YYYY" maxlength="10">
+                </div>
+                <div class="top-item">
+                  <label>Licence No.</label>
+                  <input type="text" data-field="landlord_ref" placeholder="Licence No.">
+                </div>
+                <div class="top-item gas-number-item">
+                  <label>Gas Safe<br>Reg No.</label>
+                  <input type="text" data-field="gas_safe_no" placeholder="000000" maxlength="12">
+                </div>
+                <div class="top-item wide">
+                  <label>Certificate Ref</label>
+                  <input type="text" data-field="cert_ref" class="auto-reference" readonly tabindex="-1">
+                </div>
+              </div>
+              <div class="title-box">
+                <input type="text" data-field="company_name" class="company-input" placeholder="Your Company Name Ltd">
+                <div class="doctitle">Landlord/Homeowner Gas Safety Record</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- INFO GRID -->
+          <div class="info-grid">
+            <!-- Landlord/Customer -->
+            <div class="info-box">
+              <div class="info-box-header">Landlord / Customer Details</div>
+              <div class="info-box-body">
+                <div class="compact-address has-copy-action">
+                  <div data-field="landlord_address" data-composite="ll" style="border:1px solid #e5e7eb;border-radius:2px;padding:0;background:#fff">
+                    <input type="text" id="cp12-ll-name" placeholder="Name" style="font-weight:700;font-size:12.27px;color:#111827;display:block;width:100%;border:none;border-bottom:1px solid #f3f4f6;padding:3px 38px 3px 5px;background:transparent;outline:none;font-family:inherit;box-sizing:border-box">
+                    <textarea class="address-main-ll" placeholder="Address including postcode" rows="3" style="border:none;outline:none;resize:none;width:100%;padding:2px 38px 2px 5px;font-size:12.27px;color:#111827;background:transparent;font-family:inherit;box-sizing:border-box;display:block"></textarea>
+                  </div>
+                  <button type="button" class="copy-address-btn no-print" title="Copy from installation address" onclick="copyInstallationToLandlord()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  </button>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="landlord_postcode" placeholder="SW1A 1AA">
+                  </div>
+                  <div class="pc-line no-print">
+                    <label style="white-space:nowrap">Email</label>
+                    <input type="email" data-field="recipient_email" placeholder="landlord@example.com" autocomplete="off" title="Email address to send this certificate to">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Installation Address -->
+            <div class="info-box">
+              <div class="info-box-header">Installation / Inspection Address</div>
+              <div class="info-box-body">
+                <div class="compact-address">
+                  <textarea class="address-main" data-field="install_address" placeholder="Full address of property inspected" rows="4"></textarea>
+                  <div class="pc-line">
+                    <label>Postcode</label>
+                    <input type="text" data-field="install_postcode" placeholder="e.g. SW1 1AA">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Engineer / Business -->
+            <div class="info-box">
+              <div class="info-box-header">Engineer / Business Details</div>
+              <div class="info-box-body">
+                <div class="business-grid">
+                  <textarea class="business-details" data-field="business_address" placeholder="Business address incl. postcode"></textarea>
+                  <div class="business-phone">
+                    <label>Tel</label>
+                    <input type="text" data-field="business_phone" placeholder="07...">
+                  </div>
+                  <div class="business-email">
+                    <label>Email</label>
+                    <input type="text" data-field="business_email" placeholder="info@...">
+                  </div>
+                  <div class="business-postcode">
+                    <label>Postcode</label>
+                    <input type="text" data-field="business_postcode" placeholder="Postcode">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOTTOM SPLIT -->
+          <div class="bottom-split">
+            <!-- Left panel -->
+            <div class="left-panel">
+              <!-- Defects -->
+              <div class="defects-box">
+                <div class="defects-box-header defects-split-header">
+                  <span>Defects / Immediately Dangerous / At Risk Notices Issued</span>
+                  <span class="warn-heading">Warning<br>Notice Type</span>
+                </div>
+                <table class="defects-table">
+                  <tbody>
+                    <tr><td class="num">1</td><td class="desc"><input type="text" data-field="defect_1"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_1" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_1"></div></td></tr>
+                    <tr><td class="num">2</td><td class="desc"><input type="text" data-field="defect_2"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_2" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_2"></div></td></tr>
+                    <tr><td class="num">3</td><td class="desc"><input type="text" data-field="defect_3"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_3" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_3"></div></td></tr>
+                    <tr><td class="num">4</td><td class="desc"><input type="text" data-field="defect_4"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_4" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_4"></div></td></tr>
+                    <tr><td class="num">5</td><td class="desc"><input type="text" data-field="defect_5"></td><td class="warn"><div class="choice-group"><button type="button" class="choice-cycle warn-cycle" data-group="defect_warn_5" data-options="N/A,Yes,No" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="defect_warn_5"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <!-- Remedial + Work -->
+              <div class="remedial-box">
+                <div class="remedial-box-header">
+                  <span>Remedial Action Required</span>
+                </div>
+                <textarea data-field="remedial_action" placeholder="Describe any remedial action required…"></textarea>
+              </div>
+              <div class="work-box">
+                <div class="work-box-header">
+                  <span>Work Carried Out</span>
+                </div>
+                <textarea data-field="work_details" placeholder="Description of work carried out…"></textarea>
+              </div>
+            </div>
+
+            <!-- Right panel -->
+            <div class="right-panel">
+              <!-- Pipework -->
+              <div class="pipe-box">
+                <div class="pipe-box-header pipe-split-header">
+                  <span>Pipework / Installation Checks</span>
+                  <span class="pipe-status-heading">Satisfactory<br>/ Pass</span>
+                </div>
+                <table class="pipe-table">
+                  <tbody>
+                    <tr><td class="label">Gas Tightness Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_gas_tight" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_gas_tight"></div></td></tr>
+                    <tr><td class="label">Standing / Working Pressure Test</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_pressure" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_pressure"></div></td></tr>
+                    <tr><td class="label">Gas Installation Visual Check</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_visual" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_visual"></div></td></tr>
+                    <tr><td class="label">Meter / Governor Condition</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_meter" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_meter"></div></td></tr>
+                    <tr><td class="label">Emergency Control Accessible</td><td class="check pipe-choice"><div class="choice-group"><button type="button" class="choice-cycle" data-group="pipe_emergency" data-options="✓,✕,N/A" onclick="cycleCP12Choice(this)"></button><input type="hidden" data-field="pipe_emergency"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Signatures -->
+              <div class="sig-box">
+                <!-- Issued by -->
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Record issued by the engineer:</div>
+                  <div class="sig-field">
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_issued" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_issued','Engineer Signature')"></canvas>
+                  </div>
+                  <div class="sig-field">
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="issuer_name" style="text-transform:uppercase;">
+                  </div>
+                </div>
+                <!-- Received by -->
+                <div class="sig-inner">
+                  <div class="sig-inner-title">Record received by (tenant / landlord / homeowner / agent):</div>
+                  <div class="sig-field">
+                    <label>Signature <span class="sig-tap-hint no-print">(tap to sign)</span></label>
+                    <canvas class="sig-canvas" data-sig-field="sig_received" width="400" height="96" style="cursor:pointer" onclick="openCP12SigModal('sig_received','Recipient Signature')"></canvas>
+                  </div>
+                  <div class="sig-field">
+                    <label>Name (CAPITALS)</label>
+                    <input type="text" data-field="receiver_name" style="text-transform:uppercase;">
+                  </div>
+                </div>
+                <!-- Attention box -->
+                <div class="attention-wrap">
+                  <div class="attention-box">
+                    <div class="attn-head">ATTENTION — Next Gas Safety Check Due</div>
+                    <div class="attn-body">
+                      <input type="text" data-field="next_check_date" class="fast-date next-check-date" placeholder="DD/MM/YYYY" maxlength="10" title="Next annual gas safety check date">
+                      <div style="margin-top:6px;font-size:6.5pt;color:#92400e">This certificate must be kept safe and shown to your gas engineer at the next inspection.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page-footer">
+            This Gas Safety Record is issued under the Gas Safety (Installation &amp; Use) Regulations 1998. A copy must be provided to the landlord/owner and, where applicable, to the tenant within 28 days of the check or at the start of a new tenancy.
+          </div>
+        </div><!-- end page1 -->
+
+        <!-- ===== PAGE 2 ===== -->
+        <div class="page" id="page2">
+          <div class="p2-titlebar">
+            <div class="p2-title">Appliance Inspection Details</div>
+            <div class="p2-ref-group">
+              <span class="p2-ref-label">Certificate Ref:</span>
+              <div class="p2-ref-box"><input type="text" data-field="cert_ref_p2" class="auto-reference" readonly tabindex="-1"></div>
+            </div>
+          </div>
+          <div class="p2-column-header">
+            <div class="p2-head-cell">App. No.</div>
+            <div class="p2-head-cell">Location</div>
+            <div class="p2-head-cell">Type</div>
+            <div class="p2-head-cell">Manufacturer</div>
+            <div class="p2-head-cell">Model</div>
+            <div class="p2-head-cell">Owned by Landlord / Homeowner?</div>
+            <div class="p2-head-cell">Inspected?</div>
+            <div class="p2-head-cell">Type of Flue</div>
+            <div class="p2-head-cell important">Operating Pressure (mbar) / Heat Input</div>
+            <div class="p2-head-cell important">Safety Device(s) Op.</div>
+            <div class="p2-head-cell important">Ventilation Safety Checks</div>
+            <div class="p2-head-cell important">Visual Condition of Flue &amp; Termination</div>
+            <div class="p2-head-cell important">Flue Operation Check</div>
+            <div class="p2-head-cell important">Combustion Analyser Reading</div>
+            <div class="p2-head-cell important">Serviced?</div>
+            <div class="p2-head-cell important">Safe to Use?</div>
+          </div>
+          <div class="appliance-cards" id="applianceCards">
+            <!-- Built by buildCP12ApplianceCards() -->
+          </div>
+          <div class="no-print" style="margin-top:8px">
+            <button type="button" id="btn-add-appliance" onclick="addNextApplianceRow()" style="border:2px dashed #1e3a5f;background:transparent;color:#1e3a5f;font-weight:700;font-size:8pt;padding:5px 16px;border-radius:6px;cursor:pointer;width:100%">+ Add Appliance</button>
+          </div>
+        </div><!-- end page2 -->
+
+      </div><!-- end cp12-form-wrap -->
+
+      <!-- Gas Certificate Live Preview -->
+      <div id="gas-cert-pages" class="pat-cert-scroll" style="display:none;margin-top:16px"></div>
+
+      <!-- Signature Modal -->
+      <div class="sig-modal" id="sigModal">
+        <div class="sig-modal-box">
+          <div class="sig-modal-title" id="sigModalTitle">Sign Here</div>
+          <div class="sig-modal-hint">Use your finger or mouse to sign in the box below</div>
+          <canvas id="sigModalCanvas" width="700" height="200"></canvas>
+          <div class="sig-modal-actions">
+            <button class="btn btn-secondary btn-sm" onclick="undoCP12SigModal()">↩ Undo</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearCP12SigModal()">Clear</button>
+            <button class="btn btn-secondary btn-sm" onclick="closeCP12SigModal()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmCP12SigModal()">Confirm Signature</button>
+          </div>
+        </div>
+      </div>
+      <div id="cp12Toast"></div>
+
+    </div>
+
+    <!-- GAS HISTORY -->
+    <div class="view" id="view-gas-history">
+      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportGasCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New Gas</button></div></div>
+      <div class="list-controls">
+        <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
+        <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
+        <select id="gas-filter" onchange="filterGasList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="cert-list" id="gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="view-header"><div><div class="view-title">Settings</div><div class="view-subtitle">Company &amp; application configuration</div></div><button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button></div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchSettingsTab('pat')">PAT</button>
+        <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas CP12</button>
+        <button class="settings-tab" onclick="switchSettingsTab('el')">⚡ Emergency Lighting</button>
+        <button class="settings-tab" onclick="switchSettingsTab('ref')">🔢 Reference</button>
+        <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
+        <button class="settings-tab" onclick="switchSettingsTab('integrations')">🔗 Integrations</button>
+        <button class="settings-tab" onclick="switchSettingsTab('profile')">My Profile</button>
+        <button class="settings-tab" onclick="switchSettingsTab('backend')">⚙ Backend</button>
+      </div>
+      <div class="settings-pane" id="pane-email">
+        <div class="form-section">
+          <div class="form-section-title">Choose Email Method</div>
+          <input type="hidden" id="s-email-method" value="script">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+            <div id="method-btn-script" onclick="setEmailMethod('script')" style="border:2px solid var(--accent);border-radius:8px;padding:16px;cursor:pointer;background:var(--accent);color:#fff">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📧 Google Apps Script</div>
+              <div style="font-size:12px;opacity:.85">Send via your Google account script URL</div>
+            </div>
+            <div id="method-btn-brevo" onclick="setEmailMethod('brevo')" style="border:2px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;background:var(--surface2);color:var(--text)">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">✉️ Brevo</div>
+              <div style="font-size:12px;opacity:.7">Send via Brevo transactional email API</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section" id="email-section-script">
+          <div class="form-section-title" style="color:var(--muted)">Google Apps Script Settings</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Script URL</label><input type="url" id="s-script-url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+          </div>
+        </div>
+        <div class="form-section" id="email-section-brevo">
+          <div class="form-section-title" style="color:var(--muted)">Brevo Settings</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Brevo API Key</label><input type="password" id="s-brevo-key" placeholder="xkeysib-…"></div>
+            <div class="field-group"><label>From Email</label><input type="email" id="s-from-email" placeholder="Compliance@ohmelectricals.co.uk"></div>
+            <div class="field-group"><label>From Name</label><input type="text" id="s-from-name" placeholder="OHM Electrical Engineering Ltd"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title" style="color:var(--muted)">Test Email</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Send Test To</label><input type="email" id="s-test-email" placeholder="your@email.com"></div>
+            <div class="field-group" style="display:flex;align-items:flex-end">
+              <button class="btn btn-secondary" onclick="sendTestEmail()" style="width:100%">Send Test Email</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">✉ Email Defaults</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            These apply to <strong>all certificate types</strong> — PAT, Gas CP12 and any future certificates. The <strong>Fallback Email</strong> is used when no client email is on the record. The <strong>BCC Email</strong> is always blind-copied on every send.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Fallback Client Email</label><input type="email" id="s-fallback-email" placeholder="fallback@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Used when a certificate has no client email set</div></div>
+            <div class="field-group"><label>BCC Email</label><input type="email" id="s-bcc-email" placeholder="bcc@yourcompany.co.uk"><div style="font-size:11px;color:var(--muted);margin-top:3px">Silently copied on every certificate email — all types</div></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Global CC Email(s)</label><input type="text" id="s-cc-email" placeholder="cc@yourcompany.co.uk, partner@example.com"><div style="font-size:11px;color:var(--muted);margin-top:3px">Comma-separated — copied on every certificate email. Individual client CC overrides this when set in Directory.</div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">✉ Email Subject Template</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Subject Line Template</label><input type="text" id="s-email-subject-tmpl" placeholder="{cert_type} Certificate — {ref} — {address}"><div style="font-size:11px;color:var(--muted);margin-top:3px">Tokens: <strong>{cert_type}</strong> PAT/Gas/EL · <strong>{ref}</strong> reference number · <strong>{address}</strong> property address · <strong>{company}</strong> your company name. Leave blank for default.</div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔔 Expiry Reminders</div>
+          <div class="field-grid">
+            <div class="field-group"><label>In-App Reminders</label>
+              <select id="s-reminder-enabled"><option value="on">On — show on dashboard login</option><option value="off">Off — disabled</option></select>
+            </div>
+            <div class="field-group"><label>Remind days before expiry</label><input type="number" id="s-reminder-days" placeholder="30" min="1" max="365"><div style="font-size:11px;color:var(--muted);margin-top:3px">Show a reminder banner this many days before a certificate expires</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane active" id="pane-pat">
+        <div class="form-section">
+          <div class="form-section-title">Company Information — PAT</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details print on every PAT certificate</strong> — header name, footer contact and VAT / Reg numbers.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-pat-co-name" placeholder="OHM Electrical Engineering Ltd"></div>
+            <div class="field-group"><label>Trading Name / Subtitle</label><input type="text" id="s-pat-co-sub" placeholder="Optional subtitle"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-pat-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-pat-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Registered Address</label><textarea id="s-pat-co-address" placeholder="Street, Town, County, Postcode" style="height:56px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-pat-co-website" placeholder="https://"></div>
+            <div class="field-group"><label>VAT Number</label><input type="text" id="s-pat-co-vat" placeholder="GB 123 4567 89"></div>
+            <div class="field-group"><label>Company Reg No.</label><input type="text" id="s-pat-co-regno" placeholder="12345678"></div>
+            <div class="field-group"><label>Insurance Policy No.</label><input type="text" id="s-pat-co-insurance" placeholder="Optional"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">PAT Test Defaults</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Default Retest Period</label>
+              <select id="s-pat-period"><option value="12">1 Year (12 months)</option><option value="24">2 Years</option><option value="6">6 Months</option><option value="3">3 Months</option></select>
+            </div>
+            <div class="field-group"><label>Default Engineer</label><input type="text" id="s-pat-engineer" placeholder="Default engineer name"></div>
+            <div class="field-group"><label>Default Instrument</label><input type="text" id="s-pat-instrument" placeholder="e.g. Seaward Apollo 500"></div>
+            <div class="field-group"><label>Default Result</label><select id="s-pat-result"><option value="Pass">Pass</option><option value="Fail">Fail</option></select></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — PAT</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. PAT)</small></label>
+              <input type="text" id="s-pat-ref-prefix" placeholder="PAT" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-pat-ref-start" placeholder="1" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">PAT certs will be: <strong id="pat-ref-eg" style="color:var(--text);font-family:monospace">PAT12644 / 1 MARINA POINT</strong></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Branding — Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Company Logo</label>
+              <div class="lprev" id="pr-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo_data','pr-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo_data','pr-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Scheme Logo</label>
+              <div class="lprev" id="pr-pat1"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-pat1').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-pat1" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo2_data','pr-pat1')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo2_data','pr-pat1')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Scheme Logo 2</label>
+              <div class="lprev" id="pr-pat2"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-pat2').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-pat2" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_logo3_data','pr-pat2')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_logo3_data','pr-pat2')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-sig').click()"><i class="fa-solid fa-upload"></i> Upload</div>
+              <input type="file" id="f-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'pat_sig_data','pr-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('pat_sig_data','pr-sig')">✕ Clear</button>
+            </div>
+          </div>
+          <div class="form-section-title" style="font-size:12px;margin-top:4px">Certificate Colours</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Header Background</label><input type="color" id="s-pat-hdr-color" value="#1e3a5f"></div>
+            <div class="field-group"><label>Header Text Colour</label><input type="color" id="s-pat-hdr-text" value="#ffffff"></div>
+            <div class="field-group"><label>Alt Row Colour</label><input type="color" id="s-pat-row-color" value="#f8fafc"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Company Name Size <span id="s-pat-coname-size-v" style="font-weight:700;color:var(--accent);margin-left:4px">26px</span></label><input type="range" id="s-pat-coname-size" min="14" max="48" value="26" style="width:100%;margin-top:4px" oninput="appSettings['pat_coname_size']=this.value;document.getElementById('s-pat-coname-size-v').textContent=this.value+'px';doPatPreview()"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Certificate Title Size <span id="s-pat-cotype-size-v" style="font-weight:700;color:var(--accent);margin-left:4px">11px</span></label><input type="range" id="s-pat-cotype-size" min="7" max="24" value="11" style="width:100%;margin-top:4px" oninput="appSettings['pat_cotype_size']=this.value;document.getElementById('s-pat-cotype-size-v').textContent=this.value+'px';doPatPreview()"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Table Row Text Size <span id="s-pat-td-font-v" style="font-weight:700;color:var(--accent);margin-left:4px">12px</span></label><input type="range" id="s-pat-td-font" min="8" max="16" value="12" style="width:100%;margin-top:4px" oninput="appSettings['pat_td_font']=this.value;document.getElementById('s-pat-td-font-v').textContent=this.value+'px';doPatPreview()"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">📄 Certificate Content</div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Certificate Title</label><input type="text" id="s-pat-cert-title" placeholder="PORTABLE APPLIANCE TEST REPORT"></div>
+            <div class="field-group"><label>Signature Label</label><input type="text" id="s-pat-sig-label" placeholder="Authorised Signature"></div>
+            <div class="field-group"><label>Accreditation Number</label><input type="text" id="s-pat-accred" placeholder="e.g. NAPIT 12345"></div>
+            <div class="field-group"><label>Governing Regulation</label><input type="text" id="s-pat-reg-text" placeholder="Electricity at Work Regulations 1989"></div>
+            <div class="field-group"><label>Code of Practice</label><input type="text" id="s-pat-cop" placeholder="IET Code of Practice (5th Edition)"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Footer / Compliance Notes</label><textarea id="s-pat-cert-notes" placeholder="Any compliance notes shown in the certificate header…" style="height:60px;resize:vertical"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-gas">
+        <div class="form-section">
+          <div class="form-section-title">Gas CP12 Settings</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details auto-fill every new Gas CP12 certificate</strong> — company header, engineer box, and footer contact.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Trading Title</label><input type="text" id="s-gas-co-name" placeholder="OHM Gas Services Ltd"></div>
+            <div class="field-group"><label>Engineer Name</label><input type="text" id="s-gas-engineer" placeholder="Full name — autofills Name box"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address</label><textarea id="s-gas-co-address" placeholder="Street, Town, County" style="height:52px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-gas-co-postcode" placeholder="SW1A 1AA"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-gas-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-gas-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group"><label>Gas Safe Reg No.</label><input type="text" id="s-gas-safe-no" placeholder="Gas Safe registration number"></div>
+            <div class="field-group"><label>Engineer Licence No.</label><input type="text" id="s-gas-licence" placeholder="ACS or licence number"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Gas Safe Logo</label>
+              <div class="lprev" id="pr-gas-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-gas-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-gas-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'gas_logo_data','pr-gas-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('gas_logo_data','pr-gas-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-gas-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-gas-sig').click()"><i class="fa-solid fa-upload"></i> Upload Signature</div>
+              <input type="file" id="f-gas-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'gas_engg_sig_data','pr-gas-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('gas_engg_sig_data','pr-gas-sig')">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — Gas CP12</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. OHM)</small></label>
+              <input type="text" id="s-gas-ref-prefix" placeholder="OHM" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-gas-ref-start" placeholder="210" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Gas certs will be: <strong id="gas-ref-eg" style="color:var(--text);font-family:monospace">OHM2102636 / 5 EXAMPLE RD</strong></div>
+        </div>
+      </div>
+
+      <!-- ─── EMERGENCY LIGHTING SETTINGS ─────────────────────────────── -->
+      <div class="settings-pane" id="pane-el">
+        <div class="form-section">
+          <div class="form-section-title">⚡ Emergency Lighting Settings</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details auto-fill every new EL certificate</strong> — company header, engineer box, scheme body, and footer contact.
+          </div>
+
+          <!-- Company Information -->
+          <div class="form-section-title" style="font-size:12px;margin-bottom:10px">Company Information</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-el-co-name" placeholder="OHM Electricals Ltd"></div>
+            <div class="field-group"><label>Engineer Name</label><input type="text" id="s-el-engineer" placeholder="Full name — autofills Name box"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address Line 1</label><input type="text" id="s-el-co-addr1" placeholder="Unit / Building / Street number and name"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address Line 2</label><input type="text" id="s-el-co-addr2" placeholder="Area / District (optional)"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address Line 3</label><input type="text" id="s-el-co-addr3" placeholder="Town / City"></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-el-co-postcode" placeholder="LS1 1AA" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-el-co-phone" placeholder="0113 000 0000"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Email</label><input type="email" id="s-el-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Website</label><input type="url" id="s-el-co-website" placeholder="https://www.yourcompany.co.uk"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Company Name Size on Certificate <span id="s-el-coname-size-v" style="font-weight:700;color:var(--accent);margin-left:4px">22px</span></label><input type="range" id="s-el-coname-size" min="14" max="40" value="22" style="width:100%;margin-top:4px" oninput="appSettings['el_coname_size']=this.value;document.getElementById('s-el-coname-size-v').textContent=this.value+'px'"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <!-- Engineer / Scheme Details -->
+          <div class="form-section-title" style="font-size:12px;margin-bottom:10px">Engineer &amp; Scheme Details</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Position / Title</label><input type="text" id="s-el-position" placeholder="e.g. Electrical Engineer"></div>
+            <div class="field-group">
+              <label>Enrollment Body</label>
+              <select id="s-el-body" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px">
+                <option value="">— Select body —</option>
+                <option value="NICEIC">NICEIC</option>
+                <option value="NAPIT">NAPIT</option>
+                <option value="ELECSA">ELECSA</option>
+                <option value="SELECT">SELECT</option>
+                <option value="STROMA">STROMA</option>
+                <option value="BESCA">BESCA</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field-group"><label>Enrollment / Scheme Number</label><input type="text" id="s-el-enrol-no" placeholder="e.g. 47193758"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Company Logo</label>
+              <div class="lprev" id="pr-el-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-el-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-el-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'el_logo_data','pr-el-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('el_logo_data','pr-el-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Scheme Body Logo</label>
+              <div class="lprev" id="pr-el-body-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-el-body-logo').click()"><i class="fa-solid fa-upload"></i> Upload NICEIC/Scheme Logo</div>
+              <input type="file" id="f-el-body-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'el_body_logo_data','pr-el-body-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('el_body_logo_data','pr-el-body-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-el-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-el-sig').click()"><i class="fa-solid fa-upload"></i> Upload Signature</div>
+              <input type="file" id="f-el-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'el_sig_data','pr-el-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('el_sig_data','pr-el-sig')">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — Emergency Lighting</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. EL)</small></label>
+              <input type="text" id="s-el-ref-prefix" placeholder="EL" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-el-ref-start" placeholder="1001" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">EL certs will be: <strong id="el-ref-eg" style="color:var(--text);font-family:monospace">EL1001 / 5 EXAMPLE RD</strong></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔬 Test Instruments</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Pre-filled in every new EL certificate — no need to enter them in the wizard each time.</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Instrument 1 — Brand</label><input type="text" id="s-el-inst1-brand" placeholder="e.g. Megger"></div>
+            <div class="field-group"><label>Instrument 1 — Model</label><input type="text" id="s-el-inst1-model" placeholder="e.g. LTW325"></div>
+            <div class="field-group"><label>Instrument 2 — Brand <small style="font-weight:400;color:var(--muted)">(if any)</small></label><input type="text" id="s-el-inst2-brand" placeholder="Optional"></div>
+            <div class="field-group"><label>Instrument 2 — Model</label><input type="text" id="s-el-inst2-model" placeholder="Optional"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">Default Client Email</div>
+          <div class="settings-section-desc">Pre-filled in the wizard when creating a new EL certificate. Can be overridden per certificate.</div>
+          <div class="field-group"><label>Default client email address</label><input type="email" id="s-el-client-email-default" placeholder="client@example.com"></div>
+        </div>
+      </div>
+
+      <div class="settings-pane" id="pane-ref">
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Number System</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            Each certificate type has its own prefix and serial series — configure in the <strong>PAT</strong> and <strong>Gas CP12</strong> settings tabs.
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Format Preview</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Your reference numbers will look like:</div>
+            <div id="ref-preview-line" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.02em;color:var(--text)">OHM6559/1 MARINA POINT</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7">
+              <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[PREFIX]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[SERIAL]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[YY]</span>
+              + <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[POSTCODE SCORE]</span>
+              / <span style="background:var(--accent-dim);color:var(--accent);font-weight:600;padding:1px 5px;border-radius:3px">[DOOR + STREET]</span><br>
+              <span style="margin-top:6px;display:inline-block">Example: Prefix <strong>OHM</strong> + Serial <strong>210</strong> + Year <strong>26</strong> + Score <strong>44</strong> / 1 MARINA POINT → <strong style="color:var(--text)">OHM2102644 / 1 MARINA POINT</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Certificates Issued</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--accent)" id="ref-count-pat">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">PAT Reports</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--accent)" id="ref-count-gas">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Gas CP12</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:28px;font-weight:800;color:var(--text)" id="ref-count-total">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">Total Issued</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)" id="ref-count-note">Counts load when you open this tab.</div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Recent References Issued</div>
+          <div id="ref-recent-list" style="font-size:13px;line-height:1.9">
+            <div style="color:var(--muted);font-size:12px">Opens when you switch to this tab.</div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔍 Serial Integrity Check</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Scans each certificate series for missing serials. Automatically detects the reason from audit history (deleted, superseded, etc.) and logs each gap to the audit log — no manual input needed.</div>
+          <button class="btn btn-secondary btn-sm" onclick="runSerialGapCheck()" id="gap-check-btn">Run Sequence Check</button>
+          <div id="ref-gap-list" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-integrations">
+        <div class="form-section">
+          <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> Address Autocomplete</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:13px;margin-bottom:14px;color:var(--muted)">
+            When set, address fields across <strong>all certificate types</strong> (PAT, Gas, EL) show live UK address suggestions as you type. Credits are ~3–4p each. Free 50-credit trial at <a href="https://ideal-postcodes.co.uk" target="_blank" style="color:var(--accent)">ideal-postcodes.co.uk</a> — no card needed.
+          </div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Ideal Postcodes API Key</label><input type="password" id="s-idealpc-key" placeholder="ak_…"><div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank to disable address autocomplete.</div></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Handwriting Scan</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:12px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            Add a free Gemini API key for the best scan accuracy. If left blank, scans fall back to a free public OCR service automatically.
+          </div>
+          <div class="field-grid">
+            <div class="field-group" style="grid-column:1/-1"><label>Gemini API Key (free)</label><input type="password" id="s-gemini-key" placeholder="AIzaSy…"><div style="font-size:11px;color:var(--muted);margin-top:4px">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-pane" id="pane-profile">
+        <div class="form-section">
+          <div class="form-section-title">My Profile</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Full Name</label><input type="text" id="s-profile-name"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-profile-email" disabled style="opacity:.6"></div>
+            <div class="field-group"><label>Gas Safe No</label><input type="text" id="s-profile-gas"></div>
+            <div class="field-group"><label>Licence No</label><input type="text" id="s-profile-licence"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🎨 Appearance</div>
+          <div class="field-grid">
+            <div class="field-group"><label>App Name</label><input type="text" id="s-app-name" placeholder="OHM Certificates"><div style="font-size:11px;color:var(--muted);margin-top:3px">Shown in the sidebar header</div></div>
+            <div class="field-group"><label>Theme</label>
+              <div style="display:flex;gap:8px;margin-top:2px">
+                <button id="theme-btn-system" onclick="setAppTheme('system')" class="btn btn-secondary btn-sm">System</button>
+                <button id="theme-btn-light" onclick="setAppTheme('light')" class="btn btn-secondary btn-sm">☀ Light</button>
+                <button id="theme-btn-dark" onclick="setAppTheme('dark')" class="btn btn-secondary btn-sm">🌙 Dark</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-pane" id="pane-backend">
+        <div class="form-section">
+          <div class="form-section-title">Where Your Data Is Saved</div>
+          <div style="display:grid;gap:12px">
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">📋 PAT Reports → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">pat_reports</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: ref number, test date, engineer, landlord, address, phone, email, status, appliances (JSON array with Asset ID / Description / Instrument / Period / Result)</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">🔥 CP12 Gas Certificates → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">gas_certs</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: all CP12 form fields (installer/landlord addresses, engineer details, pipework checks, defects, appliance cards, signatures as base64, status)</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">⚡ Emergency Lighting Certificates → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">el_certs</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: all EL wizard fields (premises, client, system type, luminaire schedule, observations, engineer, outcome) as JSONB</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">⚙ App Settings → Supabase</div>
+              <div style="font-size:13px;margin-bottom:6px">Table: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12px">app_config</code></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Stores: company name, phone, email, address, email method, PAT/Gas defaults — saved per user. Brevo API key stored here (never in source code).</div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/editor" target="_blank" class="btn btn-secondary btn-sm" style="display:inline-block;text-decoration:none">🔗 Open in Supabase Table Editor</a>
+            </div>
+
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">📝 Auto-save → Browser (localStorage)</div>
+              <div style="font-size:12px;color:var(--muted)">While you fill in a form, CP12 data is auto-saved to your browser every 4 seconds (<code style="font-size:11px">cp12_autosave_v1</code>) and PAT data every 15 seconds (<code style="font-size:11px">pat_autosave</code>). This survives page refresh but is local to this browser only — not synced to the cloud until you click Save.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">📥 Import Directory from Existing Reports</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agents, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
+          </div>
+          <button class="btn btn-primary" onclick="backfillDirFromReports(this)" id="btn-backfill-dir">⬇ Import from All Reports</button>
+          <div id="backfill-result" style="margin-top:12px;font-size:13px"></div>
+        </div>
+
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">👥 Sub-Account Defaults</div>
+          <div class="field-grid">
+            <div class="field-group"><label>Default role for new sign-ups</label>
+              <select id="s-default-role" class="form-control"><option value="engineer">Engineer (standard access)</option><option value="admin">Admin (full access)</option><option value="readonly">Read-only</option></select>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">When a new user requests access, they are assigned this role on approval</div>
+            </div>
+            <div class="field-group"><label>Default permissions for new engineers</label>
+              <select id="s-default-permissions" class="form-control"><option value="">All certificates (PAT, Gas, EL)</option><option value="pat">PAT only</option><option value="gas">Gas only</option><option value="el">EL only</option><option value="pat,gas">PAT + Gas</option><option value="pat,el">PAT + EL</option><option value="gas,el">Gas + EL</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveSubAccountDefaults()">Save Defaults</button>
+        </div>
+
+        <div class="form-section" style="margin-top:16px" id="staff-sql-section">
+          <div class="form-section-title">👥 Staff Setup — One-Time SQL Migration</div>
+          <div style="background:var(--warn-dim,rgba(245,158,11,0.08));border:1px solid var(--warn,#f59e0b);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.6">
+            Run this once in your <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/sql/new" target="_blank" style="color:var(--accent)">Supabase SQL Editor</a> to enable Staff Management.
+            It adds <code>role</code> and <code>is_active</code> columns, sets up admin permissions, and makes <strong>mandeepdynamics@gmail.com</strong> an admin.
+            Safe to run multiple times (all steps are idempotent).
+          </div>
+          <div style="position:relative">
+            <pre id="staff-sql-block" style="background:var(--surface3,var(--surface2));border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:11px;overflow-x:auto;white-space:pre;line-height:1.55;color:var(--text);margin:0">-- Step 1: Add columns if they don't exist
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'engineer';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+
+-- Step 2: Make mandeepdynamics@gmail.com an admin
+UPDATE public.profiles SET role = 'admin'
+  WHERE email = 'mandeepdynamics@gmail.com';
+
+-- Step 3: Drop old restrictive policies and add admin-read-all policy
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admin read all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admin update profiles" ON public.profiles;
+
+CREATE POLICY "Users can read own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Admin read all profiles" ON public.profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admin update profiles" ON public.profiles
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Step 4: Allow admins to insert new profiles (for add-staff flow)
+DROP POLICY IF EXISTS "Admin insert profiles" ON public.profiles;
+CREATE POLICY "Admin insert profiles" ON public.profiles
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Step 5: Add must_change_password column (first-time login enforcement)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+
+-- Step 6: Create staff_requests table (anyone can submit, only admins can read/update)
+CREATE TABLE IF NOT EXISTS public.staff_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.staff_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can submit request" ON public.staff_requests;
+CREATE POLICY "Anyone can submit request" ON public.staff_requests
+  FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin read requests" ON public.staff_requests;
+CREATE POLICY "Admin read requests" ON public.staff_requests
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+DROP POLICY IF EXISTS "Admin update requests" ON public.staff_requests;
+CREATE POLICY "Admin update requests" ON public.staff_requests
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Step 7: Drop role check constraint + add permissions column (run if upgrading)
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS permissions TEXT NOT NULL DEFAULT '';
+
+-- Step 8: Soft-delete support — add deleted_at to all certificate tables
+ALTER TABLE public.pat_reports ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.gas_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pre>
+            <button class="btn btn-secondary btn-sm" onclick="copyStaffSQL()" style="position:absolute;top:10px;right:10px;font-size:11px" id="copy-sql-btn">📋 Copy</button>
+          </div>
+        </div>
+
+        <div class="form-section" style="margin-top:16px">
+          <div class="form-section-title">App & Database Links</div>
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Live App (GitHub Pages)</div>
+                <div style="font-size:11px;color:var(--muted)">ohmdeepcerts.github.io/certificates</div>
+              </div>
+              <a href="https://ohmdeepcerts.github.io/certificates" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Source Code (GitHub)</div>
+                <div style="font-size:11px;color:var(--muted)">github.com/ohmdeepcerts/certificates</div>
+              </div>
+              <a href="https://github.com/ohmdeepcerts/certificates" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase Dashboard</div>
+                <div style="font-size:11px;color:var(--muted)">Project ID: iihnfgmsfshrgrhargxz</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase Auth (Users)</div>
+                <div style="font-size:11px;color:var(--muted)">Manage logins, reset passwords</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/auth/users" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+              <div>
+                <div style="font-size:13px;font-weight:600">Supabase API Keys</div>
+                <div style="font-size:11px;color:var(--muted)">anon key, service role key, JWT secret</div>
+              </div>
+              <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/settings/api" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Open ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="view" id="view-audit">
+      <div class="view-header"><div><div class="view-title">Audit Log</div><div class="view-subtitle" id="audit-subtitle">All system activity</div></div></div>
+      <div id="audit-list"><div class="empty-state"><div class="empty-icon">📄</div><p>Loading…</p></div></div>
+      <div id="audit-pagination" hidden style="display:flex;align-items:center;gap:10px;justify-content:center;padding:16px 0;font-size:13px">
+        <button class="btn btn-secondary btn-sm" id="audit-prev-btn" onclick="prevAuditPage()">← Prev</button>
+        <span id="audit-page-label" style="color:var(--muted)"></span>
+        <button class="btn btn-secondary btn-sm" id="audit-next-btn" onclick="nextAuditPage()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STAFF -->
+    <div class="view" id="view-staff">
+      <div class="view-header">
+        <div><div class="view-title">Staff Management</div><div class="view-subtitle">Manage team members, roles and access</div></div>
+        <button class="btn btn-primary btn-sm" onclick="showAddStaffModal()">+ Add Staff Member</button>
+      </div>
+      <div id="staff-setup-notice" hidden style="background:var(--warn-dim);border:1px solid var(--warn);border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:13px">
+        <strong style="color:var(--warn)">⚠ One-time setup required.</strong> Run the SQL migration in
+        <a href="#" onclick="navigate('settings');setTimeout(()=>switchSettingsTab('backend'),300);return false" style="color:var(--accent)">Settings → Backend → Staff Setup</a>
+        to enable staff management, then refresh the page.
+      </div>
+      <div id="pending-requests-section" hidden style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">⏳ Pending Access Requests</div>
+        <div id="pending-requests-list"></div>
+      </div>
+      <div id="staff-list"><div class="empty-state"><div class="empty-icon">👥</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- RECYCLE BIN (admin only) -->
+    <div class="view" id="view-recycle-bin">
+      <div class="view-header">
+        <div><div class="view-title">Recycle Bin</div><div class="view-subtitle">Soft-deleted certificates — restore or permanently purge</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadRecycleBin()">↺ Refresh</button>
+      </div>
+      <div id="recycle-bin-list"><div class="empty-state"><div class="empty-icon">🗑️</div><p>Recycle Bin is empty</p></div></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="view" id="view-analytics">
+      <div class="view-header">
+        <div><div class="view-title">Analytics</div><div class="view-subtitle">Certificate volumes, completion rates and trends</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadAnalytics()">↺ Refresh</button>
+      </div>
+      <div id="analytics-content"><div class="empty-state"><div class="empty-icon">📊</div><p>Loading…</p></div></div>
+    </div>
+
+    <!-- DIRECTORY -->
+    <div class="view" id="view-directory">
+      <div class="view-header">
+        <div><div class="view-title">Directory</div><div class="view-subtitle">Agents, landlords, properties &amp; contacts — shared across all certificates</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openDirEditModal(_dirActiveTab)">+ Add New</button>
+      </div>
+      <div class="dir-tabs">
+        <button class="dir-tab active" id="dtab-agents"    onclick="switchDirTab('agents')"><i class="fa-solid fa-building"></i> Agents</button>
+        <button class="dir-tab"        id="dtab-landlords" onclick="switchDirTab('landlords')"><i class="fa-solid fa-user-tie"></i> Landlords</button>
+        <button class="dir-tab"        id="dtab-properties" onclick="switchDirTab('properties')"><i class="fa-solid fa-house"></i> Properties</button>
+        <button class="dir-tab"        id="dtab-contacts"  onclick="switchDirTab('contacts')"><i class="fa-solid fa-person"></i> Contacts</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input type="search" id="dir-search-input" class="search-input" style="flex:1;min-width:180px" placeholder="Search by name, address, email, postcode…" oninput="renderDirectoryPage()">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" id="dir-show-archived" onchange="renderDirectoryPage()"> Show archived</label>
+      </div>
+      <div id="dir-list-area" class="dir-list"></div>
+    </div>
+
+    <!-- APPLIANCES -->
+    <div class="view" id="view-appliances">
+      <div class="view-header">
+        <div><div class="view-title">Appliance Library</div><div class="view-subtitle">Reusable templates for Gas CP12 and PAT certificates</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openApplianceEditModal()">+ Add Appliance</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input type="search" id="app-search-input" class="search-input" style="flex:1;min-width:180px" placeholder="Search by name, manufacturer, model…" oninput="renderAppliancesPage()">
+        <select id="app-cat-filter" class="form-control" style="width:auto;min-width:130px" onchange="renderAppliancesPage()">
+          <option value="">All categories</option>
+          <option>Boiler</option><option>Cooker</option><option>Hob</option><option>Oven</option>
+          <option>Fire</option><option>Water Heater</option><option>Heater</option>
+          <option>Washing Machine</option><option>Fridge</option><option>Freezer</option>
+          <option>Microwave</option><option>Kettle</option><option>Toaster</option>
+          <option>Dishwasher</option><option>Tumble Dryer</option><option>Vacuum Cleaner</option><option>Other</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" id="app-show-archived" onchange="renderAppliancesPage()"> Show archived</label>
+      </div>
+      <div id="app-list-area" class="dir-list"></div>
+    </div>
+
+    <!-- ===== EL NEW (wizard) ===== -->
+    <div class="view" id="view-el-new">
+      <div class="page-header">
+        <h1 class="page-title">New EL Certificate</h1>
+        <p class="page-sub" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+      </div>
+      <div class="el-wizard" id="el-wizard-body"></div>
+    </div>
+
+    <!-- ===== EL HISTORY ===== -->
+    <div class="view" id="view-el-history">
+      <div class="view-header">
+        <div><div class="view-title">EL Certificates</div><div class="view-subtitle">Emergency Lighting history</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportELCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button></div>
+      </div>
+      <div class="list-controls">
+        <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
+        <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Types</option>
+          <option value="EL.1">EL.1 — Installation</option>
+          <option value="EL.2">EL.2 — Periodic</option>
+          <option value="EL.3">EL.3 — Assessment</option>
+        </select>
+        <select id="el-filter-outcome" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Outcomes</option>
+          <option value="SATISFACTORY">Satisfactory</option>
+          <option value="UNSATISFACTORY">Unsatisfactory</option>
+        </select>
+      </div>
+      <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
+    </div>
+
+    <!-- ===== FIRE NEW (wizard) ===== -->
+    <div class="view" id="view-fire-new">
+      <div style="flex-shrink:0;background:var(--surface)">
+        <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px 0">
+          <h1 style="font-size:15px;font-weight:700;margin:0;color:var(--text)">New Fire Alarm Certificate</h1>
+          <p style="margin:0;font-size:12px;color:var(--muted)" id="firewiz-header-sub">BS 5839 Fire Alarm Certificate</p>
+        </div>
+        <div class="wiz-step-tabs" id="fire-step-tabs"></div>
+        <div class="wiz-pbar-wrap"><div class="wiz-pbar"><div class="wiz-pbar-fill" id="fire-pbar-fill" style="width:0%"></div></div></div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;overflow:hidden">
+        <div id="fire-wizard-body" style="width:460px;flex-shrink:0;overflow-y:auto;padding:16px 20px"></div>
+        <div id="fire-preview-panel" style="flex:1;overflow:hidden;background:#e8e4dc;display:flex;flex-direction:column;border-left:1px solid var(--border)">
+          <div style="padding:5px 12px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase">Live Preview</span>
+            <span style="font-size:10px;color:var(--success,#16a34a);display:flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>Live sync</span>
+          </div>
+          <iframe id="fire-live-preview" style="flex:1;border:none" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FIRE HISTORY ===== -->
+    <div class="view" id="view-fire-history">
+      <div class="view-header">
+        <div><div class="view-title">Fire Alarm Certificates</div><div class="view-subtitle">BS 5839-6 Domestic &amp; BS 5839-1 Commercial</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportFireCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewFire()">+ New Fire Cert</button></div>
+      </div>
+      <div class="list-controls">
+        <input class="search-input" id="fire-search" placeholder="Search by address, reference or client…" oninput="filterFireList()">
+        <select id="fire-filter-type" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Types</option>
+          <option value="FA.1">FA.1 — Domestic Installation</option>
+          <option value="FA.2">FA.2 — Domestic Inspection</option>
+          <option value="FA.3">FA.3 — Commercial Installation</option>
+          <option value="FA.4">FA.4 — Commercial Service</option>
+        </select>
+        <select id="fire-filter-outcome" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+          <option value="">All Outcomes</option>
+          <option value="SATISFACTORY">Satisfactory</option>
+          <option value="UNSATISFACTORY">Unsatisfactory</option>
+          <option value="REQUIRES ATTENTION">Requires Attention</option>
+        </select>
+      </div>
+      <div id="fire-history-list"><p class="empty-state">No fire alarm certificates yet.</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- EL CERTIFICATE MODAL -->
+<div id="el-cert-modal" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 14px;background:#1c1917;flex-shrink:0;gap:8px">
+    <span style="color:#fff;font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" id="el-cert-modal-title">EL Certificate</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
+      <button onclick="elPrintCert()" style="background:#b91c1c;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-print"></i> <span class="el-btn-label">Print</span></button>
+      <button onclick="(function(){var m=document.getElementById('el-cert-modal');if(m&&m._certRec)elDownloadPDF(m._certRec);})()" style="background:#1d4ed8;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-download"></i> <span class="el-btn-label">PDF</span></button>
+      <button id="el-cert-email-btn" onclick="elCertEmailBtn()" style="background:#15803d;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-envelope"></i> <span class="el-btn-label">Email</span></button>
+      <button onclick="elCloseCert()" style="background:#44403c;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+  <iframe id="el-cert-iframe" style="flex:1;border:none;width:100%;background:#e8e4dc;-webkit-overflow-scrolling:touch"></iframe>
+</div>
+
+<!-- TOAST CONTAINER -->
+<!-- Scan Handwriting Modal -->
+<div class="scan-modal-backdrop" id="scan-modal" style="display:none">
+  <div class="scan-modal">
+    <div class="scan-modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="scan-modal-title" style="font-weight:700;font-size:15px"><i class="fa-solid fa-camera"></i> Scan Handwriting</div>
+      <button onclick="closeScanModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <div class="scan-drop-area" id="scan-drop-area" onclick="document.getElementById('scan-file-input').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();handleScanFile({files:event.dataTransfer.files})">
+      📷 Click or drag a photo of your handwritten PAT log sheet
+    </div>
+    <input type="file" id="scan-file-input" accept="image/*" style="display:none" onchange="handleScanFile(this)">
+    <div id="scan-preview" style="margin-top:8px;text-align:center"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+      <span id="scan-status" style="font-size:.8rem;color:var(--muted);flex:1"></span>
+      <button class="btn btn-primary btn-sm" id="scan-go-btn" onclick="runScan()" disabled>
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Scan Handwriting
+      </button>
+    </div>
+    <div id="scan-results-wrap" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <strong>Detected Appliances</strong>
+        <span id="scan-count" style="color:var(--muted);font-size:13px"></span>
+      </div>
+      <div id="scan-results-list" style="max-height:240px;overflow-y:auto"></div>
+      <button class="btn btn-success btn-sm" style="margin-top:10px;width:100%" onclick="addPatScanResults()">
+        <i class="fa-solid fa-check"></i> Add Selected to Form
+      </button>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div id="overlay-simple" style="display:flex;flex-direction:column;align-items:center;gap:12px"><div class="spinner"></div><span id="overlay-msg">Loading…</span></div>
+  <div id="overlay-progress" style="display:none;width:340px;background:#fff;border-radius:14px;padding:26px 28px;box-shadow:0 12px 40px rgba(0,0,0,.3)">
+    <div id="ovp-title" style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:3px">Sending email</div>
+    <div id="ovp-step" style="font-size:13px;color:#64748b;margin-bottom:14px">Starting…</div>
+    <div style="background:#e2e8f0;border-radius:99px;height:7px;overflow:hidden;margin-bottom:16px">
+      <div id="ovp-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#6366f1);transition:width .45s cubic-bezier(.4,0,.2,1);width:0%"></div>
+    </div>
+    <div id="ovp-steps"></div>
+  </div>
+</div>
+
+<!-- ADD STAFF MODAL -->
+<div class="modal-backdrop hidden" id="add-staff-modal" style="z-index:200">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">👤 Add Staff Member</div>
+      <button class="modal-close" onclick="hideAddStaffModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-group label" style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Full Name</label>
+      <input class="form-control" type="text" id="add-staff-name" placeholder="e.g. John Smith" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Email Address</label>
+      <input class="form-control" type="email" id="add-staff-email" placeholder="john@company.co.uk" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Role</label>
+      <select class="form-control" id="add-staff-role" onchange="document.getElementById('add-staff-access-row').style.display=this.value==='admin'?'none':''">
+        <option value="engineer">Full Access</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group" id="add-staff-access-row">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px">Module Access <span style="font-size:11px;color:var(--muted);font-weight:400">— leave all unchecked for full access</span></label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px"><input type="checkbox" id="add-perm-pat" style="accent-color:var(--accent);width:15px;height:15px"> 📋 PAT Testing</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px"><input type="checkbox" id="add-perm-gas" style="accent-color:var(--accent);width:15px;height:15px"> 🔥 Gas Safety</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px"><input type="checkbox" id="add-perm-el" style="accent-color:var(--accent);width:15px;height:15px"> 💡 Emergency Lighting</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px">Temporary Password</label>
+      <input class="form-control" type="text" id="add-staff-pw" placeholder="Min 6 characters — share with staff member" autocomplete="off">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Staff member can change their password from My Profile in Settings after logging in.</div>
+    </div>
+    <div id="add-staff-error" style="color:var(--danger,#ef4444);font-size:13px;margin-top:8px;min-height:18px"></div>
+    <div class="modal-footer" style="gap:8px">
+      <button class="btn btn-secondary" onclick="hideAddStaffModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doAddStaff()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORCE CHANGE PASSWORD MODAL (first-time login) -->
+<div class="modal-backdrop hidden" id="force-pw-modal" style="z-index:700;background:rgba(0,0,0,0.85)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px"><span>🔐</span> Set Your Password</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Welcome! For your security, you must set a personal password before continuing. You will use this password for all future logins.</p>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--muted)">NEW PASSWORD</label><input class="form-control" id="force-pw-new" type="password" placeholder="Min 8 characters" autocomplete="new-password"></div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--muted)">CONFIRM PASSWORD</label><input class="form-control" id="force-pw-confirm" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+    <div id="force-pw-error" style="color:var(--danger,#ef4444);font-size:13px;margin-bottom:10px;min-height:18px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="width:100%;font-size:15px" onclick="doForceChangePassword()">Set Password &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS UNSAVED MODAL -->
+<div class="modal-backdrop hidden" id="settings-leave-modal" style="z-index:200">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title" style="display:flex;align-items:center;gap:8px"><span style="font-size:1.2rem">⚠️</span> Unsaved Changes</div></div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">You have unsaved changes in Settings.<br>What would you like to do?</p>
+    <div class="modal-footer" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="flex:1" onclick="saveAndNavigate()">💾 Save &amp; Continue</button>
+      <button class="btn btn-danger" style="flex:1" onclick="leaveWithoutSaving()">Leave without saving</button>
+      <button class="btn btn-secondary" style="width:100%" onclick="closeSettingsLeaveModal()">← Stay in Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-backdrop hidden" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="confirm-title">Confirm</div><button class="modal-close" onclick="closeModal('confirm-modal')">×</button></div>
+    <p id="confirm-msg" style="font-size:14px;color:var(--muted)"></p>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button><button class="btn btn-primary" id="confirm-ok">Confirm</button></div>
+  </div>
+</div>
+
+<div id="print-target" style="display:none"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
