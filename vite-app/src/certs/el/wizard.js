@@ -1488,27 +1488,39 @@ export function elPrevPage() { if (_elPage > 1) { _elPage--; renderELList(_elFil
 export function elNextPage() { if (_elPage < Math.ceil(_elFiltered.length / PAGE_SIZE)) { _elPage++; renderELList(_elFiltered, _elPage, _elCurrentQ); document.getElementById('el-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 
 async function elGeneratePDF(rec, returnBlob) {
-  var certHtml = elBuildCertHTML(rec);
   if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
     throw new Error('jsPDF not loaded');
   }
+  var certHtml = elBuildCertHTML(rec);
+  // Parse as a full document so <head>/<style> are properly separated from body
+  var parsed = (new DOMParser()).parseFromString(certHtml, 'text/html');
   var container = document.createElement('div');
   container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;';
-  container.innerHTML = certHtml;
+  // Import <style> blocks from parsed <head> so they apply to the cloned elements
+  parsed.head.querySelectorAll('style').forEach(function(s) {
+    container.appendChild(document.importNode(s, true));
+  });
+  // Import body children (.cert-page divs) into the container
+  Array.from(parsed.body.children).forEach(function(el) {
+    container.appendChild(document.importNode(el, true));
+  });
   document.body.appendChild(container);
+  // Two rAF ticks so styles are computed before html2canvas reads them
+  await new Promise(function(res) { requestAnimationFrame(function() { requestAnimationFrame(res); }); });
   try {
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
     var pdf = new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
     var pages = container.querySelectorAll('.cert-page');
+    if (!pages.length) throw new Error('No certificate pages found');
     for (var i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage();
-      var canvas = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, backgroundColor:'#fff'});
+      var canvas = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, backgroundColor:'#fff', logging:false});
       var imgData = canvas.toDataURL('image/jpeg', 0.92);
       pdf.addImage(imgData,'JPEG',0,0,210,297);
     }
     document.body.removeChild(container);
     if (returnBlob) return pdf.output('blob');
-    pdf.save(`EL_${rec.ref||'certificate'}.pdf`);
+    pdf.save('EL_'+(rec.ref||'certificate')+'.pdf');
   } catch(e) {
     try { document.body.removeChild(container); } catch(ee) {}
     throw e;
