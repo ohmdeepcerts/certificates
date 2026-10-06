@@ -7,11 +7,13 @@ import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
 import { sendBrevoEmail, buildEmailSubject, getGlobalCC } from '../../lib/brevo.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
+import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 
 let _w = {};
 let _elDirty = false;
 let _dir = { properties: null };
 let _elAllCerts = [];
+let _elPage = 1, _elFiltered = [], _elCurrentQ = '';
 
 const STEPS = ['type','premises','client','system','purpose','duration','test','luminaires','instruments','checklist','outcome','observations','engineer','review'];
 const CERT_TYPES = [
@@ -1358,26 +1360,41 @@ export async function loadELHistory() {
   if (error) { console.error('loadELHistory:', error); return; }
   _elAllCerts = data || [];
   window._elAllCerts = _elAllCerts;
-  renderELList(_elAllCerts);
+  _elFiltered = _elAllCerts; _elPage = 1; _elCurrentQ = '';
+  renderELList(_elAllCerts, 1, '');
 }
 
 export function filterELList(q) {
-  var lq = (q||'').toLowerCase();
+  _elCurrentQ = (q||'').trim().toLowerCase();
   var typeFilter = (document.getElementById('el-filter-type')||{}).value || '';
   var outcomeFilter = (document.getElementById('el-filter-outcome')||{}).value || '';
   var filtered = _elAllCerts.filter(function(r) {
     var d = r.data||{};
-    var mQ = !lq ||
-      (r.ref_number||'').toLowerCase().indexOf(lq) !== -1 ||
-      (d.premisesName||'').toLowerCase().indexOf(lq) !== -1 ||
-      (d.premAddr1||'').toLowerCase().indexOf(lq) !== -1 ||
-      (d.clientName||'').toLowerCase().indexOf(lq) !== -1 ||
-      (r.cert_type||'').toLowerCase().indexOf(lq) !== -1;
     var mT = !typeFilter || r.cert_type === typeFilter;
     var mO = !outcomeFilter || (r.outcome||'').toUpperCase() === outcomeFilter;
+    if (_elCurrentQ.length < 2) return mT && mO;
+    var lq = _elCurrentQ;
+    var mQ =
+      (r.ref_number     ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premisesName   ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr1      ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr2      ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr3      ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premPostcode   ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.clientName     ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.clientAddr1    ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.clientPostcode ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (r.cert_type      ||'').toLowerCase().indexOf(lq) !== -1;
     return mQ && mT && mO;
   });
-  renderELList(filtered);
+  if (_elCurrentQ.length >= 2) {
+    filtered = sortByWordStart(filtered, function(r) {
+      var d = r.data||{};
+      return [d.premisesName, d.premAddr1, d.premAddr2, d.premAddr3, d.premPostcode, r.ref_number, d.clientName].join(' ');
+    }, _elCurrentQ);
+  }
+  _elFiltered = filtered; _elPage = 1;
+  renderELList(filtered, 1, _elCurrentQ);
 }
 
 export async function deleteELCert(id) {
@@ -1396,56 +1413,77 @@ export async function copyELCert(id) {
   _w = d; navigate('el-new'); elRenderStep();
 }
 
-export function renderELList(certs) {
+export function renderELList(certs, page, q) {
+  page = page || 1; q = q || '';
   var el = document.getElementById('el-list'); if (!el) return;
   if (!certs || !certs.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">💡</div><p>No EL certificates found.</p></div>'; return;
+    el.innerHTML = q.length >= 2
+      ? '<div class="empty-state"><div class="empty-icon">🔍</div><p>No EL certificates matching "<strong>'+q+'</strong>"</p></div>'
+      : '<div class="empty-state"><div class="empty-icon">💡</div><p>No EL certificates found.</p></div>';
+    return;
   }
   var all = _elAllCerts;
   var tot = all.length;
-  var sat = all.filter(r => (r.outcome||'').toUpperCase() === 'SATISFACTORY').length;
-  var unsat = all.filter(r => (r.outcome||'').toUpperCase() === 'UNSATISFACTORY').length;
-  var tile = function(n, lbl, col) { return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:${col||'var(--text)'};">${n}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${lbl}</div></div>`; };
-  var sec = function(dot, lbl, cnt) { return `<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 0 5px;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${dot};flex-shrink:0"></span>${lbl}${cnt?' ('+cnt+')':''}</div>`; };
-  var mkRow = function(r) {
+  var sat = all.filter(function(r){ return (r.outcome||'').toUpperCase() === 'SATISFACTORY'; }).length;
+  var unsat = all.filter(function(r){ return (r.outcome||'').toUpperCase() === 'UNSATISFACTORY'; }).length;
+  var isSearch = q.length >= 2;
+  var startIdx = (page - 1) * PAGE_SIZE;
+  var pageItems = certs.slice(startIdx, startIdx + PAGE_SIZE);
+  var tile = function(n, lbl, col) { return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:'+(col||'var(--text)')+';">'+n+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+lbl+'</div></div>'; };
+  var sec = function(dot, lbl, cnt) { return '<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 0 5px;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:'+dot+';flex-shrink:0"></span>'+lbl+(cnt?' ('+cnt+')':'')+'</div>'; };
+  var mkRow = function(r, q) {
     var d = r.data||{};
-    var addr = d.premAddr1 || d.premisesName || r.premises_name || 'No address';
-    if (d.premPostcode && addr.indexOf(d.premPostcode) === -1) addr += ', ' + d.premPostcode;
-    var ac = _addrColor(addr); var abg = ac[0]; var atx = ac[1];
-    var ini = (_addrInitials(addr)||addr.slice(0,2)||'?').toUpperCase();
+    var addrRaw = d.premAddr1 || d.premisesName || r.premises_name || 'No address';
+    if (d.premPostcode && addrRaw.indexOf(d.premPostcode) === -1) addrRaw += ', ' + d.premPostcode;
+    var ac = _addrColor(addrRaw); var abg = ac[0]; var atx = ac[1];
+    var ini = (_addrInitials(addrRaw)||addrRaw.slice(0,2)||'?').toUpperCase();
     var oc = (r.outcome||d.outcome||'').toUpperCase();
     var ocCol = oc === 'SATISFACTORY' ? '#16a34a' : oc === 'UNSATISFACTORY' ? '#dc2626' : 'var(--muted)';
     var ocLabel = oc === 'SATISFACTORY' ? 'Satisfactory' : oc === 'UNSATISFACTORY' ? 'Unsatisfactory' : oc || '—';
-    return `<div class="pat-card" data-el-id="${r.id}" onclick="elShowPreview('${r.id}')" style="cursor:pointer">
-      <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
-      <div class="pat-card-body">
-        <div class="pat-card-top">
-          <span class="pat-card-addr">${_escHtml(addr)}</span>
-          <span style="font-size:11px;font-weight:600;color:${ocCol};white-space:nowrap">${_escHtml(ocLabel)}</span>
-        </div>
-        <div class="pat-card-bot">
-          <code class="pat-ref-chip">${_escHtml(r.ref_number||'—')}</code>
-          <span class="pat-card-date">${_escHtml(r.test_date||d.testDate||'—')}</span>
-          <span class="pat-card-sub">&middot; ${_escHtml(r.cert_type||'EL')}</span>
-          <div class="pat-card-btns">
-            ${isAdmin()?_ibtn('Edit','fa-pen',`event.stopPropagation();elEditCert('${r.id}')`):''}
-            ${isAdmin()?_ibtn('Copy','fa-copy',`event.stopPropagation();copyELCert('${r.id}')`):''}
-            ${_ibtn('Email','fa-envelope',`event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id==='${r.id}').data,{id:'${r.id}',ref:window._elAllCerts.find(x=>x.id==='${r.id}').ref_number}))`)}
-            ${isAdmin()?_ibtn('Delete','fa-trash',`event.stopPropagation();deleteELCert('${r.id}')`,true):''}
-          </div>
-        </div>
-      </div>
-    </div>`;
+    var addrHtml = q ? hlText(addrRaw, q) : _escHtml(addrRaw);
+    var refHtml  = q ? hlText(r.ref_number||'—', q) : _escHtml(r.ref_number||'—');
+    return '<div class="pat-card" data-el-id="'+r.id+'" onclick="elShowPreview(\''+r.id+'\')" style="cursor:pointer">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+abg+';color:'+atx+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">'+ini+'</div>'
+      +'<div class="pat-card-body">'
+        +'<div class="pat-card-top">'
+          +'<span class="pat-card-addr">'+addrHtml+'</span>'
+          +'<span style="font-size:11px;font-weight:600;color:'+ocCol+';white-space:nowrap">'+_escHtml(ocLabel)+'</span>'
+        +'</div>'
+        +'<div class="pat-card-bot">'
+          +'<code class="pat-ref-chip">'+refHtml+'</code>'
+          +'<span class="pat-card-date">'+_escHtml(r.test_date||d.testDate||'—')+'</span>'
+          +'<span class="pat-card-sub">&middot; '+_escHtml(r.cert_type||'EL')+'</span>'
+          +'<div class="pat-card-btns">'
+            +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();elEditCert(\''+r.id+'\')'):'')
+            +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
+            +_ibtn('Email','fa-envelope','event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
+            +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true):'')
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
   };
-  var satRs = certs.filter(r => (r.outcome||'').toUpperCase() === 'SATISFACTORY');
-  var unsatRs = certs.filter(r => (r.outcome||'').toUpperCase() === 'UNSATISFACTORY');
-  var otherRs = certs.filter(r => ['SATISFACTORY','UNSATISFACTORY'].indexOf((r.outcome||'').toUpperCase()) === -1);
-  var html = `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">${tile(tot,'Total EL Certs')}${tile(sat,'Satisfactory','#16a34a')}${tile(unsat,'Unsatisfactory','#dc2626')}</div>`;
-  if (unsatRs.length) html += sec('#dc2626','Unsatisfactory',unsatRs.length)+'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">'+unsatRs.map(mkRow).join('')+'</div>';
-  if (satRs.length) html += sec('#10b981','Satisfactory',satRs.length)+'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">'+satRs.map(mkRow).join('')+'</div>';
-  if (otherRs.length) html += sec('#94a3b8','Other/Draft',otherRs.length)+'<div style="display:flex;flex-direction:column;gap:6px">'+otherRs.map(mkRow).join('')+'</div>';
+  var html = '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+tile(tot,'Total EL Certs')+tile(sat,'Satisfactory','#16a34a')+tile(unsat,'Unsatisfactory','#dc2626')+'</div>';
+  if (isSearch) {
+    html += '<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">'+certs.length+' result'+(certs.length!==1?'s':'')+' matching "<strong style="color:var(--text)">'+q+'</strong>"</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px">'+pageItems.map(function(r){ return mkRow(r,q); }).join('')+'</div>';
+  } else {
+    var unsatRs = pageItems.filter(function(r){ return (r.outcome||'').toUpperCase() === 'UNSATISFACTORY'; });
+    var satRs   = pageItems.filter(function(r){ return (r.outcome||'').toUpperCase() === 'SATISFACTORY'; });
+    var otherRs = pageItems.filter(function(r){ return ['SATISFACTORY','UNSATISFACTORY'].indexOf((r.outcome||'').toUpperCase()) === -1; });
+    var allUnsat = certs.filter(function(r){ return (r.outcome||'').toUpperCase() === 'UNSATISFACTORY'; });
+    var allSat   = certs.filter(function(r){ return (r.outcome||'').toUpperCase() === 'SATISFACTORY'; });
+    var allOther = certs.filter(function(r){ return ['SATISFACTORY','UNSATISFACTORY'].indexOf((r.outcome||'').toUpperCase()) === -1; });
+    if (unsatRs.length) html += sec('#dc2626','Unsatisfactory',allUnsat.length)+'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">'+unsatRs.map(function(r){ return mkRow(r,''); }).join('')+'</div>';
+    if (satRs.length)   html += sec('#10b981','Satisfactory',allSat.length)+'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">'+satRs.map(function(r){ return mkRow(r,''); }).join('')+'</div>';
+    if (otherRs.length) html += sec('#94a3b8','Other/Draft',allOther.length)+'<div style="display:flex;flex-direction:column;gap:6px">'+otherRs.map(function(r){ return mkRow(r,''); }).join('')+'</div>';
+  }
+  html += paginationHtml(page, certs.length, 'elPrevPage()', 'elNextPage()');
   el.innerHTML = html;
 }
+
+export function elPrevPage() { if (_elPage > 1) { _elPage--; renderELList(_elFiltered, _elPage, _elCurrentQ); document.getElementById('el-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
+export function elNextPage() { if (_elPage < Math.ceil(_elFiltered.length / PAGE_SIZE)) { _elPage++; renderELList(_elFiltered, _elPage, _elCurrentQ); document.getElementById('el-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 
 async function elGeneratePDF(rec, returnBlob) {
   var certHtml = elBuildCertHTML(rec);

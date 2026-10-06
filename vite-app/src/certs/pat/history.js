@@ -7,10 +7,12 @@ import { state } from '../../lib/state.js';
 import { parseGasDate } from '../gas/helpers.js';
 import { patFd } from './form.js';
 import { loadPATForm } from './form.js';
+import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 
 // ─── Module-level state ───────────────────────────────
 let _patSortApps = 0, _patSortExp = 0;
 let _compAll = [];
+let _patPage = 1, _patFiltered = [], _patCurrentQ = '';
 
 // ─── History helpers ──────────────────────────────────
 function _patExpiryPill(r) {
@@ -40,29 +42,43 @@ export async function loadPATHistory() {
   if (error && (error.message || '').includes('deleted_at')) { ({ data, error } = await sb.from('pat_reports').select('*').order('created_at', { ascending: false })); }
   if (error) { toast('Failed to load PAT reports: ' + error.message, 'error'); return; }
   state.patReports = data || [];
-  renderPATList(state.patReports);
+  _patFiltered = state.patReports;
+  _patPage = 1; _patCurrentQ = '';
+  renderPATList(state.patReports, 1, '');
 }
 
-export function renderPATList(reports) {
+export function renderPATList(reports, page, q) {
+  page = page || 1; q = q || '';
   const el = document.getElementById('pat-list');
-  if (!reports.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests found</p></div>'; return; }
+  if (!reports.length) {
+    el.innerHTML = q.length >= 2
+      ? `<div class="empty-state"><div class="empty-icon">🔍</div><p>No PAT tests matching "<strong>${q}</strong>"</p></div>`
+      : '<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests found</p></div>';
+    return;
+  }
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const all = state.patReports;
   const tot = all.length, comp = all.filter(r => r.status === 'completed').length, dr = all.filter(r => r.status !== 'completed').length;
   const dsCount = all.filter(r => { const e = _patEarliestExp(r); if (!e) return false; const d = Math.ceil((new Date(e) - today) / 864e5); return d >= 0 && d <= 30; }).length;
-  const mkRow = (r, hl = '') => {
+  const isSearch = q.length >= 2;
+  // page slice
+  const start = (page - 1) * PAGE_SIZE;
+  const pageItems = reports.slice(start, start + PAGE_SIZE);
+  const mkRow = (r, hl = '', q = '') => {
     const isDraft = r.status !== 'completed'; const addr = r.property_address || 'No address';
     const [abg, atx] = _addrColor(addr); const ini = (_addrInitials(addr) || '?').toUpperCase();
     const appCount = (r.appliances || []).length;
+    const addrHtml = q ? hlText(addr, q) : addr;
+    const refHtml  = q ? hlText(r.ref_number || 'DRAFT', q) : (r.ref_number || 'DRAFT');
     return `<div class="pat-card" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''}">
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
       <div class="pat-card-body">
         <div class="pat-card-top">
-          <span class="pat-card-addr">${addr}</span>
+          <span class="pat-card-addr">${addrHtml}</span>
           ${_patExpiryPill(r)}
         </div>
         <div class="pat-card-bot">
-          <code class="pat-ref-chip">${r.ref_number || 'DRAFT'}</code>
+          <code class="pat-ref-chip">${refHtml}</code>
           <span class="pat-card-date">${patFd(r.test_date) || 'No date'}</span>
           <span class="pat-card-sub">&middot; ${appCount} appliance${appCount !== 1 ? 's' : ''}</span>
           <div class="pat-card-btns">
@@ -78,15 +94,28 @@ export function renderPATList(reports) {
   };
   const tile = (n, lbl, col) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:${col || 'var(--text)'}">${n}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${lbl}</div></div>`;
   const sec = (dot, lbl, cnt) => `<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 0 5px;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${dot};flex-shrink:0"></span>${lbl}${cnt ? ' (' + cnt + ')' : ''}</div>`;
-  const dueSoonRs = reports.filter(r => { if (r.status !== 'completed') return false; const e = _patEarliestExp(r); if (!e) return false; const d = Math.ceil((new Date(e) - today) / 864e5); return d >= 0 && d <= 30; });
-  const doneRs = reports.filter(r => r.status === 'completed' && !dueSoonRs.includes(r));
-  const draftRs = reports.filter(r => r.status !== 'completed');
   let html = `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">${tile(tot, 'Total reports')}${tile(comp, 'Completed', '#16a34a')}${tile(dsCount, 'Due ≤ 30 days', '#d97706')}${tile(dr, 'Drafts')}</div>`;
-  if (dueSoonRs.length) html += sec('#f59e0b', 'Due soon', dueSoonRs.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + dueSoonRs.map(r => mkRow(r, '#fde68a')).join('') + `</div>`;
-  if (doneRs.length) html += sec('#10b981', 'Completed', doneRs.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + doneRs.map(r => mkRow(r)).join('') + `</div>`;
-  if (draftRs.length) html += sec('#94a3b8', 'Drafts', draftRs.length) + `<div style="display:flex;flex-direction:column;gap:6px">` + draftRs.map(r => mkRow(r)).join('') + `</div>`;
+  if (isSearch) {
+    html += `<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">${reports.length} result${reports.length !== 1 ? 's' : ''} matching "<strong style="color:var(--text)">${q}</strong>"</div>`;
+    html += '<div style="display:flex;flex-direction:column;gap:6px">' + pageItems.map(r => mkRow(r, '', q)).join('') + '</div>';
+  } else {
+    const dueSoonRs = pageItems.filter(r => { if (r.status !== 'completed') return false; const e = _patEarliestExp(r); if (!e) return false; const d = Math.ceil((new Date(e) - today) / 864e5); return d >= 0 && d <= 30; });
+    const doneRs = pageItems.filter(r => r.status === 'completed' && !dueSoonRs.includes(r));
+    const draftRs = pageItems.filter(r => r.status !== 'completed');
+    // section totals from full list for header counts
+    const allDueSoon = reports.filter(r => { if (r.status !== 'completed') return false; const e = _patEarliestExp(r); if (!e) return false; const d = Math.ceil((new Date(e) - today) / 864e5); return d >= 0 && d <= 30; });
+    const allDone = reports.filter(r => r.status === 'completed' && !allDueSoon.includes(r));
+    const allDrafts = reports.filter(r => r.status !== 'completed');
+    if (dueSoonRs.length) html += sec('#f59e0b', 'Due soon', allDueSoon.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + dueSoonRs.map(r => mkRow(r, '#fde68a')).join('') + `</div>`;
+    if (doneRs.length)    html += sec('#10b981', 'Completed', allDone.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + doneRs.map(r => mkRow(r)).join('') + `</div>`;
+    if (draftRs.length)   html += sec('#94a3b8', 'Drafts', allDrafts.length) + `<div style="display:flex;flex-direction:column;gap:6px">` + draftRs.map(r => mkRow(r)).join('') + `</div>`;
+  }
+  html += paginationHtml(page, reports.length, 'patPrevPage()', 'patNextPage()');
   el.innerHTML = html;
 }
+
+export function patPrevPage() { if (_patPage > 1) { _patPage--; renderPATList(_patFiltered, _patPage, _patCurrentQ); document.getElementById('pat-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
+export function patNextPage() { if (_patPage < Math.ceil(_patFiltered.length / PAGE_SIZE)) { _patPage++; renderPATList(_patFiltered, _patPage, _patCurrentQ); document.getElementById('pat-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 
 export function togglePatAppSort() {
   _patSortApps = _patSortApps === 1 ? -1 : _patSortApps === -1 ? 0 : 1; _patSortExp = 0;
@@ -105,16 +134,28 @@ export function togglePatExpSort() {
   filterPATList();
 }
 export function filterPATList() {
-  const q = document.getElementById('pat-search').value.toLowerCase();
+  const q = (document.getElementById('pat-search')?.value || '');
+  _patCurrentQ = q.trim().toLowerCase();
   const s = document.getElementById('pat-filter').value;
   let list = state.patReports.filter(r => {
     const matchS = !s || r.status === s;
-    const matchQ = !q || (r.property_address || '').toLowerCase().includes(q) || (r.ref_number || '').toLowerCase().includes(q) || (r.landlord_name || '').toLowerCase().includes(q);
+    if (_patCurrentQ.length < 2) return matchS;
+    const lq = _patCurrentQ;
+    const matchQ =
+      (r.property_address  || '').toLowerCase().includes(lq) ||
+      (r.ref_number        || '').toLowerCase().includes(lq) ||
+      (r.landlord_name     || '').toLowerCase().includes(lq) ||
+      (r.landlord_address  || '').toLowerCase().includes(lq) ||
+      (r.agency_name       || '').toLowerCase().includes(lq);
     return matchS && matchQ;
   });
+  if (_patCurrentQ.length >= 2) {
+    list = sortByWordStart(list, r => [r.property_address, r.ref_number, r.landlord_name, r.landlord_address, r.agency_name].join(' '), _patCurrentQ);
+  }
   if (_patSortApps !== 0) list = [...list].sort((a, b) => _patSortApps * ((b.appliances || []).length - (a.appliances || []).length));
   if (_patSortExp !== 0) list = [...list].sort((a, b) => { const ea = _patEarliestExp(a) || '9999', eb = _patEarliestExp(b) || '9999'; return _patSortExp * (ea < eb ? -1 : ea > eb ? 1 : 0); });
-  renderPATList(list);
+  _patFiltered = list; _patPage = 1;
+  renderPATList(list, 1, _patCurrentQ);
 }
 
 export async function deletePAT(id) {

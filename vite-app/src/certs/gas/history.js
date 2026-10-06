@@ -6,11 +6,15 @@ import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
 import { toast, showOverlay, hideOverlay, confirm2, _softDelete, showEmailProgress, finishEmailProgress, _ibtn, _addrColor, _addrInitials } from '../../lib/utils.js';
 import { state } from '../../lib/state.js';
+import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 import { logAppEvent } from '../../audit/audit.js';
 import { sendBrevoEmail, buildEmailSubject, getGlobalCC } from '../../lib/brevo.js';
 import { parseGasDate, _fmtGasDate } from './helpers.js';
 import { loadGasForm } from './cp12.js';
 import { buildCP12PdfBase64, downloadCP12PDF } from './pdf.js';
+
+// ── Module-level pagination/search state ──────────────────
+let _gasPage = 1, _gasFiltered = [], _gasCurrentQ = '';
 
 // ── Load & render ─────────────────────────────────────────
 
@@ -23,12 +27,20 @@ export async function loadGasHistory() {
   }
   if (error) { toast('Failed to load Gas certs: ' + error.message, 'error'); return; }
   state.gasReports = data || [];
-  renderGasList(state.gasReports);
+  _gasFiltered = state.gasReports;
+  _gasPage = 1; _gasCurrentQ = '';
+  renderGasList(state.gasReports, 1, '');
 }
 
-export function renderGasList(reports) {
+export function renderGasList(reports, page, q) {
+  page = page || 1; q = q || '';
   const el = document.getElementById('gas-list');
-  if (!reports.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s found</p></div>'; return; }
+  if (!reports.length) {
+    el.innerHTML = q.length >= 2
+      ? `<div class="empty-state"><div class="empty-icon">🔍</div><p>No CP12s matching "<strong>${q}</strong>"</p></div>`
+      : '<div class="empty-state"><div class="empty-icon">🔥</div><p>No CP12s found</p></div>';
+    return;
+  }
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const all = state.gasReports;
   const tot = all.length, comp = all.filter(r => r.status === 'completed').length, dr = all.filter(r => r.status !== 'completed').length;
@@ -38,19 +50,24 @@ export function renderGasList(reports) {
     return p ? Math.ceil((p - today) / 864e5) : null;
   };
   const dsCount = all.filter(r => { const d = _gasExpDays(r); return d !== null && d >= 0 && d <= 30; }).length;
-  const mkRow = (r, hl = '') => {
+  const isSearch = q.length >= 2;
+  const start = (page - 1) * PAGE_SIZE;
+  const pageItems = reports.slice(start, start + PAGE_SIZE);
+  const mkRow = (r, hl = '', q = '') => {
     const isDraft = r.status !== 'completed'; const addr = r.install_address || 'No address';
     const [abg, atx] = _addrColor(addr);
     const ini = _addrInitials(addr).toUpperCase() || (addr.slice(0, 2) || '?').toUpperCase();
+    const addrHtml = q ? hlText(addr, q) : addr;
+    const refHtml  = q ? hlText(r.ref_number || 'DRAFT', q) : (r.ref_number || 'DRAFT');
     return `<div class="pat-card" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''}">
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
       <div class="pat-card-body">
         <div class="pat-card-top">
-          <span class="pat-card-addr">${addr}</span>
+          <span class="pat-card-addr">${addrHtml}</span>
           ${_gasExpiryPill(r)}
         </div>
         <div class="pat-card-bot">
-          <code class="pat-ref-chip">${r.ref_number || 'DRAFT'}</code>
+          <code class="pat-ref-chip">${refHtml}</code>
           <span class="pat-card-date">${_fmtGasDate(r.cert_date) || 'No date'}</span>
           <span class="pat-card-sub">&middot; Next: ${_fmtGasDate(r.next_check_date) || '—'}</span>
           <div class="pat-card-btns">
@@ -66,15 +83,27 @@ export function renderGasList(reports) {
   };
   const tile = (n, lbl, col) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:${col || 'var(--text)'};">${n}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${lbl}</div></div>`;
   const sec = (dot, lbl, cnt) => `<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 0 5px;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${dot};flex-shrink:0"></span>${lbl}${cnt ? ' (' + cnt + ')' : ''}</div>`;
-  const dueSoonRs = reports.filter(r => { const d = _gasExpDays(r); return d !== null && d >= 0 && d <= 30; });
-  const doneRs = reports.filter(r => r.status === 'completed' && !dueSoonRs.includes(r));
-  const draftRs = reports.filter(r => r.status !== 'completed');
   let html = `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">${tile(tot, 'Total CP12s')}${tile(comp, 'Completed', '#16a34a')}${tile(dsCount, 'Due ≤ 30 days', '#d97706')}${tile(dr, 'Drafts')}</div>`;
-  if (dueSoonRs.length) html += sec('#f59e0b', 'Due soon', dueSoonRs.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + dueSoonRs.map(r => mkRow(r, '#fde68a')).join('') + `</div>`;
-  if (doneRs.length) html += sec('#10b981', 'Completed', doneRs.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + doneRs.map(r => mkRow(r)).join('') + `</div>`;
-  if (draftRs.length) html += sec('#94a3b8', 'Drafts', draftRs.length) + `<div style="display:flex;flex-direction:column;gap:6px">` + draftRs.map(r => mkRow(r)).join('') + `</div>`;
+  if (isSearch) {
+    html += `<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">${reports.length} result${reports.length !== 1 ? 's' : ''} matching "<strong style="color:var(--text)">${q}</strong>"</div>`;
+    html += '<div style="display:flex;flex-direction:column;gap:6px">' + pageItems.map(r => mkRow(r, '', q)).join('') + '</div>';
+  } else {
+    const dueSoonRs = pageItems.filter(r => { const d = _gasExpDays(r); return d !== null && d >= 0 && d <= 30; });
+    const doneRs = pageItems.filter(r => r.status === 'completed' && !dueSoonRs.includes(r));
+    const draftRs = pageItems.filter(r => r.status !== 'completed');
+    const allDueSoon = reports.filter(r => { const d = _gasExpDays(r); return d !== null && d >= 0 && d <= 30; });
+    const allDone = reports.filter(r => r.status === 'completed' && !allDueSoon.includes(r));
+    const allDrafts = reports.filter(r => r.status !== 'completed');
+    if (dueSoonRs.length) html += sec('#f59e0b', 'Due soon', allDueSoon.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + dueSoonRs.map(r => mkRow(r, '#fde68a')).join('') + `</div>`;
+    if (doneRs.length)    html += sec('#10b981', 'Completed', allDone.length) + `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:4px">` + doneRs.map(r => mkRow(r)).join('') + `</div>`;
+    if (draftRs.length)   html += sec('#94a3b8', 'Drafts', allDrafts.length) + `<div style="display:flex;flex-direction:column;gap:6px">` + draftRs.map(r => mkRow(r)).join('') + `</div>`;
+  }
+  html += paginationHtml(page, reports.length, 'gasPrevPage()', 'gasNextPage()');
   el.innerHTML = html;
 }
+
+export function gasPrevPage() { if (_gasPage > 1) { _gasPage--; renderGasList(_gasFiltered, _gasPage, _gasCurrentQ); document.getElementById('gas-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
+export function gasNextPage() { if (_gasPage < Math.ceil(_gasFiltered.length / PAGE_SIZE)) { _gasPage++; renderGasList(_gasFiltered, _gasPage, _gasCurrentQ); document.getElementById('gas-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 
 let _gasSortExp = 0;
 
@@ -87,13 +116,25 @@ export function toggleGasExpSort() {
 }
 
 export function filterGasList() {
-  const q = document.getElementById('gas-search').value.toLowerCase();
+  const q = (document.getElementById('gas-search')?.value || '');
+  _gasCurrentQ = q.trim().toLowerCase();
   const s = document.getElementById('gas-filter').value;
   let list = state.gasReports.filter(r => {
     const mS = !s || r.status === s;
-    const mQ = !q || (r.install_address || '').toLowerCase().includes(q) || (r.ref_number || '').toLowerCase().includes(q);
+    if (_gasCurrentQ.length < 2) return mS;
+    const lq = _gasCurrentQ;
+    const mQ =
+      (r.install_address    || '').toLowerCase().includes(lq) ||
+      (r.install_postcode   || '').toLowerCase().includes(lq) ||
+      (r.ref_number         || '').toLowerCase().includes(lq) ||
+      (r.landlord_address   || '').toLowerCase().includes(lq) ||
+      (r.sig_received_name  || '').toLowerCase().includes(lq) ||
+      (r.recipient_email    || '').toLowerCase().includes(lq);
     return mS && mQ;
   });
+  if (_gasCurrentQ.length >= 2) {
+    list = sortByWordStart(list, r => [r.install_address, r.install_postcode, r.ref_number, r.sig_received_name].join(' '), _gasCurrentQ);
+  }
   if (_gasSortExp !== 0) list = [...list].sort((a, b) => {
     const pa = parseGasDate(a.next_check_date);
     const pb = parseGasDate(b.next_check_date);
@@ -101,7 +142,8 @@ export function filterGasList() {
     const eb = pb ? pb.toISOString().slice(0, 10) : '9999';
     return _gasSortExp * (ea < eb ? -1 : ea > eb ? 1 : 0);
   });
-  renderGasList(list);
+  _gasFiltered = list; _gasPage = 1;
+  renderGasList(list, 1, _gasCurrentQ);
 }
 
 export async function deleteGas(id) {

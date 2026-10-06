@@ -6,10 +6,12 @@ import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { fireBuildCertHTML } from './pdf.js';
+import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 
 let _w = {};
 let _fireDirty = false;
 let _fireAllCerts = [];
+let _firePage = 1, _fireFiltered = [], _fireCurrentQ = '';
 
 const STEPS = ['type','premises','client','system','detectors','testing','defects','outcome','engineer','review'];
 const STEP_LABELS = ['Type','Premises','Client','System','Detectors','Testing','Defects','Outcome','Engineer','Review'];
@@ -630,58 +632,93 @@ export async function loadFireHistory() {
   var { data, error } = await q;
   if (error) { console.error('loadFireHistory:', error); return; }
   _fireAllCerts = data || [];
-  renderFireList(_fireAllCerts);
+  _fireFiltered = _fireAllCerts; _firePage = 1; _fireCurrentQ = '';
+  renderFireList(_fireAllCerts, 1, '');
 }
 
 export function filterFireList() {
-  var q = (document.getElementById('fire-search')?.value||'').toLowerCase();
+  _fireCurrentQ = (document.getElementById('fire-search')?.value||'').trim().toLowerCase();
   var typeF = document.getElementById('fire-filter-type')?.value||'';
   var outF  = document.getElementById('fire-filter-outcome')?.value||'';
-  var filtered = _fireAllCerts.filter(r => {
+  var filtered = _fireAllCerts.filter(function(r) {
     var d = r.data||{};
-    var matchQ = !q ||
-      (r.ref_number||'').toLowerCase().includes(q) ||
-      (r.premises_address||'').toLowerCase().includes(q) ||
-      (d.clientName||'').toLowerCase().includes(q) ||
-      (r.cert_type||'').toLowerCase().includes(q);
-    var matchType = !typeF || (r.cert_type||'') === typeF;
-    var matchOut  = !outF  || (r.outcome||'').toUpperCase() === outF.toUpperCase();
-    return matchQ && matchType && matchOut;
+    var mT = !typeF || (r.cert_type||'') === typeF;
+    var mO = !outF  || (r.outcome||'').toUpperCase() === outF.toUpperCase();
+    if (_fireCurrentQ.length < 2) return mT && mO;
+    var lq = _fireCurrentQ;
+    var mQ =
+      (r.ref_number      ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (r.premises_address||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr1       ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr2       ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premAddr3       ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premPostcode    ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.premisesName    ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (d.clientName      ||'').toLowerCase().indexOf(lq) !== -1 ||
+      (r.cert_type       ||'').toLowerCase().indexOf(lq) !== -1;
+    return mQ && mT && mO;
   });
-  renderFireList(filtered);
+  if (_fireCurrentQ.length >= 2) {
+    filtered = sortByWordStart(filtered, function(r) {
+      var d = r.data||{};
+      return [r.premises_address, d.premAddr1, d.premAddr2, d.premAddr3, d.premPostcode, d.premisesName, r.ref_number, d.clientName].join(' ');
+    }, _fireCurrentQ);
+  }
+  _fireFiltered = filtered; _firePage = 1;
+  renderFireList(filtered, 1, _fireCurrentQ);
 }
 
-function renderFireList(certs) {
+function renderFireList(certs, page, q) {
+  page = page || 1; q = q || '';
   var container = document.getElementById('fire-history-list');
   if (!container) return;
   if (!certs.length) {
-    container.innerHTML = '<p class="empty-state">No fire alarm certificates yet.</p>';
+    container.innerHTML = q.length >= 2
+      ? '<p class="empty-state">No fire alarm certificates matching "<strong>'+q+'</strong>"</p>'
+      : '<p class="empty-state">No fire alarm certificates yet.</p>';
     return;
   }
-  container.innerHTML = certs.map(r => {
+  var isSearch = q.length >= 2;
+  var startIdx = (page - 1) * PAGE_SIZE;
+  var pageItems = certs.slice(startIdx, startIdx + PAGE_SIZE);
+  var mkRow = function(r, q) {
     var d = r.data||{};
-    var addr = [d.premAddr1, d.premAddr2, d.premAddr3, d.premPostcode].filter(Boolean).join(', ') || r.premises_address || '—';
+    var addrRaw = [d.premAddr1, d.premAddr2, d.premAddr3, d.premPostcode].filter(Boolean).join(', ') || r.premises_address || '—';
     var outcomeColor = r.outcome==='SATISFACTORY' ? '#15803d' : r.outcome==='UNSATISFACTORY' ? '#dc2626' : '#b45309';
-    var typeLabel = (CERT_TYPES.find(t => t.id === r.cert_type)||{}).label || r.cert_type || '—';
-    return `<div class="cert-card" onclick="fireOpenCert(${JSON.stringify(JSON.stringify(d))})" style="cursor:pointer">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:600;font-size:14px">${esc(r.ref_number||'—')}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(typeLabel)}</div>
-      <div style="font-size:13px;margin-top:4px">${esc(addr)}</div>
-      <div style="font-size:12px;color:var(--muted)">${esc(d.clientName||'')}${d.testDate?' · '+d.testDate:''}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-      <span style="font-size:11px;font-weight:600;color:${outcomeColor};background:${outcomeColor}18;padding:3px 8px;border-radius:100px">${esc(r.outcome||'—')}</span>
-      <div style="display:flex;gap:4px">
-        <button onclick="event.stopPropagation();fireEditCert(${JSON.stringify(JSON.stringify(r))})" class="btn-sm" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
-        <button onclick="event.stopPropagation();fireDeleteCert('${r.id}')" class="btn-sm" title="Delete" style="color:#dc2626"><i class="fa-solid fa-trash-can"></i></button>
-      </div>
-    </div>
-  </div>
-</div>`;
-  }).join('');
+    var typeLabel = (CERT_TYPES.find(function(t){ return t.id === r.cert_type; })||{}).label || r.cert_type || '—';
+    var addrHtml = q ? hlText(addrRaw, q) : esc(addrRaw);
+    var refHtml  = q ? hlText(r.ref_number||'—', q) : esc(r.ref_number||'—');
+    return '<div class="cert-card" onclick="fireOpenCert('+JSON.stringify(JSON.stringify(d))+')" style="cursor:pointer">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">'
+        +'<div>'
+          +'<div style="font-weight:600;font-size:14px">'+refHtml+'</div>'
+          +'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(typeLabel)+'</div>'
+          +'<div style="font-size:13px;margin-top:4px">'+addrHtml+'</div>'
+          +'<div style="font-size:12px;color:var(--muted)">'+esc(d.clientName||'')+(d.testDate?' · '+d.testDate:'')+'</div>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+          +'<span style="font-size:11px;font-weight:600;color:'+outcomeColor+';background:'+outcomeColor+'18;padding:3px 8px;border-radius:100px">'+esc(r.outcome||'—')+'</span>'
+          +'<div style="display:flex;gap:4px">'
+            +'<button onclick="event.stopPropagation();fireEditCert('+JSON.stringify(JSON.stringify(r))+')" class="btn-sm" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>'
+            +'<button onclick="event.stopPropagation();fireDeleteCert(\''+r.id+'\')" class="btn-sm" title="Delete" style="color:#dc2626"><i class="fa-solid fa-trash-can"></i></button>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  };
+  var html = '';
+  if (isSearch) {
+    html += '<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">'+certs.length+' result'+(certs.length!==1?'s':'')+' matching "<strong style="color:var(--text)">'+q+'</strong>"</div>';
+    html += pageItems.map(function(r){ return mkRow(r, q); }).join('');
+  } else {
+    html += pageItems.map(function(r){ return mkRow(r, ''); }).join('');
+  }
+  html += paginationHtml(page, certs.length, 'firePrevPage()', 'fireNextPage()');
+  container.innerHTML = html;
 }
+
+export function firePrevPage() { if (_firePage > 1) { _firePage--; renderFireList(_fireFiltered, _firePage, _fireCurrentQ); document.getElementById('fire-history-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
+export function fireNextPage() { if (_firePage < Math.ceil(_fireFiltered.length / PAGE_SIZE)) { _firePage++; renderFireList(_fireFiltered, _firePage, _fireCurrentQ); document.getElementById('fire-history-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 
 export function fireEditCert(recStr) {
   var r;

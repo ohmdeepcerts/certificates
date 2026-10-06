@@ -5,6 +5,7 @@ import { navigate } from '../nav/navigation.js';
 import { getSetting } from '../lib/settings.js';
 import { patFd } from '../certs/pat/form.js';
 import { parseGasDate } from '../certs/gas/helpers.js';
+import { hlText, sortByWordStart } from '../lib/search.js';
 
 let _gsTimer = null;
 let _compAll = [];
@@ -135,19 +136,26 @@ export async function globalSearch(q) {
     const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const rows = [];
     try {
-      const [p, g, e] = await Promise.all([
+      const [p, g, e, f] = await Promise.all([
         sb.from('pat_reports').select('id,ref_number,property_address,status,engineer,test_date').or(`ref_number.ilike.%${q}%,property_address.ilike.%${q}%,landlord_name.ilike.%${q}%`).limit(6),
         sb.from('gas_certs').select('id,ref_number,install_address,status,engineer,cert_date').or(`ref_number.ilike.%${q}%,install_address.ilike.%${q}%,recipient_email.ilike.%${q}%`).limit(6),
-        sb.from('el_certs').select('id,ref_number,premises_name,outcome,test_date').or(`ref_number.ilike.%${q}%,premises_name.ilike.%${q}%`).limit(6)
+        sb.from('el_certs').select('id,ref_number,premises_name,outcome,test_date').or(`ref_number.ilike.%${q}%,premises_name.ilike.%${q}%`).limit(6),
+        sb.from('fire_certs').select('id,ref_number,premises_address,outcome,cert_type').or(`ref_number.ilike.%${q}%,premises_address.ilike.%${q}%`).is('deleted_at', null).limit(6)
       ]);
-      (p.data || []).forEach(r => rows.push({ type: 'PAT', label: esc(r.ref_number || '—'), sub: esc((r.property_address || '').substring(0, 50)), status: r.status, action: `loadPATForm('${r.id}')` }));
-      (g.data || []).forEach(r => rows.push({ type: 'Gas', label: esc(r.ref_number || '—'), sub: esc((r.install_address || '').substring(0, 50)), status: r.status, action: `navigate('gas-new');loadGasForm('${r.id}')` }));
-      (e.data || []).forEach(r => rows.push({ type: 'EL', label: esc(r.ref_number || '—'), sub: esc((r.premises_name || '').substring(0, 50)), status: r.outcome, action: `navigate('el-history')` }));
+      const wkey = r => r.ref_number || '';
+      var patSorted = sortByWordStart(p.data||[], r => (r.ref_number||'')+' '+(r.property_address||''), q);
+      var gasSorted = sortByWordStart(g.data||[], r => (r.ref_number||'')+' '+(r.install_address||''), q);
+      var elSorted  = sortByWordStart(e.data||[], r => (r.ref_number||'')+' '+(r.premises_name||''), q);
+      var fireSorted = sortByWordStart(f.data||[], r => (r.ref_number||'')+' '+(r.premises_address||''), q);
+      patSorted.forEach(r => rows.push({ type: 'PAT', label: hlText(r.ref_number||'—', q), sub: hlText((r.property_address||'').substring(0,50), q), status: r.status, action: "loadPATForm('"+r.id+"')" }));
+      gasSorted.forEach(r => rows.push({ type: 'Gas', label: hlText(r.ref_number||'—', q), sub: hlText((r.install_address||'').substring(0,50), q), status: r.status, action: "navigate('gas-new');loadGasForm('"+r.id+"')" }));
+      elSorted.forEach(r  => rows.push({ type: 'EL',  label: hlText(r.ref_number||'—', q), sub: hlText((r.premises_name||'').substring(0,50), q), status: r.outcome, action: "navigate('el-history')" }));
+      fireSorted.forEach(r => rows.push({ type: 'FA',  label: hlText(r.ref_number||'—', q), sub: hlText((r.premises_address||'').substring(0,50), q), status: r.outcome, action: "navigate('fire-history')" }));
     } catch (ex) { box.innerHTML = '<div style="padding:12px 16px;color:var(--muted);font-size:13px">Search error</div>'; return; }
     if (!rows.length) { box.innerHTML = '<div style="padding:12px 16px;color:var(--muted);font-size:13px">No results for "' + esc(q) + '"</div>'; return; }
-    const typeColor = { PAT: '#dbeafe', Gas: '#fef3c7', EL: '#ede9fe' };
-    const typeText = { PAT: '#1e40af', Gas: '#92400e', EL: '#5b21b6' };
-    box.innerHTML = rows.map(r => `<div onclick="${r.action};document.getElementById('gs-results').hidden=true;document.getElementById('global-search').value=''" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><span style="background:${typeColor[r.type]};color:${typeText[r.type]};font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap">${r.type}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.label}</div><div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sub}</div></div><span style="font-size:10px;color:var(--muted)">${r.status || ''}</span></div>`).join('');
+    const typeColor = { PAT: '#dbeafe', Gas: '#fef3c7', EL: '#ede9fe', FA: '#dcfce7' };
+    const typeText  = { PAT: '#1e40af', Gas: '#92400e', EL: '#5b21b6', FA: '#166534' };
+    box.innerHTML = rows.map(r => '<div onclick="'+r.action+';document.getElementById(\'gs-results\').hidden=true;document.getElementById(\'global-search\').value=\'\'" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'"><span style="background:'+(typeColor[r.type]||'#f3f4f6')+';color:'+(typeText[r.type]||'#374151')+';font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap">'+r.type+'</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.label+'</div><div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.sub+'</div></div><span style="font-size:10px;color:var(--muted)">'+esc(r.status||'')+'</span></div>').join('');
   }, 300);
 }
 
