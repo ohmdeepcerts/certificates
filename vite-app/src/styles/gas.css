@@ -334,8 +334,8 @@
 .wiz-card.sel{background:var(--accent-dim,rgba(239,68,68,.08))}
 .wiz-card strong{display:block;font-size:13px;font-weight:700;margin-bottom:2px}
 .wiz-card span{font-size:11px;color:var(--muted)}
-.wiz-restore-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 11px;margin-bottom:12px;font-size:12px;color:var(--muted)}
-.wiz-restore-bar span{flex:1}
+.wiz-restore-bar{display:flex;align-items:center;gap:8px;background:var(--accent-dim,rgba(59,130,246,.07));border:1px solid var(--accent,#3b82f6);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:13px;color:var(--text)}
+.wiz-restore-bar span{flex:1;font-weight:500}
 .lbl-opt{font-weight:400;font-style:italic;opacity:.7;text-transform:none}
 .wiz-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:.15s}
 .wiz-dot.on{background:var(--accent)}

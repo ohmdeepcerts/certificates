@@ -117,7 +117,7 @@ export function elRenderStep() {
   if (s === 0) {
     html += `<h2 class="wiz-title">Certificate Type</h2>`;
     if (_w._savedDraft) {
-      html += `<div class="wiz-restore-bar"><span>Unsaved draft found (${_w._savedDraft.certType||'EL'})</span><button onclick="elRestoreAutosave()" class="btn-sm btn-accent">Restore</button><button onclick="elDiscardAutosave()" class="btn-sm">Discard</button></div>`;
+      html += `<div class="wiz-restore-bar"><span>Unsaved draft found (${_w._savedDraft.certType||'EL'})</span><button onclick="elRestoreAutosave()" class="btn btn-sm btn-accent">Restore</button><button onclick="elDiscardAutosave()" class="btn btn-sm btn-secondary">Discard</button></div>`;
     }
     html += `<div class="wiz-cards">`;
     CERT_TYPES.forEach(ct => {
