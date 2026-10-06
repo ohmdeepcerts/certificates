@@ -151,18 +151,16 @@ export async function generatePATPDFFromData(r, { returnB64 = false } = {}) {
     for (let i = 0; i < pages.length; i++) {
       if (i > 0) doc.addPage('a4', 'portrait');
       const clone = pages[i].cloneNode(true);
-      clone.style.cssText = 'width:794px;min-height:1123px;max-width:794px;padding:20px 24px;box-sizing:border-box;background:#fff;color:#000;font-size:.7rem;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:visible';
+      clone.style.cssText = 'width:794px;height:1123px;max-width:794px;padding:20px 24px;box-sizing:border-box;background:#fff;color:#000;font-size:.7rem;display:flex;flex-direction:column;position:relative;box-shadow:none;margin:0;overflow:hidden';
       shell.innerHTML = '';
       shell.appendChild(clone);
       await new Promise(res => setTimeout(res, 80));
-      const pw = clone.offsetWidth || 794;
-      const ph = clone.offsetHeight || 1123;
       const canvas = await html2canvas(clone, {
         scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
-        width: pw, height: ph, windowWidth: pw, scrollX: 0, scrollY: 0, logging: false,
+        width: 794, height: 1123, windowWidth: 794, scrollX: 0, scrollY: 0, logging: false,
         imageTimeout: 5000
       });
-      const imgH = (canvas.height / canvas.width) * 210;
+      const imgH = 297;
       const imgQuality = returnB64 ? 0.85 : 0.92;
       const imgData = canvas.toDataURL('image/jpeg', imgQuality);
       const imgFmt = 'JPEG';
