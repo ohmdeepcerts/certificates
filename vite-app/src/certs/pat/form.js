@@ -16,6 +16,7 @@ import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 export let patApps = [];
 export let patCurrentBaseRef = '';
 let _offlineQueueId = null;
+let autoCapEnabled = localStorage.getItem('ohm_autocap') !== 'off';
 
 // ─── Helpers ──────────────────────────────────────────
 export function patGe(id) { return document.getElementById(id); }
