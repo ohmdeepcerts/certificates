@@ -1499,7 +1499,7 @@ async function elGeneratePDF(rec, returnBlob) {
   try {
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
     var pdf = new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-    var pages = container.querySelectorAll('.page');
+    var pages = container.querySelectorAll('.cert-page');
     for (var i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage();
       var canvas = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, backgroundColor:'#fff'});
