@@ -670,9 +670,10 @@ export async function elSendEmail(rec) {
     var b64 = reader.result.split(',')[1];
     var emailHtml = _buildELEmailHTML(rec);
     var cc = getGlobalCC();
+    var bcc = getSetting('email_bcc', '') || undefined;
     showOverlay('Sending…');
     try {
-      var result = await sendBrevoEmail(to, subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, cc);
+      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, bcc, cc);
       hideOverlay();
       if (result && result.error) { toast('Email failed: '+result.error,'error'); return; }
       toast('Email sent to '+to,'success');
@@ -705,7 +706,8 @@ export async function elAutoEmail(rec, silent) {
     var emailHtml = _buildELEmailHTML(rec);
     var cc = getGlobalCC();
     try {
-      var result = await sendBrevoEmail(to, subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, cc);
+      var bcc2 = getSetting('email_bcc', '') || undefined;
+      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, bcc2, cc);
       if (result && !result.error) {
         try {
           await sb.from('email_sends').insert({
