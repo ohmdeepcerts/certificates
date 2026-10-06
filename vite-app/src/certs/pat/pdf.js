@@ -1,6 +1,7 @@
 // ========== PAT - PREVIEW & PDF MODULE ==========
 // Extracted from index.html (lines 4387-4483, 4677-4762)
 
+import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
 import { toast, showOverlay, hideOverlay } from '../../lib/utils.js';
 import { state } from '../../lib/state.js';
