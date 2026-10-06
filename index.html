@@ -1446,7 +1446,7 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportELCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button></div>
       </div>
       <div class="list-controls">
-        <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList()">
+        <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
         <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
           <option value="">All Types</option>
           <option value="EL.1">EL.1 — Installation</option>
@@ -1459,7 +1459,7 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
           <option value="UNSATISFACTORY">Unsatisfactory</option>
         </select>
       </div>
-      <div id="el-history-list"><p class="empty-state">No EL certificates yet.</p></div>
+      <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
     </div>
 
     <!-- ===== FIRE NEW (wizard) ===== -->
