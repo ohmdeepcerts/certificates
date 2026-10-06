@@ -739,6 +739,39 @@ export function elCloseCert() {
   loadELHistory();
 }
 
+export function elShowPreview(id) {
+  var rec = window._elAllCerts && window._elAllCerts.find(function(x){ return x.id === id; });
+  if (!rec) return;
+  var full = Object.assign({}, rec.data || {}, {id: rec.id, ref: rec.ref_number});
+  window._elCertRec = full;
+  var panel = document.getElementById('el-preview-panel');
+  if (!panel) { elOpenCert(full); return; }
+  var empty = document.getElementById('el-preview-empty');
+  var active = document.getElementById('el-preview-active');
+  var toolbar = document.getElementById('el-preview-toolbar');
+  var ifr = document.getElementById('el-preview-iframe');
+  if (empty) empty.style.display = 'none';
+  if (active) active.style.display = 'block';
+  var d = rec.data || {};
+  var addr = d.premAddr1 || d.premisesName || rec.premises_name || '';
+  toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+    +esc(rec.ref_number||'—')+(addr?' &mdash; '+esc(addr):'')+'</span>'
+    +_ibtn('Download PDF','fa-download','elDownloadPDF(window._elCertRec)')
+    +_ibtn('Email','fa-envelope','elEmailCert(window._elCertRec)')
+    +(isAdmin()?_ibtn('Edit','fa-pen',"elEditCert('"+id+"')"):'')
+    +(isAdmin()?_ibtn('Copy','fa-copy',"copyELCert('"+id+"')"):'')
+    +(isAdmin()?_ibtn('Delete','fa-trash',"deleteELCert('"+id+"')",true):'');
+  var html = elBuildCertHTML(full);
+  var blob = new Blob([html], {type:'text/html'});
+  if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
+  var blobUrl = URL.createObjectURL(blob);
+  ifr._blobUrl = blobUrl;
+  ifr.src = blobUrl;
+  document.querySelectorAll('.pat-card[data-el-id]').forEach(function(c){ c.style.outline='none'; c.style.background=''; });
+  var card = document.querySelector('.pat-card[data-el-id="'+id+'"]');
+  if (card) { card.style.outline='2px solid var(--primary,#0e4d33)'; card.style.background='rgba(14,77,51,.06)'; }
+}
+
 export function elPrintCert() {
   var iframe = document.getElementById('el-cert-iframe');
   if (iframe && iframe.contentWindow) { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
@@ -1383,9 +1416,7 @@ export function renderELList(certs) {
     var oc = (r.outcome||d.outcome||'').toUpperCase();
     var ocCol = oc === 'SATISFACTORY' ? '#16a34a' : oc === 'UNSATISFACTORY' ? '#dc2626' : 'var(--muted)';
     var ocLabel = oc === 'SATISFACTORY' ? 'Satisfactory' : oc === 'UNSATISFACTORY' ? 'Unsatisfactory' : oc || '—';
-    var ref = `elOpenCert(Object.assign({},window._elAllCerts.find(x=>x.id==='${r.id}').data,{id:'${r.id}',ref:window._elAllCerts.find(x=>x.id==='${r.id}').ref_number}))`;
-    var emailRef = `elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id==='${r.id}').data,{id:'${r.id}',ref:window._elAllCerts.find(x=>x.id==='${r.id}').ref_number}))`;
-    return `<div class="pat-card">
+    return `<div class="pat-card" data-el-id="${r.id}" onclick="elShowPreview('${r.id}')" style="cursor:pointer">
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
       <div class="pat-card-body">
         <div class="pat-card-top">
@@ -1397,11 +1428,10 @@ export function renderELList(certs) {
           <span class="pat-card-date">${_escHtml(r.test_date||d.testDate||'—')}</span>
           <span class="pat-card-sub">&middot; ${_escHtml(r.cert_type||'EL')}</span>
           <div class="pat-card-btns">
-            ${_ibtn('View','fa-eye',ref)}
-            ${isAdmin()?_ibtn('Edit','fa-pen',`elEditCert('${r.id}')`):''}
-            ${isAdmin()?_ibtn('Copy','fa-copy',`copyELCert('${r.id}')`):''}
-            ${_ibtn('Email','fa-envelope',emailRef)}
-            ${isAdmin()?_ibtn('Delete','fa-trash',`deleteELCert('${r.id}')`,true):''}
+            ${isAdmin()?_ibtn('Edit','fa-pen',`event.stopPropagation();elEditCert('${r.id}')`):''}
+            ${isAdmin()?_ibtn('Copy','fa-copy',`event.stopPropagation();copyELCert('${r.id}')`):''}
+            ${_ibtn('Email','fa-envelope',`event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id==='${r.id}').data,{id:'${r.id}',ref:window._elAllCerts.find(x=>x.id==='${r.id}').ref_number}))`)}
+            ${isAdmin()?_ibtn('Delete','fa-trash',`event.stopPropagation();deleteELCert('${r.id}')`,true):''}
           </div>
         </div>
       </div>
@@ -1473,7 +1503,7 @@ Object.assign(window, {
   elSetPItem, elSetPeriod, elPick, elNext, elBack, elSave,
   elPreviewCurrent, elRestoreAutosave, elDiscardAutosave, elEditCert,
   elEmailCert, elSendEmail, elAutoEmail, elOpenCert, elCertEmailBtn,
-  elCloseCert, elPrintCert, elBuildCertHTML,
+  elCloseCert, elPrintCert, elBuildCertHTML, elShowPreview,
   loadELHistory, filterELList, deleteELCert, copyELCert, renderELList, elDownloadPDF,
   initELWizard, elRender, elPrev, saveEL, completeEL,
   elwSetWizard, elSetStep, elReset, renderELHistory, editELCert

@@ -1441,21 +1441,36 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
         <div><div class="view-title">EL Certificates</div><div class="view-subtitle">Emergency Lighting history</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportELCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button></div>
       </div>
-      <div class="list-controls">
-        <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
-        <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Types</option>
-          <option value="EL.1">EL.1 — Installation</option>
-          <option value="EL.2">EL.2 — Periodic</option>
-          <option value="EL.3">EL.3 — Assessment</option>
-        </select>
-        <select id="el-filter-outcome" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Outcomes</option>
-          <option value="SATISFACTORY">Satisfactory</option>
-          <option value="UNSATISFACTORY">Unsatisfactory</option>
-        </select>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:0 0 400px;min-width:280px;max-width:100%">
+          <div class="list-controls">
+            <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
+            <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Types</option>
+              <option value="EL.1">EL.1 — Installation</option>
+              <option value="EL.2">EL.2 — Periodic</option>
+              <option value="EL.3">EL.3 — Assessment</option>
+            </select>
+            <select id="el-filter-outcome" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Outcomes</option>
+              <option value="SATISFACTORY">Satisfactory</option>
+              <option value="UNSATISFACTORY">Unsatisfactory</option>
+            </select>
+          </div>
+          <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
+        </div>
+        <div id="el-preview-panel" style="flex:1;min-width:320px;position:sticky;top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          <div id="el-preview-empty" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+            <div style="font-size:38px;opacity:.4">💡</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text)">Select a certificate</div>
+            <div style="font-size:12px;color:var(--muted)">Click any row to preview the full<br>certificate and access actions</div>
+          </div>
+          <div id="el-preview-active" style="display:none">
+            <div id="el-preview-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <iframe id="el-preview-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
       </div>
-      <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
     </div>
 
     <!-- ===== FIRE NEW (wizard) ===== -->
