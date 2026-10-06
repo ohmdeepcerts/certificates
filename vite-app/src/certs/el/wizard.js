@@ -816,7 +816,6 @@ export function elBuildCertHTML(rec) {
   var modeLabel = r.mode ? r.mode.replace(/ \([XYZ]\)/,'') : '—';
   var modeCode  = r.mode ? (r.mode.match(/\(([XYZ])\)/)||['',''])[1] : '';
   var durCode   = r.ratedDuration==='1 hour' ? 'A' : r.ratedDuration==='2 hours' ? 'B' : r.ratedDuration==='3 hours' ? 'C' : '';
-  var classCode = modeCode && durCode ? 'X'+((modeCode==='X')?'0':(modeCode==='Y')?'1':'2')+durCode : '—';
   var nextInsp = '';
   if(r.nextTestDate){
     try {
@@ -890,6 +889,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .cb{padding:20px 28px;flex:1;display:flex;flex-direction:column;}
 .sec-head{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0e4d33;padding-bottom:6px;border-bottom:2px solid #b08d2e;margin-bottom:14px;margin-top:22px;flex-shrink:0;}
 .sec-head:first-child{margin-top:0;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;}
 .fg-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px;}
 .field{padding-bottom:11px;border-bottom:1px solid #e2e6e0;margin-bottom:11px;}
 .fl{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8b968f;margin-bottom:3px;}
@@ -922,7 +922,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .cf-right{font-size:10.5px;color:rgba(255,255,255,.55);text-align:right;}
 .cf-ref{font-family:monospace;font-size:10.5px;font-weight:700;color:#b08d2e;}
 @media print{body{background:#fff;padding:0;margin:0} .cert-page{width:210mm;min-height:297mm;box-shadow:none;margin:0;page-break-after:always;break-after:page;} .cert-page::after{display:none;}}
-@media(max-width:480px){.fg-3,.addr-panel{grid-template-columns:1fr;} .stats-bar{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.fg,.fg-3,.addr-panel{grid-template-columns:1fr;} .stats-bar{grid-template-columns:1fr 1fr;}}
 `;
 
   function field(label, val, cls){
@@ -1059,10 +1059,9 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
           +'<div style="font-size:18px;font-weight:800;color:#093423;white-space:nowrap;margin-left:20px">'+nextInsp+'</div>'
         +'</div>'
         :'')
-      +'<div class="fg-3">'
+      +'<div class="fg">'
         +field('System Type',sys)
         +field('Mode of Operation',mode)
-        +field('Classification Code',classCode)
       +'</div>'
       +(sat
         ?'<div class="note-box"><div class="nb-lbl">✓ System Satisfactory</div><p>This emergency lighting system has been inspected and tested in accordance with BS 5266-1:2025. The system satisfies the requirements of the standard. All '+lumTotal+' luminaires were tested and '+lumPass+' achieved the full rated duration of '+rated+'.</p></div>'
