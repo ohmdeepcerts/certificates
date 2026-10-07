@@ -765,7 +765,16 @@ export function gwNext() {
     if (!(_gw.landlordAddr1 || '').trim()) { toast('Landlord address line 1 is required', 'warn'); return; }
     if (!(_gw.landlordPostcode || '').trim()) { toast('Landlord postcode is required', 'warn'); return; }
   }
-  if (_gw.step < _GW_STEPS.length - 1) { _gw.step++; gwRender(); }
+  if (_gw.step < _GW_STEPS.length - 1) {
+    _gw.step++;
+    if (_gw.step === 2 && !(_gw.landlordAddr1 || '').trim()) {
+      _gw.landlordAddr1    = _gw.installAddr1    || '';
+      _gw.landlordAddr2    = _gw.installAddr2    || '';
+      _gw.landlordAddr3    = _gw.installAddr3    || '';
+      _gw.landlordPostcode = _gw.installPostcode || '';
+    }
+    gwRender();
+  }
 }
 
 export function gwBack() { if (_gw.step > 0) { _gw.step--; gwRender(); } }
