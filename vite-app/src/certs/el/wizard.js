@@ -375,7 +375,7 @@ export function elRenderStep() {
   el.innerHTML = html;
   try { localStorage.setItem('el_autosave', JSON.stringify(_w)); } catch(e) {}
 
-  // Address autocomplete on premises step (step 1)
+  // Address autocomplete on premises step (step 1) and client step (step 2)
   if (s === 1) {
     const _a1 = el.querySelector('input[placeholder="House no. & street"]');
     if (_a1) attachAddressAutocomplete(_a1, {
@@ -384,6 +384,19 @@ export function elRenderStep() {
         _w.premAddr2  = [a.line2, a.line3].filter(Boolean).join(', ');
         _w.premAddr3  = a.town;
         _w.premPostcode = a.postcode;
+        _elDirty = true;
+        elRenderStep();
+      }
+    });
+  }
+  if (s === 2) {
+    const _ca1 = el.querySelector('input[placeholder="(if different from premises)"]');
+    if (_ca1) attachAddressAutocomplete(_ca1, {
+      onSelect(a) {
+        _w.clientAddr1   = a.line1;
+        _w.clientAddr2   = [a.line2, a.line3].filter(Boolean).join(', ');
+        _w.clientAddr3   = a.town;
+        _w.clientPostcode = a.postcode;
         _elDirty = true;
         elRenderStep();
       }

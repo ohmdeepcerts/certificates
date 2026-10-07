@@ -581,7 +581,8 @@ export function initCP12Form() {
       setCP12Field('install_postcode', a.postcode);
     }
   });
-  const _la = document.querySelector('[data-field="landlord_address"]');
+  const _laDiv = document.querySelector('[data-field="landlord_address"]');
+  const _la = _laDiv ? (_laDiv.querySelector('textarea') || _laDiv) : null;
   if (_la) attachAddressAutocomplete(_la, {
     onSelect(a) {
       setCP12Field('landlord_address', [a.line1, a.line2, a.line3, a.town].filter(Boolean).join('\n'));
