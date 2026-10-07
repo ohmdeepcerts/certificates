@@ -7,6 +7,7 @@ import { state, isAdmin } from '../../lib/state.js';
 import { _refSettings, _pcScore, _refAddrPart } from '../_core/refgen.js';
 // Circular-safe: cp12.js imports { gwRender, gwInitState, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive } from here.
 import { setCP12Field, toggleCP12AppRow, oneYearMinusOneDayUK, saveGas, completeGas } from './cp12.js';
+import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 
 // ── OLD MGW WIZARD ────────────────────────────────────────
 
@@ -607,6 +608,15 @@ export function gwAttachAC() {
   if (_gw.step === 1) {
     var ia = document.getElementById('gw-install-a1');
     if (ia && typeof attachDirAC === 'function') attachDirAC(ia, 'properties', _gwFillProperty); // still global
+    if (ia) attachAddressAutocomplete(ia, {
+      onSelect: function(a) {
+        gwSet('installAddr1', a.line1);
+        gwSet('installAddr2', [a.line2, a.line3].filter(Boolean).join(', '));
+        gwSet('installAddr3', a.town);
+        gwSet('installPostcode', a.postcode);
+        gwRender();
+      }
+    });
     var ia2 = document.getElementById('gw-install-a2');
     var ia3 = document.getElementById('gw-install-a3');
     if (ia2) _gwAttachColAC(ia2, 'addr2', function (v) { gwSet('installAddr2', v); ia2.value = v; });
@@ -616,6 +626,15 @@ export function gwAttachAC() {
     var la = document.getElementById('gw-landlord-a1');
     if (ni && typeof attachDirAC === 'function') attachDirAC(ni, 'landlords', _gwFillLandlord);
     if (la && typeof attachDirAC === 'function') attachDirAC(la, 'landlords', _gwFillLandlord);
+    if (la) attachAddressAutocomplete(la, {
+      onSelect: function(a) {
+        gwSet('landlordAddr1', a.line1);
+        gwSet('landlordAddr2', [a.line2, a.line3].filter(Boolean).join(', '));
+        gwSet('landlordAddr3', a.town);
+        gwSet('landlordPostcode', a.postcode);
+        gwRender();
+      }
+    });
   } else if (_gw.step === 3) {
     (_gw.appliances || []).forEach(function (_, i) {
       var card = document.querySelector('[data-gw-app="' + i + '"]'); if (!card) return;
