@@ -1,6 +1,6 @@
 {
-  "v": "1.0.6",
-  "build": 6,
+  "v": "1.0.7",
+  "build": 7,
   "changes": [
     "Gas cert date picker redesigned",
     "Day stepper + calendar with year jump",
