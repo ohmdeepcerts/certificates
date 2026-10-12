@@ -1,9 +1,9 @@
 {
-  "v": "1.0.8",
-  "build": 8,
+  "v": "1.0.9",
+  "build": 9,
   "changes": [
-    "Gas cert date picker redesigned",
-    "Day stepper + calendar with year jump",
-    "Update notification now centred and theme-matched"
+    "Gas cert date pickers now vertically aligned",
+    "12-months chip moved inline with label",
+    "Update notification centred and theme-matched"
   ]
 }
