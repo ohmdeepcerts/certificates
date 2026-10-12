@@ -1654,5 +1654,67 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
 </div>
 
 <div id="print-target" style="display:none"></div>
+
+<script>
+(function(){
+  var VERSION_FILE   = 'version.json';
+  var CHECK_INTERVAL = 5 * 60 * 1000;
+  var STORAGE_KEY    = 'app_version';
+  var _notified = false;
+
+  async function checkVersion() {
+    if (location.protocol === 'file:') return;
+    try {
+      var base = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+      var res  = await fetch(base + VERSION_FILE + '?_v=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      var sig  = data.v || data.version || '';
+      if (!sig) return;
+      var stored = sessionStorage.getItem(STORAGE_KEY);
+      if (!stored) { sessionStorage.setItem(STORAGE_KEY, sig); return; }
+      if (sig !== stored && !_notified) { _notified = true; showBanner(); }
+    } catch(e) {}
+  }
+
+  function showBanner() {
+    if (document.getElementById('_updateBanner')) return;
+    var b = document.createElement('div');
+    b.id = '_updateBanner';
+    b.style.cssText = [
+      'position:fixed','top:0','left:0','right:0','z-index:2147483647',
+      'background:#92400e','color:#fff',
+      'display:flex','align-items:center','justify-content:center',
+      'gap:12px','padding:10px 18px',
+      'font-size:13px','font-weight:600','font-family:sans-serif',
+      'box-shadow:0 3px 14px rgba(0,0,0,0.35)','line-height:1.4'
+    ].join(';') + ';';
+    b.innerHTML =
+      '<span style="font-size:16px;">🔄</span>' +
+      '<span>A new version is available — restart to get the latest updates.</span>' +
+      '<button onclick="window._hardReload()" style="' +
+        'background:#fff;color:#92400e;border:none;border-radius:7px;' +
+        'padding:6px 16px;font-size:12px;font-weight:800;cursor:pointer;' +
+        'white-space:nowrap;margin-left:4px;' +
+      '">↺ Restart Now</button>';
+    document.body.insertBefore(b, document.body.firstChild);
+  }
+
+  window._hardReload = async function() {
+    if ('caches' in window) {
+      try { var keys = await caches.keys(); await Promise.all(keys.map(function(k){ return caches.delete(k); })); } catch(e) {}
+    }
+    if ('serviceWorker' in navigator) {
+      try { var regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(function(r){ return r.unregister(); })); } catch(e) {}
+    }
+    sessionStorage.clear();
+    location.reload(true);
+  };
+
+  checkVersion();
+  setInterval(checkVersion, CHECK_INTERVAL);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkVersion(); });
+})();
+</script>
 </body>
 </html>
