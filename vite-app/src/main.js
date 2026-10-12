@@ -47,20 +47,24 @@ async function _loadCertGlobals() {
   Object.assign(window, gas);
   Object.assign(window, el);
   Object.assign(window, fire);
-  const [gasWiz, gasPdf, gasPrev, dir, eng, settings, patEmail, patPdf] = await Promise.all([
+  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist] = await Promise.all([
     import('./certs/gas/wizard.js'),
     import('./certs/gas/pdf.js'),
     import('./certs/gas/preview.js'),
+    import('./certs/gas/history.js'),
     import('./directory/directory.js'),
     import('./engineers/engineers.js'),
     import('./settings/settings.js'),
     import('./certs/pat/email.js'),
     import('./certs/pat/pdf.js'),
+    import('./certs/pat/history.js'),
   ]);
   Object.assign(window, gasWiz);
   Object.assign(window, gasPdf);
   Object.assign(window, gasPrev);
-  Object.assign(window, { renderDirectoryPage: dir.renderDirectoryPage, loadCompliance: dir.loadCompliance });
+  Object.assign(window, gasHist);
+  Object.assign(window, dir);
+  Object.assign(window, patHist);
   Object.assign(window, { _showEngineerPicker: eng.showEngineerPicker });
   Object.assign(window, { loadSettingsUI: settings.loadSettingsUI, saveSettings: settings.saveSettings });
   Object.assign(window, { emailPAT: patEmail.emailPAT, emailPATFromList: patEmail.emailPATFromList });

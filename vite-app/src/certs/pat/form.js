@@ -259,6 +259,17 @@ export function getPATFormData() {
   };
 }
 
+export function restorePATAutosave() {
+  try {
+    const saved = localStorage.getItem('pat_autosave');
+    if (saved) { populatePATForm(JSON.parse(saved)); }
+    const rb = patGe('pat-restore-banner'); if (rb) rb.hidden = true;
+  } catch(e) { toast('Could not restore autosave', 'error'); }
+}
+export function discardPATAutosave() {
+  try { localStorage.removeItem('pat_autosave'); } catch(e) {}
+  const rb = patGe('pat-restore-banner'); if (rb) rb.hidden = true;
+}
 export function startNewPAT() { state.editingPATId = null; _offlineQueueId = null; navigate('pat-new'); }
 export async function newPAT() {
   state.editingPATId = null; _offlineQueueId = null; patApps.splice(0); state._patDirty = false;

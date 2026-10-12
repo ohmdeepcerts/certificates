@@ -7,6 +7,7 @@ import { navigate } from '../nav/navigation.js';
 const _dir = { agents: null, landlords: null, properties: null, contacts: null, appliances: null };
 const _dirTable = { agents: 'directory_agents', landlords: 'directory_landlords', properties: 'directory_properties', contacts: 'directory_contacts' };
 let _dirActiveTab = 'agents';
+window._dirActiveTab = 'agents';
 
 function _inferAppCat(t) {
   const s = (t || '').toLowerCase();
@@ -460,6 +461,7 @@ export function _attachGasFormAC() {
 // ── Directory page ───────────────────────────────────────────────────────────
 export async function switchDirTab(type) {
   _dirActiveTab = type;
+  window._dirActiveTab = type;
   document.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
   const tb = document.getElementById('dtab-' + type); if (tb) tb.classList.add('active');
   document.getElementById('dir-search-input').value = '';
