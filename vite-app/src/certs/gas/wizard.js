@@ -247,7 +247,9 @@ function _gwFmtDate(d, m0, y) {
   return String(d).padStart(2, '0') + '/' + String(m0 + 1).padStart(2, '0') + '/' + y;
 }
 
-function _gwStepCalHTML(baseId, dateStr) {
+function _gwStepCalHTML(baseId, dateStr, cv, cbg) {
+  cv  = cv  || 'var(--accent)';
+  cbg = cbg || 'var(--accent-bg,rgba(37,99,235,.08))';
   var p = _gwParseDate(dateStr); if (!p) { p = { d: new Date().getDate(), m0: new Date().getMonth(), y: new Date().getFullYear() }; }
   var st = _gwCalState[baseId]; if (!st) { st = { cy: p.y, cm0: p.m0, showYear: false, ypStart: p.y - 7 }; _gwCalState[baseId] = st; }
   var mNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -258,9 +260,9 @@ function _gwStepCalHTML(baseId, dateStr) {
   var html = '<div id="' + baseId + '-scp" style="display:flex;flex-direction:column;gap:8px;max-width:340px;width:100%">';
   html += '<div style="display:flex;align-items:center;gap:8px">'
     + '<button type="button" onclick="_gwCalStep(\'' + baseId + '\',-1)" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>'
-    + '<div style="flex:1;text-align:center;padding:8px 6px;border:1.5px solid var(--accent);border-radius:8px;background:var(--accent-bg,rgba(185,28,28,.08))">'
-    + '<div style="font-size:28px;font-weight:700;color:var(--accent);line-height:1">' + p.d + '</div>'
-    + '<div style="font-size:11px;color:var(--accent);margin-top:2px">' + dayLabel + ', ' + mShort[p.m0] + ' ' + p.y + '</div>'
+    + '<div style="flex:1;text-align:center;padding:8px 6px;border:1.5px solid ' + cv + ';border-radius:8px;background:' + cbg + '">'
+    + '<div style="font-size:28px;font-weight:700;color:' + cv + ';line-height:1">' + p.d + '</div>'
+    + '<div style="font-size:11px;color:' + cv + ';margin-top:2px">' + dayLabel + ', ' + mShort[p.m0] + ' ' + p.y + '</div>'
     + '</div>'
     + '<button type="button" onclick="_gwCalStep(\'' + baseId + '\',1)" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8250;</button>'
     + '</div>';
@@ -272,7 +274,7 @@ function _gwStepCalHTML(baseId, dateStr) {
     html += '<div style="display:flex;align-items:center;gap:2px;margin-bottom:6px">'
       + '<button type="button" onclick="_gwCalYearShift(\'' + baseId + '\',-1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#171;</button>'
       + '<button type="button" onclick="_gwCalMonthShift(\'' + baseId + '\',-1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8249;</button>'
-      + '<button type="button" onclick="_gwCalToggleYear(\'' + baseId + '\')" style="flex:1;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:2px 4px;border-radius:5px;border:none;background:none;text-align:center">'
+      + '<button type="button" onclick="_gwCalToggleYear(\'' + baseId + '\')" style="flex:1;font-size:13px;font-weight:600;color:' + cv + ';cursor:pointer;padding:2px 4px;border-radius:5px;border:none;background:none;text-align:center">'
       + mNames[st.cm0] + ' ' + st.cy + ' ▾'
       + '</button>'
       + '<button type="button" onclick="_gwCalMonthShift(\'' + baseId + '\',1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8250;</button>'
@@ -289,8 +291,8 @@ function _gwStepCalHTML(baseId, dateStr) {
       var isToday = thisDate.getTime() === today.getTime();
       var isSel = dn === p.d && st.cm0 === p.m0 && st.cy === p.y;
       var isoStr = st.cy + '-' + String(st.cm0 + 1).padStart(2,'0') + '-' + String(dn).padStart(2,'0');
-      var cellSty = isSel ? 'background:var(--accent);color:#fff;font-weight:700;'
-                  : isToday ? 'color:var(--accent);font-weight:700;' : 'color:var(--muted);';
+      var cellSty = isSel ? 'background:' + cv + ';color:#fff;font-weight:700;'
+                  : isToday ? 'color:' + cv + ';font-weight:700;' : 'color:var(--muted);';
       html += '<div onclick="_gwCalPickDay(\'' + baseId + '\',\'' + isoStr + '\')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;' + cellSty + '">' + dn + '</div>';
     }
     html += '</div>';
@@ -305,8 +307,8 @@ function _gwStepCalHTML(baseId, dateStr) {
     var curYear = new Date().getFullYear();
     for (var yr = ypStart; yr < ypStart + 12; yr++) {
       var isCurSel = yr === p.y, isThisYear = yr === curYear;
-      var yrSty = isCurSel ? 'background:var(--accent);color:#fff;border:1px solid transparent;'
-               : isThisYear ? 'border:1px solid var(--accent);color:var(--accent);'
+      var yrSty = isCurSel ? 'background:' + cv + ';color:#fff;border:1px solid transparent;'
+               : isThisYear ? 'border:1px solid ' + cv + ';color:' + cv + ';'
                : 'border:1px solid transparent;color:var(--muted);';
       html += '<div onclick="_gwCalPickYear(\'' + baseId + '\',' + yr + ')" style="padding:7px 4px;text-align:center;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;' + yrSty + '">' + yr + '</div>';
     }
@@ -515,16 +517,18 @@ export function gwRender() {
       + '<div class="elwiz-sub">When was the inspection carried out?</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">'
       + '<div style="flex:1;min-width:270px">'
-      + '<label class="elwiz-input-label">Date of inspection</label>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;height:26px;margin-bottom:5px">'
+      + '<label class="elwiz-input-label" style="margin-bottom:0">Date of inspection</label>'
+      + '</div>'
       + '<div id="gw-cert-date-wrap">' + _gwStepCalHTML('gw-cert-date', _gw.certDate) + '</div>'
       + '<div id="gw-cert-date-display" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:6px;padding:5px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">' + _gwFmtDateWithDay(_gw.certDate) + '</div>'
       + '</div>'
       + '<div style="flex:1;min-width:270px">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;height:26px;margin-bottom:5px">'
       + '<label class="elwiz-input-label" style="margin-bottom:0">Next inspection due</label>'
-      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:4px 10px;font-size:11px">&#8635; 12 months</button>'
+      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:2px 9px;font-size:11px;line-height:1.4">&#8635; 12 months</button>'
       + '</div>'
-      + '<div id="gw-ncd-wrap">' + _gwStepCalHTML('gw-ncd', _gw.nextCheckDate) + '</div>'
+      + '<div id="gw-ncd-wrap">' + _gwStepCalHTML('gw-ncd', _gw.nextCheckDate, 'var(--warn,#d97706)', 'var(--warn-bg,rgba(217,119,6,.1))') + '</div>'
       + '<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: ' + esc(_gw.nextCheckDate) + '</div>'
       + '</div>'
       + '</div>';
