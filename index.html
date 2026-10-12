@@ -1686,34 +1686,50 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
     var esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
     var changesList = '';
     if (changes && changes.length) {
-      changesList = '<ul style="margin:6px 0 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px 12px;">' +
-        changes.map(function(c){ return '<li style="font-size:11px;font-weight:400;opacity:.92;">✓ ' + esc(c) + '</li>'; }).join('') +
-        '</ul>';
+      changesList = '<ul style="margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;">' +
+        changes.map(function(c){
+          return '<li style="display:flex;align-items:flex-start;gap:7px;font-size:12px;font-weight:400;line-height:1.4;opacity:.88;">' +
+            '<span style="color:#4ade80;font-size:11px;margin-top:2px;flex-shrink:0;">✓</span>' + esc(c) + '</li>';
+        }).join('') + '</ul>';
     }
     var b = document.createElement('div');
     b.id = '_updateBanner';
     b.style.cssText = [
-      'position:fixed','top:0','left:0','right:0','z-index:2147483647',
-      'background:#1e3a2f','color:#fff',
-      'display:flex','align-items:flex-start','justify-content:space-between',
-      'gap:12px','padding:12px 18px',
-      'font-size:13px','font-weight:600','font-family:sans-serif',
-      'box-shadow:0 3px 14px rgba(0,0,0,0.4)','line-height:1.4'
+      'position:fixed','bottom:24px','right:24px','z-index:2147483647',
+      'width:320px','max-width:calc(100vw - 32px)',
+      'background:#1a2332','color:#f0f4f8',
+      'border-radius:14px','border:1px solid rgba(255,255,255,0.1)',
+      'padding:16px 18px 14px',
+      'font-family:system-ui,sans-serif','font-size:13px','line-height:1.4',
+      'box-shadow:0 8px 32px rgba(0,0,0,0.45),0 2px 8px rgba(0,0,0,0.3)',
+      'animation:_slideUp .3s cubic-bezier(.16,1,.3,1)'
     ].join(';') + ';';
+
+    var style = document.createElement('style');
+    style.textContent = '@keyframes _slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(style);
+
     b.innerHTML =
-      '<div style="display:flex;align-items:flex-start;gap:10px;flex:1;">' +
-        '<span style="font-size:18px;margin-top:1px;">🚀</span>' +
-        '<div>' +
-          '<div><strong>' + esc(ver) + ' is ready</strong> — restart to get the latest updates.</div>' +
-          changesList +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+        '<span style="font-size:20px;line-height:1;">🚀</span>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700;font-size:13px;">Update available — <span style="color:#4ade80;">' + esc(ver) + '</span></div>' +
         '</div>' +
+        '<button onclick="document.getElementById(\'_updateBanner\').remove()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;line-height:1;margin:-4px -4px 0 0;" title="Dismiss">×</button>' +
       '</div>' +
-      '<button onclick="window._hardReload()" style="' +
-        'background:#4ade80;color:#052e16;border:none;border-radius:7px;' +
-        'padding:7px 18px;font-size:12px;font-weight:800;cursor:pointer;' +
-        'white-space:nowrap;flex-shrink:0;margin-top:1px;' +
-      '">↺ Restart Now</button>';
-    document.body.insertBefore(b, document.body.firstChild);
+      '<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">What\'s new in this update:</div>' +
+      changesList +
+      '<div style="display:flex;gap:8px;margin-top:14px;">' +
+        '<button onclick="window._hardReload()" style="' +
+          'flex:1;background:#4ade80;color:#052e16;border:none;border-radius:8px;' +
+          'padding:9px 16px;font-size:13px;font-weight:800;cursor:pointer;' +
+        '">↺ Restart Now</button>' +
+        '<button onclick="document.getElementById(\'_updateBanner\').remove()" style="' +
+          'background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:none;border-radius:8px;' +
+          'padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;' +
+        '">Later</button>' +
+      '</div>';
+    document.body.appendChild(b);
   }
 
   window._hardReload = async function() {

@@ -1,11 +1,11 @@
 {
-  "v": "1.0.3",
-  "build": 3,
+  "v": "1.0.4",
+  "build": 4,
   "changes": [
     "Directory + Add New button fixed",
     "PAT history search & sort working",
     "PAT autosave restore banner fixed",
     "Version number shown in sidebar",
-    "Auto-update banner with changelog"
+    "Update notification redesigned"
   ]
 }
