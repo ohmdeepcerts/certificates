@@ -728,7 +728,8 @@ export async function elSendEmail(rec) {
     var bcc = getSetting('email_bcc', '') || undefined;
     showOverlay('Sending…');
     try {
-      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, bcc, cc);
+      var pdfName = (rec.ref||'cert').replace(/[\s/\\]+/g,'-') + '.pdf';
+      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, pdfName, bcc, cc);
       hideOverlay();
       if (result && result.error) { toast('Email failed: '+result.error,'error'); return; }
       toast('Email sent to '+to,'success');
@@ -742,10 +743,88 @@ function _escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function _elCalUrl(dateStr, ref, addressLine) {
+  // dateStr is DD/MM/YYYY; convert to YYYYMMDD for Google Calendar
+  var parts = (dateStr || '').split('/');
+  if (parts.length !== 3) return '';
+  var yyyymmdd = parts[2] + parts[1] + parts[0];
+  var nextDay = (function() {
+    var d = new Date(+parts[2], +parts[1] - 1, +parts[0] + 1);
+    return '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  })();
+  var title = encodeURIComponent('Emergency Lighting Test Due — ' + (ref || ''));
+  var details = encodeURIComponent('Certificate Ref: ' + (ref || '') + '\nPremises: ' + (addressLine || ''));
+  var loc = encodeURIComponent(addressLine || '');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title
+    + '&dates=' + yyyymmdd + '%2F' + nextDay
+    + '&details=' + details + '&location=' + loc;
+}
+
 function _buildELEmailHTML(rec) {
   var co = getSetting('company_name','OHM Electrical Engineering Ltd');
   var phone = getSetting('company_phone','');
-  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#fff"><div style="background:#14532d;padding:24px;text-align:center"><h1 style="color:#f59e0b;margin:0;font-size:22px">${_escHtml(co)}</h1><p style="color:#86efac;margin:4px 0 0;font-size:13px">Emergency Lighting Certificate</p></div><div style="padding:24px;border:1px solid #e5e7eb;border-top:none"><p style="color:#374151">Dear ${_escHtml(rec.clientName||'Client')},</p><p style="color:#374151">Please find attached your emergency lighting certificate.</p><table style="width:100%;border-collapse:collapse;margin:16px 0"><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;width:40%">Certificate Ref</td><td style="padding:8px;border:1px solid #e5e7eb">${_escHtml(rec.ref||'')}</td></tr><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">Type</td><td style="padding:8px;border:1px solid #e5e7eb">${_escHtml(rec.certType||'')}</td></tr><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">Premises</td><td style="padding:8px;border:1px solid #e5e7eb">${_escHtml(rec.premisesName||rec.premAddr1||'')}</td></tr><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">Test Date</td><td style="padding:8px;border:1px solid #e5e7eb">${_escHtml(rec.testDate||'')}</td></tr><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">Outcome</td><td style="padding:8px;border:1px solid #e5e7eb;color:${rec.outcome==='SATISFACTORY'?'#16a34a':'#dc2626'};font-weight:700">${_escHtml(rec.outcome||'')}</td></tr><tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600">Next Test Due</td><td style="padding:8px;border:1px solid #e5e7eb">${_escHtml(rec.nextTestDate||'')}</td></tr></table><p style="color:#6b7280;font-size:13px">If you have any queries please contact us.</p><p style="color:#374151;font-weight:600">${_escHtml(co)}${phone?' — '+_escHtml(phone):''}</p></div></div>`;
+  var e = _escHtml;
+  var addrParts = [rec.premisesName, rec.premAddr1, rec.premAddr2, rec.premAddr3, rec.premPostcode].filter(Boolean);
+  var addrLine = addrParts.join(', ');
+  var addrHtml = addrParts.map(function(p) { return e(p); }).join('<br>');
+  var sat = (rec.outcome || '').toUpperCase() === 'SATISFACTORY';
+  var outcomeColor = sat ? '#16a34a' : '#dc2626';
+  var outcomeIcon = sat ? '&#10003;' : '&#9888;';
+  var calUrl = _elCalUrl(rec.nextTestDate || '', rec.ref || '', addrLine);
+  var calBtn = calUrl
+    ? '<table cellpadding="0" cellspacing="0" style="margin:0 0 24px"><tr><td style="background:#166534;border-radius:6px;padding:0"><a href="' + calUrl + '" style="display:inline-block;padding:11px 20px;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;font-family:Arial,sans-serif">&#128197;&nbsp; Add Next Test to Calendar</a></td></tr></table>'
+    : '';
+  var phoneLine = phone ? '<div style="font-size:12px;color:#6b7280;margin-top:3px">' + e(phone) + '</div>' : '';
+  var typeLabel = rec.certType ? '<br><span style="font-size:13px;font-weight:400;color:#6b7280">' + e(rec.certType) + '</span>' : '';
+  var row = function(label, val, extra) {
+    return '<tr>'
+      + '<td style="padding:10px 16px;background:#f9fafb;font-size:11px;font-weight:700;color:#6b7280;width:38%;border-bottom:1px solid #e5e7eb;text-transform:uppercase;letter-spacing:.4px;vertical-align:top">' + label + '</td>'
+      + '<td style="padding:10px 16px;font-size:13px;color:#111827;border-bottom:1px solid #e5e7eb;vertical-align:top' + (extra ? ';' + extra : '') + '">' + val + '</td>'
+      + '</tr>';
+  };
+  return '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6"><tr><td align="center" style="padding:28px 16px">'
+    + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb">'
+
+    // Header
+    + '<tr><td style="background:#14532d;padding:26px 32px;text-align:center">'
+    + '<div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:.3px">' + e(co) + '</div>'
+    + '<div style="font-size:11px;color:#86efac;margin-top:5px;letter-spacing:1.2px;text-transform:uppercase">Emergency Lighting Certificate</div>'
+    + '</td></tr>'
+
+    // Cert ref banner
+    + '<tr><td style="background:#f0fdf4;border-bottom:3px solid #14532d;padding:16px 32px">'
+    + '<div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Certificate Reference</div>'
+    + '<div style="font-size:22px;font-weight:700;color:#14532d">' + e(rec.ref || '—') + typeLabel + '</div>'
+    + '</td></tr>'
+
+    // Body
+    + '<tr><td style="padding:28px 32px">'
+    + '<p style="margin:0 0 18px;color:#374151;font-size:15px">Dear ' + e(rec.clientName || 'Client') + ',</p>'
+    + '<p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6">Please find attached your emergency lighting certificate for the premises below. Please retain this document for your records.</p>'
+
+    // Details table
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin:0 0 24px;border-collapse:collapse">'
+    + row('Premises', addrHtml)
+    + row('Test Date', e(rec.testDate || '—'))
+    + row('Outcome', outcomeIcon + '&nbsp;' + e(rec.outcome || '—'), 'font-weight:700;color:' + outcomeColor)
+    + '<tr><td style="padding:10px 16px;background:#f9fafb;font-size:11px;font-weight:700;color:#6b7280;width:38%;text-transform:uppercase;letter-spacing:.4px;vertical-align:top">Next Test Due</td>'
+    + '<td style="padding:10px 16px;font-size:13px;color:#111827;font-weight:600;vertical-align:top">' + e(rec.nextTestDate || '—') + '</td></tr>'
+    + '</table>'
+
+    // Add to Calendar CTA
+    + calBtn
+
+    + '<p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.7">If you have any queries regarding this certificate, please do not hesitate to contact us.</p>'
+    + '</td></tr>'
+
+    // Footer
+    + '<tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;text-align:center">'
+    + '<div style="font-size:13px;font-weight:600;color:#374151">' + e(co) + '</div>'
+    + phoneLine
+    + '</td></tr>'
+    + '</table>'
+    + '</td></tr></table></body></html>';
 }
 
 export async function elAutoEmail(rec, silent) {
@@ -762,7 +841,8 @@ export async function elAutoEmail(rec, silent) {
     var cc = getGlobalCC();
     try {
       var bcc2 = getSetting('email_bcc', '') || undefined;
-      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, `EL_${rec.ref||'cert'}.pdf`, bcc2, cc);
+      var pdfName2 = (rec.ref||'cert').replace(/[\s/\\]+/g,'-') + '.pdf';
+      var result = await sendBrevoEmail(to, rec.clientName||'', subject, emailHtml, b64, pdfName2, bcc2, cc);
       if (result && !result.error) {
         try {
           await sb.from('email_sends').insert({

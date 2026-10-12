@@ -1,10 +1,10 @@
 {
-  "v": "1.1.3",
-  "build": 13,
+  "v": "1.1.4",
+  "build": 14,
   "changes": [
-    "Gas address step: directory results shown first, API results below in combined dropdown",
-    "Directory pre-loaded when wizard opens (fixes timing issue)",
-    "Min chars reduced to 2 for address field",
-    "NCD picker tinted amber to visually distinguish it as expiry date"
+    "EL email: full redesign with cert ref banner, full address, Add to Calendar button",
+    "EL email: PDF filename now uses cert ref (e.g. EL2152688-32.pdf) not EL_EL prefix",
+    "Gas address step: directory + API combined dropdown, pre-loaded, 2-char trigger",
+    "NCD picker tinted amber"
   ]
 }
