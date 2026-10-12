@@ -49,10 +49,12 @@ async function _resolve(id, key) {
 
 // Attach address autocomplete to an input or textarea.
 //
-// opts.onSelect(addr)  — called with { line1, line2, line3, town, county, postcode }
-//                        when user picks an address; if omitted, fills inputEl as multi-line text
-// opts.minChars        — minimum characters before searching (default 3)
-// opts.debounce        — milliseconds to debounce keystrokes (default 350)
+// opts.onSelect(addr)    — called with { line1, line2, line3, town, county, postcode }
+//                          when user picks an address; if omitted, fills inputEl as multi-line text
+// opts.minChars          — minimum characters before searching (default 3)
+// opts.debounce          — milliseconds to debounce keystrokes (default 350)
+// opts.localSuggest(q)   — optional fn returning [{label, onPick}] for local/directory results;
+//                          if it returns a non-empty array the API call is skipped entirely
 //
 // Safe to call multiple times on the same element — guards against double-attach.
 export function attachAddressAutocomplete(inputEl, opts = {}) {
@@ -60,7 +62,7 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
   inputEl._aacAttached = true;
   _injectCSS();
 
-  const { onSelect, minChars = 3, debounce = 350 } = opts;
+  const { onSelect, minChars = 3, debounce = 350, localSuggest } = opts;
 
   // Wrap the input in a relative container for dropdown positioning
   const parent = inputEl.parentNode;
@@ -110,6 +112,22 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
     clearTimeout(_timer);
     const q = inputEl.value.trim();
     if (q.length < minChars) { _close(); return; }
+
+    // Check local/directory suggestions first — skips API call if matches found
+    if (localSuggest) {
+      const local = localSuggest(q);
+      if (local && local.length) {
+        _hits = []; _hi = -1;
+        drop.innerHTML = local.map((item, i) =>
+          `<div class="aac-item" data-i="${i}">${item.label}</div>`
+        ).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('.aac-item').forEach(el =>
+          el.addEventListener('mousedown', e => { e.preventDefault(); _close(); local[+el.dataset.i].onPick(); })
+        );
+        return;
+      }
+    }
 
     const key = getSetting('ideal_postcodes_key', '');
     if (!key) {

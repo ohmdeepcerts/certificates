@@ -4,7 +4,7 @@
 // ============================================================
 import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
-import { toast, showOverlay, hideOverlay } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, esc } from '../../lib/utils.js';
 import { state, isAdmin } from '../../lib/state.js';
 import { buildCertRefSeq, _refSettings, _pcScore, _refAddrPart, _extractPC } from '../_core/refgen.js';
 import { navigate } from '../../nav/navigation.js';
@@ -14,6 +14,25 @@ import { gwRender, gwInitState, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive 
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { doGasPreview, _applyCP12Zoom } from './preview.js';
 import { emailGas } from './history.js';
+
+// ── Directory cache for inline suggest ───────────────────
+let _cpDir = { properties: null };
+
+function _cpDirSuggest(q, onPickFill) {
+  const props = _cpDir.properties;
+  if (!props) {
+    window.dirLoad?.('properties').then(data => { if (data) _cpDir.properties = data; });
+    return [];
+  }
+  const lq = q.toLowerCase();
+  return props
+    .filter(p => (p.name || '').toLowerCase().includes(lq) || (p.addr1 || '').toLowerCase().includes(lq))
+    .slice(0, 6)
+    .map(p => ({
+      label: `<strong>${esc(p.name || p.addr1 || '')}</strong>${p.name && p.addr1 ? ' &mdash; <span style="color:var(--muted,#6b7280)">' + esc(p.addr1) + '</span>' : ''}${p.postcode ? ' <span style="color:var(--muted,#6b7280)">(' + esc(p.postcode) + ')</span>' : ''}`,
+      onPick() { onPickFill(p); }
+    }));
+}
 
 // ── CP12 choice cycles ────────────────────────────────────
 
@@ -375,6 +394,12 @@ export function toggleGasView() {
   }
 }
 
+export function startNewGas() {
+  state.editingGasId = null;
+  state.gasDirty = false;
+  navigate('gas-new');
+}
+
 export function newGasCert() {
   state.editingGasId = null; state.gasDirty = false;
   state.cachedNextGasSerial = null;
@@ -581,12 +606,39 @@ export function initCP12Form() {
       setCP12Field('install_postcode', a.postcode);
     }
   });
+  // Lazy-load directory so localSuggest has data when user starts typing
+  if (!_cpDir.properties) {
+    window.dirLoad?.('properties').then(data => { if (data) _cpDir.properties = data; });
+  }
+
+  // Directory suggest on the client/landlord NAME input
+  const _llName = document.getElementById('cp12-ll-name');
+  if (_llName) attachAddressAutocomplete(_llName, {
+    onSelect() {},
+    localSuggest(q) {
+      return _cpDirSuggest(q, p => {
+        const ni = document.getElementById('cp12-ll-name');
+        if (ni) ni.value = p.name || '';
+        setCP12Field('landlord_address', [p.addr1, p.addr2, p.addr3 || p.town].filter(Boolean).join('\n'));
+        setCP12Field('landlord_postcode', p.postcode || '');
+      });
+    }
+  });
+
   const _laDiv = document.querySelector('[data-field="landlord_address"]');
   const _la = _laDiv ? (_laDiv.querySelector('textarea') || _laDiv) : null;
   if (_la) attachAddressAutocomplete(_la, {
     onSelect(a) {
       setCP12Field('landlord_address', [a.line1, a.line2, a.line3, a.town].filter(Boolean).join('\n'));
       setCP12Field('landlord_postcode', a.postcode);
+    },
+    localSuggest(q) {
+      return _cpDirSuggest(q, p => {
+        const ni = document.getElementById('cp12-ll-name');
+        if (ni) ni.value = p.name || '';
+        setCP12Field('landlord_address', [p.addr1, p.addr2, p.addr3 || p.town].filter(Boolean).join('\n'));
+        setCP12Field('landlord_postcode', p.postcode || '');
+      });
     }
   });
   document.querySelectorAll('#cp12Wrap .fast-date').forEach(el => attachFastDateInput(el));

@@ -162,7 +162,7 @@ export async function generatePATPDFFromData(r, { returnB64 = false } = {}) {
         imageTimeout: 5000
       });
       const imgH = 297;
-      const imgQuality = returnB64 ? 0.85 : 0.92;
+      const imgQuality = returnB64 ? 0.88 : 0.88;
       const imgData = canvas.toDataURL('image/jpeg', imgQuality);
       const imgFmt = 'JPEG';
       if (imgH <= 297) {

@@ -341,3 +341,33 @@
 .wiz-dot.on{background:var(--accent)}
 .wiz-dot.done{background:var(--success,#16a34a)}
 .wiz-progress{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+/* ---- EL Wizard missing styles ---- */
+.chip.large{padding:9px 18px;font-size:14px;font-weight:600}
+/* Toggle buttons (✓/✗/N/A) */
+.tog-btn{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:4px 8px;border-radius:5px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;line-height:1}
+.tog-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tog-btn.on{border-color:var(--accent);background:var(--accent-dim,rgba(59,130,246,.1));color:var(--accent)}
+.tog-btn.pass{border-color:#16a34a;background:rgba(22,163,74,.1);color:#16a34a}
+.tog-btn.fail{border-color:#dc2626;background:rgba(220,38,38,.1);color:#dc2626}
+/* Toggle tables (Purpose/Arrangement/Checklist) */
+.wiz-toggle-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:13px}
+.wiz-toggle-table thead tr th{text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:5px 6px;border-bottom:2px solid var(--border)}
+.wiz-toggle-table thead tr th:first-child{text-align:left}
+.wiz-toggle-table tbody tr td{padding:6px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.wiz-toggle-table tbody tr td:not(:first-child){text-align:center}
+.wiz-toggle-table tbody tr:last-child td{border-bottom:none}
+/* Generic wizard table */
+.wiz-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px}
+.wiz-table thead tr th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;border-bottom:2px solid var(--border)}
+.wiz-table tbody tr td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.wiz-table tbody tr td input,.wiz-table tbody tr td select{width:100%;padding:5px 7px;background:var(--surface2);border:1.5px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box}
+.wiz-table tbody tr td input:focus,.wiz-table tbody tr td select:focus{border-color:var(--accent)}
+.checklist-table tbody tr td:first-child{font-size:12px;color:var(--text);padding-right:10px}
+/* Luminaires grid */
+.lum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+/* Review grid */
+.review-grid{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.rv-row{display:grid;grid-template-columns:160px 1fr;gap:0;border-bottom:1px solid var(--border)}
+.rv-row:last-child{border-bottom:none}
+.rv-key{padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:var(--surface2);display:flex;align-items:center}
+.rv-val{padding:8px 12px;font-size:13px;color:var(--text);display:flex;align-items:center}

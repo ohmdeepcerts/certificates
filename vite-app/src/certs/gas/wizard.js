@@ -231,131 +231,184 @@ export function mgwSyncToDesktopForm() {
 export async function mgwSaveDraft() { mgwSyncToDesktopForm(); await saveGas(true); }
 export async function mgwComplete() { mgwSyncToDesktopForm(); await completeGas(); }
 
-// ── GW DRUM PICKER ────────────────────────────────────────
+// ── GW STEP+CALENDAR PICKER ────────────────────────────────
 
-function _gwDrumPickerHTML(baseId, dateStr) {
-  var parts = (dateStr || '01/01/' + new Date().getFullYear()).split('/');
-  var dd = parseInt(parts[0]) || 1, mm = parseInt(parts[1]) || 1, yyyy = parseInt(parts[2]) || new Date().getFullYear();
-  var IH = 30, VIS = 5, H = IH * VIS;
-  var days = []; for (var _d = 1; _d <= 31; _d++) days.push(String(_d).padStart(2, '0'));
-  var mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var ty = new Date().getFullYear(), years = []; for (var _y = ty - 2; _y <= ty + 3; _y++) years.push(String(_y));
-  var di = dd - 1, mi = mm - 1, yi = years.indexOf(String(yyyy)); if (yi < 0) yi = 2;
-  function col(id, items, si) {
-    var c = '<div style="flex:1;position:relative;overflow:hidden;height:' + H + 'px">';
-    c += '<div style="position:absolute;top:0;left:0;right:0;height:' + (IH * 2) + 'px;background:linear-gradient(to bottom,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
-    c += '<div style="position:absolute;bottom:0;left:0;right:0;height:' + (IH * 2) + 'px;background:linear-gradient(to top,var(--surface2) 10%,transparent);pointer-events:none;z-index:2"></div>';
-    c += '<div style="position:absolute;top:' + ((H - IH) / 2) + 'px;left:6px;right:6px;height:' + IH + 'px;background:rgba(37,99,235,.07);border-radius:6px;pointer-events:none;z-index:1"></div>';
-    c += '<div id="' + id + '" data-gw-drum="' + baseId + '" data-init-idx="' + si + '" style="height:' + H + 'px;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-snap-stop:always;-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-padding-top:' + (IH * 2) + 'px" onscroll="_gwDrumScrolled(this)" onwheel="_gwDrumWheel(event,this)">';
-    c += '<div style="height:' + (IH * 2) + 'px"></div>';
-    items.forEach(function (item, i) {
-      var isSel = i === si;
-      c += '<div data-idx="' + i + '" data-val="' + item + '" onclick="_gwDrumClickItem(this)" style="height:' + IH + 'px;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;font-size:' + (isSel ? '17' : '13') + 'px;font-weight:' + (isSel ? '700' : '400') + ';color:' + (isSel ? 'var(--accent)' : 'var(--text)') + ';user-select:none;cursor:pointer">' + item + '</div>';
-    });
-    c += '<div style="height:' + (IH * 2) + 'px"></div></div></div>';
-    return c;
+var _gwCalState = {};
+
+function _gwParseDate(dateStr) {
+  if (!dateStr || dateStr.length < 8) return null;
+  var p = dateStr.split('/'); if (p.length !== 3) return null;
+  var d = parseInt(p[0]), m = parseInt(p[1]), y = parseInt(p[2]);
+  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+  return { d: d, m0: m - 1, y: y };
+}
+
+function _gwFmtDate(d, m0, y) {
+  return String(d).padStart(2, '0') + '/' + String(m0 + 1).padStart(2, '0') + '/' + y;
+}
+
+function _gwStepCalHTML(baseId, dateStr) {
+  var p = _gwParseDate(dateStr); if (!p) { p = { d: new Date().getDate(), m0: new Date().getMonth(), y: new Date().getFullYear() }; }
+  var st = _gwCalState[baseId]; if (!st) { st = { cy: p.y, cm0: p.m0, showYear: false, ypStart: p.y - 7 }; _gwCalState[baseId] = st; }
+  var mNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var mShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var today = new Date(); today.setHours(0,0,0,0);
+  var selDate = new Date(p.y, p.m0, p.d);
+  var dayLabel = selDate.toLocaleDateString('en-GB', { weekday: 'short' });
+  var html = '<div id="' + baseId + '-scp" style="display:flex;flex-direction:column;gap:8px;max-width:340px;width:100%">';
+  html += '<div style="display:flex;align-items:center;gap:8px">'
+    + '<button type="button" onclick="_gwCalStep(\'' + baseId + '\',-1)" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>'
+    + '<div style="flex:1;text-align:center;padding:8px 6px;border:1.5px solid var(--accent);border-radius:8px;background:var(--accent-bg,rgba(185,28,28,.08))">'
+    + '<div style="font-size:28px;font-weight:700;color:var(--accent);line-height:1">' + p.d + '</div>'
+    + '<div style="font-size:11px;color:var(--accent);margin-top:2px">' + dayLabel + ', ' + mShort[p.m0] + ' ' + p.y + '</div>'
+    + '</div>'
+    + '<button type="button" onclick="_gwCalStep(\'' + baseId + '\',1)" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8250;</button>'
+    + '</div>';
+  html += '<div style="display:flex;justify-content:center">'
+    + '<button type="button" onclick="_gwCalToday(\'' + baseId + '\')" style="padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:none;font-size:11px;cursor:pointer;color:var(--muted)">Today</button>'
+    + '</div>';
+  html += '<div style="height:1px;background:var(--border)"></div>';
+  if (!st.showYear) {
+    html += '<div style="display:flex;align-items:center;gap:2px;margin-bottom:6px">'
+      + '<button type="button" onclick="_gwCalYearShift(\'' + baseId + '\',-1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#171;</button>'
+      + '<button type="button" onclick="_gwCalMonthShift(\'' + baseId + '\',-1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8249;</button>'
+      + '<button type="button" onclick="_gwCalToggleYear(\'' + baseId + '\')" style="flex:1;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;padding:2px 4px;border-radius:5px;border:none;background:none;text-align:center">'
+      + mNames[st.cm0] + ' ' + st.cy + ' ▾'
+      + '</button>'
+      + '<button type="button" onclick="_gwCalMonthShift(\'' + baseId + '\',1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8250;</button>'
+      + '<button type="button" onclick="_gwCalYearShift(\'' + baseId + '\',1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#187;</button>'
+      + '</div>';
+    var dows = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">';
+    dows.forEach(function(dow) { html += '<div style="text-align:center;font-size:10px;font-weight:600;color:var(--muted);padding-bottom:4px">' + dow + '</div>'; });
+    var firstDay = new Date(st.cy, st.cm0, 1);
+    var lastDay = new Date(st.cy, st.cm0 + 1, 0);
+    for (var blank = 0; blank < firstDay.getDay(); blank++) html += '<div></div>';
+    for (var dn = 1; dn <= lastDay.getDate(); dn++) {
+      var thisDate = new Date(st.cy, st.cm0, dn);
+      var isToday = thisDate.getTime() === today.getTime();
+      var isSel = dn === p.d && st.cm0 === p.m0 && st.cy === p.y;
+      var isoStr = st.cy + '-' + String(st.cm0 + 1).padStart(2,'0') + '-' + String(dn).padStart(2,'0');
+      var cellSty = isSel ? 'background:var(--accent);color:#fff;font-weight:700;'
+                  : isToday ? 'color:var(--accent);font-weight:700;' : 'color:var(--muted);';
+      html += '<div onclick="_gwCalPickDay(\'' + baseId + '\',\'' + isoStr + '\')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;' + cellSty + '">' + dn + '</div>';
+    }
+    html += '</div>';
+  } else {
+    var ypStart = st.ypStart;
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      + '<button type="button" onclick="_gwCalYearPageShift(\'' + baseId + '\',-1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8249;</button>'
+      + '<span style="font-size:12px;font-weight:600;color:var(--muted)">' + ypStart + ' – ' + (ypStart + 11) + '</span>'
+      + '<button type="button" onclick="_gwCalYearPageShift(\'' + baseId + '\',1)" style="background:none;border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;color:var(--muted)">&#8250;</button>'
+      + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">';
+    var curYear = new Date().getFullYear();
+    for (var yr = ypStart; yr < ypStart + 12; yr++) {
+      var isCurSel = yr === p.y, isThisYear = yr === curYear;
+      var yrSty = isCurSel ? 'background:var(--accent);color:#fff;border:1px solid transparent;'
+               : isThisYear ? 'border:1px solid var(--accent);color:var(--accent);'
+               : 'border:1px solid transparent;color:var(--muted);';
+      html += '<div onclick="_gwCalPickYear(\'' + baseId + '\',' + yr + ')" style="padding:7px 4px;text-align:center;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;' + yrSty + '">' + yr + '</div>';
+    }
+    html += '</div>';
   }
-  var html = '<div id="' + baseId + '-drum" style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)">';
-  html += col(baseId + '-dd', days, di) + '<div style="width:1px;background:var(--border)"></div>';
-  html += col(baseId + '-mm', mNames, mi) + '<div style="width:1px;background:var(--border)"></div>';
-  html += col(baseId + '-yy', years, yi) + '</div>';
+  html += '</div>';
   return html;
 }
 
-function _gwInitDrums() {
-  document.querySelectorAll('[data-gw-drum]').forEach(function (el) {
-    el.scrollTop = parseInt(el.getAttribute('data-init-idx') || '0') * 30;
-  });
-}
-
-window._gwDrumScrolled = function (el) {
-  var IH = 30, nearIdx = Math.round(el.scrollTop / IH);
-  el.querySelectorAll('[data-idx]').forEach(function (item) {
-    var isSel = parseInt(item.getAttribute('data-idx')) === nearIdx;
-    item.style.fontSize = isSel ? '17px' : '13px'; item.style.fontWeight = isSel ? '700' : '400';
-    item.style.color = isSel ? 'var(--accent)' : 'var(--text)';
-  });
-  clearTimeout(el._st); el._st = setTimeout(function () { window._gwDrumDone(el); }, 120);
-};
-
-window._gwDrumDone = function (el) {
-  var IH = 30, baseId = el.getAttribute('data-gw-drum');
-  function getColVal(sfx) {
-    var d = document.getElementById(baseId + sfx); if (!d) return null;
-    var i = Math.round(d.scrollTop / IH), found = null;
-    d.querySelectorAll('[data-idx]').forEach(function (x) { if (parseInt(x.getAttribute('data-idx')) === i) found = x; });
-    return found ? found.getAttribute('data-val') : null;
-  }
-  var ddV = getColVal('-dd'), mmV = getColVal('-mm'), yyV = getColVal('-yy'); if (!ddV || !mmV || !yyV) return;
-  var mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var dateStr = ddV + '/' + String(mNames.indexOf(mmV) + 1).padStart(2, '0') + '/' + yyV;
+function _gwCalUpdateDate(baseId, dateStr) {
   if (baseId === 'gw-cert-date') {
-    gwSet('certDate', dateStr); var nx = oneYearMinusOneDayUK(dateStr); gwSet('nextCheckDate', nx);
-    window._gwSetDrum('gw-ncd', nx);
+    gwSet('certDate', dateStr);
+    var nx = oneYearMinusOneDayUK(dateStr);
+    gwSet('nextCheckDate', nx);
+    var np = _gwParseDate(nx); var nst = _gwCalState['gw-ncd'];
+    if (np && nst) { nst.cy = np.y; nst.cm0 = np.m0; }
+    var cdp = _gwParseDate(dateStr); var cst = _gwCalState['gw-cert-date'];
+    if (cdp && cst) { cst.cy = cdp.y; cst.cm0 = cdp.m0; }
     var ex = document.getElementById('gw-expiry-display'); if (ex) ex.textContent = 'Next due: ' + nx;
     var cd = document.getElementById('gw-cert-date-display'); if (cd) cd.textContent = _gwFmtDateWithDay(dateStr);
-  } else if (baseId === 'gw-ncd') {
-    gwSet('nextCheckDate', dateStr);
-    var ex2 = document.getElementById('gw-expiry-display'); if (ex2) ex2.textContent = 'Next due: ' + dateStr;
-  }
-};
-
-window._gwSetDrum = function (baseId, dateStr) {
-  var parts = (dateStr || '').split('/'); if (parts.length !== 3) return;
-  var dd = parseInt(parts[0]) || 1, mm = parseInt(parts[1]) || 1, yyyy = parseInt(parts[2]) || new Date().getFullYear();
-  var IH = 30, ty = new Date().getFullYear(), years = []; for (var _y = ty - 2; _y <= ty + 3; _y++) years.push(String(_y));
-  var ddD = document.getElementById(baseId + '-dd'), mmD = document.getElementById(baseId + '-mm'), yyD = document.getElementById(baseId + '-yy');
-  if (ddD) ddD.scrollTop = (dd - 1) * IH; if (mmD) mmD.scrollTop = (mm - 1) * IH;
-  if (yyD) { var yi = years.indexOf(String(yyyy)); yyD.scrollTop = (yi < 0 ? 2 : yi) * IH; }
-};
-
-window._gwDrumWheel = function (e, el) {
-  e.preventDefault(); e.stopPropagation();
-  var IH = 30, dir = e.deltaY > 0 ? 1 : -1;
-  var steps = Math.max(1, Math.min(5, Math.round(Math.abs(e.deltaY) / 40)));
-  var cur = Math.round(el.scrollTop / IH);
-  var max = el.querySelectorAll('[data-idx]').length - 1;
-  var next = Math.max(0, Math.min(max, cur + dir * steps));
-  el.scrollTo({ top: next * IH, behavior: 'smooth' });
-};
-
-window._gwDrumClickItem = function (itemEl) {
-  var col = itemEl.parentElement; if (!col) return;
-  var idx = parseInt(itemEl.getAttribute('data-idx'));
-  col.scrollTo({ top: idx * 30, behavior: 'smooth' });
-};
-
-window._gwDateAdjust = function (baseId, delta) {
-  var cur = baseId === 'gw-cert-date' ? _gw.certDate : _gw.nextCheckDate;
-  var parts = (cur || '').split('/'); if (parts.length !== 3) return;
-  var d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])); if (isNaN(d.getTime())) return;
-  d.setDate(d.getDate() + delta);
-  var nd = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-  if (baseId === 'gw-cert-date') {
-    gwSet('certDate', nd); var nx = oneYearMinusOneDayUK(nd); gwSet('nextCheckDate', nx);
-    window._gwSetDrum('gw-cert-date', nd); window._gwSetDrum('gw-ncd', nx);
-    var ex = document.getElementById('gw-expiry-display'); if (ex) ex.textContent = 'Next due: ' + nx;
-    var cd = document.getElementById('gw-cert-date-display'); if (cd) cd.textContent = _gwFmtDateWithDay(nd);
+    _gwCalRedraw('gw-cert-date'); _gwCalRedraw('gw-ncd');
   } else {
-    gwSet('nextCheckDate', nd); window._gwSetDrum('gw-ncd', nd);
-    var ex2 = document.getElementById('gw-expiry-display'); if (ex2) ex2.textContent = 'Next due: ' + nd;
+    gwSet('nextCheckDate', dateStr);
+    var ndp = _gwParseDate(dateStr); var ndst = _gwCalState['gw-ncd'];
+    if (ndp && ndst) { ndst.cy = ndp.y; ndst.cm0 = ndp.m0; }
+    var ex2 = document.getElementById('gw-expiry-display'); if (ex2) ex2.textContent = 'Next due: ' + dateStr;
+    _gwCalRedraw('gw-ncd');
   }
+}
+
+function _gwCalRedraw(baseId) {
+  var wrapper = document.getElementById(baseId + '-wrap'); if (!wrapper) return;
+  var cur = baseId === 'gw-cert-date' ? _gw.certDate : _gw.nextCheckDate;
+  wrapper.innerHTML = _gwStepCalHTML(baseId, cur);
+}
+
+window._gwCalStep = function(baseId, delta) {
+  var cur = baseId === 'gw-cert-date' ? _gw.certDate : _gw.nextCheckDate;
+  var p = _gwParseDate(cur); if (!p) return;
+  var d = new Date(p.y, p.m0, p.d); d.setDate(d.getDate() + delta);
+  _gwCalUpdateDate(baseId, _gwFmtDate(d.getDate(), d.getMonth(), d.getFullYear()));
 };
 
-window._gwDateToday = function (baseId) {
-  var t = new Date(), nd = String(t.getDate()).padStart(2, '0') + '/' + String(t.getMonth() + 1).padStart(2, '0') + '/' + t.getFullYear();
-  if (baseId === 'gw-cert-date') {
-    gwSet('certDate', nd); var nx = oneYearMinusOneDayUK(nd); gwSet('nextCheckDate', nx);
-    window._gwSetDrum('gw-cert-date', nd); window._gwSetDrum('gw-ncd', nx);
-    var ex = document.getElementById('gw-expiry-display'); if (ex) ex.textContent = 'Next due: ' + nx;
-    var cd = document.getElementById('gw-cert-date-display'); if (cd) cd.textContent = _gwFmtDateWithDay(nd);
-  } else { gwSet('nextCheckDate', nd); window._gwSetDrum('gw-ncd', nd); }
+window._gwCalToday = function(baseId) {
+  var t = new Date();
+  _gwCalUpdateDate(baseId, _gwFmtDate(t.getDate(), t.getMonth(), t.getFullYear()));
 };
 
-window._gwDateSetNcd12m = function () {
+window._gwCalMonthShift = function(baseId, delta) {
+  var st = _gwCalState[baseId]; if (!st) return;
+  var d = new Date(st.cy, st.cm0 + delta, 1); st.cy = d.getFullYear(); st.cm0 = d.getMonth();
+  _gwCalRedraw(baseId);
+};
+
+window._gwCalYearShift = function(baseId, delta) {
+  var st = _gwCalState[baseId]; if (!st) return;
+  st.cy += delta; _gwCalRedraw(baseId);
+};
+
+window._gwCalToggleYear = function(baseId) {
+  var st = _gwCalState[baseId]; if (!st) return;
+  st.showYear = !st.showYear;
+  if (st.showYear) { var cur2 = baseId === 'gw-cert-date' ? _gw.certDate : _gw.nextCheckDate; var p2 = _gwParseDate(cur2); if (p2) st.ypStart = p2.y - 7; }
+  _gwCalRedraw(baseId);
+};
+
+window._gwCalYearPageShift = function(baseId, delta) {
+  var st = _gwCalState[baseId]; if (!st) return;
+  st.ypStart += delta * 12; _gwCalRedraw(baseId);
+};
+
+window._gwCalPickDay = function(baseId, isoStr) {
+  var pts = isoStr.split('-');
+  _gwCalUpdateDate(baseId, _gwFmtDate(parseInt(pts[2]), parseInt(pts[1]) - 1, parseInt(pts[0])));
+};
+
+window._gwCalPickYear = function(baseId, yr) {
+  var st = _gwCalState[baseId]; if (!st) return;
+  var cur3 = baseId === 'gw-cert-date' ? _gw.certDate : _gw.nextCheckDate;
+  var p3 = _gwParseDate(cur3);
+  st.showYear = false;
+  if (p3) { var maxDay = new Date(yr, p3.m0 + 1, 0).getDate(); st.cy = yr; _gwCalUpdateDate(baseId, _gwFmtDate(Math.min(p3.d, maxDay), p3.m0, yr)); }
+  else { st.cy = yr; _gwCalRedraw(baseId); }
+};
+
+window._gwSetDrum = function(baseId, dateStr) {
+  var p = _gwParseDate(dateStr); if (!p) return;
+  var st = _gwCalState[baseId]; if (st) { st.cy = p.y; st.cm0 = p.m0; }
+  _gwCalRedraw(baseId);
+};
+
+window._gwDateAdjust = function(baseId, delta) { window._gwCalStep(baseId, delta); };
+
+window._gwDateToday = function(baseId) { window._gwCalToday(baseId); };
+
+window._gwDateSetNcd12m = function() {
   var cd = _gw.certDate; if (!cd || cd.length !== 10) return;
-  var nx = oneYearMinusOneDayUK(cd); gwSet('nextCheckDate', nx); window._gwSetDrum('gw-ncd', nx);
+  var nx = oneYearMinusOneDayUK(cd); gwSet('nextCheckDate', nx);
+  var np = _gwParseDate(nx); var st = _gwCalState['gw-ncd'];
+  if (np && st) { st.cy = np.y; st.cm0 = np.m0; st.showYear = false; }
   var ex = document.getElementById('gw-expiry-display'); if (ex) ex.textContent = 'Next due: ' + nx;
+  _gwCalRedraw('gw-ncd');
 };
 
 function _gwFmtDateWithDay(dateStr) {
@@ -453,24 +506,27 @@ export function gwRender() {
     + '<div style="height:4px;border-radius:2px;background:var(--accent,#b91c1c);width:' + pct + '%;transition:width .3s"></div></div>'
     + '<div style="font-size:11px;color:var(--muted);margin-bottom:18px">Step ' + (s + 1) + ' of ' + total + ' — ' + _GW_STEPS[s] + '</div>';
   if (s === 0) {
+    var _cdP0 = _gwParseDate(_gw.certDate);
+    _gwCalState['gw-cert-date'] = { cy: _cdP0 ? _cdP0.y : new Date().getFullYear(), cm0: _cdP0 ? _cdP0.m0 : new Date().getMonth(), showYear: false, ypStart: (_cdP0 ? _cdP0.y : new Date().getFullYear()) - 7 };
+    var _ncdP0 = _gwParseDate(_gw.nextCheckDate);
+    _gwCalState['gw-ncd'] = { cy: _ncdP0 ? _ncdP0.y : new Date().getFullYear(), cm0: _ncdP0 ? _ncdP0.m0 : new Date().getMonth(), showYear: false, ypStart: (_ncdP0 ? _ncdP0.y : new Date().getFullYear()) - 7 };
     html += '<div class="elwiz-q">Certificate dates</div>'
       + '<div class="elwiz-sub">When was the inspection carried out?</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:270px">'
       + '<label class="elwiz-input-label">Date of inspection</label>'
-      + '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
-      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateToday(\'gw-cert-date\')" style="padding:5px 11px;font-size:12px">Today</button>'
-      + '<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-cert-date\',-1)" style="padding:5px 11px;font-size:12px">← Prev</button>'
-      + '<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-cert-date\',1)" style="padding:5px 11px;font-size:12px">Next →</button>'
-      + '</div>'
-      + _gwDrumPickerHTML('gw-cert-date', _gw.certDate)
+      + '<div id="gw-cert-date-wrap">' + _gwStepCalHTML('gw-cert-date', _gw.certDate) + '</div>'
       + '<div id="gw-cert-date-display" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:6px;padding:5px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">' + _gwFmtDateWithDay(_gw.certDate) + '</div>'
-      + '<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:4px;margin-bottom:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: ' + esc(_gw.nextCheckDate) + '</div>'
-      + '<label class="elwiz-input-label">Next inspection due</label>'
-      + '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'
-      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:5px 11px;font-size:12px">12 months</button>'
-      + '<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-ncd\',-1)" style="padding:5px 11px;font-size:12px">← Prev</button>'
-      + '<button type="button" class="elwiz-chip" onclick="_gwDateAdjust(\'gw-ncd\',1)" style="padding:5px 11px;font-size:12px">Next →</button>'
       + '</div>'
-      + _gwDrumPickerHTML('gw-ncd', _gw.nextCheckDate);
+      + '<div style="flex:1;min-width:270px">'
+      + '<label class="elwiz-input-label">Next inspection due</label>'
+      + '<div style="display:flex;gap:6px;margin-bottom:8px">'
+      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:5px 11px;font-size:12px">&#8635; 12 months</button>'
+      + '</div>'
+      + '<div id="gw-ncd-wrap">' + _gwStepCalHTML('gw-ncd', _gw.nextCheckDate) + '</div>'
+      + '<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: ' + esc(_gw.nextCheckDate) + '</div>'
+      + '</div>'
+      + '</div>';
   } else if (s === 1) {
     html += '<div class="elwiz-q">Installation address</div>'
       + '<div class="elwiz-sub">Start typing in Address line 1 to search the Directory, or enter manually.</div>'
@@ -598,7 +654,6 @@ export function gwRender() {
   }
   html += '</div>';
   body.innerHTML = html;
-  if (s === 0) setTimeout(_gwInitDrums, 0);
   var wiz = document.getElementById('mobile-gas-wizard');
   if (wiz) wiz.scrollTop = 0;
   gwAttachAC();

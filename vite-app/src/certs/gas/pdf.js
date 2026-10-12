@@ -368,7 +368,7 @@ export async function _buildCP12PdfFromHTML(returnB64 = false) {
       const appNumSnaps = [];
       livePage.querySelectorAll('input.appliance-number-input').forEach(inp => { appNumSnaps.push({ value: inp.value, snap: _snapEl(inp) }); });
       const canvas = await window.html2canvas(livePage, {
-        scale: 3, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
+        scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
         logging: false, imageTimeout: 5000,
         onclone: (clonedDoc, clonedEl) => {
           Object.entries(ccSnap).forEach(([grp, snap]) => {
@@ -413,7 +413,7 @@ export async function _buildCP12PdfFromHTML(returnB64 = false) {
           });
         }
       });
-      const q = returnB64 ? 0.88 : 0.97;
+      const q = returnB64 ? 0.88 : 0.92;
       doc.addImage(canvas.toDataURL('image/jpeg', q), 'JPEG', 0, 0, 297, 210);
     }
   } finally {

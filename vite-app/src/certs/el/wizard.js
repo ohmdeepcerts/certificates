@@ -129,10 +129,10 @@ export function elRenderStep() {
   } else if (s === 1) {
     html += `<h2 class="wiz-title">Premises Details</h2>`;
     html += `<div class="wiz-field"><label>Premises Name</label><input value="${esc(_w.premisesName)}" oninput="elSet('premisesName',this.value)" placeholder="e.g. The Crown Hotel"></div>`;
-    html += `<div class="wiz-field"><label>Address Line 1</label><input value="${esc(_w.premAddr1)}" oninput="elSet('premAddr1',this.value);elUpdateSubtitle()" placeholder="House no. & street"></div>`;
+    html += `<div class="wiz-field"><label>Address Line 1 <span style="color:#dc2626">*</span></label><input id="el-prem-a1" value="${esc(_w.premAddr1)}" oninput="elSet('premAddr1',this.value);elUpdateSubtitle()" placeholder="House no. & street"></div>`;
     html += `<div class="wiz-field"><label>Address Line 2</label><input value="${esc(_w.premAddr2)}" oninput="elSet('premAddr2',this.value)" placeholder="District / area (optional)"></div>`;
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.premAddr3)}" oninput="elSet('premAddr3',this.value)" placeholder="Town or city"></div>`;
-    html += `<div class="wiz-field"><label>Postcode</label><input value="${esc(_w.premPostcode)}" oninput="elSet('premPostcode',this.value);elUpdateSubtitle()" placeholder="e.g. SW1A 1AA" style="max-width:140px"></div>`;
+    html += `<div class="wiz-field"><label>Postcode <span style="color:#dc2626">*</span></label><input value="${esc(_w.premPostcode)}" oninput="elSet('premPostcode',this.value);elUpdateSubtitle()" placeholder="e.g. SW1A 1AA" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Property Type</label><div class="chip-row">`;
     var showTypes = _w._ptShowMore ? PREMISES_TYPES : PREMISES_TYPES.slice(0,6);
     showTypes.forEach(pt => { html += `<button class="chip${_w.premisesType===pt?' on':''}" onclick="elPickPremType('${esc(pt)}')">${esc(pt)}</button>`; });
@@ -151,10 +151,10 @@ export function elRenderStep() {
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
     allClientTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="elSet('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `<button class="chip" onclick="elSaveClientType()">+ Custom</button></div></div>`;
-    html += `<div class="wiz-field"><label>Client Address Line 1</label><input value="${esc(_w.clientAddr1)}" oninput="elSet('clientAddr1',this.value)" placeholder="(if different from premises)"></div>`;
+    html += `<div class="wiz-field"><label>Client Address Line 1 <span style="color:#dc2626">*</span></label><input id="el-client-a1" value="${esc(_w.clientAddr1)}" oninput="elSet('clientAddr1',this.value)" placeholder="Address line 1"></div>`;
     html += `<div class="wiz-field"><label>Address Line 2</label><input value="${esc(_w.clientAddr2)}" oninput="elSet('clientAddr2',this.value)"></div>`;
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.clientAddr3)}" oninput="elSet('clientAddr3',this.value)"></div>`;
-    html += `<div class="wiz-field"><label>Postcode</label><input value="${esc(_w.clientPostcode)}" oninput="elSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
+    html += `<div class="wiz-field"><label>Postcode <span style="color:#dc2626">*</span></label><input value="${esc(_w.clientPostcode)}" oninput="elSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Client Email (for auto-send)</label><input type="email" value="${esc(_w.clientEmail)}" oninput="elSet('clientEmail',this.value)" placeholder="client@example.com"></div>`;
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary">Next →</button></div>`;
 
@@ -377,20 +377,46 @@ export function elRenderStep() {
 
   // Address autocomplete on premises step (step 1) and client step (step 2)
   if (s === 1) {
-    const _a1 = el.querySelector('input[placeholder="House no. & street"]');
+    // Lazy-load directory properties so localSuggest and elPickFromDirectory have data
+    if (!_dir.properties) {
+      window.dirLoad?.('properties').then(data => { if (data) _dir.properties = data; });
+    }
+    const _a1 = el.querySelector('#el-prem-a1');
     if (_a1) attachAddressAutocomplete(_a1, {
       onSelect(a) {
-        _w.premAddr1  = a.line1;
-        _w.premAddr2  = [a.line2, a.line3].filter(Boolean).join(', ');
-        _w.premAddr3  = a.town;
+        _w.premAddr1    = a.line1;
+        _w.premAddr2    = [a.line2, a.line3].filter(Boolean).join(', ');
+        _w.premAddr3    = a.town;
         _w.premPostcode = a.postcode;
         _elDirty = true;
         elRenderStep();
+      },
+      localSuggest(q) {
+        const props = _dir.properties;
+        if (!props || !props.length) return [];
+        const lq = q.toLowerCase();
+        return props
+          .filter(p => (p.addr1 || '').toLowerCase().includes(lq) || (p.name || '').toLowerCase().includes(lq))
+          .slice(0, 6)
+          .map(p => ({
+            label: `<strong>${esc(p.addr1 || '')}</strong>${p.name ? ' &mdash; <span style="color:var(--muted,#6b7280)">' + esc(p.name) + '</span>' : ''}${p.postcode ? ' <span style="color:var(--muted,#6b7280)">(' + esc(p.postcode) + ')</span>' : ''}`,
+            onPick() {
+              _w.premisesName  = p.name    || _w.premisesName;
+              _w.premAddr1     = p.addr1   || p.address || '';
+              _w.premAddr2     = p.addr2   || '';
+              _w.premAddr3     = p.addr3   || p.town    || '';
+              _w.premPostcode  = p.postcode || '';
+              if (p.type) _w.premisesType = p.type;
+              _elDirty = true;
+              elRenderStep();
+              elUpdateSubtitle();
+            }
+          }));
       }
     });
   }
   if (s === 2) {
-    const _ca1 = el.querySelector('input[placeholder="(if different from premises)"]');
+    const _ca1 = el.querySelector('#el-client-a1');
     if (_ca1) attachAddressAutocomplete(_ca1, {
       onSelect(a) {
         _w.clientAddr1   = a.line1;
@@ -410,8 +436,15 @@ export function elSet(key, val) {
 }
 
 export function elPickFromDirectory() {
+  if (!_dir.properties) {
+    window.dirLoad?.('properties').then(data => {
+      if (data) { _dir.properties = data; elPickFromDirectory(); }
+      else toast('Property directory is empty. Add properties in Settings → Directory.', 'info');
+    });
+    return;
+  }
   var props = _dir.properties;
-  if (!props || !props.length) {
+  if (!props.length) {
     toast('Property directory is empty. Add properties in Settings → Directory.', 'info'); return;
   }
   var items = props.map((p,i) => `<div class="dir-item" onclick="window._elDirPick(${i})" style="padding:10px;cursor:pointer;border-bottom:1px solid var(--border)">${esc(p.address||p.name||'')}</div>`).join('');
@@ -560,7 +593,10 @@ export function elNext() {
     if (!(_w.premAddr1||'').trim()) { toast('Address Line 1 is required','error'); return; }
     if (!(_w.premPostcode||'').trim()) { toast('Postcode is required','error'); return; }
   }
-  if (s === 2 && !(_w.clientName||'').trim()) { toast('Client name is required','error'); return; }
+  if (s === 2) {
+    if (!(_w.clientAddr1||'').trim()) { toast('Client address line 1 is required','error'); return; }
+    if (!(_w.clientPostcode||'').trim()) { toast('Client postcode is required','error'); return; }
+  }
   if (s === 3 && !_w.systemType) { toast('Please select a system type','error'); return; }
   if (s === 7) {
     var lumRows = Array.isArray(_w.lumRows) ? _w.lumRows : [];
@@ -574,6 +610,12 @@ export function elNext() {
   var nextStep = s + 1;
   if (nextStep === 12 && _w.engineerName && _w.niceicNo) { nextStep = 13; }
   if (nextStep >= STEPS.length) { elSave(); return; }
+  if (nextStep === 2 && !(_w.clientAddr1 || '').trim()) {
+    _w.clientAddr1    = _w.premAddr1    || '';
+    _w.clientAddr2    = _w.premAddr2    || '';
+    _w.clientAddr3    = _w.premAddr3    || '';
+    _w.clientPostcode = _w.premPostcode || '';
+  }
   _w.step = nextStep; elRenderStep();
 }
 
@@ -1471,6 +1513,7 @@ export function renderELList(certs, page, q) {
           +'<div class="pat-card-btns">'
             +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();elEditCert(\''+r.id+'\')'):'')
             +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
+            +_ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
             +_ibtn('Email','fa-envelope','event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
             +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true):'')
           +'</div>'
@@ -1504,9 +1547,29 @@ async function elGeneratePDF(rec, returnBlob) {
   if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
     throw new Error('jsPDF not loaded');
   }
+  // html2canvas draws text via the MAIN document's Canvas 2D context, so the
+  // font must be loaded in the main document — loading it only in the iframe
+  // has no effect on what html2canvas can render.
+  var _gfId = '_el-cert-gf';
+  if (!document.getElementById(_gfId)) {
+    var _gfl = document.createElement('link');
+    _gfl.id = _gfId;
+    _gfl.rel = 'stylesheet';
+    _gfl.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap';
+    document.head.appendChild(_gfl);
+  }
+  try {
+    var _mainFontLink = document.getElementById(_gfId);
+    await new Promise(function(res) {
+      if (_mainFontLink.sheet) { res(); return; }
+      _mainFontLink.addEventListener('load', res, {once:true});
+      _mainFontLink.addEventListener('error', res, {once:true});
+      setTimeout(res, 5000);
+    });
+    await document.fonts.ready;
+  } catch(e) {}
+
   var certHtml = elBuildCertHTML(rec);
-  // Render in a hidden iframe so the full HTML document (head/style/body) is
-  // parsed correctly — same approach as elOpenCert but off-screen.
   var iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;height:6000px;border:none;';
   document.body.appendChild(iframe);
@@ -1514,8 +1577,7 @@ async function elGeneratePDF(rec, returnBlob) {
     iframe.addEventListener('load', resolve, {once:true});
     iframe.srcdoc = certHtml;
   });
-  // Give layout and any inline resources a moment to settle
-  await new Promise(function(res) { setTimeout(res, 250); });
+  await new Promise(function(res) { setTimeout(res, 200); });
   try {
     var iDoc = iframe.contentDocument || iframe.contentWindow.document;
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
@@ -1525,10 +1587,10 @@ async function elGeneratePDF(rec, returnBlob) {
     for (var i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage();
       var canvas = await html2canvas(pages[i], {
-        scale:2, useCORS:true, allowTaint:true, backgroundColor:'#ffffff',
+        scale:1.5, useCORS:true, allowTaint:true, backgroundColor:'#ffffff',
         logging:false, windowWidth:794, scrollX:0, scrollY:0
       });
-      var imgData = canvas.toDataURL('image/jpeg', 0.92);
+      var imgData = canvas.toDataURL('image/jpeg', 0.82);
       pdf.addImage(imgData,'JPEG',0,0,210,297);
     }
     document.body.removeChild(iframe);
