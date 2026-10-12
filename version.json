@@ -1,9 +1,9 @@
 {
-  "v": "1.1.0",
-  "build": 10,
+  "v": "1.1.1",
+  "build": 11,
   "changes": [
-    "Gas wizard now searches your property directory",
-    "Type in Address line 1 to see saved properties",
-    "Picks fill address, town and postcode automatically"
+    "Gas cert date pickers now pixel-perfectly aligned",
+    "Gas wizard property directory search",
+    "Update banner centred and theme-matched"
   ]
 }
