@@ -192,6 +192,7 @@
         <div class="user-info"><div class="user-name" id="user-name-display">Loading…</div><div class="user-role" id="user-role-display">engineer</div></div>
         <button class="btn-logout" onclick="doLogout()" title="Sign out">⏻</button>
       </div>
+      <div id="app-version-badge" style="text-align:center;font-size:10px;color:var(--muted,#888);padding:4px 0 2px;letter-spacing:.5px;opacity:.7;"></div>
     </div>
   </nav>
   <button id="sidebar-expand-btn" onclick="toggleDesktopSidebar()" title="Expand sidebar">›</button>
@@ -700,7 +701,7 @@
 
     <!-- GAS HISTORY -->
     <div class="view" id="view-gas-history">
-      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportGasCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="navigate('gas-new')">+ New Gas</button></div></div>
+      <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportGasCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewGas()">+ New Gas</button></div></div>
       <div class="list-controls">
         <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
         <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
