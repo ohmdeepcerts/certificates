@@ -478,6 +478,12 @@ var _GW_PIPE_LABELS = ['Gas Tightness Test', 'Standing / Working Pressure', 'Vis
 var _GW_PIPE_FIELDS = ['pipe_gas_tight', 'pipe_pressure', 'pipe_visual', 'pipe_meter', 'pipe_emergency'];
 var _GW_FLUE = ['RS', 'FL'];
 
+export function gwPreloadDir() {
+  if (!_gwDir.properties) {
+    window.dirLoad?.('properties').then(function(data) { if (data) _gwDir.properties = data; });
+  }
+}
+
 export function gwInitState() {
   var t = new Date();
   var dd = String(t.getDate()).padStart(2, '0'), mm = String(t.getMonth() + 1).padStart(2, '0'), yyyy = t.getFullYear();
@@ -667,18 +673,20 @@ export function gwRender() {
 export function gwAttachAC() {
   if (_gw.step === 1) {
     var ia = document.getElementById('gw-install-a1');
-    if (!_gwDir.properties) {
-      window.dirLoad?.('properties').then(function(data) { if (data) _gwDir.properties = data; });
-    }
-    if (ia && typeof attachDirAC === 'function') attachDirAC(ia, 'properties', _gwFillProperty); // still global
     if (ia) attachAddressAutocomplete(ia, {
+      minChars: 2,
+      localAlwaysSearch: true,
       localSuggest: function(q) {
         var props = _gwDir.properties || [];
         if (!props.length) return [];
         var lq = q.toLowerCase();
         var _e = function(v) { return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
         return props
-          .filter(function(p) { return (p.addr1 || '').toLowerCase().includes(lq) || (p.name || '').toLowerCase().includes(lq); })
+          .filter(function(p) {
+            return (p.addr1 || '').toLowerCase().includes(lq)
+              || (p.name || '').toLowerCase().includes(lq)
+              || (p.postcode || '').toLowerCase().includes(lq);
+          })
           .slice(0, 6)
           .map(function(p) { return {
             label: '<strong>' + _e(p.addr1 || '') + '</strong>'

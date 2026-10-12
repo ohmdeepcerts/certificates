@@ -17,11 +17,14 @@ function _injectCSS() {
 .aac-drop{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:9999;
   background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);
   border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.14);
-  max-height:220px;overflow-y:auto;font-size:13px;line-height:1.4}
+  max-height:260px;overflow-y:auto;font-size:13px;line-height:1.4}
 .aac-item{padding:8px 12px;cursor:pointer;color:var(--fg,#111);
   border-bottom:1px solid var(--border,#f3f4f6)}
 .aac-item:last-child{border-bottom:none}
 .aac-item:hover,.aac-item.aac-hi{background:var(--surface2,#f3f4f6)}
+.aac-section{padding:4px 12px 2px;font-size:10px;font-weight:700;
+  color:var(--hint,#9ca3af);text-transform:uppercase;letter-spacing:.5px;
+  background:var(--surface,#fff);border-bottom:1px solid var(--border,#f3f4f6)}
 .aac-msg{padding:8px 12px;color:var(--muted,#6b7280);font-style:italic}
 `;
   document.head.appendChild(s);
@@ -49,12 +52,12 @@ async function _resolve(id, key) {
 
 // Attach address autocomplete to an input or textarea.
 //
-// opts.onSelect(addr)    — called with { line1, line2, line3, town, county, postcode }
-//                          when user picks an address; if omitted, fills inputEl as multi-line text
-// opts.minChars          — minimum characters before searching (default 3)
-// opts.debounce          — milliseconds to debounce keystrokes (default 350)
-// opts.localSuggest(q)   — optional fn returning [{label, onPick}] for local/directory results;
-//                          if it returns a non-empty array the API call is skipped entirely
+// opts.onSelect(addr)       — called with { line1, line2, line3, town, county, postcode }
+// opts.minChars             — minimum characters before searching (default 3)
+// opts.debounce             — milliseconds to debounce API call (default 350)
+// opts.localSuggest(q)      — optional fn returning [{label, onPick}] for directory results
+// opts.localAlwaysSearch    — when true, show directory results AND also fire API; when false
+//                             (default), directory results skip the API entirely (legacy behaviour)
 //
 // Safe to call multiple times on the same element — guards against double-attach.
 export function attachAddressAutocomplete(inputEl, opts = {}) {
@@ -62,9 +65,8 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
   inputEl._aacAttached = true;
   _injectCSS();
 
-  const { onSelect, minChars = 3, debounce = 350, localSuggest } = opts;
+  const { onSelect, minChars = 3, debounce = 350, localSuggest, localAlwaysSearch = false } = opts;
 
-  // Wrap the input in a relative container for dropdown positioning
   const parent = inputEl.parentNode;
   const wrap = document.createElement('div');
   wrap.className = 'aac-wrap';
@@ -76,17 +78,26 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
   drop.style.display = 'none';
   wrap.appendChild(drop);
 
-  let _timer, _hits = [], _hi = -1;
+  let _timer, _hits = [], _localItems = [], _hi = -1;
 
-  const _close = () => { drop.style.display = 'none'; _hits = []; _hi = -1; };
+  const _close = () => { drop.style.display = 'none'; _hits = []; _localItems = []; _hi = -1; };
 
-  const _highlight = i => {
-    _hi = i;
-    drop.querySelectorAll('.aac-item').forEach((el, j) => el.classList.toggle('aac-hi', j === i));
-    if (i >= 0) drop.querySelectorAll('.aac-item')[i]?.scrollIntoView({ block: 'nearest' });
+  // Build combined item list for keyboard nav: [{type:'local'|'api', idx}]
+  const _navItems = () => {
+    const out = [];
+    _localItems.forEach((_, i) => out.push({ type: 'local', idx: i }));
+    _hits.forEach((_, i) => out.push({ type: 'api', idx: i }));
+    return out;
   };
 
-  const _pick = async hit => {
+  const _highlight = i => {
+    const all = drop.querySelectorAll('.aac-item');
+    _hi = i;
+    all.forEach((el, j) => el.classList.toggle('aac-hi', j === i));
+    if (i >= 0) all[i]?.scrollIntoView({ block: 'nearest' });
+  };
+
+  const _pickApi = async hit => {
     _close();
     const key = getSetting('ideal_postcodes_key', '');
     const addr = await _resolve(hit.id, key);
@@ -102,9 +113,41 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
     if (onSelect) {
       onSelect(out);
     } else {
-      // Default: fill textarea with address lines joined by newline
       inputEl.value = [out.line1, out.line2, out.line3, out.town].filter(Boolean).join('\n');
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  };
+
+  const _renderDrop = (local, apiHits, apiLoading) => {
+    let html = '';
+    if (local && local.length) {
+      html += '<div class="aac-section">&#128193; Your directory</div>';
+      html += local.map((item, i) =>
+        `<div class="aac-item aac-local" data-li="${i}">${item.label}</div>`
+      ).join('');
+    }
+    if (apiLoading) {
+      html += `<div class="aac-section">&#128205; Addresses</div><div class="aac-msg">Searching…</div>`;
+    } else if (apiHits && apiHits.length) {
+      html += '<div class="aac-section">&#128205; Addresses</div>';
+      html += apiHits.map((h, i) =>
+        `<div class="aac-item aac-api" data-ai="${i}">${h.suggestion}</div>`
+      ).join('');
+    }
+    drop.innerHTML = html || '<div class="aac-msg">No results</div>';
+    drop.style.display = 'block';
+
+    // Bind local picks
+    if (local && local.length) {
+      drop.querySelectorAll('.aac-local').forEach(el =>
+        el.addEventListener('mousedown', e => { e.preventDefault(); _close(); local[+el.dataset.li].onPick(); })
+      );
+    }
+    // Bind API picks
+    if (apiHits && apiHits.length) {
+      drop.querySelectorAll('.aac-api').forEach(el =>
+        el.addEventListener('mousedown', e => { e.preventDefault(); _pickApi(apiHits[+el.dataset.ai]); })
+      );
     }
   };
 
@@ -113,50 +156,56 @@ export function attachAddressAutocomplete(inputEl, opts = {}) {
     const q = inputEl.value.trim();
     if (q.length < minChars) { _close(); return; }
 
-    // Check local/directory suggestions first — skips API call if matches found
-    if (localSuggest) {
-      const local = localSuggest(q);
-      if (local && local.length) {
-        _hits = []; _hi = -1;
-        drop.innerHTML = local.map((item, i) =>
-          `<div class="aac-item" data-i="${i}">${item.label}</div>`
-        ).join('');
-        drop.style.display = 'block';
-        drop.querySelectorAll('.aac-item').forEach(el =>
-          el.addEventListener('mousedown', e => { e.preventDefault(); _close(); local[+el.dataset.i].onPick(); })
-        );
-        return;
-      }
+    const local = localSuggest ? localSuggest(q) : null;
+
+    // Legacy mode: local results skip the API entirely
+    if (!localAlwaysSearch && local && local.length) {
+      _hits = []; _localItems = local; _hi = -1;
+      drop.innerHTML = local.map((item, i) =>
+        `<div class="aac-item" data-i="${i}">${item.label}</div>`
+      ).join('');
+      drop.style.display = 'block';
+      drop.querySelectorAll('.aac-item').forEach(el =>
+        el.addEventListener('mousedown', e => { e.preventDefault(); _close(); local[+el.dataset.i].onPick(); })
+      );
+      return;
     }
 
+    // Combined mode (localAlwaysSearch: true) — show local now, fire API in background
     const key = getSetting('ideal_postcodes_key', '');
-    if (!key) {
+
+    if (!key && (!local || !local.length)) {
       drop.innerHTML = '<div class="aac-msg">Add Ideal Postcodes key in Settings → Integrations</div>';
       drop.style.display = 'block';
       return;
     }
 
-    drop.innerHTML = '<div class="aac-msg">Searching…</div>';
-    drop.style.display = 'block';
+    _localItems = local || [];
+    _hits = [];
+    _renderDrop(local, null, !!key);
+
+    if (!key) return;
 
     _timer = setTimeout(async () => {
       const hits = await _suggest(q, key);
-      if (!hits.length) { drop.innerHTML = '<div class="aac-msg">No addresses found</div>'; return; }
-      _hits = hits; _hi = -1;
-      drop.innerHTML = hits.map((h, i) => `<div class="aac-item" data-i="${i}">${h.suggestion}</div>`).join('');
-      drop.style.display = 'block';
-      drop.querySelectorAll('.aac-item').forEach(el =>
-        el.addEventListener('mousedown', e => { e.preventDefault(); _pick(hits[+el.dataset.i]); })
-      );
+      _hits = hits;
+      _renderDrop(local, hits, false);
     }, debounce);
   });
 
   inputEl.addEventListener('keydown', e => {
     if (drop.style.display === 'none') return;
-    if      (e.key === 'ArrowDown')              { e.preventDefault(); _highlight(Math.min(_hi + 1, _hits.length - 1)); }
-    else if (e.key === 'ArrowUp')                { e.preventDefault(); _highlight(Math.max(_hi - 1, 0)); }
-    else if (e.key === 'Enter' && _hi >= 0)      { e.preventDefault(); _pick(_hits[_hi]); }
-    else if (e.key === 'Escape')                 { _close(); }
+    const all = drop.querySelectorAll('.aac-item');
+    const total = all.length;
+    if (!total) return;
+    if (e.key === 'ArrowDown')  { e.preventDefault(); _highlight(Math.min(_hi + 1, total - 1)); }
+    else if (e.key === 'ArrowUp')   { e.preventDefault(); _highlight(Math.max(_hi - 1, 0)); }
+    else if (e.key === 'Enter' && _hi >= 0) {
+      e.preventDefault();
+      const el = all[_hi];
+      if (el) el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    }
+    else if (e.key === 'Escape') { _close(); }
   });
 
   inputEl.addEventListener('blur', () => setTimeout(_close, 200));

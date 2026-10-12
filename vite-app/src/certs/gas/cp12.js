@@ -10,7 +10,7 @@ import { buildCertRefSeq, _refSettings, _pcScore, _refAddrPart, _extractPC } fro
 import { navigate } from '../../nav/navigation.js';
 // Circular-safe: wizard.js imports { saveGas, completeGas, setCP12Field, toggleCP12AppRow } from here.
 // These imports are used only inside function bodies — never at module init time.
-import { gwRender, gwInitState, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive } from './wizard.js';
+import { gwRender, gwInitState, gwPreloadDir, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive } from './wizard.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { doGasPreview, _applyCP12Zoom } from './preview.js';
 import { emailGas } from './history.js';
@@ -443,6 +443,7 @@ export function newGasCert() {
   if (wizard && wrap) {
     wrap.style.display = 'none';
     gwInitState();
+    gwPreloadDir();
     wizard.hidden = false;
     gwRender();
   }
