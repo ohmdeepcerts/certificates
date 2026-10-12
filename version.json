@@ -1,11 +1,9 @@
 {
-  "v": "1.0.4",
-  "build": 4,
+  "v": "1.0.5",
+  "build": 5,
   "changes": [
-    "Directory + Add New button fixed",
-    "PAT history search & sort working",
-    "PAT autosave restore banner fixed",
-    "Version number shown in sidebar",
-    "Update notification redesigned"
+    "Gas cert date picker redesigned",
+    "Day stepper + calendar with year jump",
+    "Tap month title to open year grid picker"
   ]
 }
