@@ -1,9 +1,9 @@
 {
-  "v": "1.0.9",
-  "build": 9,
+  "v": "1.1.0",
+  "build": 10,
   "changes": [
-    "Gas cert date pickers now vertically aligned",
-    "12-months chip moved inline with label",
-    "Update notification centred and theme-matched"
+    "Gas wizard now searches your property directory",
+    "Type in Address line 1 to see saved properties",
+    "Picks fill address, town and postcode automatically"
   ]
 }

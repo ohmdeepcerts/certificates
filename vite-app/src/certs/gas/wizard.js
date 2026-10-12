@@ -470,6 +470,7 @@ function _gwFillAppliance(i, rec) {
 
 // _gw is module-level, not exported (internal to wizard)
 var _gw = {};
+var _gwDir = { properties: null };
 var _GW_STEPS = ['Dates', 'Property', 'Landlord', 'Appliances', 'Work & Defects', 'Review'];
 var _GW_PIPE_LABELS = ['Gas Tightness Test', 'Standing / Working Pressure', 'Visual Inspection of Installation', 'Meter / Governor Condition', 'Emergency Control Valve Accessible'];
 var _GW_PIPE_FIELDS = ['pipe_gas_tight', 'pipe_pressure', 'pipe_visual', 'pipe_meter', 'pipe_emergency'];
@@ -519,9 +520,9 @@ export function gwRender() {
       + '<div id="gw-cert-date-display" style="font-size:12px;font-weight:600;color:var(--accent);margin-top:6px;padding:5px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">' + _gwFmtDateWithDay(_gw.certDate) + '</div>'
       + '</div>'
       + '<div style="flex:1;min-width:270px">'
-      + '<label class="elwiz-input-label">Next inspection due</label>'
-      + '<div style="display:flex;gap:6px;margin-bottom:8px">'
-      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:5px 11px;font-size:12px">&#8635; 12 months</button>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      + '<label class="elwiz-input-label" style="margin-bottom:0">Next inspection due</label>'
+      + '<button type="button" class="elwiz-chip sel" onclick="_gwDateSetNcd12m()" style="padding:4px 10px;font-size:11px">&#8635; 12 months</button>'
       + '</div>'
       + '<div id="gw-ncd-wrap">' + _gwStepCalHTML('gw-ncd', _gw.nextCheckDate) + '</div>'
       + '<div id="gw-expiry-display" style="font-size:12px;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">Next due: ' + esc(_gw.nextCheckDate) + '</div>'
@@ -662,8 +663,26 @@ export function gwRender() {
 export function gwAttachAC() {
   if (_gw.step === 1) {
     var ia = document.getElementById('gw-install-a1');
+    if (!_gwDir.properties) {
+      window.dirLoad?.('properties').then(function(data) { if (data) _gwDir.properties = data; });
+    }
     if (ia && typeof attachDirAC === 'function') attachDirAC(ia, 'properties', _gwFillProperty); // still global
     if (ia) attachAddressAutocomplete(ia, {
+      localSuggest: function(q) {
+        var props = _gwDir.properties || [];
+        if (!props.length) return [];
+        var lq = q.toLowerCase();
+        var _e = function(v) { return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+        return props
+          .filter(function(p) { return (p.addr1 || '').toLowerCase().includes(lq) || (p.name || '').toLowerCase().includes(lq); })
+          .slice(0, 6)
+          .map(function(p) { return {
+            label: '<strong>' + _e(p.addr1 || '') + '</strong>'
+              + (p.name ? ' &mdash; <span style="color:var(--muted)">' + _e(p.name) + '</span>' : '')
+              + (p.postcode ? ' <span style="color:var(--muted)">(' + _e(p.postcode) + ')</span>' : ''),
+            onPick: function() { _gwFillProperty(p); gwRender(); }
+          }; });
+      },
       onSelect: function(a) {
         gwSet('installAddr1', a.line1);
         gwSet('installAddr2', [a.line2, a.line3].filter(Boolean).join(', '));
