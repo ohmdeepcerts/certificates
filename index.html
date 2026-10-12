@@ -1677,29 +1677,41 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
 
       var stored = sessionStorage.getItem(STORAGE_KEY);
       if (!stored) { sessionStorage.setItem(STORAGE_KEY, sig); return; }
-      if (sig !== stored && !_notified) { _notified = true; showBanner(); }
+      if (sig !== stored && !_notified) { _notified = true; showBanner(data.changes, data.v); }
     } catch(e) {}
   }
 
-  function showBanner() {
+  function showBanner(changes, ver) {
     if (document.getElementById('_updateBanner')) return;
+    var esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    var changesList = '';
+    if (changes && changes.length) {
+      changesList = '<ul style="margin:6px 0 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px 12px;">' +
+        changes.map(function(c){ return '<li style="font-size:11px;font-weight:400;opacity:.92;">✓ ' + esc(c) + '</li>'; }).join('') +
+        '</ul>';
+    }
     var b = document.createElement('div');
     b.id = '_updateBanner';
     b.style.cssText = [
       'position:fixed','top:0','left:0','right:0','z-index:2147483647',
-      'background:#92400e','color:#fff',
-      'display:flex','align-items:center','justify-content:center',
-      'gap:12px','padding:10px 18px',
+      'background:#1e3a2f','color:#fff',
+      'display:flex','align-items:flex-start','justify-content:space-between',
+      'gap:12px','padding:12px 18px',
       'font-size:13px','font-weight:600','font-family:sans-serif',
-      'box-shadow:0 3px 14px rgba(0,0,0,0.35)','line-height:1.4'
+      'box-shadow:0 3px 14px rgba(0,0,0,0.4)','line-height:1.4'
     ].join(';') + ';';
     b.innerHTML =
-      '<span style="font-size:16px;">🔄</span>' +
-      '<span>A new version is available — restart to get the latest updates.</span>' +
+      '<div style="display:flex;align-items:flex-start;gap:10px;flex:1;">' +
+        '<span style="font-size:18px;margin-top:1px;">🚀</span>' +
+        '<div>' +
+          '<div><strong>' + esc(ver) + ' is ready</strong> — restart to get the latest updates.</div>' +
+          changesList +
+        '</div>' +
+      '</div>' +
       '<button onclick="window._hardReload()" style="' +
-        'background:#fff;color:#92400e;border:none;border-radius:7px;' +
-        'padding:6px 16px;font-size:12px;font-weight:800;cursor:pointer;' +
-        'white-space:nowrap;margin-left:4px;' +
+        'background:#4ade80;color:#052e16;border:none;border-radius:7px;' +
+        'padding:7px 18px;font-size:12px;font-weight:800;cursor:pointer;' +
+        'white-space:nowrap;flex-shrink:0;margin-top:1px;' +
       '">↺ Restart Now</button>';
     document.body.insertBefore(b, document.body.firstChild);
   }
