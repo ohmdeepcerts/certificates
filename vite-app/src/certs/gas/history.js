@@ -213,59 +213,104 @@ export async function openGasPDF(id) { await loadGasForm(id); await downloadCP12
 export function _buildCP12EmailHtml(r) {
   const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const fmtDate = s => { if (!s) return '—'; const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : s; };
-  const _mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-  const fmtDateExp = s => { if (!s) return '—'; const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${_mon[parseInt(m[2], 10) - 1]}/${m[1]}` : s; };
-  const addrHtml = (r.install_address || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-  const co = getSetting('gas_co_name', 'OHM Electrical Engineering Ltd');
-  const coPhone = getSetting('gas_co_phone', '');
-  const coEmail = getSetting('gas_co_email', '');
-  const navy = getSetting('gas_hdr_color', '#1e3a5f');
-  const gasSafe = r.gas_safe_no || getSetting('gas_safe_no', '');
+  const _mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+  const fmtDateLong = s => { if (!s) return '—'; const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]} ${_mon[parseInt(m[2],10)-1]} ${m[1]}` : s; };
+  const addrParts = (r.install_address || '').split('\n').map(l => l.trim()).filter(Boolean);
+  if (r.install_postcode && !addrParts.some(p => p === r.install_postcode.trim())) addrParts.push(r.install_postcode.trim());
+  const addrHtml = addrParts.map(esc).join('<br>');
+  const co = getSetting('gas_co_name', getSetting('company_name', 'MK Heating'));
+  const coPhone = getSetting('gas_co_phone', getSetting('company_phone', ''));
+  const coWebsite = getSetting('gas_co_website', '');
   const _llFirst = (r.landlord_address || '').split('\n')[0].trim();
   const _addrRx = /^(flat\b|apt\b|apartment\b|unit\b|suite\b|room\b|block\b|ground\s+floor|first\s+floor|second\s+floor|top\s+floor|basement|\d)/i;
   const _llIsName = _llFirst && !_addrRx.test(_llFirst);
-  const toName = esc((r.sig_received_name || '').trim());
-  const contactLine = [coPhone ? '&#128222; ' + esc(coPhone) : '', coEmail ? '&#9993; ' + esc(coEmail) : ''].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
-  const landlordRow = _llIsName ? `<tr><td class="em-lbl" style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#64748b;width:110px;vertical-align:top;">Client</td><td class="em-val" style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${esc(_llFirst)}</td></tr>` : '';
+  const toName = (r.sig_received_name || '').trim();
+  const contactParts = [];
+  if (coPhone) contactParts.push(esc(coPhone));
+  if (coWebsite) contactParts.push('<a href="' + esc(coWebsite) + '" style="color:#d97706;text-decoration:none">' + esc(coWebsite.replace(/^https?:\/\//, '')) + '</a>');
+  const contactLine = contactParts.join('&ensp;&middot;&ensp;');
   const _gcalDate = (r.next_check_date || '').replace(/-/g, '');
-  const _gcalUrl = _gcalDate ? (() => { const _e = new Date(r.next_check_date); _e.setDate(_e.getDate() + 1); const _ed = _e.toISOString().slice(0, 10).replace(/-/g, ''); return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Gas Safety Check Due — ' + (r.install_address || '').split('\n')[0])}&dates=${_gcalDate}/${_ed}&details=${encodeURIComponent('Annual gas safety inspection due.\nCertificate ref: ' + (r.ref_number || ''))}&location=${encodeURIComponent((r.install_address || '').replace(/\n/g, ', '))}`; })() : '';
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>.em-card{background-color:#ffffff}.em-bdy{background-color:#ffffff}.em-lbl{color:#64748b;background-color:#ffffff}.em-val{color:#1e293b;background-color:#ffffff}@media(prefers-color-scheme:dark){.em-card{background-color:#1e293b!important}.em-bdy{background-color:#1e293b!important}.em-lbl{color:#94a3b8!important;background-color:#1e293b!important}.em-val{color:#e2e8f0!important;background-color:#1e293b!important}}</style></head>
-<body style="margin:0;padding:28px 12px 40px;background:#eef1f6;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
-<tr><td>
-<table width="100%" cellpadding="0" cellspacing="0" class="em-card" style="background:#ffffff;border-radius:10px;overflow:hidden;border-top:4px solid #f59e0b;">
-<tr><td style="background:${navy};padding:22px 28px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td colspan="2" style="padding-bottom:5px;"><div style="font-size:18px;font-weight:700;color:#ffffff;line-height:1.2;">${esc(co)}</div></td></tr>
-    <tr><td style="vertical-align:middle;"><div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;">CP12 &middot; Landlord Gas Safety Record</div></td>
-    <td align="right" style="white-space:nowrap;padding-left:8px;vertical-align:middle;"><span style="display:inline-block;background:rgba(16,185,129,.18);border:1.5px solid rgba(16,185,129,.5);color:#34d399;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:20px;white-space:nowrap;">&#10003; Certificate Issued</span></td>
-  </tr></table>
-</td></tr>
-<tr><td class="em-bdy" style="padding:26px 28px 0;">
-  <p style="font-size:15px;color:#475569;margin:0 0 5px 0;">Dear <strong style="color:#1e293b;">${toName || 'Client'}</strong>,</p>
-  <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 22px 0;">Please find attached your Gas Safety Certificate (CP12) for the property below. This inspection was carried out in accordance with the <em>Gas Safety (Installation and Use) Regulations 1998</em> by a qualified Gas Safe registered engineer.</p>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-    <tr><td colspan="2" style="background:${navy};padding:10px 18px;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.85);">Certificate Reference</td><td align="right" style="font-size:14px;font-weight:700;color:#ffffff;letter-spacing:.03em;">${esc(r.ref_number || '—')}</td></tr></table></td></tr>
-    ${landlordRow}
-    <tr><td class="em-lbl" style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#64748b;width:110px;vertical-align:top;">Property</td><td class="em-val" style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${addrHtml}${r.install_postcode ? ' ' + esc(r.install_postcode) : ''}</td></tr>
-    <tr><td class="em-lbl" style="padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#64748b;">Certificate Date</td><td class="em-val" style="padding:10px 18px;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${esc(fmtDate(r.cert_date))}</td></tr>
-  </table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:16px 18px;"><table cellpadding="0" cellspacing="0"><tr><td width="46" style="vertical-align:middle;padding-right:14px;"><div style="width:42px;height:42px;background:#f59e0b;border-radius:21px;text-align:center;font-size:22px;line-height:42px;mso-line-height-rule:exactly;">&#128293;</div></td><td style="vertical-align:middle;"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b45309;margin-bottom:3px;">Next Annual Check Due</div><div style="font-size:21px;font-weight:700;color:#1e293b;line-height:1;">${esc(fmtDateExp(r.next_check_date))}</div><div style="font-size:12px;color:#475569;margin-top:3px;">Gas appliances must be inspected every 12 months by law. Please book your next service before this date.</div>${_gcalUrl ? `<div style="margin-top:10px;"><a href="${_gcalUrl}" target="_blank" style="display:inline-block;background:#4285f4;color:#ffffff;font-size:11px;font-weight:700;padding:7px 14px;border-radius:5px;text-decoration:none;letter-spacing:.02em;">&#128197; Add to Google Calendar</a></div>` : ''}</td></tr></table></td></tr></table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:14px 18px;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b91c1c;margin-bottom:6px;">Landlord Legal Obligations</div><div style="font-size:13px;color:#7f1d1d;line-height:1.7;">Under the <em>Gas Safety (Installation &amp; Use) Regulations 1998</em>, landlords must:<br>&bull;&nbsp; Have all gas appliances inspected annually by a Gas Safe engineer.<br>&bull;&nbsp; Provide a copy of this certificate to existing tenants within 28 days.<br>&bull;&nbsp; Provide a copy to new tenants before move-in.</div></td></tr></table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #e2e8f0;border-radius:8px;background:#f8fafc;margin-bottom:22px;"><tr><td style="padding:13px 18px;"><table cellpadding="0" cellspacing="0"><tr><td style="font-size:26px;padding-right:13px;vertical-align:middle;">&#128206;</td><td><div style="font-size:13px;color:#1e293b;font-weight:500;">Certificate PDF is attached to this email</div><div style="font-size:11px;color:#475569;margin-top:2px;">Please save for your records, provide a copy to your tenant, and retain for at least two years as required by law.</div></td></tr></table></td></tr></table>
-  <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 26px 0;">If you have any questions regarding this certificate, please do not hesitate to get in touch.<br><strong style="color:#1e293b;">${esc(co)}</strong><br>${contactLine}</p>
-</td></tr>
-<tr><td style="border-top:1px solid #e2e8f0;"></td></tr>
-<tr><td style="background:#f1f5f9;padding:16px 28px 20px;">
-  <p style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin:0 0 5px 0;">Certificate Ownership</p>
-  <p style="font-size:11px;color:#94a3b8;line-height:1.7;margin:0 0 11px 0;">This certificate remains the property of ${esc(co)} until payment for the associated works has been received in full.</p>
-  <p style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin:0 0 5px 0;">Certificate Integrity</p>
-  <p style="font-size:11px;color:#94a3b8;line-height:1.7;margin:0;">Forging, altering or reproducing this certificate without written permission is unlawful and may result in legal action.</p>
-</td></tr>
-</table>
-<p style="text-align:center;margin-top:12px;font-size:11px;color:#94a3b8;line-height:1.8;">${esc(co)}${coPhone ? '&nbsp;&nbsp;&#183;&nbsp;&nbsp;' + esc(coPhone) : ''}<br>This email was sent automatically upon certificate completion.</p>
-</td></tr></table></td></tr></table>
-</body></html>`;
+  const _gcalUrl = _gcalDate ? (() => {
+    const _e = new Date(r.next_check_date); _e.setDate(_e.getDate() + 1);
+    const _ed = _e.toISOString().slice(0, 10).replace(/-/g, '');
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='
+      + encodeURIComponent('Gas Safety Check Due — ' + (addrParts[0] || ''))
+      + '&dates=' + _gcalDate + '/' + _ed
+      + '&details=' + encodeURIComponent('Annual gas safety inspection due.\nCertificate ref: ' + (r.ref_number || ''))
+      + '&location=' + encodeURIComponent(addrParts.join(', '));
+  })() : '';
+  const calBtn = _gcalUrl
+    ? '<table cellpadding="0" cellspacing="0" style="margin:0 0 24px">'
+      + '<tr><td style="background:linear-gradient(90deg,#1e3a5f,#2b5182);border:1px solid #d97706;border-radius:5px;padding:0">'
+      + '<a href="' + _gcalUrl + '" style="display:inline-block;padding:11px 22px;color:#f4ecd8;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.02em;font-family:Arial,sans-serif">&#128197;&ensp;Add Next Service to Calendar</a>'
+      + '</td></tr></table>'
+    : '';
+  const lbl = t => '<td style="padding:9px 16px;background:#eff3f8;font-size:10px;font-weight:700;color:#4a6080;width:36%;border-bottom:1px solid #dde5ef;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">' + t + '</td>';
+  const val = (v, extra) => '<td style="padding:9px 16px;font-size:13px;color:#182420;border-bottom:1px solid #dde5ef;vertical-align:top' + (extra || '') + '">' + v + '</td>';
+  const landlordRow = _llIsName ? '<tr>' + lbl('Client') + val(esc(_llFirst)) + '</tr>' : '';
+
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+    + '<body style="margin:0;padding:0;background:#e8ecf2;font-family:Arial,Helvetica,sans-serif">'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#e8ecf2"><tr><td align="center" style="padding:28px 16px">'
+    + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fafcfe;border-radius:6px;overflow:hidden;border:1px solid #c8d3e0;box-shadow:0 4px 24px rgba(15,34,64,.13)">'
+
+    + '<tr><td height="6" style="background:linear-gradient(90deg,#1e3a5f,#2b5182 60%,#d97706);font-size:0;line-height:0">&nbsp;</td></tr>'
+
+    + '<tr><td style="background:#fafcfe;padding:20px 28px 0">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="vertical-align:top"><div style="font-size:19px;font-weight:900;color:#0d2240;letter-spacing:-.02em;line-height:1.1">' + esc(co) + '</div>'
+    + '<div style="font-size:10px;color:#4a5568;margin-top:3px">' + contactLine + '</div></td>'
+    + '<td style="text-align:right;vertical-align:middle"><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#d97706">CP12</div></td>'
+    + '</tr></table>'
+    + '<div style="height:8px;border-bottom:1.5px solid #c8d8ea;margin:10px 0 0"></div>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:#fafcfe;padding:14px 28px 0">'
+    + '<div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#d97706;margin-bottom:4px">Gas Safety</div>'
+    + '<div style="font-size:24px;font-weight:700;color:#1e3a5f;line-height:1.2;font-family:Georgia,serif">Landlord Gas Safety Record (CP12)</div>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:linear-gradient(90deg,#1e3a5f,#2b5182);border-top:1px solid #d97706;padding:10px 28px">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td><div style="font-size:10px;color:rgba(244,236,216,.7);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Certificate Reference</div>'
+    + '<div style="font-family:monospace;font-size:17px;font-weight:700;color:#f4ecd8;letter-spacing:.06em">' + esc(r.ref_number || '—') + '</div></td>'
+    + '<td style="text-align:right;vertical-align:bottom"><div style="font-size:11px;color:rgba(255,255,255,.75)">' + fmtDate(r.cert_date) + '</div></td>'
+    + '</tr></table>'
+    + '</td></tr>'
+
+    + '<tr><td style="padding:24px 28px">'
+    + '<p style="margin:0 0 16px;font-size:15px;color:#182420">Dear ' + esc(toName || 'Client') + ',</p>'
+    + '<p style="margin:0 0 22px;font-size:13px;color:#4a5568;line-height:1.7">Please find attached your Gas Safety Certificate (CP12) for the property listed below. This inspection was carried out in accordance with the <em>Gas Safety (Installation and Use) Regulations 1998</em> by a qualified Gas Safe registered engineer.</p>'
+
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dde5ef;border-radius:5px;overflow:hidden;margin:0 0 24px;border-collapse:collapse">'
+    + landlordRow
+    + '<tr>' + lbl('Property') + val(addrHtml) + '</tr>'
+    + '<tr>' + lbl('Certificate Date') + val(esc(fmtDate(r.cert_date))) + '</tr>'
+    + '<tr><td style="padding:9px 16px;background:#eff3f8;font-size:10px;font-weight:700;color:#4a6080;width:36%;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">Next Check Due</td>'
+    + '<td style="padding:9px 16px;font-size:13px;font-weight:700;color:#92400e;vertical-align:top">' + esc(fmtDateLong(r.next_check_date)) + '</td></tr>'
+    + '</table>'
+
+    + calBtn
+
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border:1.5px solid #fed7aa;border-radius:5px;margin:0 0 24px">'
+    + '<tr><td style="padding:14px 18px">'
+    + '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#92400e;margin-bottom:6px">Landlord Legal Obligations</div>'
+    + '<div style="font-size:12px;color:#78350f;line-height:1.7">Under the <em>Gas Safety (Installation &amp; Use) Regulations 1998</em>, landlords must:<br>&bull;&nbsp; Have all gas appliances inspected annually by a Gas Safe registered engineer.<br>&bull;&nbsp; Provide a copy of this certificate to existing tenants within 28 days of the check.<br>&bull;&nbsp; Provide a copy to new tenants before they move in.</div>'
+    + '</td></tr></table>'
+
+    + '<p style="margin:0;font-size:12px;color:#8b968f;line-height:1.7">If you have any queries regarding this certificate, please do not hesitate to contact us.</p>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:#eff3f8;border-top:2px solid #d97706;padding:14px 28px;text-align:center">'
+    + '<div style="font-size:12px;font-weight:700;color:#0d2240">' + esc(co) + '</div>'
+    + (contactLine ? '<div style="font-size:11px;color:#4a5568;margin-top:3px">' + contactLine + '</div>' : '')
+    + '</td></tr>'
+
+    + '<tr><td height="5" style="background:linear-gradient(90deg,#1e3a5f,#2b5182 60%,#d97706);font-size:0;line-height:0">&nbsp;</td></tr>'
+
+    + '</table>'
+    + '</td></tr></table>'
+    + '</body></html>';
 }
 
 export async function emailGas(autoTriggered = false) {

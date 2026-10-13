@@ -1,9 +1,10 @@
 {
-  "v": "1.1.5",
-  "build": 15,
+  "v": "1.1.6",
+  "build": 17,
   "changes": [
-    "EL email: theme-matched to actual certificate (green/gold, warm paper, ref ribbon)",
-    "EL email: NICEIC badge, Georgia serif title, gold-accented footer",
-    "EL email: PDF filename uses cert ref (EL2152688-32.pdf)"
+    "Premium email redesign: Gas/CP12 — navy/amber theme matching cert, Google Calendar CTA, legal obligations panel",
+    "Premium email redesign: PAT — dark-blue/teal theme, pass/fail/total stats grid, retest calendar CTA",
+    "Premium email redesign: Fire Alarm — red/amber theme matching cert, next inspection calendar CTA",
+    "EL email: already redesigned (builds 14-16); all cert types now have consistent premium templates"
   ]
 }

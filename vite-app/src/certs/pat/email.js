@@ -1,5 +1,4 @@
 // ========== PAT - EMAIL MODULE ==========
-// Extracted from index.html (lines 4820-4913)
 
 import { sb }                                                  from '../../lib/supabase.js';
 import { getSetting }                                          from '../../lib/settings.js';
@@ -41,79 +40,9 @@ export async function emailPATFromList(id, autoTriggered = false) {
     return;
   }
 
-  const bcc      = getSetting('email_bcc', '');
-  const co       = getSetting('pat_co_name', getSetting('company_name', 'OHM Electrical Engineering Ltd'));
-  const coPhone  = getSetting('pat_co_phone', '');
-  const coEmail  = getSetting('pat_co_email', '');
-  const navy     = getSetting('pat_hdr_color', '#1e3a5f');
-  const apps     = r.appliances || [];
-  const total    = apps.length;
-  const pass     = apps.filter(a => (a.result || '').toLowerCase() === 'pass').length;
-  const fail     = total - pass;
-
-  const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const addrHtml = (r.property_address || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-  const client   = r.landlord_name || r.client_name || 'Customer';
-
-  const nxtDates = apps.map(a => a.nextTest || a.next_test || '').filter(Boolean).sort();
-  const due      = nxtDates[0] || r.next_test_date || '';
-
-  const failStyle = fail > 0 ? 'border:1px solid #ef4444;background:#fef2f2;' : 'border:1px solid #e2e8f0;';
-  const failColor = fail > 0 ? '#ef4444' : '#94a3b8';
-
-  const landlordRow = r.landlord_name
-    ? `<tr><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;width:110px;vertical-align:top">Landlord</td><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right">${esc(r.landlord_name)}</td></tr>`
-    : '';
-  const agencyRow = r.agency_name
-    ? `<tr><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;width:110px;vertical-align:top">Client</td><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right">${esc(r.agency_name)}</td></tr>`
-    : '';
-
-  const contactLine = [
-    coPhone ? '&#128222; ' + esc(coPhone) : '',
-    coEmail ? '&#9993; '  + esc(coEmail) : '',
-  ].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:28px 12px 40px;background:#eef1f6;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
-<tr><td>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;">
-<tr><td style="background:${navy};padding:22px 28px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td colspan="2" style="padding-bottom:5px;"><div style="font-size:18px;font-weight:700;color:#ffffff;line-height:1.2;">${esc(co)}</div></td></tr>
-    <tr><td style="vertical-align:middle;"><div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;">Portable Appliance Testing</div></td>
-    <td align="right" style="white-space:nowrap;padding-left:8px;vertical-align:middle;"><span style="display:inline-block;background:rgba(16,185,129,.18);border:1.5px solid rgba(16,185,129,.5);color:#34d399;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:20px;white-space:nowrap;">&#10003; Certificate Issued</span></td>
-  </tr></table>
-</td></tr>
-<tr><td style="padding:26px 28px 0;">
-  <p style="font-size:15px;color:#475569;margin:0 0 5px 0;">Dear <strong style="color:#1e293b;">${esc(client)}</strong>,</p>
-  <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 22px 0;">Please find attached your PAT (Portable Appliance Testing) certificate for the property below. This test was carried out in full accordance with the <em>Electricity at Work Regulations 1989</em> and the IET Code of Practice (5th Edition).</p>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-    <tr><td colspan="2" style="background:${navy};padding:10px 18px;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);">Certificate Reference</td><td align="right" style="font-size:14px;font-weight:700;color:#ffffff;letter-spacing:.03em;">${esc(r.ref_number || '—')}</td></tr></table></td></tr>
-    ${landlordRow}${agencyRow}
-    <tr><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;width:110px;vertical-align:top">Property</td><td style="padding:10px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${addrHtml}</td></tr>
-    <tr><td style="padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8">Test Date</td><td style="padding:10px 18px;font-size:14px;color:#1e293b;font-weight:500;text-align:right;">${esc(r.test_date || '—')}</td></tr>
-  </table>
-  ${due ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;margin-bottom:16px;"><tr><td style="padding:16px 18px;"><table cellpadding="0" cellspacing="0"><tr><td width="46" style="vertical-align:middle;padding-right:14px;"><div style="width:42px;height:42px;background:#f59e0b;border-radius:21px;text-align:center;font-size:22px;line-height:42px;mso-line-height-rule:exactly;">&#9888;</div></td><td style="vertical-align:middle;"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b45309;margin-bottom:3px;">Next Retest Due</div><div style="font-size:21px;font-weight:700;color:#1e293b;line-height:1;">${esc(due)}</div><div style="font-size:12px;color:#475569;margin-top:3px;">Please ensure retesting is booked before this date to remain compliant.</div></td></tr></table></td></tr></table>` : ''}
-  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;"><tr>
-    <td width="33%" style="padding-right:4px;"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;text-align:center;"><tr><td style="padding:14px 8px;"><div style="font-size:24px;font-weight:700;color:#1e293b;line-height:1;margin-bottom:4px;">${total}</div><div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">Appliances</div></td></tr></table></td>
-    <td width="33%" style="padding:0 4px;"><table width="100%" cellpadding="0" cellspacing="0" style="${failStyle}border-radius:8px;text-align:center;"><tr><td style="padding:14px 8px;"><div style="font-size:24px;font-weight:700;color:${failColor};line-height:1;margin-bottom:4px;">${fail}</div><div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:${failColor};">Failed</div></td></tr></table></td>
-    <td width="34%" style="padding-left:4px;"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #10b981;border-radius:8px;background:#ecfdf5;text-align:center;"><tr><td style="padding:14px 8px;"><div style="font-size:24px;font-weight:700;color:#10b981;line-height:1;margin-bottom:4px;">${pass}</div><div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#10b981;">Passed</div></td></tr></table></td>
-  </tr></table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #e2e8f0;border-radius:8px;background:#f8fafc;margin-bottom:22px;"><tr><td style="padding:13px 18px;"><table cellpadding="0" cellspacing="0"><tr><td style="font-size:26px;padding-right:13px;vertical-align:middle;">&#128206;</td><td><div style="font-size:13px;color:#1e293b;font-weight:500;">Certificate PDF is attached to this email</div><div style="font-size:11px;color:#475569;margin-top:2px;">Please save for your records and share with your letting agent, local authority, or any relevant party if required.</div></td></tr></table></td></tr></table>
-  <p style="font-size:14px;color:#475569;line-height:1.8;margin:0 0 26px 0;">If you have any questions regarding this certificate, please do not hesitate to get in touch.<br><strong style="color:#1e293b;">${esc(co)}</strong><br>${contactLine}</p>
-</td></tr>
-<tr><td style="border-top:1px solid #e2e8f0;"></td></tr>
-<tr><td style="background:#f1f5f9;padding:16px 28px 20px;">
-  <p style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin:0 0 5px 0;">Certificate Ownership</p>
-  <p style="font-size:11px;color:#94a3b8;line-height:1.7;margin:0 0 11px 0;">This certificate remains the property of ${esc(co)} until payment for the associated works has been received in full.</p>
-  <p style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin:0 0 5px 0;">Certificate Integrity</p>
-  <p style="font-size:11px;color:#94a3b8;line-height:1.7;margin:0;">Forging, altering or reproducing this certificate without written permission is unlawful and may result in legal action.</p>
-</td></tr>
-</table>
-<p style="text-align:center;margin-top:12px;font-size:11px;color:#94a3b8;line-height:1.8;">${esc(co)}${coPhone ? '&nbsp;&nbsp;&#183;&nbsp;&nbsp;' + esc(coPhone) : ''}<br>This email was sent automatically upon certificate completion.</p>
-</td></tr></table></td></tr></table>
-</body></html>`;
+  const bcc = getSetting('email_bcc', '');
+  const client = r.landlord_name || r.client_name || 'Customer';
+  const html = _buildPATEmailHTML(r);
 
   try {
     if (!autoTriggered) showEmailProgress(_emailSteps, 1);
@@ -134,4 +63,117 @@ export async function emailPATFromList(id, autoTriggered = false) {
   } finally {
     hideOverlay();
   }
+}
+
+function _buildPATEmailHTML(r) {
+  const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const co       = getSetting('pat_co_name', getSetting('company_name', 'OHM Electrical Engineering Ltd'));
+  const coPhone  = getSetting('pat_co_phone', getSetting('company_phone', ''));
+  const coWebsite = getSetting('pat_co_website', '');
+  const apps     = r.appliances || [];
+  const total    = apps.length;
+  const pass     = apps.filter(a => (a.result || '').toLowerCase() === 'pass').length;
+  const fail     = total - pass;
+  const client   = r.landlord_name || r.client_name || 'Customer';
+  const addrParts = (r.property_address || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const addrHtml  = addrParts.map(esc).join('<br>');
+  const nxtDates  = apps.map(a => a.nextTest || a.next_test || '').filter(Boolean).sort();
+  const due       = nxtDates[0] || r.next_test_date || '';
+  const contactParts = [];
+  if (coPhone) contactParts.push(esc(coPhone));
+  if (coWebsite) contactParts.push('<a href="' + esc(coWebsite) + '" style="color:#0891b2;text-decoration:none">' + esc(coWebsite.replace(/^https?:\/\//, '')) + '</a>');
+  const contactLine = contactParts.join('&ensp;&middot;&ensp;');
+  const landlordRow = r.landlord_name
+    ? '<tr><td style="padding:9px 16px;background:#eef4fa;font-size:10px;font-weight:700;color:#3d5a7a;width:36%;border-bottom:1px solid #dae5f0;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">Landlord</td><td style="padding:9px 16px;font-size:13px;color:#182420;border-bottom:1px solid #dae5f0;vertical-align:top">' + esc(r.landlord_name) + '</td></tr>'
+    : '';
+  const agencyRow = r.agency_name
+    ? '<tr><td style="padding:9px 16px;background:#eef4fa;font-size:10px;font-weight:700;color:#3d5a7a;width:36%;border-bottom:1px solid #dae5f0;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">Client</td><td style="padding:9px 16px;font-size:13px;color:#182420;border-bottom:1px solid #dae5f0;vertical-align:top">' + esc(r.agency_name) + '</td></tr>'
+    : '';
+  const failBorderColor = fail > 0 ? '#f87171' : '#86efac';
+  const failBg = fail > 0 ? '#fef2f2' : '#f0fdf4';
+  const failTextColor = fail > 0 ? '#dc2626' : '#16a34a';
+  const lbl = t => '<td style="padding:9px 16px;background:#eef4fa;font-size:10px;font-weight:700;color:#3d5a7a;width:36%;border-bottom:1px solid #dae5f0;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">' + t + '</td>';
+  const val = v => '<td style="padding:9px 16px;font-size:13px;color:#182420;border-bottom:1px solid #dae5f0;vertical-align:top">' + v + '</td>';
+  const calUrl = due ? (() => {
+    const parts = due.split('/');
+    if (parts.length === 3) {
+      const yyyymmdd = parts[2] + parts[1] + parts[0];
+      const _d = new Date(+parts[2], +parts[1]-1, +parts[0]+1);
+      const nextDay = '' + _d.getFullYear() + String(_d.getMonth()+1).padStart(2,'0') + String(_d.getDate()).padStart(2,'0');
+      return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='
+        + encodeURIComponent('PAT Retest Due — ' + (addrParts[0] || ''))
+        + '&dates=' + yyyymmdd + '/' + nextDay
+        + '&details=' + encodeURIComponent('Portable Appliance Testing retest due.\nCertificate ref: ' + (r.ref_number || ''))
+        + '&location=' + encodeURIComponent(addrParts.join(', '));
+    }
+    return '';
+  })() : '';
+  const calBtn = calUrl
+    ? '<table cellpadding="0" cellspacing="0" style="margin:0 0 24px">'
+      + '<tr><td style="background:linear-gradient(90deg,#1a3d6b,#1e5fa8);border:1px solid #0891b2;border-radius:5px;padding:0">'
+      + '<a href="' + calUrl + '" style="display:inline-block;padding:11px 22px;color:#e8f4fc;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.02em;font-family:Arial,sans-serif">&#128197;&ensp;Add Retest to Calendar</a>'
+      + '</td></tr></table>'
+    : '';
+
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+    + '<body style="margin:0;padding:0;background:#e5ecf5;font-family:Arial,Helvetica,sans-serif">'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#e5ecf5"><tr><td align="center" style="padding:28px 16px">'
+    + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fafcff;border-radius:6px;overflow:hidden;border:1px solid #c0cfdf;box-shadow:0 4px 24px rgba(20,50,100,.13)">'
+
+    + '<tr><td height="6" style="background:linear-gradient(90deg,#1a3d6b,#1e5fa8 60%,#0891b2);font-size:0;line-height:0">&nbsp;</td></tr>'
+
+    + '<tr><td style="background:#fafcff;padding:20px 28px 0">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="vertical-align:top"><div style="font-size:19px;font-weight:900;color:#0d2444;letter-spacing:-.02em;line-height:1.1">' + esc(co) + '</div>'
+    + '<div style="font-size:10px;color:#4a5568;margin-top:3px">' + contactLine + '</div></td>'
+    + '<td style="text-align:right;vertical-align:middle"><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0891b2">PAT</div></td>'
+    + '</tr></table>'
+    + '<div style="height:8px;border-bottom:1.5px solid #c0d8ea;margin:10px 0 0"></div>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:#fafcff;padding:14px 28px 0">'
+    + '<div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#0891b2;margin-bottom:4px">Portable Appliance Testing</div>'
+    + '<div style="font-size:24px;font-weight:700;color:#1a3d6b;line-height:1.2;font-family:Georgia,serif">PAT Test Certificate</div>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:linear-gradient(90deg,#1a3d6b,#1e5fa8);border-top:1px solid #0891b2;padding:10px 28px">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td><div style="font-size:10px;color:rgba(232,244,252,.7);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Certificate Reference</div>'
+    + '<div style="font-family:monospace;font-size:17px;font-weight:700;color:#e8f4fc;letter-spacing:.06em">' + esc(r.ref_number || '—') + '</div></td>'
+    + '<td style="text-align:right;vertical-align:bottom"><div style="font-size:11px;color:rgba(255,255,255,.75)">' + esc(r.test_date || '') + '</div></td>'
+    + '</tr></table>'
+    + '</td></tr>'
+
+    + '<tr><td style="padding:24px 28px">'
+    + '<p style="margin:0 0 16px;font-size:15px;color:#182420">Dear ' + esc(client) + ',</p>'
+    + '<p style="margin:0 0 22px;font-size:13px;color:#4a5568;line-height:1.7">Please find attached your Portable Appliance Testing (PAT) certificate. This test was carried out in full accordance with the <em>Electricity at Work Regulations 1989</em> and the IET Code of Practice (5th Edition).</p>'
+
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dae5f0;border-radius:5px;overflow:hidden;margin:0 0 24px;border-collapse:collapse">'
+    + landlordRow + agencyRow
+    + '<tr>' + lbl('Property') + val(addrHtml || '—') + '</tr>'
+    + '<tr>' + lbl('Test Date') + val(esc(r.test_date || '—')) + '</tr>'
+    + (due ? '<tr><td style="padding:9px 16px;background:#eef4fa;font-size:10px;font-weight:700;color:#3d5a7a;width:36%;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">Retest Due</td><td style="padding:9px 16px;font-size:13px;font-weight:700;color:#0e4d7a;vertical-align:top">' + esc(due) + '</td></tr>' : '')
+    + '</table>'
+
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-collapse:collapse"><tr>'
+    + '<td width="33%" style="padding-right:6px"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dae5f0;border-radius:5px;text-align:center"><tr><td style="padding:14px 8px"><div style="font-size:26px;font-weight:800;color:#1a3d6b;line-height:1;margin-bottom:3px">' + total + '</div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5a7a9a">Appliances</div></td></tr></table></td>'
+    + '<td width="33%" style="padding:0 3px"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ' + failBorderColor + ';background:' + failBg + ';border-radius:5px;text-align:center"><tr><td style="padding:14px 8px"><div style="font-size:26px;font-weight:800;color:' + failTextColor + ';line-height:1;margin-bottom:3px">' + fail + '</div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + failTextColor + '">Failed</div></td></tr></table></td>'
+    + '<td width="34%" style="padding-left:6px"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #86efac;background:#f0fdf4;border-radius:5px;text-align:center"><tr><td style="padding:14px 8px"><div style="font-size:26px;font-weight:800;color:#16a34a;line-height:1;margin-bottom:3px">' + pass + '</div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#16a34a">Passed</div></td></tr></table></td>'
+    + '</tr></table>'
+
+    + calBtn
+
+    + '<p style="margin:0;font-size:12px;color:#8b968f;line-height:1.7">If you have any queries regarding this certificate, please do not hesitate to contact us.</p>'
+    + '</td></tr>'
+
+    + '<tr><td style="background:#eef4fa;border-top:2px solid #0891b2;padding:14px 28px;text-align:center">'
+    + '<div style="font-size:12px;font-weight:700;color:#0d2444">' + esc(co) + '</div>'
+    + (contactLine ? '<div style="font-size:11px;color:#4a5568;margin-top:3px">' + contactLine + '</div>' : '')
+    + '</td></tr>'
+
+    + '<tr><td height="5" style="background:linear-gradient(90deg,#1a3d6b,#1e5fa8 60%,#0891b2);font-size:0;line-height:0">&nbsp;</td></tr>'
+
+    + '</table>'
+    + '</td></tr></table>'
+    + '</body></html>';
 }
