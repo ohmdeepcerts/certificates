@@ -1,10 +1,10 @@
 {
-  "v": "1.1.9",
-  "build": 20,
+  "v": "1.2.0",
+  "build": 21,
   "changes": [
-    "Fixed: Tapping a suggestion in the address / client search dropdown now correctly selects it",
-    "New: Gas certificates now save offline when there is no internet connection, and sync automatically when back online",
-    "Improved: Gas, PAT and EL certificate history pages remember the last loaded list — available to view offline",
-    "Improved: App assets (scripts, styles) are now cached so the app loads faster and works without internet after first visit"
+    "New: Fire alarm certificates now save offline when there is no internet connection, and sync automatically when back online",
+    "Improved: Fire alarm certificate history is now available to view offline",
+    "Improved: Dashboard summary now loads from cache when offline",
+    "Improved: Directory (properties, landlords, agents, contacts) now loads from cache when offline"
   ]
 }

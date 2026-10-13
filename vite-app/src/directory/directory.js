@@ -167,9 +167,17 @@ export async function backfillDirFromReports(btn) {
 
 export async function dirLoad(type) {
   const tbl = _dirTable[type]; if (!tbl) return [];
+  if (!navigator.onLine) {
+    try {
+      const _c = JSON.parse(localStorage.getItem('_cache_dir_' + type) || 'null');
+      if (_c) { _dir[type] = _c.data; return _dir[type]; }
+    } catch {}
+    _dir[type] = []; return [];
+  }
   try {
     const { data } = await sb.from(tbl).select('*').order('usage_count', { ascending: false });
     _dir[type] = data || [];
+    try { localStorage.setItem('_cache_dir_' + type, JSON.stringify({ data: _dir[type], ts: Date.now() })); } catch {}
   } catch (e) { _dir[type] = []; }
   return _dir[type];
 }

@@ -7,6 +7,7 @@ import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { fireBuildCertHTML } from './pdf.js';
 import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
+import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 
 let _w = {};
 let _fireDirty = false;
@@ -522,6 +523,19 @@ export function fireDiscardAutosave() {
 
 export async function fireSave() {
   var isEdit = !!_w._editId; var editId = _w._editId || null;
+  if (!navigator.onLine) {
+    var _ofRec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
+    delete _ofRec._editId; delete _ofRec.step;
+    var _ofAddr = [_w.premAddr1, _w.premAddr2, _w.premAddr3, _w.premPostcode].filter(Boolean).join(', ');
+    var _ofRow = { ref_number: null, base_ref: null, cert_type: _ofRec.certType || null, premises_address: _ofAddr || null, test_date: _ofRec.testDate || null, outcome: _ofRec.outcome || null, updated_at: new Date().toISOString(), data: _ofRec };
+    await idbEnqueue({ type: 'fire_upsert', form: _ofRow, supabaseId: isEdit ? _w._editId : null, userId: state.currentUser.id, ts: Date.now() });
+    refreshSyncBadge();
+    _fireDirty = false;
+    try { localStorage.removeItem('fire_autosave'); } catch(e) {}
+    toast('Saved offline — will sync when back online', 'success');
+    navigate('fire-history');
+    return;
+  }
   if (!isEdit && (!_w.ref || _w.ref === 'Generating…' || !_w.baseRef)) {
     showOverlay('Generating reference…');
     try {
@@ -627,11 +641,26 @@ export async function fireDownloadPDF(rec) {
 // ── History ───────────────────────────────────────────────────────────────────
 export async function loadFireHistory() {
   if (!state.currentUser) return;
+  if (!navigator.onLine) {
+    try {
+      const _c = JSON.parse(localStorage.getItem('_cache_fire_history') || 'null');
+      if (_c) {
+        _fireAllCerts = _c.data; _fireFiltered = _fireAllCerts; _firePage = 1; _fireCurrentQ = '';
+        renderFireList(_fireAllCerts, 1, '');
+        const _ago = new Date(_c.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        toast('Offline — showing certificates loaded at ' + _ago, 'info');
+        return;
+      }
+    } catch {}
+    toast('Offline — no cached fire certificates available', 'warn');
+    return;
+  }
   var q = sb.from('fire_certs').select('*').is('deleted_at', null).order('created_at', { ascending:false });
   if (!isAdmin()) q = q.eq('created_by', state.currentUser.id);
   var { data, error } = await q;
   if (error) { console.error('loadFireHistory:', error); return; }
   _fireAllCerts = data || [];
+  try { localStorage.setItem('_cache_fire_history', JSON.stringify({ data: _fireAllCerts, ts: Date.now() })); } catch {}
   _fireFiltered = _fireAllCerts; _firePage = 1; _fireCurrentQ = '';
   renderFireList(_fireAllCerts, 1, '');
 }

@@ -163,11 +163,26 @@ export async function globalSearch(q) {
 export async function loadDashboard() {
   ['stat-pat-total', 'stat-pat-complete', 'stat-pat-due', 'stat-gas-total', 'stat-gas-complete', 'stat-gas-due', 'stat-el-total', 'stat-el-sat', 'stat-el-unsat'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = '<span class="skeleton" style="width:38px;height:22px;vertical-align:middle"></span>'; });
   ['recent-pat-list', 'recent-gas-list'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = [0, 1, 2].map(() => '<div class="skeleton" style="height:36px;border-radius:6px;margin-bottom:8px;display:block;width:100%"></div>').join(''); });
-  const [{ data: pats }, { data: gases }, { data: els }] = await Promise.all([
-    sb.from('pat_reports').select('id,status,test_date,appliances').order('created_at', { ascending: false }),
-    sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address').order('created_at', { ascending: false }),
-    sb.from('el_certs').select('id,data,created_at').order('created_at', { ascending: false })
-  ]);
+  let pats, gases, els;
+  if (!navigator.onLine) {
+    try {
+      const _dc = JSON.parse(localStorage.getItem('_cache_dashboard') || 'null');
+      if (_dc) { pats = _dc.pats; gases = _dc.gases; els = _dc.els; const _ago = new Date(_dc.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); toast('Offline — showing dashboard loaded at ' + _ago, 'info'); }
+    } catch {}
+  } else {
+    const [{ data: _dp }, { data: _dg }, { data: _de }] = await Promise.all([
+      sb.from('pat_reports').select('id,status,test_date,appliances').order('created_at', { ascending: false }),
+      sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address').order('created_at', { ascending: false }),
+      sb.from('el_certs').select('id,data,created_at').order('created_at', { ascending: false })
+    ]);
+    pats = _dp; gases = _dg; els = _de;
+    try { localStorage.setItem('_cache_dashboard', JSON.stringify({ pats, gases, els, ts: Date.now() })); } catch {}
+  }
+  if (!pats && !gases && !els) {
+    ['recent-pat-list', 'recent-gas-list'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = '<div class="empty-state"><div class="empty-icon">📵</div><p>Offline — no cached data</p></div>'; });
+    ['stat-pat-total','stat-pat-complete','stat-pat-due','stat-gas-total','stat-gas-complete','stat-gas-due','stat-el-total','stat-el-sat','stat-el-unsat'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = '—'; });
+    return;
+  }
   const today = new Date(); const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
   const patTotal = pats?.length || 0;
   const patDone = (pats || []).filter(r => r.status === 'completed').length;

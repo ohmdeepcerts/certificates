@@ -162,6 +162,13 @@ export async function syncQueue() {
           } else {
             await sb.from('gas_certs').insert({ ...d, created_by: item.userId }).select().single();
           }
+        } else if (item.type === 'fire_upsert') {
+          const d = { ...item.form };
+          if (item.supabaseId) {
+            await sb.from('fire_certs').update({ ...d, updated_at: new Date().toISOString() }).eq('id', item.supabaseId);
+          } else {
+            await sb.from('fire_certs').insert({ ...d, created_by: item.userId }).select().single();
+          }
         }
         await idbRemove(item.localId);
         done++;
