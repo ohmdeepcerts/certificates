@@ -47,7 +47,7 @@ async function _loadCertGlobals() {
   Object.assign(window, gas);
   Object.assign(window, el);
   Object.assign(window, fire);
-  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist] = await Promise.all([
+  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist, patScan] = await Promise.all([
     import('./certs/gas/wizard.js'),
     import('./certs/gas/pdf.js'),
     import('./certs/gas/preview.js'),
@@ -58,6 +58,7 @@ async function _loadCertGlobals() {
     import('./certs/pat/email.js'),
     import('./certs/pat/pdf.js'),
     import('./certs/pat/history.js'),
+    import('./certs/pat/scan.js'),
   ]);
   Object.assign(window, gasWiz);
   Object.assign(window, gasPdf);
@@ -69,6 +70,7 @@ async function _loadCertGlobals() {
   Object.assign(window, { loadSettingsUI: settings.loadSettingsUI, saveSettings: settings.saveSettings });
   Object.assign(window, { emailPAT: patEmail.emailPAT, emailPATFromList: patEmail.emailPATFromList });
   Object.assign(window, { generatePATPDF: patPdf.generatePATPDF, printPATCertificate: patPdf.printPATCertificate, openPATPDF: patPdf.openPATPDF });
+  Object.assign(window, { openScanModal: patScan.openScanModal, closeScanModal: patScan.closeScanModal, handleScanFile: patScan.handleScanFile, doScanApply: patScan.doScanApply });
 }
 
 // ── App init ──────────────────────────────────────────────────────────────
