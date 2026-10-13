@@ -157,7 +157,7 @@ export async function backfillDirFromReports(btn) {
     const total = counts.properties + counts.landlords + counts.agents + counts.appliances;
     const msg = total === 0
       ? '<span style="color:var(--success,#22c55e)">✓ All records already in Directory — nothing to import.</span>'
-      : `<span style="color:var(--success,#22c55e)">✓ Imported: ${counts.properties} properties, ${counts.landlords} landlords, ${counts.agents} agents, ${counts.appliances} appliances.</span>`;
+      : `<span style="color:var(--success,#22c55e)">✓ Imported: ${counts.properties} properties, ${counts.landlords} landlords, ${counts.agents} agencies, ${counts.appliances} appliances.</span>`;
     if (res) res.innerHTML = msg;
   } catch (e) {
     if (res) res.innerHTML = `<span style="color:#dc2626">Error: ${e.message}</span>`;
@@ -325,7 +325,7 @@ function _renderAcDDCombined(items, inputEl, q, onSelect) {
   }
   const html = closeBtn + items.map((item, idx) => {
     const isAgent = item._dirType === 'agents';
-    const typeLabel = isAgent ? 'Agent' : 'Landlord';
+    const typeLabel = isAgent ? 'Agency' : 'Landlord';
     const typeBg = isAgent ? 'rgba(16,185,129,.15)' : 'rgba(99,102,241,.15)';
     const typeColor = isAgent ? '#059669' : '#6366f1';
     const name = _dirName(item._dirType, item);
@@ -431,7 +431,7 @@ function _dirFillAgentPAT(rec) {
   if (a) { const pts = [rec.addr1, rec.addr2, rec.town, rec.county, rec.postcode].filter(Boolean); a.value = pts.join('\n'); }
   if (ph && rec.phone && !ph.value) ph.value = rec.phone;
   if (em && rec.email && !em.value) em.value = rec.email;
-  _fillToast('Agent'); window.doPatPreview?.();
+  _fillToast('Agency'); window.doPatPreview?.();
 }
 function _dirFillLandlordPAT(rec) {
   const n = document.getElementById('pat-landlord');
@@ -478,11 +478,11 @@ function _offerLinkedContacts(propRec, formType) {
   }
   let h = '<div style="font-weight:600;color:var(--accent);margin-bottom:8px">📇 Saved contacts for this property</div>';
   if (ll) h += `<div style="margin-bottom:3px;font-size:12px">Landlord: <strong>${ll.landlord_name || ll.company_name}</strong></div>`;
-  if (ag) h += `<div style="margin-bottom:8px;font-size:12px">Agent: <strong>${ag.agency_name || ag.contact_name}</strong></div>`;
+  if (ag) h += `<div style="margin-bottom:8px;font-size:12px">Agency: <strong>${ag.agency_name || ag.contact_name}</strong></div>`;
   h += '<div style="display:flex;gap:5px;flex-wrap:wrap">';
   if (ll && ag) h += `<button onclick="_applyLinked('both','${formType}')" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px">Apply Both</button>`;
   if (ll) h += `<button onclick="_applyLinked('landlord','${formType}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px">Landlord</button>`;
-  if (ag) h += `<button onclick="_applyLinked('agent','${formType}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px">Agent</button>`;
+  if (ag) h += `<button onclick="_applyLinked('agent','${formType}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px">Agency</button>`;
   h += `<button onclick="this.closest('#dir-linked-banner').remove()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;color:var(--muted)">Ignore</button></div>`;
   ban.innerHTML = h; ban._propRec = propRec; ban._formType = formType;
   clearTimeout(ban._t); ban._t = setTimeout(() => { if (ban.parentNode) ban.remove(); }, 25000);
@@ -764,7 +764,7 @@ let _dirEditType = null, _dirEditId = null;
 export function openDirEditModal(type, id = null, prefill = '') {
   _dirEditType = type; _dirEditId = id || null;
   const rec = id ? (_dir[type] || []).find(r => r.id === id) : null;
-  const labels = { agents: 'Agent / Agency', landlords: 'Landlord', properties: 'Property', contacts: 'Contact' };
+  const labels = { agents: 'Agency', landlords: 'Landlord', properties: 'Property', contacts: 'Contact' };
   document.getElementById('dir-edit-modal-title').textContent = (id ? 'Edit ' : 'New ') + (labels[type] || type);
   document.getElementById('dir-edit-modal-body').innerHTML = _dirForm(type, rec, prefill);
   delete document.getElementById('dir-edit-modal').dataset.dupConfirmed;

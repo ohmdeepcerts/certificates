@@ -821,7 +821,7 @@ function _gwShowSaveDirBanner(name) {
     + '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Pick a type so you can find them quickly next time</div>'
     + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
     + '<button onclick="window._gwSaveDirContact(\'landlords\')" style="background:rgba(99,102,241,.15);color:#6366f1;border:1px solid rgba(99,102,241,.35);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600">👤 Landlord</button>'
-    + '<button onclick="window._gwSaveDirContact(\'agents\')" style="background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.35);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600">🏢 Agent</button>'
+    + '<button onclick="window._gwSaveDirContact(\'agents\')" style="background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.35);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600">🏢 Agency</button>'
     + '<button onclick="document.getElementById(\'gw-save-dir-banner\')?.remove()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--muted)">Skip</button>'
     + '</div>';
   if (ni.parentNode) ni.parentNode.insertBefore(wrap, ni.nextSibling);
@@ -833,7 +833,7 @@ window._gwSaveDirContact = async function(type) {
   if (!name) return;
   var result = await window.quickSaveDirContact?.(type, name, _gw.landlordAddr1, _gw.landlordAddr2, _gw.landlordAddr3, _gw.landlordPostcode, _gw.recipientEmail);
   if (result === 'exists') toast('"' + name + '" is already in your Directory', 'info');
-  else if (result) toast('Saved to Directory as ' + (type === 'landlords' ? 'Landlord' : 'Agent') + ' ✓', 'success', 2500);
+  else if (result) toast('Saved to Directory as ' + (type === 'landlords' ? 'Landlord' : 'Agency') + ' ✓', 'success', 2500);
   else toast('Could not save to Directory', 'error');
   var ni = document.getElementById('gw-landlord-name');
   if (ni) ni._dirPicked = true;

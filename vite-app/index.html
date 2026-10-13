@@ -1185,7 +1185,7 @@
         <div class="form-section" style="margin-top:16px">
           <div class="form-section-title">📥 Import Directory from Existing Reports</div>
           <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
-            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agents, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
+            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agencies, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
           </div>
           <button class="btn btn-primary" onclick="backfillDirFromReports(this)" id="btn-backfill-dir">⬇ Import from All Reports</button>
           <div id="backfill-result" style="margin-top:12px;font-size:13px"></div>
@@ -1390,11 +1390,11 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
     <!-- DIRECTORY -->
     <div class="view" id="view-directory">
       <div class="view-header">
-        <div><div class="view-title">Directory</div><div class="view-subtitle">Agents, landlords, properties &amp; contacts — shared across all certificates</div></div>
+        <div><div class="view-title">Directory</div><div class="view-subtitle">Agencies, landlords, properties &amp; contacts — shared across all certificates</div></div>
         <button class="btn btn-primary btn-sm" onclick="openDirEditModal(_dirActiveTab)">+ Add New</button>
       </div>
       <div class="dir-tabs">
-        <button class="dir-tab active" id="dtab-agents"    onclick="switchDirTab('agents')"><i class="fa-solid fa-building"></i> Agents</button>
+        <button class="dir-tab active" id="dtab-agents"    onclick="switchDirTab('agents')"><i class="fa-solid fa-building"></i> Agency</button>
         <button class="dir-tab"        id="dtab-landlords" onclick="switchDirTab('landlords')"><i class="fa-solid fa-user-tie"></i> Landlords</button>
         <button class="dir-tab"        id="dtab-properties" onclick="switchDirTab('properties')"><i class="fa-solid fa-house"></i> Properties</button>
         <button class="dir-tab"        id="dtab-contacts"  onclick="switchDirTab('contacts')"><i class="fa-solid fa-person"></i> Contacts</button>

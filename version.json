@@ -1,8 +1,8 @@
 {
-  "v": "1.2.2",
-  "build": 23,
+  "v": "1.2.3",
+  "build": 24,
   "changes": [
-    "Fixed: Landlord/customer name autocomplete now works correctly in the gas wizard",
-    "Fixed: Directory suggestions now appear when typing in the gas wizard name field"
+    "Improved: Renamed 'Agents' to 'Agency' everywhere in the app",
+    "Improved: Save-to-Directory banner in gas wizard now shows Landlord and Agency buttons"
   ]
 }
