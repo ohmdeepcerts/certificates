@@ -710,8 +710,18 @@ export function gwAttachAC() {
   } else if (_gw.step === 2) {
     var ni = document.getElementById('gw-landlord-name');
     var la = document.getElementById('gw-landlord-a1');
-    if (ni && typeof attachDirAC === 'function') attachDirAC(ni, 'landlords', _gwFillLandlord);
-    if (la && typeof attachDirAC === 'function') attachDirAC(la, 'landlords', _gwFillLandlord);
+    if (ni) window.attachDirACLandlordAgent?.(ni, _gwFillLandlordOrAgent);
+    if (la) window.attachDirAC?.(la, 'landlords', _gwFillLandlord);
+    if (ni && !ni._saveDirBound) {
+      ni._saveDirBound = true;
+      ni.addEventListener('blur', function () {
+        setTimeout(function () {
+          var val = ni.value.trim();
+          if (!val || ni._dirPicked) return;
+          _gwShowSaveDirBanner(val);
+        }, 200);
+      });
+    }
     if (la) attachAddressAutocomplete(la, {
       onSelect: function(a) {
         gwSet('landlordAddr1', a.line1);
@@ -788,6 +798,46 @@ function _gwFillLandlord(rec) {
   if (ni) ni.value = name; if (e1) e1.value = a1; if (e2) e2.value = a2; if (e3) e3.value = a3; if (pc) pc.value = rec.postcode || ''; if (em && rec.email) em.value = rec.email;
   if (typeof _fillToast === 'function') _fillToast('Landlord'); // still global
 }
+
+function _gwFillLandlordOrAgent(rec) {
+  var name = rec._dirType === 'agents' ? (rec.agency_name || rec.contact_name || '') : (rec.landlord_name || rec.company_name || '');
+  _gwFillLandlord(Object.assign({}, rec, { landlord_name: name }));
+  _gw._dirContactType = rec._dirType;
+  _gw._dirContactId = rec.id;
+  var ni = document.getElementById('gw-landlord-name');
+  if (ni) ni._dirPicked = true;
+  document.getElementById('gw-save-dir-banner')?.remove();
+}
+
+function _gwShowSaveDirBanner(name) {
+  document.getElementById('gw-save-dir-banner')?.remove();
+  var ni = document.getElementById('gw-landlord-name');
+  if (!ni) return;
+  var esc2 = function(v) { return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  var wrap = document.createElement('div');
+  wrap.id = 'gw-save-dir-banner';
+  wrap.style.cssText = 'background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:13px';
+  wrap.innerHTML = '<div style="font-weight:600;color:var(--accent);margin-bottom:6px">💾 Save <em>' + esc2(name) + '</em> to Directory?</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Pick a type so you can find them quickly next time</div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+    + '<button onclick="window._gwSaveDirContact(\'landlords\')" style="background:rgba(99,102,241,.15);color:#6366f1;border:1px solid rgba(99,102,241,.35);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600">👤 Landlord</button>'
+    + '<button onclick="window._gwSaveDirContact(\'agents\')" style="background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.35);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600">🏢 Agent</button>'
+    + '<button onclick="document.getElementById(\'gw-save-dir-banner\')?.remove()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--muted)">Skip</button>'
+    + '</div>';
+  if (ni.parentNode) ni.parentNode.insertBefore(wrap, ni.nextSibling);
+}
+
+window._gwSaveDirContact = async function(type) {
+  document.getElementById('gw-save-dir-banner')?.remove();
+  var name = (_gw.landlordName || '').trim();
+  if (!name) return;
+  var result = await window.quickSaveDirContact?.(type, name, _gw.landlordAddr1, _gw.landlordAddr2, _gw.landlordAddr3, _gw.landlordPostcode, _gw.recipientEmail);
+  if (result === 'exists') toast('"' + name + '" is already in your Directory', 'info');
+  else if (result) toast('Saved to Directory as ' + (type === 'landlords' ? 'Landlord' : 'Agent') + ' ✓', 'success', 2500);
+  else toast('Could not save to Directory', 'error');
+  var ni = document.getElementById('gw-landlord-name');
+  if (ni) ni._dirPicked = true;
+};
 
 export function gwCopyPropToLandlord() {
   if (!(_gw.installAddr1 || _gw.installAddr2 || _gw.installAddr3)) return;

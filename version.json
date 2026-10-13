@@ -1,10 +1,9 @@
 {
-  "v": "1.2.0",
-  "build": 21,
+  "v": "1.2.1",
+  "build": 22,
   "changes": [
-    "New: Fire alarm certificates now save offline when there is no internet connection, and sync automatically when back online",
-    "Improved: Fire alarm certificate history is now available to view offline",
-    "Improved: Dashboard summary now loads from cache when offline",
-    "Improved: Directory (properties, landlords, agents, contacts) now loads from cache when offline"
+    "Improved: Landlord/customer name field in gas wizard now suggests matching names from your Directory as you type",
+    "New: If you type a name that isn't in the Directory yet, a prompt appears to save them as a Landlord or Agent",
+    "Improved: Gas wizard now searches both Landlords and Agents together, showing which type each result is"
   ]
 }

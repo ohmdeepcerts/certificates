@@ -314,6 +314,71 @@ function _acKbd(e) {
   else if (e.key === 'Tab') { _hideAcDD(); }
 }
 
+function _renderAcDDCombined(items, inputEl, q, onSelect) {
+  _acItems = items; _acCurInput = inputEl;
+  const closeBtn = '<div style="padding:4px 14px;text-align:right;border-bottom:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>';
+  if (!items.length) {
+    if (q.length >= 2) { _acDD.innerHTML = closeBtn + '<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No matches — this will be saved as new</div>'; _posAcDD(inputEl); }
+    else _hideAcDD();
+    return;
+  }
+  const html = closeBtn + items.map((item, idx) => {
+    const isAgent = item._dirType === 'agents';
+    const typeLabel = isAgent ? 'Agent' : 'Landlord';
+    const typeBg = isAgent ? 'rgba(16,185,129,.15)' : 'rgba(99,102,241,.15)';
+    const typeColor = isAgent ? '#059669' : '#6366f1';
+    const name = _dirName(item._dirType, item);
+    const sub = _dirSub(item._dirType, item);
+    return '<div class="ac-item" data-idx="' + idx + '" onclick="_acPick(' + idx + ')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)">'
+      + '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:' + typeBg + ';color:' + typeColor + ';white-space:nowrap">' + typeLabel + '</span>'
+      + '<span style="font-size:13px;font-weight:500;color:var(--text)">' + _hlText(name, q) + '</span></div>'
+      + (sub ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;margin-left:52px">' + _hlText(sub, q) + '</div>' : '')
+      + '</div>';
+  }).join('');
+  _acDD.innerHTML = html;
+  _acDD._onSelect = onSelect; _acDD._type = '_combined'; _acDD._q = q;
+  _acIdx = -1; _posAcDD(inputEl);
+}
+
+export function attachDirACLandlordAgent(inputEl, onSelect) {
+  if (!_acDD) _initAcDD();
+  if (inputEl._acAttached) return; inputEl._acAttached = true;
+  const _doSearch = async (q) => {
+    const [ll, ag] = await Promise.all([dirSearch('landlords', q), dirSearch('agents', q)]);
+    const combined = [...ll.map(r => ({ ...r, _dirType: 'landlords' })), ...ag.map(r => ({ ...r, _dirType: 'agents' }))].slice(0, 8);
+    _renderAcDDCombined(combined, inputEl, q, onSelect);
+  };
+  inputEl.addEventListener('focus', async () => { _acCurInput = inputEl; const q = inputEl.value.trim(); if (q.length >= 2) await _doSearch(q); });
+  inputEl.addEventListener('input', () => {
+    clearTimeout(_acTimer); _acCurInput = inputEl;
+    const q = inputEl.value.trim();
+    _acTimer = setTimeout(async () => { if (q.length < 2) { _hideAcDD(); return; } await _doSearch(q); }, 200);
+  });
+  inputEl.addEventListener('keydown', _acKbd);
+}
+
+export async function quickSaveDirContact(type, name, addr1, addr2, town, postcode, email) {
+  const now = new Date().toISOString();
+  const uid = state.currentUser?.id || null;
+  const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const n = (name || '').trim(); if (!n) return null;
+  if (type === 'landlords') {
+    if ((_dir.landlords || []).some(r => norm(r.landlord_name || r.company_name) === norm(n))) return 'exists';
+    const rec = { landlord_name: n, company_name: '', addr1: addr1 || '', addr2: addr2 || '', town: town || '', postcode: (postcode || '').toUpperCase(), email: email || '', is_active: true, usage_count: 0, created_at: now, created_by: uid };
+    const { data: c } = await sb.from('directory_landlords').insert(rec).select().single();
+    if (c) { if (!_dir.landlords) _dir.landlords = []; _dir.landlords.push(c); try { localStorage.setItem('_cache_dir_landlords', JSON.stringify({ data: _dir.landlords, ts: Date.now() })); } catch {} return c; }
+    return null;
+  }
+  if (type === 'agents') {
+    if ((_dir.agents || []).some(r => norm(r.agency_name || r.contact_name) === norm(n))) return 'exists';
+    const rec = { agency_name: n, addr1: addr1 || '', addr2: addr2 || '', town: town || '', postcode: (postcode || '').toUpperCase(), email: email || '', is_active: true, usage_count: 0, created_at: now, created_by: uid };
+    const { data: c } = await sb.from('directory_agents').insert(rec).select().single();
+    if (c) { if (!_dir.agents) _dir.agents = []; _dir.agents.push(c); try { localStorage.setItem('_cache_dir_agents', JSON.stringify({ data: _dir.agents, ts: Date.now() })); } catch {} return c; }
+    return null;
+  }
+  return null;
+}
+
 export function attachDirAC(inputEl, type, onSelect) {
   if (!_acDD) _initAcDD();
   if (inputEl._acAttached) return; inputEl._acAttached = true;
