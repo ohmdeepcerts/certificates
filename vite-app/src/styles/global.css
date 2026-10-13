@@ -342,6 +342,10 @@ a{color:var(--accent);text-decoration:none}
 .dir-card-actions{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:flex-start;flex-direction:column}
 .dir-act-btn{padding:5px 11px;font-size:12px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:600;white-space:nowrap}
 .dir-quick-btn{padding:5px 11px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff;white-space:nowrap}
+.dir-pagination{display:flex;align-items:center;gap:4px;justify-content:center;padding:16px 0 4px;flex-wrap:wrap}
+.dir-pg-btn{padding:5px 10px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;min-width:34px;transition:.12s}.dir-pg-btn:hover:not(:disabled):not(.active){background:var(--surface);border-color:var(--accent);color:var(--accent)}.dir-pg-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}.dir-pg-btn:disabled{opacity:.4;cursor:default}
+.dir-pg-gap{font-size:12px;color:var(--muted);padding:0 2px}
+.dir-pg-info{font-size:11px;color:var(--muted);margin-left:8px}
 .dir-new-btn{padding:7px 13px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;background:var(--accent);border:none;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;line-height:1.4}
 .dir-new-btn:hover{opacity:.9}
 #dir-new-cert-dd{position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.22);min-width:220px;display:none;overflow:hidden}

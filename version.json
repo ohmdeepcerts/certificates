@@ -1,11 +1,8 @@
 {
-  "v": "1.4.0",
-  "build": 28,
+  "v": "1.4.1",
+  "build": 29,
   "changes": [
-    "Fixed: Edit button now opens properly on all Agency, Landlord, Property and Contact cards.",
-    "Fixed: Add New button at the top of Directory now works.",
-    "Fixed: Appliance Library Edit button now opens correctly.",
-    "Fixed: Move to Agency / Move to Landlord button now shows a proper confirmation screen instead of relying on a browser popup.",
-    "Fixed: Agency tab label and page subtitle corrected."
+    "Fixed: Landlord and Agency cards now show the correct number of linked properties.",
+    "Fixed: Property links to landlords are now set automatically when a certificate is saved."
   ]
 }

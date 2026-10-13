@@ -8,6 +8,10 @@ const _dir = { agents: null, landlords: null, properties: null, contacts: null, 
 const _dirTable = { agents: 'directory_agents', landlords: 'directory_landlords', properties: 'directory_properties', contacts: 'directory_contacts' };
 let _dirActiveTab = 'agents';
 window._dirActiveTab = 'agents';
+let _dirPage = 1;
+const _DIR_PAGE_SIZE = 20;
+let _dirLastQ = '';
+let _dirLastTab = '';
 
 function _inferAppCat(t) {
   const s = (t || '').toLowerCase();
@@ -65,6 +69,28 @@ export async function _autoSaveDirAfterCert(certType, data) {
           const rec = { agency_name: aName, addr1: aL[0] || '', addr2: aL[1] || '', town: aL[2] || '', is_active: true, usage_count: 0, created_at: now, created_by: uid };
           const { data: c } = await sb.from('directory_agents').insert(rec).select().single();
           if (c) { if (!_dir.agents) _dir.agents = []; _dir.agents.push(c); }
+        }
+      }
+    }
+    // Auto-link property to landlord (gas) or agent (PAT) when both are known
+    if (addr1) {
+      const propRec = (_dir.properties || []).find(r => norm(r.addr1) === norm(addr1) && (!postcode || norm(r.postcode) === norm(postcode)));
+      if (propRec) {
+        if (certType === 'gas' && lName) {
+          const llRec = (_dir.landlords || []).find(r => norm(r.landlord_name || r.company_name) === norm(lName));
+          if (llRec && !propRec.landlord_id) {
+            const { data: upd } = await sb.from('directory_properties').update({ landlord_id: llRec.id }).eq('id', propRec.id).select().single();
+            if (upd) propRec.landlord_id = upd.landlord_id;
+          }
+        } else if (certType === 'pat') {
+          const aName2 = (data.agency_name || '').trim();
+          if (aName2) {
+            const agRec = (_dir.agents || []).find(r => norm(r.agency_name || r.contact_name) === norm(aName2));
+            if (agRec && !propRec.agent_id) {
+              const { data: upd } = await sb.from('directory_properties').update({ agent_id: agRec.id }).eq('id', propRec.id).select().single();
+              if (upd) propRec.agent_id = upd.agent_id;
+            }
+          }
         }
       }
     }
@@ -536,6 +562,7 @@ export function _attachGasFormAC() {
 export async function switchDirTab(type) {
   _dirActiveTab = type;
   window._dirActiveTab = type;
+  _dirPage = 1;
   document.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
   const tb = document.getElementById('dtab-' + type); if (tb) tb.classList.add('active');
   document.getElementById('dir-search-input').value = '';
@@ -546,8 +573,8 @@ let _dirCerts = null;
 async function _loadDirCerts() {
   if (_dirCerts) return;
   const [gr, pr] = await Promise.all([
-    sb.from('gas_certs').select('id,install_address,install_postcode,cert_date,next_check_date,status').in('status', ['completed', 'draft']),
-    sb.from('pat_reports').select('id,property_address,test_date,status')
+    sb.from('gas_certs').select('id,install_address,install_postcode,cert_date,next_check_date,status,landlord_address').in('status', ['completed', 'draft']),
+    sb.from('pat_reports').select('id,property_address,test_date,status,landlord_name,agency_name')
   ]);
   _dirCerts = { gas: gr.data || [], pat: pr.data || [] };
 }
@@ -574,7 +601,19 @@ function _propCompliance(prop) {
   return { gas, pat, completed, latest, status, expText, days };
 }
 function _landlordCompliance(ll) {
-  const props = (_dir.properties || []).filter(p => p.is_active !== false && p.landlord_id === ll.id);
+  const _n = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const llName = _n(ll.landlord_name || ll.company_name);
+  const matched = new Set((_dir.properties || []).filter(p => p.is_active !== false && p.landlord_id === ll.id).map(p => p.id));
+  if (_dirCerts && llName) {
+    _dirCerts.gas.forEach(c => {
+      if (!c.landlord_address) return;
+      if (_n((c.landlord_address || '').split('\n')[0]) !== llName) return;
+      const pc = _n(c.install_postcode); const a1 = _n((c.install_address || '').split('\n')[0]);
+      const prop = (_dir.properties || []).find(p => p.is_active !== false && ((pc && _n(p.postcode) === pc) || (a1 && _n(p.addr1) === a1)));
+      if (prop) matched.add(prop.id);
+    });
+  }
+  const props = (_dir.properties || []).filter(p => matched.has(p.id));
   let valid = 0, expiring = 0, expired = 0, missing = 0, totalGas = 0, totalPat = 0;
   props.forEach(p => {
     const c = _propCompliance(p); if (!c) { missing++; return; }
@@ -584,7 +623,19 @@ function _landlordCompliance(ll) {
   return { propCount: props.length, valid, expiring, expired, missing, totalGas, totalPat };
 }
 function _agentCompliance(ag) {
-  const props = (_dir.properties || []).filter(p => p.is_active !== false && p.agent_id === ag.id);
+  const _n = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const agName = _n(ag.agency_name || ag.contact_name);
+  const matched = new Set((_dir.properties || []).filter(p => p.is_active !== false && p.agent_id === ag.id).map(p => p.id));
+  if (_dirCerts && agName) {
+    _dirCerts.pat.forEach(c => {
+      if (!c.agency_name) return;
+      if (_n(c.agency_name) !== agName) return;
+      const pa = _n(c.property_address || '');
+      const prop = (_dir.properties || []).find(p => p.is_active !== false && pa && (pa.includes(_n(p.addr1)) || (p.postcode && pa.includes(_n(p.postcode)))));
+      if (prop) matched.add(prop.id);
+    });
+  }
+  const props = (_dir.properties || []).filter(p => matched.has(p.id));
   let valid = 0, expiring = 0, expired = 0, missing = 0;
   props.forEach(p => { const c = _propCompliance(p); if (!c) { missing++; return; } if (c.status === 'valid') valid++; else if (c.status === 'expiring') expiring++; else if (c.status === 'expired') expired++; else missing++; });
   return { propCount: props.length, valid, expiring, expired, missing };
@@ -604,13 +655,36 @@ export async function renderDirectoryPage() {
   let recs = _dir[type] || [];
   if (!showArch) recs = recs.filter(r => r.is_active !== false);
   if (q.length >= 2) { const ql = q.toLowerCase(); recs = recs.filter(r => _dirMatchScore(type, r, ql) > 0); }
+  if (type !== _dirLastTab || q !== _dirLastQ) { _dirPage = 1; _dirLastTab = type; _dirLastQ = q; }
   if (!recs.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📇</div><p>No ${type} found${q ? ' matching "' + q + '"' : ''}</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="openDirEditModal('${type}')">+ Add First</button></div>`;
     return;
   }
+  const total = recs.length;
+  const totalPages = Math.ceil(total / _DIR_PAGE_SIZE);
+  if (_dirPage < 1) _dirPage = 1;
+  if (_dirPage > totalPages) _dirPage = totalPages;
+  const start = (_dirPage - 1) * _DIR_PAGE_SIZE;
+  const pageRecs = recs.slice(start, start + _DIR_PAGE_SIZE);
   const q2 = q.length >= 2 ? q : '';
-  el.innerHTML = '<div class="dir-list">' + recs.map(r => _dirCard(type, r, q2)).join('') + '</div>';
+  el.innerHTML = '<div class="dir-list">' + pageRecs.map(r => _dirCard(type, r, q2)).join('') + '</div>' + _dirPaginationHtml(total, _dirPage, totalPages);
 }
+
+function _dirPaginationHtml(total, page, totalPages) {
+  if (totalPages <= 1) return '';
+  const start = (page - 1) * _DIR_PAGE_SIZE + 1;
+  const end = Math.min(page * _DIR_PAGE_SIZE, total);
+  const prevDis = page <= 1 ? ' disabled' : '';
+  const nextDis = page >= totalPages ? ' disabled' : '';
+  let pages = '';
+  const lo = Math.max(1, page - 2), hi = Math.min(totalPages, page + 2);
+  if (lo > 1) pages += `<button class="dir-pg-btn" onclick="window._dirGoPage(1)">1</button>${lo > 2 ? '<span class="dir-pg-gap">…</span>' : ''}`;
+  for (let i = lo; i <= hi; i++) pages += `<button class="dir-pg-btn${i === page ? ' active' : ''}" onclick="window._dirGoPage(${i})">${i}</button>`;
+  if (hi < totalPages) pages += `${hi < totalPages - 1 ? '<span class="dir-pg-gap">…</span>' : ''}<button class="dir-pg-btn" onclick="window._dirGoPage(${totalPages})">${totalPages}</button>`;
+  return `<div class="dir-pagination"><button class="dir-pg-btn"${prevDis} onclick="window._dirGoPage(${page - 1})">‹ Prev</button>${pages}<button class="dir-pg-btn"${nextDis} onclick="window._dirGoPage(${page + 1})">Next ›</button><span class="dir-pg-info">${start}–${end} of ${total}</span></div>`;
+}
+
+window._dirGoPage = function(n) { _dirPage = n; renderDirectoryPage(); };
 
 function _cpill(cls, icon, txt) { return `<span class="cpill cpill-${cls}">${icon} ${txt}</span>`; }
 function _daysPillHtml(days) {
@@ -764,17 +838,41 @@ export async function dirToggleArchive(type, id, currentlyActive) {
 }
 
 let _dirEditType = null, _dirEditId = null;
+function _getDirEditModal() {
+  let m = document.getElementById('dir-edit-modal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'dir-edit-modal';
+  m.style.cssText = 'display:none;position:fixed;inset:0;z-index:9100;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);padding:16px';
+  m.innerHTML = `
+    <div style="background:var(--surface);border-radius:14px;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div id="dir-edit-modal-title" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+        <button onclick="closeDirEditModal()" style="background:none;border:none;font-size:20px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px">×</button>
+      </div>
+      <div id="dir-edit-modal-body" style="padding:18px 20px;overflow-y:auto;flex:1"></div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-secondary" onclick="closeDirEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDirRecord()">Save</button>
+      </div>
+    </div>`;
+  m.addEventListener('pointerdown', e => { if (e.target === m) closeDirEditModal(); });
+  document.body.appendChild(m);
+  return m;
+}
+
 export function openDirEditModal(type, id = null, prefill = '') {
   _dirEditType = type; _dirEditId = id || null;
   const rec = id ? (_dir[type] || []).find(r => r.id === id) : null;
   const labels = { agents: 'Agency', landlords: 'Landlord', properties: 'Property', contacts: 'Contact' };
+  const m = _getDirEditModal();
   document.getElementById('dir-edit-modal-title').textContent = (id ? 'Edit ' : 'New ') + (labels[type] || type);
   document.getElementById('dir-edit-modal-body').innerHTML = _dirForm(type, rec, prefill);
-  delete document.getElementById('dir-edit-modal').dataset.dupConfirmed;
+  delete m.dataset.dupConfirmed;
   if (type === 'properties') setTimeout(_populateDirSelects, 0);
-  document.getElementById('dir-edit-modal').style.display = 'flex';
+  m.style.display = 'flex';
 }
-export function closeDirEditModal() { document.getElementById('dir-edit-modal').style.display = 'none'; _dirEditType = null; _dirEditId = null; }
+export function closeDirEditModal() { const m = document.getElementById('dir-edit-modal'); if (m) m.style.display = 'none'; _dirEditType = null; _dirEditId = null; }
 
 function _dirForm(type, rec, pf = '') {
   const v = (f, fb = '') => rec ? (rec[f] || fb) : (f === 'agency_name' || f === 'landlord_name' || f === 'addr1' || f === 'name' ? pf : fb);
@@ -819,9 +917,10 @@ export async function saveDirRecord() {
   const existing = (_dir[type] || []).filter(r => _dirEditId ? r.id !== _dirEditId : true);
   const norm = s => (s || '').toLowerCase().replace(/\s+ltd\.?$|\s+limited\.?$/, '').replace(/[^a-z0-9]/g, '');
   const isDup = existing.some(r => norm(data[pk]) && norm(data[pk]) === norm(r[pk]));
-  if (isDup && !document.getElementById('dir-edit-modal').dataset.dupConfirmed) {
+  const _dem = document.getElementById('dir-edit-modal');
+  if (isDup && !_dem?.dataset.dupConfirmed) {
     if (!confirm('A similar record already exists. Save anyway?')) return;
-    document.getElementById('dir-edit-modal').dataset.dupConfirmed = '1';
+    if (_dem) _dem.dataset.dupConfirmed = '1';
   }
   data.updated_at = new Date().toISOString();
   let error;
@@ -839,14 +938,38 @@ export async function saveDirRecord() {
 }
 
 // ── Change Type ──────────────────────────────────────────────────────────────
-export async function dirChangeType(type, id) {
+export function dirChangeType(type, id) {
   if (type !== 'landlords' && type !== 'agents') return;
   const rec = (_dir[type] || []).find(r => r.id === id);
-  if (!rec) return;
+  if (!rec) { toast('Record not found — try refreshing', 'error'); return; }
   const newType = type === 'landlords' ? 'agents' : 'landlords';
   const name = _dirName(type, rec);
   const newLabel = newType === 'agents' ? 'Agency' : 'Landlord';
-  if (!confirm(`Move "${name}" to ${newLabel}?\n\nAll linked properties will be updated.`)) return;
+  const _esc2 = v => (v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let m = document.getElementById('dir-changetype-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'dir-changetype-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+    document.body.appendChild(m);
+  }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.4);padding:24px">
+    <div style="font-size:16px;font-weight:700;margin-bottom:10px">Move to ${newLabel}?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px"><strong>${_esc2(name)}</strong> will be moved from ${type === 'landlords' ? 'Landlord' : 'Agency'} to ${newLabel}.<br><br>All linked properties will be updated automatically.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="document.getElementById('dir-changetype-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" onclick="window._dirDoChangeType('${type}','${id}')">Move to ${newLabel}</button>
+    </div>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+window._dirDoChangeType = async function(type, id) {
+  document.getElementById('dir-changetype-modal').style.display = 'none';
+  const rec = (_dir[type] || []).find(r => r.id === id);
+  if (!rec) { toast('Record not found', 'error'); return; }
+  const newType = type === 'landlords' ? 'agents' : 'landlords';
+  const newLabel = newType === 'agents' ? 'Agency' : 'Landlord';
   const shared = { email: rec.email||'', email2: rec.email2||'', cc_emails: rec.cc_emails||'', phone: rec.phone||'', mobile: rec.mobile||'', addr1: rec.addr1||'', addr2: rec.addr2||'', town: rec.town||'', county: rec.county||'', postcode: (rec.postcode||'').toUpperCase(), notes: rec.notes||'', is_active: rec.is_active !== false, usage_count: rec.usage_count||0, created_at: rec.created_at||new Date().toISOString(), created_by: rec.created_by||null };
   const newRec = newType === 'agents'
     ? { ...shared, agency_name: rec.landlord_name || rec.company_name || '', contact_name: rec.company_name ? rec.landlord_name : '' }
@@ -867,7 +990,7 @@ export async function dirChangeType(type, id) {
   try { localStorage.setItem('_cache_dir_'+newType, JSON.stringify({data:_dir[newType],ts:Date.now()})); } catch {}
   toast(`Moved to ${newLabel} ✓`, 'success');
   switchDirTab(newType);
-}
+};
 
 // ── Merge ────────────────────────────────────────────────────────────────────
 let _mergeType = null, _mergeKeepId = null, _mergeOtherId = null;
@@ -1070,10 +1193,34 @@ export async function appToggleArchive(id, currentlyActive) {
   toast(currentlyActive ? 'Archived' : 'Restored', 'success'); renderAppliancesPage();
 }
 
+function _getAppEditModal() {
+  let m = document.getElementById('app-edit-modal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'app-edit-modal';
+  m.style.cssText = 'display:none;position:fixed;inset:0;z-index:9100;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);padding:16px';
+  m.innerHTML = `
+    <div style="background:var(--surface);border-radius:14px;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div id="app-edit-modal-title" style="font-size:16px;font-weight:700;color:var(--text)"></div>
+        <button onclick="closeApplianceEditModal()" style="background:none;border:none;font-size:20px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 6px">×</button>
+      </div>
+      <div id="app-edit-modal-body" style="padding:18px 20px;overflow-y:auto;flex:1"></div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">
+        <button class="btn btn-secondary" onclick="closeApplianceEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveApplianceRecord()">Save</button>
+      </div>
+    </div>`;
+  m.addEventListener('pointerdown', e => { if (e.target === m) closeApplianceEditModal(); });
+  document.body.appendChild(m);
+  return m;
+}
+
 let _appEditId = null;
 export function openApplianceEditModal(id = null) {
   _appEditId = id || null;
   const rec = id ? (_dir.appliances || []).find(r => r.id === id) : null;
+  _getAppEditModal();
   document.getElementById('app-edit-modal-title').textContent = id ? 'Edit Appliance' : 'New Appliance';
   const v = f => rec ? (rec[f] || '') : ''; const esc = s => (s || '').replace(/"/g, '&quot;');
   const defs = rec?.defaults || {};
@@ -1091,7 +1238,7 @@ export function openApplianceEditModal(id = null) {
     `<div class="field-group" style="margin-top:10px"><label>Notes</label><textarea id="ape-notes" rows="2" class="form-control" style="resize:vertical">${v('notes')}</textarea></div>`;
   document.getElementById('app-edit-modal').style.display = 'flex';
 }
-export function closeApplianceEditModal() { document.getElementById('app-edit-modal').style.display = 'none'; _appEditId = null; }
+export function closeApplianceEditModal() { const m = document.getElementById('app-edit-modal'); if (m) m.style.display = 'none'; _appEditId = null; }
 
 export async function saveApplianceRecord() {
   const gv = id => (document.getElementById('ape-' + id) || {}).value?.trim() || '';
