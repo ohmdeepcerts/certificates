@@ -418,9 +418,7 @@ export async function completePAT() {
   patGe('btn-pat-complete2').disabled = true;
   doPatPreview();
   toast(`Certificate issued: ${refNum}`, 'success', 5000);
-  // TODO: import _dirCerts and _autoSaveDirAfterCert from their module
-  // _dirCerts = null;
-  // _autoSaveDirAfterCert('pat', getPATFormData()).catch(() => {});
+  if (typeof window._autoSaveDirAfterCert === 'function') window._autoSaveDirAfterCert('pat', d).catch(() => {});
   import('./email.js').then(m => m.emailPAT(true));
 }
 

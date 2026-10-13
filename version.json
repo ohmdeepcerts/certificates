@@ -1,10 +1,8 @@
 {
-  "v": "1.5.0",
-  "build": 30,
+  "v": "1.5.1",
+  "build": 31,
   "changes": [
-    "New: Click any card in the Directory to open a full detail view.",
-    "New: Landlord and Agency detail view shows all linked properties with compliance status.",
-    "New: Property detail view shows full certificate history — gas and PAT, including superseded certs.",
-    "New: Click a property inside a landlord view to drill into it, and navigate back."
+    "Fixed: Directory now automatically updates property counts when a PAT certificate is saved.",
+    "Fixed: Creating a PAT cert now links the property to the correct agency in the Directory."
   ]
 }

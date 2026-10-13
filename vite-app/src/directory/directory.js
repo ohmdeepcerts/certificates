@@ -30,10 +30,15 @@ export async function _autoSaveDirAfterCert(certType, data) {
       addrLines = (data.install_address || '').split('\n').map(l => l.trim()).filter(Boolean);
       addr1 = addrLines[0] || ''; postcode = (data.install_postcode || '').trim().toUpperCase();
     } else {
-      const patAddr = document.getElementById('pat-addr');
-      const patPc = document.getElementById('pat-postcode');
-      addrLines = (patAddr?.value || '').split('\n').map(l => l.trim()).filter(Boolean);
-      addr1 = addrLines[0] || ''; postcode = (patPc?.value || '').trim().toUpperCase();
+      if (data.property_address) {
+        addrLines = data.property_address.split('\n').map(l => l.trim()).filter(Boolean);
+        addr1 = addrLines[0] || '';
+        const last = addrLines[addrLines.length - 1] || '';
+        postcode = /^[A-Z]{1,2}\d/.test(last) ? last : (document.getElementById('pat-postcode')?.value || '').trim().toUpperCase();
+      } else {
+        addrLines = (document.getElementById('pat-addr')?.value || '').split('\n').map(l => l.trim()).filter(Boolean);
+        addr1 = addrLines[0] || ''; postcode = (document.getElementById('pat-postcode')?.value || '').trim().toUpperCase();
+      }
     }
     if (addr1) {
       if (!_dir.properties) await dirLoad('properties');
@@ -107,6 +112,7 @@ export async function _autoSaveDirAfterCert(certType, data) {
         }
       }
     }
+    _dirCerts = null;
   } catch (e) { /* silent */ }
 }
 
