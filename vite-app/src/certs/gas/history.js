@@ -21,14 +21,27 @@ let _gasPage = 1, _gasFiltered = [], _gasCurrentQ = '';
 export async function loadGasHistory() {
   const _gl = document.getElementById('gas-list');
   if (_gl) _gl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+  if (!navigator.onLine) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('_cache_gas_history') || 'null');
+      if (cached?.data) {
+        state.gasReports = cached.data; _gasFiltered = state.gasReports; _gasPage = 1; _gasCurrentQ = '';
+        renderGasList(state.gasReports, 1, '');
+        toast('Offline — showing data saved ' + new Date(cached.ts).toLocaleString(), 'info', 4000);
+        return;
+      }
+    } catch {}
+    if (_gl) _gl.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><p>Offline — no cached data yet. Load this page once while online first.</p></div>';
+    return;
+  }
   let { data, error } = await sb.from('gas_certs').select('*').is('deleted_at', null).order('created_at', { ascending: false });
   if (error && (error.message || '').includes('deleted_at')) {
     ({ data, error } = await sb.from('gas_certs').select('*').order('created_at', { ascending: false }));
   }
   if (error) { toast('Failed to load Gas certs: ' + error.message, 'error'); return; }
   state.gasReports = data || [];
-  _gasFiltered = state.gasReports;
-  _gasPage = 1; _gasCurrentQ = '';
+  try { localStorage.setItem('_cache_gas_history', JSON.stringify({ data: state.gasReports, ts: Date.now() })); } catch {}
+  _gasFiltered = state.gasReports; _gasPage = 1; _gasCurrentQ = '';
   renderGasList(state.gasReports, 1, '');
 }
 

@@ -38,12 +38,25 @@ export function _patEarliestExp(r) { const d = (r.appliances || []).map(a => a.n
 // ─── Load PAT history ─────────────────────────────────
 export async function loadPATHistory() {
   const _pl = document.getElementById('pat-list'); if (_pl) _pl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+  if (!navigator.onLine) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('_cache_pat_history') || 'null');
+      if (cached?.data) {
+        state.patReports = cached.data; _patFiltered = state.patReports; _patPage = 1; _patCurrentQ = '';
+        renderPATList(state.patReports, 1, '');
+        toast('Offline — showing data saved ' + new Date(cached.ts).toLocaleString(), 'info', 4000);
+        return;
+      }
+    } catch {}
+    if (_pl) _pl.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><p>Offline — no cached data yet. Load this page once while online first.</p></div>';
+    return;
+  }
   let { data, error } = await sb.from('pat_reports').select('*').is('deleted_at', null).order('created_at', { ascending: false });
   if (error && (error.message || '').includes('deleted_at')) { ({ data, error } = await sb.from('pat_reports').select('*').order('created_at', { ascending: false })); }
   if (error) { toast('Failed to load PAT reports: ' + error.message, 'error'); return; }
   state.patReports = data || [];
-  _patFiltered = state.patReports;
-  _patPage = 1; _patCurrentQ = '';
+  try { localStorage.setItem('_cache_pat_history', JSON.stringify({ data: state.patReports, ts: Date.now() })); } catch {}
+  _patFiltered = state.patReports; _patPage = 1; _patCurrentQ = '';
   renderPATList(state.patReports, 1, '');
 }
 

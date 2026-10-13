@@ -1,12 +1,10 @@
 {
-  "v": "1.1.8",
-  "build": 19,
+  "v": "1.1.9",
+  "build": 20,
   "changes": [
-    "Fixed: 'Scan Handwriting' button in PAT tests — was not opening the scan window",
-    "Fixed: Gas certificate signature boxes — tapping the signature area now opens the signing screen",
-    "Fixed: Staff management page — Add Staff, approve/reject access requests and set permissions all work again",
-    "Fixed: CSV Export buttons on PAT, Gas and EL certificate history pages were not downloading",
-    "Fixed: Audit log page — Previous / Next navigation buttons now work",
-    "Fixed: Dashboard search bar, Analytics refresh and Recycle Bin restore / delete"
+    "Fixed: Tapping a suggestion in the address / client search dropdown now correctly selects it",
+    "New: Gas certificates now save offline when there is no internet connection, and sync automatically when back online",
+    "Improved: Gas, PAT and EL certificate history pages remember the last loaded list — available to view offline",
+    "Improved: App assets (scripts, styles) are now cached so the app loads faster and works without internet after first visit"
   ]
 }

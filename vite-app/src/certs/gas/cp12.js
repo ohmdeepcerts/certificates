@@ -6,6 +6,7 @@ import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
 import { toast, showOverlay, hideOverlay, esc } from '../../lib/utils.js';
 import { state, isAdmin } from '../../lib/state.js';
+import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 import { buildCertRefSeq, _refSettings, _pcScore, _refAddrPart, _extractPC } from '../_core/refgen.js';
 import { navigate } from '../../nav/navigation.js';
 // Circular-safe: wizard.js imports { saveGas, completeGas, setCP12Field, toggleCP12AppRow } from here.
@@ -549,6 +550,14 @@ export async function saveGas(_fromMgw) {
   if (!_fromMgw && mgwActive()) mgwSyncToDesktopForm();
   const d = getGasFormData();
   if (!d.install_address) { toast('Installation address required', 'error'); return false; }
+  if (!navigator.onLine) {
+    const _gasIntNotes = (document.getElementById('gas-internal-notes')?.value || '').trim();
+    await idbEnqueue({ type: 'gas_upsert', form: { ...d, internal_notes: _gasIntNotes, status: 'draft' }, supabaseId: state.editingGasId || null, userId: state.currentUser.id, ts: Date.now() });
+    refreshSyncBadge();
+    state.gasDirty = false;
+    toast('Saved offline — will sync when back online', 'success');
+    return true;
+  }
   showOverlay('Saving…');
   let err;
   const _gasIntNotes = (document.getElementById('gas-internal-notes')?.value || '').trim();
@@ -570,6 +579,11 @@ export async function saveGas(_fromMgw) {
 }
 
 export async function completeGas() {
+  if (!navigator.onLine) {
+    const saved = await saveGas();
+    if (saved) toast('Draft saved offline — come back online to issue the final certificate', 'info', 5000);
+    return;
+  }
   if (!cp12RequireAppliance()) return;
   const d = getGasFormData();
   if (!d.install_address || !d.cert_date) { toast('Address and date required', 'error'); return; }

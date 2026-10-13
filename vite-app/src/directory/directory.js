@@ -229,7 +229,7 @@ function _initAcDD() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') _hideAcDD(); });
 }
 
-function _hideAcDD() {
+export function _hideAcDD() {
   if (_acDD) _acDD.style.display = 'none';
   _acIdx = -1; _acItems = [];
 }
@@ -287,7 +287,7 @@ function _renderAcDD(items, type, inputEl, q, onSelect) {
   _acIdx = -1; _posAcDD(inputEl);
 }
 
-function _acPick(idx) {
+export function _acPick(idx) {
   const item = _acItems[idx]; if (!item) return;
   const onSel = _acDD._onSelect, type = _acDD._type;
   _hideAcDD();

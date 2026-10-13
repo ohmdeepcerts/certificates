@@ -1540,12 +1540,27 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 
 export async function loadELHistory() {
   if (!state.currentUser) return;
+  if (!navigator.onLine) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('_cache_el_history') || 'null');
+      if (cached?.data) {
+        _elAllCerts = cached.data; window._elAllCerts = _elAllCerts; _elFiltered = _elAllCerts; _elPage = 1; _elCurrentQ = '';
+        renderELList(_elAllCerts, 1, '');
+        toast('Offline — showing data saved ' + new Date(cached.ts).toLocaleString(), 'info', 4000);
+        return;
+      }
+    } catch {}
+    const _el = document.getElementById('el-list');
+    if (_el) _el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><p>Offline — no cached data yet. Load this page once while online first.</p></div>';
+    return;
+  }
   var q = sb.from('el_certs').select('*').order('created_at', {ascending:false});
   if (!isAdmin()) q = q.eq('created_by', state.currentUser.id);
   var {data, error} = await q;
   if (error) { console.error('loadELHistory:', error); return; }
   _elAllCerts = data || [];
   window._elAllCerts = _elAllCerts;
+  try { localStorage.setItem('_cache_el_history', JSON.stringify({ data: _elAllCerts, ts: Date.now() })); } catch {}
   _elFiltered = _elAllCerts; _elPage = 1; _elCurrentQ = '';
   renderELList(_elAllCerts, 1, '');
 }
