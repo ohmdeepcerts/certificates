@@ -2,7 +2,11 @@
   "v": "1.1.8",
   "build": 19,
   "changes": [
-    "Fix: 5 modules missing from main.js window globals — gas/signatures, staff, audit, shared/csv, dashboard",
-    "Gas CP12 signature pads, Staff management, Audit pagination, CSV exports, Dashboard all now work"
+    "Fixed: 'Scan Handwriting' button in PAT tests — was not opening the scan window",
+    "Fixed: Gas certificate signature boxes — tapping the signature area now opens the signing screen",
+    "Fixed: Staff management page — Add Staff, approve/reject access requests and set permissions all work again",
+    "Fixed: CSV Export buttons on PAT, Gas and EL certificate history pages were not downloading",
+    "Fixed: Audit log page — Previous / Next navigation buttons now work",
+    "Fixed: Dashboard search bar, Analytics refresh and Recycle Bin restore / delete"
   ]
 }
