@@ -47,7 +47,7 @@ async function _loadCertGlobals() {
   Object.assign(window, gas);
   Object.assign(window, el);
   Object.assign(window, fire);
-  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist, patScan] = await Promise.all([
+  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist, patScan, gasSig, staff, audit, csv, dash] = await Promise.all([
     import('./certs/gas/wizard.js'),
     import('./certs/gas/pdf.js'),
     import('./certs/gas/preview.js'),
@@ -59,6 +59,11 @@ async function _loadCertGlobals() {
     import('./certs/pat/pdf.js'),
     import('./certs/pat/history.js'),
     import('./certs/pat/scan.js'),
+    import('./certs/gas/signatures.js'),
+    import('./staff/staff.js'),
+    import('./audit/audit.js'),
+    import('./shared/csv.js'),
+    import('./dashboard/dashboard.js'),
   ]);
   Object.assign(window, gasWiz);
   Object.assign(window, gasPdf);
@@ -71,6 +76,11 @@ async function _loadCertGlobals() {
   Object.assign(window, { emailPAT: patEmail.emailPAT, emailPATFromList: patEmail.emailPATFromList });
   Object.assign(window, { generatePATPDF: patPdf.generatePATPDF, printPATCertificate: patPdf.printPATCertificate, openPATPDF: patPdf.openPATPDF });
   Object.assign(window, { openScanModal: patScan.openScanModal, closeScanModal: patScan.closeScanModal, handleScanFile: patScan.handleScanFile, doScanApply: patScan.doScanApply });
+  Object.assign(window, gasSig);
+  Object.assign(window, { showAddStaffModal: staff.showAddStaffModal, hideAddStaffModal: staff.hideAddStaffModal, doAddStaff: staff.doAddStaff, setStaffPerm: staff.setStaffPerm, toggleStaffActive: staff.toggleStaffActive, resetStaffPassword: staff.resetStaffPassword, approveRequest: staff.approveRequest, rejectRequest: staff.rejectRequest, copyStaffSQL: staff.copyStaffSQL, loadStaff: staff.loadStaff, loadPendingRequests: staff.loadPendingRequests });
+  Object.assign(window, { renderAuditPage: audit.renderAuditPage, prevAuditPage: audit.prevAuditPage, nextAuditPage: audit.nextAuditPage, loadAuditLog: audit.loadAuditLog });
+  Object.assign(window, { exportPATCSV: csv.exportPATCSV, exportGasCSV: csv.exportGasCSV, exportELCSV: csv.exportELCSV });
+  Object.assign(window, { globalSearch: dash.globalSearch, loadDashboard: dash.loadDashboard, loadAnalytics: dash.loadAnalytics, recycleBinRestore: dash.recycleBinRestore, recycleBinPurge: dash.recycleBinPurge, loadCompliance: dash.loadCompliance, filterCompliance: dash.filterCompliance });
 }
 
 // ── App init ──────────────────────────────────────────────────────────────
