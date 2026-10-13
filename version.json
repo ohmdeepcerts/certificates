@@ -1,8 +1,10 @@
 {
-  "v": "1.4.1",
-  "build": 29,
+  "v": "1.5.0",
+  "build": 30,
   "changes": [
-    "Fixed: Landlord and Agency cards now show the correct number of linked properties.",
-    "Fixed: Property links to landlords are now set automatically when a certificate is saved."
+    "New: Click any card in the Directory to open a full detail view.",
+    "New: Landlord and Agency detail view shows all linked properties with compliance status.",
+    "New: Property detail view shows full certificate history — gas and PAT, including superseded certs.",
+    "New: Click a property inside a landlord view to drill into it, and navigate back."
   ]
 }

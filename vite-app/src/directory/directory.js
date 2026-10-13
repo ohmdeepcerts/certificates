@@ -752,8 +752,8 @@ function _dirCard(type, r, q) {
     footer = usedTxt + (r.last_used_at ? ' · Last ' + new Date(r.last_used_at).toLocaleDateString('en-GB') : '');
   }
   return `<div class="dir-card${arch ? ' dir-card-archived' : ''}"${cardStyle ? ` style="${cardStyle}"` : ''}>
-    <div class="dir-card-avatar">${(name[0] || '?')}</div>
-    <div class="dir-card-body">
+    <div class="dir-card-avatar" onclick="openDirDetail('${type}','${r.id}')" style="cursor:pointer">${(name[0] || '?')}</div>
+    <div class="dir-card-body" onclick="openDirDetail('${type}','${r.id}')" style="cursor:pointer">
       <div class="dir-card-name">${_hlText(name, q)}${arch ? ' <span style="font-size:10px;color:var(--muted);font-weight:600">[archived]</span>' : ''}</div>
       ${sub ? `<div class="dir-card-sub">${_hlText(sub, q)}</div>` : ''}
       ${pills ? `<div class="dir-pills">${pills}</div>` : ''}
@@ -768,6 +768,189 @@ function _dirCard(type, r, q) {
       <button class="dir-act-btn" style="color:${arch ? 'var(--success)' : 'var(--muted)'}" onclick="dirToggleArchive('${type}','${r.id}',${r.is_active !== false})">${arch ? 'Restore' : 'Archive'}</button>
     </div>
   </div>`;
+}
+
+// ── Detail Drawer ────────────────────────────────────────────────────────────
+
+function _getDirDetailDrawer() {
+  let ov = document.getElementById('dir-detail-ov');
+  let dr = document.getElementById('dir-detail-dr');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'dir-detail-ov';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:8499;background:rgba(0,0,0,.3);display:none;opacity:0;transition:opacity .2s';
+    ov.onclick = () => window.closeDirDetail();
+    document.body.appendChild(ov);
+  }
+  if (!dr) {
+    dr = document.createElement('div'); dr.id = 'dir-detail-dr';
+    dr.style.cssText = 'position:fixed;right:0;top:0;bottom:0;width:460px;max-width:100vw;background:var(--surface);border-left:1px solid var(--border);z-index:8500;display:flex;flex-direction:column;box-shadow:-6px 0 40px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)';
+    document.body.appendChild(dr);
+  }
+  return { dr, ov };
+}
+
+export function openDirDetail(type, id) {
+  const rec = (_dir[type] || []).find(r => r.id === id); if (!rec) return;
+  const { dr, ov } = _getDirDetailDrawer();
+  dr.innerHTML = _buildDetailHtml(type, rec);
+  ov.style.display = 'block';
+  requestAnimationFrame(() => { ov.style.opacity = '1'; dr.style.transform = 'translateX(0)'; });
+}
+
+window.closeDirDetail = function() {
+  const dr = document.getElementById('dir-detail-dr');
+  const ov = document.getElementById('dir-detail-ov');
+  if (!dr) return;
+  dr.style.transform = 'translateX(100%)';
+  if (ov) { ov.style.opacity = '0'; setTimeout(() => { ov.style.display = 'none'; }, 200); }
+};
+
+function _buildDetailHtml(type, r) {
+  const _e = v => (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const name = _dirName(type, r);
+  const sub = _dirSub(type, r);
+  const typeLabel = type === 'landlords' ? 'Landlord' : type === 'agents' ? 'Agency' : type === 'properties' ? 'Property' : 'Contact';
+  const body = type === 'properties' ? _detailProperty(r) : (type === 'landlords' || type === 'agents') ? _detailEntity(type, r) : '';
+  return `<div style="padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0">
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:4px">${typeLabel}</div>
+      <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.2">${_e(name)}</div>
+      ${sub ? `<div style="font-size:12px;color:var(--muted);margin-top:3px">${_e(sub)}</div>` : ''}
+    </div>
+    <button onclick="closeDirDetail()" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 4px;flex-shrink:0;margin-top:-2px">×</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:18px 20px 24px">${body}</div>
+  <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+    <button class="btn btn-secondary" onclick="closeDirDetail();openDirEditModal('${type}','${r.id}')">✏ Edit</button>
+    ${type === 'properties' ? `<button class="btn btn-primary" onclick="closeDirDetail();setTimeout(()=>showNewCertDD(document.body,'${r.id}'),50)">+ New Cert</button>` : ''}
+  </div>`;
+}
+
+function _detailSectionTitle(t) {
+  return `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px">${t}</div>`;
+}
+
+function _detailEntity(type, r) {
+  const _e = v => (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const _n = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const isLandlord = type === 'landlords';
+  // Build matched property set (same logic as compliance)
+  const matched = new Set((_dir.properties || []).filter(p => p.is_active !== false && (isLandlord ? p.landlord_id === r.id : p.agent_id === r.id)).map(p => p.id));
+  if (_dirCerts) {
+    const nameKey = _n(isLandlord ? (r.landlord_name || r.company_name) : (r.agency_name || r.contact_name));
+    if (nameKey) {
+      if (isLandlord) {
+        _dirCerts.gas.forEach(c => {
+          if (!c.landlord_address || _n((c.landlord_address || '').split('\n')[0]) !== nameKey) return;
+          const pc = _n(c.install_postcode); const a1 = _n((c.install_address || '').split('\n')[0]);
+          const prop = (_dir.properties || []).find(p => p.is_active !== false && ((pc && _n(p.postcode) === pc) || (a1 && _n(p.addr1) === a1)));
+          if (prop) matched.add(prop.id);
+        });
+      } else {
+        _dirCerts.pat.forEach(c => {
+          if (!c.agency_name || _n(c.agency_name) !== nameKey) return;
+          const pa = _n(c.property_address || '');
+          const prop = (_dir.properties || []).find(p => p.is_active !== false && pa && (pa.includes(_n(p.addr1)) || (p.postcode && pa.includes(_n(p.postcode)))));
+          if (prop) matched.add(prop.id);
+        });
+      }
+    }
+  }
+  const props = (_dir.properties || []).filter(p => matched.has(p.id));
+  // Contact info
+  const contactFields = [];
+  if (r.email) contactFields.push(['✉', 'Email', r.email]);
+  if (r.phone) contactFields.push(['📞', 'Phone', r.phone]);
+  if (r.mobile) contactFields.push(['📱', 'Mobile', r.mobile]);
+  if (r.addr1) contactFields.push(['📍', 'Address', [r.addr1, r.addr2, r.town, r.county, r.postcode].filter(Boolean).join(', ')]);
+  if (r.notes) contactFields.push(['📝', 'Notes', r.notes]);
+  let contactHtml = contactFields.length ? `<div style="margin-bottom:20px">${_detailSectionTitle('Contact Details')}${contactFields.map(([ic, lb, vl]) =>
+    `<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="width:18px;flex-shrink:0">${ic}</span>
+      <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">${lb}</div><div style="font-size:13px;color:var(--text)">${_e(vl)}</div></div>
+    </div>`).join('')}</div>` : '';
+  // Properties
+  let propsHtml = props.length === 0
+    ? `<div style="padding:14px;background:var(--bg);border-radius:10px;text-align:center;color:var(--muted);font-size:13px">No properties linked yet</div>`
+    : props.map(p => {
+        const c = _propCompliance(p);
+        const borderColor = c ? _complianceBorderColor(c.status, c.days) : 'var(--border)';
+        const sCol = { valid: '#22c55e', expiring: '#f59e0b', expired: '#ef4444', none: 'var(--muted)' }[c?.status || 'none'];
+        const sIco = { valid: '✓', expiring: '⚠', expired: '✕', none: '—' }[c?.status || 'none'];
+        return `<div style="padding:10px 12px;border:1px solid var(--border);border-left:4px solid ${borderColor};border-radius:2px 8px 8px 2px;margin-bottom:8px;cursor:pointer;background:var(--bg)" onclick="closeDirDetail();setTimeout(()=>openDirDetail('properties','${p.id}'),60)">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${_e(p.addr1)}</div>
+          ${[p.addr2, p.town, p.postcode].filter(Boolean).length ? `<div style="font-size:11px;color:var(--muted)">${_e([p.addr2, p.town, p.postcode].filter(Boolean).join(', '))}</div>` : ''}
+          <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            ${c ? `<span style="font-size:11px;font-weight:700;color:${sCol}">${sIco} ${c.expText}</span>` : ''}
+            ${c && c.pat.length ? `<span style="font-size:11px;color:var(--muted)">· ${c.pat.length} PAT</span>` : ''}
+            <span style="font-size:11px;color:var(--accent);margin-left:auto">View →</span>
+          </div>
+        </div>`;
+      }).join('');
+  return contactHtml + _detailSectionTitle(`${isLandlord ? 'Properties' : 'Managed Properties'} (${props.length})`) + propsHtml;
+}
+
+function _detailProperty(p) {
+  const _e = v => (v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!_dirCerts) return '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading certificate history…</p>';
+  const pc = _dn(p.postcode); const a1 = _dn(p.addr1);
+  const gasCerts = (_dirCerts.gas || [])
+    .filter(c => (pc && _dn(c.install_postcode) === pc) || (a1 && _dn((c.install_address || '').split('\n')[0]) === a1))
+    .sort((a, b) => new Date(b.cert_date || 0) - new Date(a.cert_date || 0));
+  const patCerts = (_dirCerts.pat || [])
+    .filter(c => { const pa = _dn(c.property_address || ''); return (pc && pa.includes(pc)) || (a1 && pa.includes(a1)); })
+    .sort((a, b) => new Date(b.test_date || 0) - new Date(a.test_date || 0));
+  // Linked landlord/agent buttons
+  const ll = p.landlord_id ? (_dir.landlords || []).find(l => l.id === p.landlord_id) : null;
+  const ag = p.agent_id ? (_dir.agents || []).find(a => a.id === p.agent_id) : null;
+  const linksHtml = (ll || ag) ? `<div style="margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap">
+    ${ll ? `<button style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:12px;font-weight:700;color:var(--text)" onclick="closeDirDetail();setTimeout(()=>openDirDetail('landlords','${ll.id}'),60)">👤 ${_e(ll.landlord_name || ll.company_name)}</button>` : ''}
+    ${ag ? `<button style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;font-size:12px;font-weight:700;color:var(--text)" onclick="closeDirDetail();setTimeout(()=>openDirDetail('agents','${ag.id}'),60)">🏢 ${_e(ag.agency_name || ag.contact_name)}</button>` : ''}
+  </div>` : '';
+  // Gas history
+  const gasRows = gasCerts.length === 0
+    ? `<div style="padding:14px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--muted);text-align:center">No gas certificates found</div>`
+    : gasCerts.map((c, i) => {
+        const isLatest = i === 0 && c.status === 'completed';
+        const certDate = c.cert_date ? new Date(c.cert_date).toLocaleDateString('en-GB') : '—';
+        const expDate = c.next_check_date ? new Date(c.next_check_date).toLocaleDateString('en-GB') : null;
+        const days = c.next_check_date ? Math.floor((new Date(c.next_check_date) - new Date()) / 86400000) : null;
+        let badge = 'Superseded'; let bCol = 'var(--muted)';
+        if (c.status === 'draft') { badge = 'Draft'; bCol = '#6366f1'; }
+        else if (isLatest) {
+          if (days === null) { badge = 'Valid'; bCol = '#22c55e'; }
+          else if (days < 0) { badge = 'Expired'; bCol = '#ef4444'; }
+          else if (days <= 60) { badge = 'Expiring · ' + days + 'd'; bCol = '#f59e0b'; }
+          else { badge = 'Valid · ' + days + 'd'; bCol = '#22c55e'; }
+        }
+        const landlordName = c.landlord_address ? _e((c.landlord_address || '').split('\n')[0]) : null;
+        return `<div style="padding:11px 13px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg);${i > 0 ? 'opacity:.7' : ''}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-size:12px;font-weight:800;color:${bCol}">🔥 ${badge}</span>
+            <button style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:0" onclick="closeDirDetail();navigate('gas-cert-${c.id}')">View cert →</button>
+          </div>
+          <div style="font-size:12px;color:var(--text)">Issued: <strong>${certDate}</strong>${expDate ? ` · Expires: <strong>${expDate}</strong>` : ''}</div>
+          ${landlordName ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">👤 ${landlordName}</div>` : ''}
+        </div>`;
+      }).join('');
+  // PAT history
+  const patRows = patCerts.length === 0
+    ? `<div style="padding:14px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--muted);text-align:center">No PAT certificates found</div>`
+    : patCerts.map((c, i) => {
+        const testDate = c.test_date ? new Date(c.test_date).toLocaleDateString('en-GB') : '—';
+        const badge = i === 0 ? 'Latest' : 'Superseded';
+        const bCol = i === 0 ? '#22c55e' : 'var(--muted)';
+        return `<div style="padding:11px 13px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg);${i > 0 ? 'opacity:.7' : ''}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-size:12px;font-weight:800;color:${bCol}">⚡ ${badge}</span>
+            <button style="font-size:11px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:0" onclick="closeDirDetail();navigate('pat-cert-${c.id}')">View cert →</button>
+          </div>
+          <div style="font-size:12px;color:var(--text)">Tested: <strong>${testDate}</strong>${c.status === 'draft' ? ' <span style="color:var(--muted)">(Draft)</span>' : ''}</div>
+        </div>`;
+      }).join('');
+  return linksHtml
+    + `<div style="margin-bottom:20px">${_detailSectionTitle('Gas Safety History (' + gasCerts.length + ')')}${gasRows}</div>`
+    + `<div>${_detailSectionTitle('PAT Test History (' + patCerts.length + ')')}${patRows}</div>`;
 }
 
 export function showNewCertDD(btn, propId) {
