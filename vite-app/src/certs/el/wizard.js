@@ -1635,6 +1635,7 @@ export function renderELList(certs, page, q) {
   var mkRow = function(r, q) {
     var d = r.data||{};
     var addrRaw = d.premAddr1 || d.premisesName || r.premises_name || 'No address';
+    if (d.premAddr2 && /^\d+[a-zA-Z]?\s*$/.test(addrRaw.trim())) addrRaw = addrRaw.trim() + ' ' + d.premAddr2;
     if (d.premPostcode && addrRaw.indexOf(d.premPostcode) === -1) addrRaw += ', ' + d.premPostcode;
     var ac = _addrColor(addrRaw); var abg = ac[0]; var atx = ac[1];
     var ini = (_addrInitials(addrRaw)||addrRaw.slice(0,2)||'?').toUpperCase();

@@ -1,8 +1,7 @@
 {
-  "v": "1.5.1",
-  "build": 31,
+  "v": "1.5.2",
+  "build": 32,
   "changes": [
-    "Fixed: Directory now automatically updates property counts when a PAT certificate is saved.",
-    "Fixed: Creating a PAT cert now links the property to the correct agency in the Directory."
+    "Fixed: EL certificate list now shows road name when address line 1 is only a door number."
   ]
 }
