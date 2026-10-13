@@ -1,10 +1,9 @@
 {
-  "v": "1.1.4",
-  "build": 14,
+  "v": "1.1.5",
+  "build": 15,
   "changes": [
-    "EL email: full redesign with cert ref banner, full address, Add to Calendar button",
-    "EL email: PDF filename now uses cert ref (e.g. EL2152688-32.pdf) not EL_EL prefix",
-    "Gas address step: directory + API combined dropdown, pre-loaded, 2-char trigger",
-    "NCD picker tinted amber"
+    "EL email: theme-matched to actual certificate (green/gold, warm paper, ref ribbon)",
+    "EL email: NICEIC badge, Georgia serif title, gold-accented footer",
+    "EL email: PDF filename uses cert ref (EL2152688-32.pdf)"
   ]
 }

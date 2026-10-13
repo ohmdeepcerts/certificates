@@ -743,6 +743,10 @@ function _escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function _elPdfName(ref) {
+  return (ref||'cert').replace(/[\s/\\]+/g,'-') + '.pdf';
+}
+
 function _elCalUrl(dateStr, ref, addressLine) {
   // dateStr is DD/MM/YYYY; convert to YYYYMMDD for Google Calendar
   var parts = (dateStr || '').split('/');
@@ -761,70 +765,118 @@ function _elCalUrl(dateStr, ref, addressLine) {
 }
 
 function _buildELEmailHTML(rec) {
-  var co = getSetting('company_name','OHM Electrical Engineering Ltd');
-  var phone = getSetting('company_phone','');
   var e = _escHtml;
+  var co      = getSetting('el_co_name', getSetting('company_name', 'OHM Electrical Engineering Ltd'));
+  var phone   = getSetting('el_co_phone', getSetting('company_phone', ''));
+  var website = getSetting('el_co_website', '');
   var addrParts = [rec.premisesName, rec.premAddr1, rec.premAddr2, rec.premAddr3, rec.premPostcode].filter(Boolean);
-  var addrLine = addrParts.join(', ');
-  var addrHtml = addrParts.map(function(p) { return e(p); }).join('<br>');
+  var addrLine  = addrParts.join(', ');
+  var addrHtml  = addrParts.map(function(p){ return e(p); }).join('<br>');
   var sat = (rec.outcome || '').toUpperCase() === 'SATISFACTORY';
-  var outcomeColor = sat ? '#16a34a' : '#dc2626';
-  var outcomeIcon = sat ? '&#10003;' : '&#9888;';
-  var calUrl = _elCalUrl(rec.nextTestDate || '', rec.ref || '', addrLine);
+  var calUrl  = _elCalUrl(rec.nextTestDate || '', rec.ref || '', addrLine);
+  var certTypeLabel = rec.certType === 'EL.1' ? 'Certificate of Completion'
+                    : rec.certType === 'EL.2' ? 'Periodic Inspection &amp; Test Certificate'
+                    : rec.certType === 'EL.3' ? 'Existing Site Assessment'
+                    : rec.certType ? e(rec.certType) : 'Emergency Lighting Certificate';
+
+  // contact footer line
+  var contactParts = [];
+  if (phone)   contactParts.push(e(phone));
+  if (website) contactParts.push('<a href="' + e(website) + '" style="color:#b08d2e;text-decoration:none">' + e(website.replace(/^https?:\/\//,'')) + '</a>');
+  var contactLine = contactParts.join('&ensp;&middot;&ensp;');
+
+  // calendar CTA
   var calBtn = calUrl
-    ? '<table cellpadding="0" cellspacing="0" style="margin:0 0 24px"><tr><td style="background:#166534;border-radius:6px;padding:0"><a href="' + calUrl + '" style="display:inline-block;padding:11px 20px;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;font-family:Arial,sans-serif">&#128197;&nbsp; Add Next Test to Calendar</a></td></tr></table>'
+    ? '<table cellpadding="0" cellspacing="0" style="margin:0 0 28px">'
+      + '<tr><td style="background:linear-gradient(90deg,#093423,#0e4d33);border:1px solid #b08d2e;border-radius:5px;padding:0">'
+      + '<a href="' + calUrl + '" style="display:inline-block;padding:11px 22px;color:#f4ecd8;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.02em;font-family:Arial,sans-serif">&#128197;&ensp;Add Next Test to Calendar</a>'
+      + '</td></tr></table>'
     : '';
-  var phoneLine = phone ? '<div style="font-size:12px;color:#6b7280;margin-top:3px">' + e(phone) + '</div>' : '';
-  var typeLabel = rec.certType ? '<br><span style="font-size:13px;font-weight:400;color:#6b7280">' + e(rec.certType) + '</span>' : '';
-  var row = function(label, val, extra) {
-    return '<tr>'
-      + '<td style="padding:10px 16px;background:#f9fafb;font-size:11px;font-weight:700;color:#6b7280;width:38%;border-bottom:1px solid #e5e7eb;text-transform:uppercase;letter-spacing:.4px;vertical-align:top">' + label + '</td>'
-      + '<td style="padding:10px 16px;font-size:13px;color:#111827;border-bottom:1px solid #e5e7eb;vertical-align:top' + (extra ? ';' + extra : '') + '">' + val + '</td>'
-      + '</tr>';
+
+  var lbl = function(t) {
+    return '<td style="padding:9px 16px;background:#f4f1ea;font-size:10px;font-weight:700;color:#8b7840;width:36%;border-bottom:1px solid #e2ddd3;text-transform:uppercase;letter-spacing:.5px;vertical-align:top">' + t + '</td>';
   };
-  return '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif">'
-    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6"><tr><td align="center" style="padding:28px 16px">'
-    + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb">'
+  var val = function(v, extra) {
+    return '<td style="padding:9px 16px;font-size:13px;color:#182420;border-bottom:1px solid #e2ddd3;vertical-align:top' + (extra||'') + '">' + v + '</td>';
+  };
 
-    // Header
-    + '<tr><td style="background:#14532d;padding:26px 32px;text-align:center">'
-    + '<div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:.3px">' + e(co) + '</div>'
-    + '<div style="font-size:11px;color:#86efac;margin-top:5px;letter-spacing:1.2px;text-transform:uppercase">Emergency Lighting Certificate</div>'
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+    + '<body style="margin:0;padding:0;background:#e7e4dc;font-family:Arial,Helvetica,sans-serif">'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#e7e4dc"><tr><td align="center" style="padding:28px 16px">'
+    + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fffdf8;border-radius:6px;overflow:hidden;border:1px solid #ccc8bc;box-shadow:0 4px 24px rgba(10,25,17,.15)">'
+
+    // ── top colour strip ──────────────────────────────────────────────────
+    + '<tr><td height="6" style="background:linear-gradient(90deg,#093423,#0e4d33 60%,#b08d2e);font-size:0;line-height:0">&nbsp;</td></tr>'
+
+    // ── header: logo area + title ─────────────────────────────────────────
+    + '<tr><td style="background:#fffdf8;padding:20px 28px 0">'
+    + '<table width="100%" cellpadding="0" cellspacing="0">'
+    + '<tr>'
+    + '<td style="vertical-align:top">'
+    + '<div style="font-size:19px;font-weight:900;color:#182420;letter-spacing:-.02em;line-height:1.1">' + e(co) + '</div>'
+    + '<div style="font-size:10px;color:#5a6660;margin-top:3px">' + contactLine + '</div>'
+    + '</td>'
+    + '<td style="vertical-align:top;text-align:right">'
+    + '<div style="display:inline-block;border:1.5px solid #b08d2e;border-radius:4px;padding:6px 14px;text-align:center;background:#f4ecd8">'
+    + '<div style="font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#093423">NICEIC</div>'
+    + '<div style="font-size:8px;color:#5a6660;margin-top:1px">Approved Contractor</div>'
+    + '</div>'
+    + '</td>'
+    + '</tr>'
+    + '</table>'
+    + '<div style="height:8px;border-bottom:1.5px solid #d5e5db;margin:10px 0 0"></div>'
     + '</td></tr>'
 
-    // Cert ref banner
-    + '<tr><td style="background:#f0fdf4;border-bottom:3px solid #14532d;padding:16px 32px">'
-    + '<div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Certificate Reference</div>'
-    + '<div style="font-size:22px;font-weight:700;color:#14532d">' + e(rec.ref || '—') + typeLabel + '</div>'
+    // ── cert eyebrow + title ──────────────────────────────────────────────
+    + '<tr><td style="background:#fffdf8;padding:14px 28px 0">'
+    + '<div style="font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b08d2e;margin-bottom:4px">Emergency Lighting</div>'
+    + '<div style="font-size:24px;font-weight:700;color:#0e4d33;line-height:1.2;font-family:Georgia,serif">' + certTypeLabel + '</div>'
     + '</td></tr>'
 
-    // Body
-    + '<tr><td style="padding:28px 32px">'
-    + '<p style="margin:0 0 18px;color:#374151;font-size:15px">Dear ' + e(rec.clientName || 'Client') + ',</p>'
-    + '<p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6">Please find attached your emergency lighting certificate for the premises below. Please retain this document for your records.</p>'
+    // ── ref bar (dark green ribbon) ───────────────────────────────────────
+    + '<tr><td style="background:linear-gradient(90deg,#093423,#0e4d33);border-top:1px solid #b08d2e;padding:10px 28px;margin-top:12px">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td><div style="font-size:10px;color:rgba(244,236,216,.7);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Certificate Reference</div>'
+    + '<div style="font-family:monospace;font-size:17px;font-weight:700;color:#f4ecd8;letter-spacing:.06em">' + e(rec.ref || '—') + '</div></td>'
+    + '<td style="text-align:right;vertical-align:bottom"><div style="font-size:11px;color:rgba(255,255,255,.75)">' + e(rec.testDate || '') + '</div></td>'
+    + '</tr></table>'
+    + '</td></tr>'
 
-    // Details table
-    + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin:0 0 24px;border-collapse:collapse">'
-    + row('Premises', addrHtml)
-    + row('Test Date', e(rec.testDate || '—'))
-    + row('Outcome', outcomeIcon + '&nbsp;' + e(rec.outcome || '—'), 'font-weight:700;color:' + outcomeColor)
-    + '<tr><td style="padding:10px 16px;background:#f9fafb;font-size:11px;font-weight:700;color:#6b7280;width:38%;text-transform:uppercase;letter-spacing:.4px;vertical-align:top">Next Test Due</td>'
-    + '<td style="padding:10px 16px;font-size:13px;color:#111827;font-weight:600;vertical-align:top">' + e(rec.nextTestDate || '—') + '</td></tr>'
+    // ── premises + details ────────────────────────────────────────────────
+    + '<tr><td style="padding:24px 28px">'
+    + '<p style="margin:0 0 16px;font-size:15px;color:#182420">Dear ' + e(rec.clientName || 'Client') + ',</p>'
+    + '<p style="margin:0 0 22px;font-size:13px;color:#5a6660;line-height:1.7">Please find attached your emergency lighting certificate for the premises listed below. Please retain this document for your records and compliance purposes.</p>'
+
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2ddd3;border-radius:5px;overflow:hidden;margin:0 0 24px;border-collapse:collapse">'
+    + '<tr>' + lbl('Premises') + val(addrHtml) + '</tr>'
+    + '<tr>' + lbl('Test Date') + val(e(rec.testDate || '—')) + '</tr>'
+    + '<tr>' + lbl('Outcome')
+    + (sat
+      ? '<td style="padding:9px 16px;font-size:13px;font-weight:700;color:#0e4d33;border-bottom:1px solid #e2ddd3;vertical-align:top;background:linear-gradient(90deg,rgba(9,52,35,.06),transparent)">&#10003;&ensp;SATISFACTORY</td>'
+      : '<td style="padding:9px 16px;font-size:13px;font-weight:700;color:#b3452e;border-bottom:1px solid #e2ddd3;vertical-align:top">&#9888;&ensp;UNSATISFACTORY</td>')
+    + '</tr>'
+    + '<tr>' + lbl('Next Test Due')
+    + '<td style="padding:9px 16px;font-size:13px;font-weight:700;color:#182420;vertical-align:top">' + e(rec.nextTestDate || '—') + '</td>'
+    + '</tr>'
     + '</table>'
 
-    // Add to Calendar CTA
     + calBtn
 
-    + '<p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.7">If you have any queries regarding this certificate, please do not hesitate to contact us.</p>'
+    + '<p style="margin:0;font-size:12px;color:#8b968f;line-height:1.7">If you have any queries regarding this certificate, please do not hesitate to contact us.</p>'
     + '</td></tr>'
 
-    // Footer
-    + '<tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;text-align:center">'
-    + '<div style="font-size:13px;font-weight:600;color:#374151">' + e(co) + '</div>'
-    + phoneLine
+    // ── footer ────────────────────────────────────────────────────────────
+    + '<tr><td style="background:#f4f1ea;border-top:2px solid #b08d2e;padding:14px 28px;text-align:center">'
+    + '<div style="font-size:12px;font-weight:700;color:#182420;letter-spacing:.01em">' + e(co) + '</div>'
+    + (contactLine ? '<div style="font-size:11px;color:#5a6660;margin-top:3px">' + contactLine + '</div>' : '')
     + '</td></tr>'
+
+    // ── bottom colour strip ───────────────────────────────────────────────
+    + '<tr><td height="5" style="background:linear-gradient(90deg,#093423,#0e4d33 60%,#b08d2e);font-size:0;line-height:0">&nbsp;</td></tr>'
+
     + '</table>'
-    + '</td></tr></table></body></html>';
+    + '</td></tr></table>'
+    + '</body></html>';
 }
 
 export async function elAutoEmail(rec, silent) {
