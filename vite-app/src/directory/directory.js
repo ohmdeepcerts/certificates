@@ -230,6 +230,7 @@ let _acDD = null, _acTimer = null, _acIdx = -1, _acItems = [], _acCurInput = nul
 
 function _initAcDD() {
   _acDD = document.getElementById('dir-ac-dd');
+  if (!_acDD) { _acDD = document.createElement('div'); _acDD.id = 'dir-ac-dd'; document.body.appendChild(_acDD); }
   if (_acDD._init) return; _acDD._init = true;
   document.addEventListener('pointerdown', e => {
     if (!_acDD.contains(e.target) && e.target !== _acCurInput) _hideAcDD();

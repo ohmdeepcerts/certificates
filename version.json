@@ -1,9 +1,8 @@
 {
-  "v": "1.2.1",
-  "build": 22,
+  "v": "1.2.2",
+  "build": 23,
   "changes": [
-    "Improved: Landlord/customer name field in gas wizard now suggests matching names from your Directory as you type",
-    "New: If you type a name that isn't in the Directory yet, a prompt appears to save them as a Landlord or Agent",
-    "Improved: Gas wizard now searches both Landlords and Agents together, showing which type each result is"
+    "Fixed: Landlord/customer name autocomplete now works correctly in the gas wizard",
+    "Fixed: Directory suggestions now appear when typing in the gas wizard name field"
   ]
 }
