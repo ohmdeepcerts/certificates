@@ -1,7 +1,7 @@
 {
-  "v": "1.5.2",
-  "build": 32,
+  "v": "1.5.3",
+  "build": 33,
   "changes": [
-    "Fixed: EL certificate list now shows road name when address line 1 is only a door number."
+    "Fixed: PDF download button on Windows now saves directly to file instead of opening the Share dialog."
   ]
 }

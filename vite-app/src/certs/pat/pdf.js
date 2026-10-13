@@ -185,7 +185,8 @@ export async function generatePATPDFFromData(r, { returnB64 = false } = {}) {
     if (returnB64) { hideOverlay(); return doc.output('datauristring').split(',')[1]; }
     const _patPdfBlob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
     const _patPdfName = `PAT_${ref}.pdf`;
-    if (navigator.canShare && navigator.canShare({ files: [new File([_patPdfBlob], _patPdfName, { type: 'application/pdf' })] })) {
+    const _isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (_isMobile && navigator.canShare && navigator.canShare({ files: [new File([_patPdfBlob], _patPdfName, { type: 'application/pdf' })] })) {
       try { await navigator.share({ files: [new File([_patPdfBlob], _patPdfName, { type: 'application/pdf' })], title: _patPdfName }); }
       catch (e) { if (e.name !== 'AbortError') { doc.save(_patPdfName); toast('PDF downloaded ✓', 'success'); } }
     } else { doc.save(_patPdfName); toast('PDF downloaded ✓', 'success'); }

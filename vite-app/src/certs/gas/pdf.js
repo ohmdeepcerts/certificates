@@ -437,7 +437,8 @@ export async function downloadCP12PDF(btn) {
     const ref = cp12Field('cert_ref') || 'DRAFT';
     const filename = `Gas_${ref.replace(/[^\w-]/g, '_')}.pdf`;
     const _gasPdfBlob = new Blob([doc.output('arraybuffer')], { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [new File([_gasPdfBlob], filename, { type: 'application/pdf' })] })) {
+    const _isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (_isMobile && navigator.canShare && navigator.canShare({ files: [new File([_gasPdfBlob], filename, { type: 'application/pdf' })] })) {
       try { await navigator.share({ files: [new File([_gasPdfBlob], filename, { type: 'application/pdf' })], title: filename }); }
       catch (e) { if (e.name !== 'AbortError') { doc.save(filename); toast('PDF downloaded ✓', 'success'); } }
     } else { doc.save(filename); toast('PDF downloaded ✓', 'success'); }
