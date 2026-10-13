@@ -1,8 +1,8 @@
 {
-  "v": "1.2.3",
-  "build": 24,
+  "v": "1.3.0",
+  "build": 25,
   "changes": [
-    "Improved: Renamed 'Agents' to 'Agency' everywhere in the app",
-    "Improved: Save-to-Directory banner in gas wizard now shows Landlord and Agency buttons"
+    "New: Change Type — move a Landlord to Agency or Agency to Landlord with one click. All linked properties update automatically.",
+    "New: Merge — combine two duplicate contacts. For each field where both records differ, you choose which value to keep. The duplicate is deleted and all property links are updated."
   ]
 }

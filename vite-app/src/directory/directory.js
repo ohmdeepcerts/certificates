@@ -688,6 +688,9 @@ function _dirCard(type, r, q) {
     <div class="dir-card-actions">
       ${extraBtns}
       <button class="dir-act-btn" onclick="openDirEditModal('${type}','${r.id}')">Edit</button>
+      ${(type === 'landlords' || type === 'agents') ? `<button class="dir-act-btn" onclick="dirOpenMerge('${type}','${r.id}')">Merge…</button>` : ''}
+      ${type === 'landlords' ? `<button class="dir-act-btn" style="color:#059669" onclick="dirChangeType('landlords','${r.id}')">→ Agency</button>` : ''}
+      ${type === 'agents' ? `<button class="dir-act-btn" style="color:#6366f1" onclick="dirChangeType('agents','${r.id}')">→ Landlord</button>` : ''}
       <button class="dir-act-btn" style="color:${arch ? 'var(--success)' : 'var(--muted)'}" onclick="dirToggleArchive('${type}','${r.id}',${r.is_active !== false})">${arch ? 'Restore' : 'Archive'}</button>
     </div>
   </div>`;
@@ -833,6 +836,188 @@ export async function saveDirRecord() {
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   toast(_dirEditId ? 'Record updated ✓' : 'Saved to Directory ✓', 'success');
   closeDirEditModal(); renderDirectoryPage();
+}
+
+// ── Change Type ──────────────────────────────────────────────────────────────
+export async function dirChangeType(type, id) {
+  if (type !== 'landlords' && type !== 'agents') return;
+  const rec = (_dir[type] || []).find(r => r.id === id);
+  if (!rec) return;
+  const newType = type === 'landlords' ? 'agents' : 'landlords';
+  const name = _dirName(type, rec);
+  const newLabel = newType === 'agents' ? 'Agency' : 'Landlord';
+  if (!confirm(`Move "${name}" to ${newLabel}?\n\nAll linked properties will be updated.`)) return;
+  const shared = { email: rec.email||'', email2: rec.email2||'', cc_emails: rec.cc_emails||'', phone: rec.phone||'', mobile: rec.mobile||'', addr1: rec.addr1||'', addr2: rec.addr2||'', town: rec.town||'', county: rec.county||'', postcode: (rec.postcode||'').toUpperCase(), notes: rec.notes||'', is_active: rec.is_active !== false, usage_count: rec.usage_count||0, created_at: rec.created_at||new Date().toISOString(), created_by: rec.created_by||null };
+  const newRec = newType === 'agents'
+    ? { ...shared, agency_name: rec.landlord_name || rec.company_name || '', contact_name: rec.company_name ? rec.landlord_name : '' }
+    : { ...shared, landlord_name: rec.agency_name || rec.contact_name || '', company_name: '' };
+  const { data: ins, error: insErr } = await sb.from(_dirTable[newType]).insert(newRec).select().single();
+  if (insErr || !ins) { toast('Move failed: ' + (insErr?.message || 'unknown'), 'error'); return; }
+  const propField = type === 'landlords' ? 'landlord_id' : 'agent_id';
+  const newField = type === 'landlords' ? 'agent_id' : 'landlord_id';
+  const props = (_dir.properties || []).filter(p => p[propField] === id);
+  if (props.length) {
+    await sb.from('directory_properties').update({ [propField]: null, [newField]: ins.id }).in('id', props.map(p => p.id));
+    props.forEach(p => { p[propField] = null; p[newField] = ins.id; });
+  }
+  await sb.from(_dirTable[type]).delete().eq('id', id);
+  if (_dir[type]) { _dir[type] = _dir[type].filter(r => r.id !== id); try { localStorage.setItem('_cache_dir_'+type, JSON.stringify({data:_dir[type],ts:Date.now()})); } catch {} }
+  if (!_dir[newType]) _dir[newType] = [];
+  _dir[newType].push(ins);
+  try { localStorage.setItem('_cache_dir_'+newType, JSON.stringify({data:_dir[newType],ts:Date.now()})); } catch {}
+  toast(`Moved to ${newLabel} ✓`, 'success');
+  switchDirTab(newType);
+}
+
+// ── Merge ────────────────────────────────────────────────────────────────────
+let _mergeType = null, _mergeKeepId = null, _mergeOtherId = null;
+
+function _mergeGetModal() {
+  let m = document.getElementById('dir-merge-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'dir-merge-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.55);display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+    document.body.appendChild(m);
+    m.addEventListener('pointerdown', e => { if (e.target === m) dirCloseMerge(); });
+  }
+  return m;
+}
+
+export function dirOpenMerge(type, id) {
+  if (type !== 'landlords' && type !== 'agents') return;
+  _mergeType = type; _mergeKeepId = id; _mergeOtherId = null;
+  const rec = (_dir[type]||[]).find(r => r.id === id);
+  if (!rec) return;
+  const _esc = v => (v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const typeLabel = type === 'agents' ? 'Agency' : 'Landlord';
+  const m = _mergeGetModal();
+  m.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.4);margin:auto">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-weight:700;font-size:15px">🔀 Merge ${typeLabel}</div>
+      <button onclick="dirCloseMerge()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1">✕</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px">
+        <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.05em;margin-bottom:3px">MERGING FROM</div>
+        <div style="font-weight:600">${_esc(_dirName(type,rec))}</div>
+        ${rec.addr1?`<div style="color:var(--muted);font-size:12px;margin-top:2px">${_esc(rec.addr1)}${rec.postcode?', '+_esc(rec.postcode):''}</div>`:''}
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Search for the duplicate to merge with:</div>
+      <input id="dir-merge-q" type="text" class="form-control" placeholder="Type a name…" oninput="dirMergeSearch(this.value)" autocomplete="off">
+      <div id="dir-merge-results" style="margin-top:8px"></div>
+    </div>
+  </div>`;
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('dir-merge-q')?.focus(), 60);
+}
+
+export function dirCloseMerge() {
+  const m = document.getElementById('dir-merge-modal');
+  if (m) m.style.display = 'none';
+  _mergeType = null; _mergeKeepId = null; _mergeOtherId = null;
+}
+
+export function dirMergeSearch(q) {
+  const res = document.getElementById('dir-merge-results'); if (!res) return;
+  const _esc = v => (v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (q.trim().length < 2) { res.innerHTML = ''; return; }
+  const ql = q.trim().toLowerCase();
+  const recs = (_dir[_mergeType]||[]).filter(r => r.id !== _mergeKeepId && r.is_active !== false && _dirMatchScore(_mergeType, r, ql) > 0).slice(0, 6);
+  if (!recs.length) { res.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 2px">No matches</div>`; return; }
+  res.innerHTML = recs.map(r => `<div onclick="dirMergePick('${r.id}')" style="padding:9px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border);margin-bottom:6px;font-size:13px;background:var(--surface2)">
+    <div style="font-weight:600">${_esc(_dirName(_mergeType,r))}</div>
+    ${r.addr1?`<div style="color:var(--muted);font-size:12px;margin-top:2px">${_esc(r.addr1)}${r.postcode?', '+_esc(r.postcode):''}</div>`:''}
+  </div>`).join('');
+}
+
+export function dirMergePick(otherId) {
+  _mergeOtherId = otherId;
+  const a = (_dir[_mergeType]||[]).find(r => r.id === _mergeKeepId);
+  const b = (_dir[_mergeType]||[]).find(r => r.id === otherId);
+  if (!a || !b) return;
+  const _esc = v => (v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const type = _mergeType;
+  const typeLabel = type === 'agents' ? 'Agency' : 'Landlord';
+  const fields = type === 'agents'
+    ? [['agency_name','Agency Name'],['contact_name','Contact Person'],['email','Email'],['email2','Secondary Email'],['phone','Phone'],['mobile','Mobile'],['addr1','Address Line 1'],['addr2','Address Line 2'],['town','Town'],['county','County'],['postcode','Postcode'],['notes','Notes']]
+    : [['landlord_name','Landlord Name'],['company_name','Company'],['email','Email'],['email2','Secondary Email'],['phone','Phone'],['mobile','Mobile'],['addr1','Address Line 1'],['addr2','Address Line 2'],['town','Town'],['county','County'],['postcode','Postcode'],['notes','Notes']];
+  let rows = '';
+  fields.forEach(([f, lbl]) => {
+    const va = (a[f]||'').trim(), vb = (b[f]||'').trim();
+    if (!va && !vb) return;
+    if (!va || !vb || va === vb) {
+      rows += `<tr><td style="padding:7px 8px;font-size:11px;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--border)">${lbl}</td><td colspan="2" style="padding:7px 8px;font-size:13px;border-bottom:1px solid var(--border)">${_esc(va||vb)}<input type="hidden" name="mf_${f}" value="${_esc(va||vb)}"></td></tr>`;
+    } else {
+      rows += `<tr><td style="padding:7px 8px;font-size:11px;color:var(--muted);white-space:nowrap;vertical-align:top;border-bottom:1px solid var(--border)">${lbl}</td>
+        <td style="padding:7px 6px;border-bottom:1px solid var(--border)"><label style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;font-size:13px"><input type="radio" name="mf_${f}" value="${_esc(va)}" style="margin-top:3px;flex-shrink:0" checked><span>${_esc(va)}</span></label></td>
+        <td style="padding:7px 6px;border-bottom:1px solid var(--border)"><label style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;font-size:13px"><input type="radio" name="mf_${f}" value="${_esc(vb)}" style="margin-top:3px;flex-shrink:0"><span>${_esc(vb)}</span></label></td>
+      </tr>`;
+    }
+  });
+  const m = _mergeGetModal();
+  m.innerHTML = `<div style="background:var(--surface);border-radius:14px;width:100%;max-width:600px;box-shadow:0 8px 40px rgba(0,0,0,.4);margin:auto">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-weight:700;font-size:15px">🔀 Choose Which Details to Keep</div>
+      <button onclick="dirCloseMerge()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1">✕</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:rgba(99,102,241,.1);border:2px solid rgba(99,102,241,.4);border-radius:8px;padding:10px 12px;font-size:13px">
+          <div style="font-size:10px;font-weight:700;color:#6366f1;letter-spacing:.05em;margin-bottom:4px">← LEFT COLUMN</div>
+          <div style="font-weight:600">${_esc(_dirName(type,a))}</div>
+          ${a.addr1?`<div style="color:var(--muted);font-size:12px;margin-top:2px">${_esc(a.addr1)}</div>`:''}
+        </div>
+        <div style="background:rgba(16,185,129,.1);border:2px solid rgba(16,185,129,.4);border-radius:8px;padding:10px 12px;font-size:13px">
+          <div style="font-size:10px;font-weight:700;color:#059669;letter-spacing:.05em;margin-bottom:4px">RIGHT COLUMN →</div>
+          <div style="font-weight:600">${_esc(_dirName(type,b))}</div>
+          ${b.addr1?`<div style="color:var(--muted);font-size:12px;margin-top:2px">${_esc(b.addr1)}</div>`:''}
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Where both records differ, pick which value to keep. The other record will be deleted.</div>
+      <div id="dir-merge-fields-form" style="overflow-x:auto;border:1px solid var(--border);border-radius:8px">
+        <table style="width:100%;border-collapse:collapse">${rows || '<tr><td colspan="3" style="padding:12px;text-align:center;font-size:13px;color:var(--muted)">No conflicting fields — safe to merge</td></tr>'}</table>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="dirConfirmMerge()" style="flex:2;min-width:180px;background:var(--accent,#b91c1c);color:#fff;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px">✓ Merge &amp; Keep Left Record</button>
+        <button onclick="dirCloseMerge()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:var(--muted)">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+export async function dirConfirmMerge() {
+  const type = _mergeType, keepId = _mergeKeepId, discardId = _mergeOtherId;
+  if (!type || !keepId || !discardId) return;
+  const form = document.getElementById('dir-merge-fields-form');
+  const merged = {};
+  if (form) {
+    form.querySelectorAll('input[name^="mf_"]').forEach(inp => {
+      if (inp.type === 'hidden' || (inp.type === 'radio' && inp.checked)) {
+        merged[inp.name.replace('mf_', '')] = inp.value;
+      }
+    });
+  }
+  merged.updated_at = new Date().toISOString();
+  const { error: updErr } = await sb.from(_dirTable[type]).update(merged).eq('id', keepId);
+  if (updErr) { toast('Merge failed: ' + updErr.message, 'error'); return; }
+  const propField = type === 'landlords' ? 'landlord_id' : 'agent_id';
+  const propsToUpdate = (_dir.properties||[]).filter(p => p[propField] === discardId);
+  if (propsToUpdate.length) {
+    await sb.from('directory_properties').update({ [propField]: keepId }).in('id', propsToUpdate.map(p => p.id));
+    propsToUpdate.forEach(p => { p[propField] = keepId; });
+  }
+  await sb.from(_dirTable[type]).delete().eq('id', discardId);
+  if (_dir[type]) {
+    const keepRec = _dir[type].find(r => r.id === keepId);
+    if (keepRec) Object.assign(keepRec, merged);
+    _dir[type] = _dir[type].filter(r => r.id !== discardId);
+    try { localStorage.setItem('_cache_dir_'+type, JSON.stringify({data:_dir[type],ts:Date.now()})); } catch {}
+  }
+  dirCloseMerge();
+  toast('Merged successfully ✓', 'success');
+  renderDirectoryPage();
 }
 
 // ── Appliances page ──────────────────────────────────────────────────────────
