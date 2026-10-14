@@ -1,7 +1,8 @@
 {
-  "v": "1.5.7",
-  "build": 37,
+  "v": "1.5.8",
+  "build": 38,
   "changes": [
+    "Fixed: PAT reference number now updates its address part when the address is edited.",
     "Improved: Location, Manufacturer and Model fields now suggest from previously saved appliances."
   ]
 }
