@@ -1,8 +1,7 @@
 {
-  "v": "1.5.8",
-  "build": 38,
+  "v": "1.5.9",
+  "build": 39,
   "changes": [
-    "Fixed: PAT reference number now updates its address part when the address is edited.",
-    "Improved: Location, Manufacturer and Model fields now suggest from previously saved appliances."
+    "Fixed: Scan Handwriting button now works in the PAT scan modal."
   ]
 }
