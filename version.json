@@ -1,6 +1,6 @@
 {
   "v": "1.6.0",
-  "build": 40,
+  "build": 41,
   "changes": [
     "Improved: Fire Alarm certificate text is now larger and easier to read.",
     "Improved: Fire Alarm detector table now captures Serial Number and Zone/Circuit.",
