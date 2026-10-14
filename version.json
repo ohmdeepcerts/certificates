@@ -1,7 +1,8 @@
 {
-  "v": "1.5.4",
-  "build": 34,
+  "v": "1.5.5",
+  "build": 35,
   "changes": [
+    "Fixed: PDF download overlay now disappears after generating the PDF.",
     "Fixed: Inspector signature now appears on Emergency Lighting certificate PDF."
   ]
 }

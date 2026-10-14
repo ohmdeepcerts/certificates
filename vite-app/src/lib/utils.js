@@ -10,7 +10,7 @@ export function showOverlay(msg) {
 }
 export function hideOverlay() {
   document.getElementById('loading-overlay').classList.remove('active');
-  document.getElementById('overlay-simple').style.display = 'flex';
+  document.getElementById('overlay-simple').style.display = 'none';
   document.getElementById('overlay-progress').style.display = 'none';
 }
 
