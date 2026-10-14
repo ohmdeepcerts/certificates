@@ -1725,6 +1725,11 @@ async function elGeneratePDF(rec, returnBlob) {
   await new Promise(function(res) { setTimeout(res, 200); });
   try {
     var iDoc = iframe.contentDocument || iframe.contentWindow.document;
+    // html2canvas 1.4.1 bug: images inside display:inline-block inside flex containers
+    // are silently skipped. Changing to display:block before rendering fixes this.
+    Array.from(iDoc.querySelectorAll('[style*="inline-block"]')).forEach(function(el) {
+      el.style.display = 'block';
+    });
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
     var pdf = new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});
     var pages = iDoc.querySelectorAll('.cert-page');
