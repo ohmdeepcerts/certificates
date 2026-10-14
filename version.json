@@ -1,7 +1,10 @@
 {
-  "v": "1.5.9",
-  "build": 39,
+  "v": "1.6.0",
+  "build": 40,
   "changes": [
-    "Fixed: Scan Handwriting button now works in the PAT scan modal."
+    "Improved: Fire Alarm certificate text is now larger and easier to read.",
+    "Improved: Fire Alarm detector table now captures Serial Number and Zone/Circuit.",
+    "Improved: FA.1 wizard now captures Installation Date; FA.2 captures Previous Service Date.",
+    "Added: 4 demo Fire Alarm certificates added (FA.1, FA.2, FA.3, FA.4)."
   ]
 }
