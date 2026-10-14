@@ -1,7 +1,7 @@
 {
-  "v": "1.6.1",
-  "build": 42,
+  "v": "1.6.2",
+  "build": 43,
   "changes": [
-    "Fixed: Emergency Lighting certificate PDF now downloads with the title text rendering correctly (no more overlapping or garbled characters)."
+    "Fixed: Certificate reference number now correctly includes the road name (e.g. 220 BURRAGE ROAD) instead of just the house number (e.g. 220)."
   ]
 }
