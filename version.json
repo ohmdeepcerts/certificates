@@ -1,7 +1,7 @@
 {
-  "v": "1.5.3",
-  "build": 33,
+  "v": "1.5.4",
+  "build": 34,
   "changes": [
-    "Fixed: PDF download button on Windows now saves directly to file instead of opening the Share dialog."
+    "Fixed: Inspector signature now appears on Emergency Lighting certificate PDF."
   ]
 }

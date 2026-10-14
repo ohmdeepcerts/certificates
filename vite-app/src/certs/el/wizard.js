@@ -989,7 +989,7 @@ export function elBuildCertHTML(rec) {
   var engineerPosition = getSetting('el_position','');
   var elLogoData = getSetting('el_logo_data','');
   var elBodyLogoData = getSetting('el_body_logo_data','');
-  var elSigData = getSetting('el_sig_data','');
+  var elSigData = getSetting('el_sig_data','') || getSetting('gas_engg_sig_data','') || getSetting('pat_sig_data','');
   var lumTotal = r.lumTotal||'—';
   var lumPass  = r.lumPass||'—';
   var lumFail  = r.lumFail||'0';
