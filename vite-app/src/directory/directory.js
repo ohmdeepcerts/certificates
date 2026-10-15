@@ -4,7 +4,7 @@ import { toast }   from '../lib/utils.js';
 import { navigate } from '../nav/navigation.js';
 
 // ── Cache ──────────────────────────────────────────────────────────────────
-const _dir = { agents: null, landlords: null, properties: null, contacts: null, appliances: null };
+const _dir = { agents: null, landlords: null, properties: null, contacts: null, appliances: null, appFields: null };
 const _dirTable = { agents: 'directory_agents', landlords: 'directory_landlords', properties: 'directory_properties', contacts: 'directory_contacts' };
 let _dirActiveTab = 'agents';
 window._dirActiveTab = 'agents';
@@ -449,6 +449,63 @@ export function attachApplianceAC(inputEl, onSelect) {
     }, 200);
   });
   inputEl.addEventListener('keydown', _acKbd);
+}
+
+// ── Appliance field history AC (location / make / model from past gas certs) ─
+async function _loadAppFields() {
+  if (_dir.appFields) return;
+  _dir.appFields = { location: [], make: [], model: [] };
+  try {
+    const { data } = await sb.from('gas_certs').select('appliances').is('deleted_at', null).not('appliances', 'is', null);
+    const seen = { location: new Set(), make: new Set(), model: new Set() };
+    (data || []).forEach(cert => {
+      let apps = cert.appliances;
+      if (typeof apps === 'string') { try { apps = JSON.parse(apps); } catch { apps = []; } }
+      (apps || []).forEach(app => {
+        ['location', 'make', 'model'].forEach(f => {
+          const v = (app[f] || '').trim();
+          if (v && !seen[f].has(v.toLowerCase())) { seen[f].add(v.toLowerCase()); _dir.appFields[f].push(v); }
+        });
+      });
+    });
+  } catch { /* silently ignore */ }
+}
+
+export async function attachApplianceFieldAC(inputEl, field, onSelect) {
+  if (!_acDD) _initAcDD();
+  if (inputEl._acFieldAttached) return; inputEl._acFieldAttached = true;
+  const search = async q => {
+    await _loadAppFields();
+    const vals = (_dir.appFields && _dir.appFields[field]) || [];
+    if (!q || q.length < 2) return vals.slice(0, 8).map(v => ({ _fv: v }));
+    const ql = q.toLowerCase();
+    return vals.filter(v => v.toLowerCase().includes(ql)).slice(0, 10).map(v => ({ _fv: v }));
+  };
+  inputEl.addEventListener('focus', async () => {
+    _acCurInput = inputEl;
+    const q = inputEl.value.trim();
+    const items = await search(q.length >= 2 ? q : '');
+    if (items.length) _renderFieldAcDD(items, inputEl, q, onSelect);
+  });
+  inputEl.addEventListener('input', () => {
+    clearTimeout(_acTimer); _acCurInput = inputEl;
+    const q = inputEl.value.trim();
+    _acTimer = setTimeout(async () => {
+      const items = await search(q);
+      _renderFieldAcDD(items, inputEl, q, onSelect);
+    }, 200);
+  });
+  inputEl.addEventListener('keydown', _acKbd);
+}
+
+function _renderFieldAcDD(items, inputEl, q, onSelect) {
+  _acItems = items; _acCurInput = inputEl;
+  if (!items.length) { _hideAcDD(); return; }
+  const closeBtn = `<div style="padding:4px 14px;text-align:right;border-bottom:1px solid var(--border)"><button onclick="_hideAcDD()" style="border:none;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px">✕ Close</button></div>`;
+  const html = closeBtn + items.map((item, idx) => `<div class="ac-item" data-idx="${idx}" onclick="_acPick(${idx})" style="padding:8px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text)">${_hlText(item._fv, q)}</div>`).join('');
+  _acDD.innerHTML = html;
+  _acDD._onSelect = item => { if (onSelect) onSelect(item._fv); };
+  _acDD._type = ''; _acIdx = -1; _posAcDD(inputEl);
 }
 
 // ── Fill helpers ────────────────────────────────────────────────────────────

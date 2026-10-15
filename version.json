@@ -1,7 +1,7 @@
 {
-  "v": "1.6.2",
-  "build": 43,
+  "v": "1.6.3",
+  "build": 44,
   "changes": [
-    "Fixed: Certificate reference number now correctly includes the road name (e.g. 220 BURRAGE ROAD) instead of just the house number (e.g. 220)."
+    "Fixed: Fire Alarm Certificates history now shows proper card layout with coloured initials, address, outcome badge, and action buttons — matching the EL and PAT history pages."
   ]
 }

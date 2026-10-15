@@ -1,6 +1,6 @@
 import { sb } from '../../lib/supabase.js';
 import { state, isAdmin } from '../../lib/state.js';
-import { toast, showOverlay, hideOverlay, confirm2, _softDelete, esc } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, confirm2, _softDelete, esc, _addrColor, _addrInitials, _ibtn } from '../../lib/utils.js';
 import { getSetting } from '../../lib/settings.js';
 import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
@@ -75,6 +75,7 @@ export function startNewFire() {
     // system — commercial extra
     sysPanelMake: '', sysPanelModel: '', sysCommType: '',
     sysZones: '', sysLoops: '', sysBafe: '', sysFia: '',
+    installDate: '', prevServiceDate: '',
     // detectors
     detectors: [],
     // testing — domestic
@@ -108,7 +109,8 @@ export function fireUpdateSubtitle() {
   var addrStr = [addr1, pc].filter(Boolean).join(', ');
   if (_w.baseRef && addrStr) {
     var yy = String(new Date().getFullYear()).slice(-2);
-    var score = _pcScore(pc); var aPart = _refAddrPart(addr1);
+    var addrForRef = [addr1, (_w.premAddr2||'').trim()].filter(Boolean).join(' ');
+    var score = _pcScore(pc); var aPart = _refAddrPart(addrForRef);
     _w.ref = _w.baseRef + yy + score + ' / ' + aPart;
     hs.textContent = _w.baseRef + ' · ' + addrStr;
   } else if (_w.baseRef) {
@@ -211,6 +213,11 @@ export function fireRenderStep() {
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
       html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
+      if (_w.certType === 'FA.1') {
+        html += `<div class="wiz-field"><label>Installation Date <span class="lbl-opt">(date system first fitted)</span></label><input value="${esc(_w.installDate||_w.testDate||todayStr())}" oninput="fireSet('installDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      } else if (_w.certType === 'FA.2') {
+        html += `<div class="wiz-field"><label>Previous Service Date <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevServiceDate||'')}" oninput="fireSet('prevServiceDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      }
     } else {
       // Commercial Grade A
       html += `<div class="wiz-field"><label>System Category</label><div class="chip-row">`;
@@ -237,6 +244,8 @@ export function fireRenderStep() {
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Location</th>`;
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Type</th>`;
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Make / Model</th>`;
+    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Serial No.</th>`;
+    if (_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Zone / Circuit</th>`;
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Result</th>`;
     if (!_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. replaced</th>`;
     html += `<th style="padding:6px 4px;border-bottom:1px solid var(--border)"></th>`;
@@ -426,6 +435,8 @@ function _detRow(det, i) {
   DETECTOR_TYPES.forEach(t => { html += `<option${(det.type||'Smoke (optical)')===t?' selected':''}>${esc(t)}</option>`; });
   html += `</select></td>`;
   html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="Make/model" style="width:100%"></td>`;
+  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.serialNo||'')}" oninput="fireDetSet(${i},'serialNo',this.value)" placeholder="Serial no." style="width:100%;min-width:80px"></td>`;
+  if (comm) { html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="Zone/circuit" style="width:100%;min-width:70px"></td>`; }
   html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'result',this.value)">`;
   ['PASS','FAIL','N/T'].forEach(r => { html += `<option${(det.result||'PASS')===r?' selected':''}>${r}</option>`; });
   html += `</select></td>`;
@@ -463,7 +474,7 @@ export function fireJumpStep(i) {
 
 export function fireAddDetector() {
   if (!_w.detectors) _w.detectors = [];
-  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', result:'PASS', batReplaced:'N/A' });
+  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'PASS', batReplaced:'N/A' });
   fireRenderStep();
 }
 export function fireRemoveDet(i) {
@@ -710,26 +721,33 @@ function renderFireList(certs, page, q) {
   var isSearch = q.length >= 2;
   var startIdx = (page - 1) * PAGE_SIZE;
   var pageItems = certs.slice(startIdx, startIdx + PAGE_SIZE);
-  var mkRow = function(r, q) {
+  var mkRow = function(r, q, idx) {
     var d = r.data||{};
     var addrRaw = [d.premAddr1, d.premAddr2, d.premAddr3, d.premPostcode].filter(Boolean).join(', ') || r.premises_address || '—';
-    var outcomeColor = r.outcome==='SATISFACTORY' ? '#15803d' : r.outcome==='UNSATISFACTORY' ? '#dc2626' : '#b45309';
-    var typeLabel = (CERT_TYPES.find(function(t){ return t.id === r.cert_type; })||{}).label || r.cert_type || '—';
+    var oc = (r.outcome||'').toUpperCase();
+    var ocCol = oc==='SATISFACTORY' ? '#16a34a' : oc==='UNSATISFACTORY' ? '#dc2626' : '#b45309';
+    var ocLabel = oc==='SATISFACTORY' ? 'Satisfactory' : oc==='UNSATISFACTORY' ? 'Unsatisfactory' : r.outcome||'—';
+    var typeLabel = (CERT_TYPES.find(function(t){ return t.id===r.cert_type; })||{}).label || r.cert_type || '—';
+    var ac = _addrColor(addrRaw); var abg = ac[0]; var atx = ac[1];
+    var ini = (_addrInitials(addrRaw)||addrRaw.slice(0,2)||'?').toUpperCase();
     var addrHtml = q ? hlText(addrRaw, q) : esc(addrRaw);
     var refHtml  = q ? hlText(r.ref_number||'—', q) : esc(r.ref_number||'—');
-    return '<div class="cert-card" onclick="fireOpenCert('+JSON.stringify(JSON.stringify(d))+')" style="cursor:pointer">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">'
-        +'<div>'
-          +'<div style="font-weight:600;font-size:14px">'+refHtml+'</div>'
-          +'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(typeLabel)+'</div>'
-          +'<div style="font-size:13px;margin-top:4px">'+addrHtml+'</div>'
-          +'<div style="font-size:12px;color:var(--muted)">'+esc(d.clientName||'')+(d.testDate?' · '+d.testDate:'')+'</div>'
+    return '<div class="pat-card" onclick="fireOpenCertIdx('+idx+')" style="cursor:pointer">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+abg+';color:'+atx+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">'+ini+'</div>'
+      +'<div class="pat-card-body">'
+        +'<div class="pat-card-top">'
+          +'<span class="pat-card-addr">'+addrHtml+'</span>'
+          +'<span style="font-size:11px;font-weight:600;color:'+ocCol+';white-space:nowrap">'+esc(ocLabel)+'</span>'
         +'</div>'
-        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
-          +'<span style="font-size:11px;font-weight:600;color:'+outcomeColor+';background:'+outcomeColor+'18;padding:3px 8px;border-radius:100px">'+esc(r.outcome||'—')+'</span>'
-          +'<div style="display:flex;gap:4px">'
-            +'<button onclick="event.stopPropagation();fireEditCert('+JSON.stringify(JSON.stringify(r))+')" class="btn-sm" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>'
-            +'<button onclick="event.stopPropagation();fireDeleteCert(\''+r.id+'\')" class="btn-sm" title="Delete" style="color:#dc2626"><i class="fa-solid fa-trash-can"></i></button>'
+        +'<div class="pat-card-bot">'
+          +'<code class="pat-ref-chip">'+refHtml+'</code>'
+          +'<span class="pat-card-date">'+esc(r.test_date||d.testDate||'—')+'</span>'
+          +'<span class="pat-card-sub">&middot; '+esc(typeLabel)+'</span>'
+          +'<div class="pat-card-btns">'
+            +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();fireEditCertIdx('+idx+')'):'')
+            +_ibtn('Download PDF','fa-download','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
+            +_ibtn('Email','fa-envelope','event.stopPropagation();fireEmailCertIdx('+idx+')')
+            +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true):'')
           +'</div>'
         +'</div>'
       +'</div>'
@@ -738,9 +756,9 @@ function renderFireList(certs, page, q) {
   var html = '';
   if (isSearch) {
     html += '<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">'+certs.length+' result'+(certs.length!==1?'s':'')+' matching "<strong style="color:var(--text)">'+q+'</strong>"</div>';
-    html += pageItems.map(function(r){ return mkRow(r, q); }).join('');
+    html += pageItems.map(function(r, i){ return mkRow(r, q, startIdx + i); }).join('');
   } else {
-    html += pageItems.map(function(r){ return mkRow(r, ''); }).join('');
+    html += pageItems.map(function(r, i){ return mkRow(r, '', startIdx + i); }).join('');
   }
   html += paginationHtml(page, certs.length, 'firePrevPage()', 'fireNextPage()');
   container.innerHTML = html;
@@ -748,6 +766,23 @@ function renderFireList(certs, page, q) {
 
 export function firePrevPage() { if (_firePage > 1) { _firePage--; renderFireList(_fireFiltered, _firePage, _fireCurrentQ); document.getElementById('fire-history-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
 export function fireNextPage() { if (_firePage < Math.ceil(_fireFiltered.length / PAGE_SIZE)) { _firePage++; renderFireList(_fireFiltered, _firePage, _fireCurrentQ); document.getElementById('fire-history-list')?.scrollIntoView({behavior:'smooth',block:'start'}); } }
+
+export function fireOpenCertIdx(idx) {
+  var r = _fireFiltered[idx]; if (!r) return;
+  fireOpenCert(r.data || r);
+}
+export function fireEditCertIdx(idx) {
+  var r = _fireFiltered[idx]; if (!r) return;
+  fireEditCert(r);
+}
+export function fireDownloadPDFIdx(idx) {
+  var r = _fireFiltered[idx]; if (!r) return;
+  fireDownloadPDF(r.data || r);
+}
+export function fireEmailCertIdx(idx) {
+  var r = _fireFiltered[idx]; if (!r) return;
+  import('./email.js').then(function(m){ m.fireEmailCert(r.data || r); }).catch(function(){});
+}
 
 export function fireEditCert(recStr) {
   var r;

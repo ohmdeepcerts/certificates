@@ -98,7 +98,8 @@ export function elUpdateSubtitle() {
   var addrStr = [addr1, pc].filter(Boolean).join(', ');
   if (_w.baseRef && addrStr) {
     var yy = String(new Date().getFullYear()).slice(-2);
-    var score = _pcScore(pc); var aPart = _refAddrPart(addr1);
+    var addrForRef = [addr1, (_w.premAddr2||'').trim()].filter(Boolean).join(' ');
+    var score = _pcScore(pc); var aPart = _refAddrPart(addrForRef);
     _w.ref = _w.baseRef + yy + score + ' / ' + aPart;
     hs.textContent = _w.baseRef + ' · ' + addrStr;
   } else if (_w.baseRef) {
@@ -1695,12 +1696,16 @@ async function elGeneratePDF(rec, returnBlob) {
   // html2canvas draws text via the MAIN document's Canvas 2D context, so the
   // font must be loaded in the main document — loading it only in the iframe
   // has no effect on what html2canvas can render.
+  // html2canvas reads font metrics from the main document's canvas context.
+  // display=block (not swap) ensures fonts.ready only resolves after the font
+  // file is fully downloaded — display=swap allows fonts.ready to fire early
+  // with a fallback font loaded, causing text overlap at render time.
   var _gfId = '_el-cert-gf';
   if (!document.getElementById(_gfId)) {
     var _gfl = document.createElement('link');
     _gfl.id = _gfId;
     _gfl.rel = 'stylesheet';
-    _gfl.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap';
+    _gfl.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=block';
     document.head.appendChild(_gfl);
   }
   try {
@@ -1712,6 +1717,11 @@ async function elGeneratePDF(rec, returnBlob) {
       setTimeout(res, 5000);
     });
     await document.fonts.ready;
+    // Explicitly force the font face into the canvas context before rendering
+    await Promise.all([
+      document.fonts.load('700 1em "Cormorant Garamond"'),
+      document.fonts.load('600 1em "Cormorant Garamond"'),
+    ]).catch(function(){});
   } catch(e) {}
 
   var certHtml = elBuildCertHTML(rec);
@@ -1722,13 +1732,27 @@ async function elGeneratePDF(rec, returnBlob) {
     iframe.addEventListener('load', resolve, {once:true});
     iframe.srcdoc = certHtml;
   });
-  await new Promise(function(res) { setTimeout(res, 200); });
+  await new Promise(function(res) { setTimeout(res, 400); });
+  // Also wait for the iframe's own fonts to settle
+  try {
+    if (iframe.contentWindow && iframe.contentWindow.document.fonts) {
+      await iframe.contentWindow.document.fonts.ready;
+    }
+  } catch(e) {}
   try {
     var iDoc = iframe.contentDocument || iframe.contentWindow.document;
-    // html2canvas 1.4.1 bug: images inside display:inline-block inside flex containers
-    // are silently skipped. Changing to display:block before rendering fixes this.
+    // Fix inline-block: html2canvas 1.4.1 misrenders display:inline-block elements.
+    // Fix 1: elements with inline style
     Array.from(iDoc.querySelectorAll('[style*="inline-block"]')).forEach(function(el) {
       el.style.display = 'block';
+    });
+    // Fix 2: elements with CSS class-based display:inline-block
+    Array.from(iDoc.querySelectorAll('*')).forEach(function(el) {
+      try {
+        if ((iframe.contentWindow.getComputedStyle(el)||{}).display === 'inline-block') {
+          el.style.display = 'block';
+        }
+      } catch(ee) {}
     });
     var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
     var pdf = new JsPDF({unit:'mm',format:'a4',orientation:'portrait'});

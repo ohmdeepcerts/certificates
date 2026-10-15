@@ -75,7 +75,7 @@ async function _loadCertGlobals() {
   Object.assign(window, { loadSettingsUI: settings.loadSettingsUI, saveSettings: settings.saveSettings });
   Object.assign(window, { emailPAT: patEmail.emailPAT, emailPATFromList: patEmail.emailPATFromList });
   Object.assign(window, { generatePATPDF: patPdf.generatePATPDF, printPATCertificate: patPdf.printPATCertificate, openPATPDF: patPdf.openPATPDF });
-  Object.assign(window, { openScanModal: patScan.openScanModal, closeScanModal: patScan.closeScanModal, handleScanFile: patScan.handleScanFile, doScanApply: patScan.doScanApply });
+  Object.assign(window, { openScanModal: patScan.openScanModal, closeScanModal: patScan.closeScanModal, handleScanFile: patScan.handleScanFile, runScan: patScan.runScan, renderScanResults: patScan.renderScanResults, addPatScanResults: patScan.addPatScanResults });
   Object.assign(window, gasSig);
   Object.assign(window, { showAddStaffModal: staff.showAddStaffModal, hideAddStaffModal: staff.hideAddStaffModal, doAddStaff: staff.doAddStaff, setStaffPerm: staff.setStaffPerm, toggleStaffActive: staff.toggleStaffActive, resetStaffPassword: staff.resetStaffPassword, approveRequest: staff.approveRequest, rejectRequest: staff.rejectRequest, copyStaffSQL: staff.copyStaffSQL, loadStaff: staff.loadStaff, loadPendingRequests: staff.loadPendingRequests });
   Object.assign(window, { renderAuditPage: audit.renderAuditPage, prevAuditPage: audit.prevAuditPage, nextAuditPage: audit.nextAuditPage, loadAuditLog: audit.loadAuditLog });

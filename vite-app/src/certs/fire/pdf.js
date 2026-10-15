@@ -38,15 +38,17 @@ export function fireBuildCertHTML(r) {
   var metaCols   = hasClient ? '1fr 1fr 1fr' : '1fr 1fr';
 
   // ── Detector table ──────────────────────────────────────────────────────────
-  var hasDetModel = (r.detectors||[]).some(function(d){ return d.model; });
+  var hasDetModel  = (r.detectors||[]).some(function(d){ return d.model; });
+  var hasSerialNo  = (r.detectors||[]).some(function(d){ return d.serialNo; });
+  var hasZone      = isComm && (r.detectors||[]).some(function(d){ return d.zone; });
   var detHeaders = isComm
-    ? `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}<th>Result</th>`
-    : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}<th>Result</th><th>Battery replaced</th>`;
+    ? `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}${hasZone?'<th>Zone / Circuit</th>':''}<th>Result</th>`
+    : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}<th>Result</th><th>Battery replaced</th>`;
   var detRows = (r.detectors||[]).map(function(d,i) {
     var rCls = d.result==='PASS' ? 'pass' : d.result==='FAIL' ? 'fail' : '';
     return isComm
-      ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td></tr>`
-      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td></tr>`;
+      ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}${hasZone?`<td>${_esc(d.zone||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td></tr>`
+      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td></tr>`;
   }).join('');
 
   // ── Test results ────────────────────────────────────────────────────────────
@@ -91,7 +93,9 @@ export function fireBuildCertHTML(r) {
   if (!isComm) {
     sysCol1 = _cell('Category', r.sysCategory) + _cell('System grade', r.sysGrade) + _cell('Coverage', r.sysCoverage||'—');
     sysCol2 = _cell('Power supply', r.sysPowerSupply) + _cell('Interlinked', r.sysInterlinked)
-            + ((r.sysMfr||r.sysModel) ? _cell('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' ')) : '');
+            + ((r.sysMfr||r.sysModel) ? _cell('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' ')) : '')
+            + (r.installDate ? _cell('Installation date', r.installDate) : '')
+            + (r.prevServiceDate ? _cell('Previous service date', r.prevServiceDate) : '');
     var detCount = (r.detectors||[]).length;
     sysCol3 = _cell('No. of devices', detCount ? String(detCount) : '—')
             + _cell('Test date', r.testDate) + _cell('Next inspection due', r.nextInspDate);
@@ -145,7 +149,7 @@ export function fireBuildCertHTML(r) {
   // ── CSS ─────────────────────────────────────────────────────────────────────
   var css = `
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#2a2a2a;background:#fff}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#2a2a2a;background:#fff}
     @page{size:A4;margin:0}
     @media print{
       .page{width:210mm;min-height:297mm;max-height:297mm;page-break-after:always;break-after:page;overflow:hidden}
@@ -157,8 +161,8 @@ export function fireBuildCertHTML(r) {
     .cert-topbar{display:flex;justify-content:space-between;align-items:center;padding:5px 20px;background:rgba(200,0,28,.04);border-bottom:1px solid rgba(200,0,28,.09);flex-shrink:0}
     .cert-topbar-left{display:flex;flex-direction:column;gap:1px}
     .cert-topbar-eyebrow{font-size:7.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c8001c}
-    .cert-topbar-title{font-size:12px;font-weight:600;color:#111}
-    .cert-topbar-std{font-size:10px;color:#909090;font-style:italic;margin-top:1px}
+    .cert-topbar-title{font-size:13px;font-weight:600;color:#111}
+    .cert-topbar-std{font-size:11px;color:#909090;font-style:italic;margin-top:1px}
     .cert-ref-badge{background:#c8001c;color:#fff;border-radius:5px;padding:6px 14px;text-align:center;min-width:100px}
     .cert-ref-badge .ref-lbl{display:block;font-size:7px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;opacity:.8;margin-bottom:2px}
     .cert-ref-badge .ref-val{font-size:20px;font-weight:700;letter-spacing:.02em}
@@ -166,7 +170,7 @@ export function fireBuildCertHTML(r) {
     .cert-co-band{display:flex;align-items:center;gap:14px;padding:10px 20px;border-bottom:2px solid rgba(200,0,28,.12);background:linear-gradient(180deg,rgba(200,0,28,.025) 0%,transparent 100%);flex-shrink:0}
     .co-name-lg{font-size:22px;font-weight:900;color:#111;letter-spacing:-.02em;line-height:1.1}
     .co-band-details{display:flex;gap:14px;flex-wrap:wrap;align-items:center;flex:1}
-    .co-band-item{font-size:9px;color:#5a5a5a}
+    .co-band-item{font-size:10px;color:#5a5a5a}
     .co-band-item strong{color:#333;font-weight:600}
     .co-niceic{display:inline-flex;align-items:center;gap:4px;background:rgba(200,0,28,.07);border:1px solid rgba(200,0,28,.18);border-radius:3px;padding:2px 7px;font-size:8px;font-weight:700;color:#c8001c;letter-spacing:.06em}
 
@@ -178,25 +182,25 @@ export function fireBuildCertHTML(r) {
     .glass-card{background:linear-gradient(135deg,rgba(200,0,28,.052) 0%,rgba(200,0,28,.020) 50%,rgba(200,0,28,.006) 100%);border:1px solid rgba(200,0,28,.15);border-top:2px solid rgba(200,0,28,.28);border-radius:5px;padding:9px 11px;break-inside:avoid;page-break-inside:avoid;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
     .card-head{display:flex;align-items:center;gap:6px;margin-bottom:8px}
     .card-bar{width:3px;height:11px;background:#c8001c;border-radius:2px;flex-shrink:0}
-    .card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111}
+    .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111}
     .card-rule{flex:1;height:1px;background:rgba(200,0,28,.12)}
 
     .spec-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
     .spec-pill{display:flex;flex-direction:column;align-items:center;background:rgba(200,0,28,.07);border:1px solid rgba(200,0,28,.17);border-radius:4px;padding:4px 10px;min-width:72px}
-    .pill-lbl{font-size:7px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c8001c;margin-bottom:2px}
-    .pill-val{font-size:14px;font-weight:700;color:#111;letter-spacing:-.01em}
-    .pill-sm{font-size:11.5px}
-    .pill-bold{font-size:14px;font-weight:800;color:#111}
-    .pill-desc{font-size:8px;color:#5a5a5a;margin-top:1px;font-weight:400;text-align:center}
+    .pill-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c8001c;margin-bottom:2px}
+    .pill-val{font-size:15px;font-weight:700;color:#111;letter-spacing:-.01em}
+    .pill-sm{font-size:12.5px}
+    .pill-bold{font-size:15px;font-weight:800;color:#111}
+    .pill-desc{font-size:9px;color:#5a5a5a;margin-top:1px;font-weight:400;text-align:center}
 
     table.info-table{width:100%;border-collapse:collapse}
     table.info-table tr+tr td{border-top:1px solid rgba(200,0,28,.07)}
-    table.info-table td{padding:3.5px 3px;vertical-align:top;font-size:11px}
-    table.info-table .lbl{width:43%;color:#5a5a5a;font-size:10.5px;padding-right:5px}
+    table.info-table td{padding:3.5px 3px;vertical-align:top;font-size:12px}
+    table.info-table .lbl{width:43%;color:#5a5a5a;font-size:11.5px;padding-right:5px}
     table.info-table .val{font-weight:500;color:#111}
-    table.data-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid rgba(200,0,28,.15);border-radius:4px;overflow:hidden}
+    table.data-table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid rgba(200,0,28,.15);border-radius:4px;overflow:hidden}
     table.data-table thead tr{background:rgba(200,0,28,.78)}
-    table.data-table th{padding:5px 7px;text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.95);border-right:1px solid rgba(255,255,255,.10)}
+    table.data-table th{padding:5px 7px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.95);border-right:1px solid rgba(255,255,255,.10)}
     table.data-table th:last-child{border-right:none}
     table.data-table tbody tr:nth-child(even){background:rgba(200,0,28,.04)}
     table.data-table td{padding:4.5px 7px;border-bottom:1px solid rgba(200,0,28,.07);border-right:1px solid rgba(200,0,28,.05);vertical-align:top}
@@ -211,7 +215,7 @@ export function fireBuildCertHTML(r) {
     .sig-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
     .sig-box{background:rgba(200,0,28,.025);border:1px dashed rgba(200,0,28,.22);border-radius:4px;min-height:42px;padding:5px 9px}
     .sig-lbl{font-size:7.5px;text-transform:uppercase;letter-spacing:.1em;color:#909090;margin-bottom:3px}
-    .decl{font-size:11px;color:#5a5a5a;line-height:1.6}
+    .decl{font-size:12px;color:#5a5a5a;line-height:1.6}
 
     .cert-footer{border-top:1px solid rgba(200,0,28,.10);background:linear-gradient(180deg,rgba(200,0,28,.04) 0%,rgba(200,0,28,.02) 100%);padding:6px 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-size:10px;color:#909090;flex-shrink:0}
     .cert-footer strong{color:#5a5a5a}

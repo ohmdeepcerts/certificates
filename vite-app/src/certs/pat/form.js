@@ -358,6 +358,20 @@ export async function savePAT() {
   const d = getPATFormData();
   if (!d.property_address) { toast('Property address required', 'error'); return; }
   if (!(patGv('pat-postcode') || '').trim()) { toast('Postcode is required — enter it in the Postcode field', 'error'); patGe('pat-postcode').focus(); return; }
+
+  // For completed certs: keep numeric prefix, refresh the address part from the current address
+  if (d.status === 'completed' && d.ref_number && d.ref_number.includes(' / ')) {
+    const addr = (patGv('pat-addr') || '').trim();
+    if (addr) {
+      const numPart = d.ref_number.split(' / ')[0];
+      const newRef = numPart + ' / ' + _refAddrPart(d.property_address);
+      if (newRef !== d.ref_number) {
+        d.ref_number = newRef;
+        const refEl = patGe('pat-ref');
+        if (refEl) refEl.value = newRef;
+      }
+    }
+  }
   if (!navigator.onLine) {
     const existingId = state.editingPATId && state.editingPATId !== '__offline__' ? state.editingPATId : null;
     const localId = await idbEnqueue({ type: 'pat_upsert', form: d, supabaseId: existingId, userId: state.currentUser.id, ts: Date.now() });

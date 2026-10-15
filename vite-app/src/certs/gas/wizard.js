@@ -430,7 +430,8 @@ export function _gwUpdateTitle() {
     var s = _refSettings('gas');
     var yy = String(new Date().getFullYear()).slice(-2);
     var score = _pcScore(pc);
-    var addrPart = addr ? _refAddrPart(addr) : '';
+    var addrForRef = [addr, (_gw.installAddr2||'').trim()].filter(Boolean).join(' ');
+    var addrPart = addrForRef ? _refAddrPart(addrForRef) : '';
     refEl.textContent = s.prefix + state.cachedNextGasSerial + yy + (score ? score : '') + (addrPart ? ' / ' + addrPart : '');
   } else {
     refEl.textContent = [addr, pc].filter(Boolean).join(' · ') || 'CP12 · Draft';
@@ -582,7 +583,7 @@ export function gwRender() {
         + (i > 0 ? '<span onclick="gwRemoveApp(' + i + ')" style="cursor:pointer;color:var(--muted);font-size:22px;line-height:1">&times;</span>' : '')
         + '</div>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-        + '<div><label class="elwiz-input-label">Location</label><input class="elwiz-input" style="margin:0" placeholder="e.g. Kitchen" value="' + esc(app.location || '') + '" oninput="gwSetApp(' + i + ',\'location\',this.value)"></div>'
+        + '<div><label class="elwiz-input-label">Location</label><input data-gw-location class="elwiz-input" style="margin:0" placeholder="e.g. Kitchen" value="' + esc(app.location || '') + '" oninput="gwSetApp(' + i + ',\'location\',this.value)"></div>'
         + '<div><label class="elwiz-input-label">Type</label><input data-gw-type class="elwiz-input" style="margin:0" placeholder="e.g. Combi Boiler" value="' + esc(app.type || '') + '" oninput="gwSetApp(' + i + ',\'type\',this.value);gwAutoFlue(' + i + ',this.value)"></div>'
         + '</div>'
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
@@ -735,7 +736,13 @@ export function gwAttachAC() {
     (_gw.appliances || []).forEach(function (_, i) {
       var card = document.querySelector('[data-gw-app="' + i + '"]'); if (!card) return;
       var typeEl = card.querySelector('[data-gw-type]');
+      var locEl  = card.querySelector('[data-gw-location]');
+      var makeEl = card.querySelector('[data-gw-make]');
+      var modEl  = card.querySelector('[data-gw-model]');
       if (typeEl && typeof attachApplianceAC === 'function') attachApplianceAC(typeEl, function (rec) { _gwFillAppliance(i, rec); }); // still global
+      if (locEl  && typeof attachApplianceFieldAC === 'function') attachApplianceFieldAC(locEl,  'location', function (v) { gwSetApp(i, 'location', v); locEl.value  = v; }); // still global
+      if (makeEl && typeof attachApplianceFieldAC === 'function') attachApplianceFieldAC(makeEl, 'make',     function (v) { gwSetApp(i, 'make',     v); makeEl.value = v; }); // still global
+      if (modEl  && typeof attachApplianceFieldAC === 'function') attachApplianceFieldAC(modEl,  'model',    function (v) { gwSetApp(i, 'model',    v); modEl.value  = v; }); // still global
     });
   }
 }
