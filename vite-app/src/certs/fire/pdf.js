@@ -24,13 +24,14 @@ export function fireBuildCertHTML(r) {
     : 'BS 5839-6:2019 — Fire Detection and Alarm Systems for Dwellings — Issued in accordance with Annex G';
   var typeTitle = typeLabels[r.certType] || 'Fire Alarm Certificate';
 
-  var company      = getSetting('company_name','OHM Electrical Engineering Ltd');
-  var companyAddr  = getSetting('company_address','');
-  var companyTel   = getSetting('company_tel','');
-  var companyEmail = getSetting('company_email','');
-  var niceicNo       = getSetting('el_enrol_no', getSetting('niceic_scheme_no',''));
+  var company      = getSetting('fire_co_name', getSetting('company_name','OHM Electrical Engineering Ltd'));
+  var companyAddr  = getSetting('fire_co_address', getSetting('company_address',''));
+  var companyTel   = getSetting('fire_co_phone', getSetting('company_tel',''));
+  var companyEmail = getSetting('fire_co_email', getSetting('company_email',''));
+  var niceicNo       = getSetting('fire_niceic_scheme_no', getSetting('el_enrol_no', getSetting('niceic_scheme_no','')));
   var logoData       = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
+  var enggSigData    = getSetting('fire_engg_sig_data', '');
 
   var premAddr   = [r.premAddr1, r.premAddr2, r.premAddr3, r.premPostcode].filter(Boolean).join(', ');
   var clientAddr = [r.clientAddr1, r.clientAddr2, r.clientAddr3, r.clientPostcode].filter(Boolean).join(', ');
@@ -331,7 +332,7 @@ export function fireBuildCertHTML(r) {
           </table>
         </div>
         <div class="sig-row">
-          <div class="sig-box"><div class="sig-lbl">Engineer signature</div></div>
+          <div class="sig-box"><div class="sig-lbl">Engineer signature</div>${enggSigData?`<img src="${enggSigData}" style="max-height:38px;max-width:160px;object-fit:contain;display:block;margin-top:3px">`:''}</div>
           <div class="sig-box"><div class="sig-lbl">Client signature (if on-site)</div></div>
         </div>
       </div>

@@ -719,6 +719,7 @@
         <button class="settings-tab active" onclick="switchSettingsTab('pat')">PAT</button>
         <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas CP12</button>
         <button class="settings-tab" onclick="switchSettingsTab('el')">⚡ Emergency Lighting</button>
+        <button class="settings-tab" onclick="switchSettingsTab('fire')">🔥 Fire Alarm</button>
         <button class="settings-tab" onclick="switchSettingsTab('ref')">🔢 Reference</button>
         <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
         <button class="settings-tab" onclick="switchSettingsTab('integrations')">🔗 Integrations</button>
@@ -1040,6 +1041,67 @@
           <div class="settings-section-title">Default Client Email</div>
           <div class="settings-section-desc">Pre-filled in the wizard when creating a new EL certificate. Can be overridden per certificate.</div>
           <div class="field-group"><label>Default client email address</label><input type="email" id="s-el-client-email-default" placeholder="client@example.com"></div>
+        </div>
+      </div>
+
+      <!-- ─── FIRE ALARM CERTIFICATE SETTINGS ─────────────────────────────── -->
+      <div class="settings-pane" id="pane-fire">
+        <div class="form-section">
+          <div class="form-section-title">Fire Alarm Certificate Settings</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details auto-fill every new Fire Alarm certificate</strong> — company header, contractor box, and footer.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-fire-co-name" placeholder="OHM Electrical Engineering Ltd"></div>
+            <div class="field-group"><label>Sub-heading / Trading name</label><input type="text" id="s-fire-co-sub" placeholder="e.g. Fire Safety Division"></div>
+            <div class="field-group"><label>Default Engineer Name</label><input type="text" id="s-fire-engineer" placeholder="Full name — autofills engineer box"></div>
+            <div class="field-group"><label>NICEIC / Scheme No.</label><input type="text" id="s-fire-niceic-no" placeholder="Scheme registration number"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address</label><textarea id="s-fire-co-address" placeholder="Street, Town, County" style="height:52px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-fire-co-postcode" placeholder="SW1A 1AA"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-fire-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-fire-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-fire-co-website" placeholder="https://www.yourcompany.co.uk"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Company Logo</label>
+              <div class="lprev" id="pr-fire-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-fire-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_logo_data','pr-fire-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_logo_data','pr-fire-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">NICEIC / Scheme Logo</label>
+              <div class="lprev" id="pr-fire-niceic"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-niceic').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-fire-niceic" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_niceic_logo','pr-fire-niceic')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_niceic_logo','pr-fire-niceic')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-fire-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-sig').click()"><i class="fa-solid fa-upload"></i> Upload Signature</div>
+              <input type="file" id="f-fire-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_engg_sig_data','pr-fire-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_engg_sig_data','pr-fire-sig')">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — Fire Alarm</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. FA)</small></label>
+              <input type="text" id="s-fire-ref-prefix" placeholder="FA" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-fire-ref-start" placeholder="1001" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Fire certs will be: <strong id="fire-ref-eg" style="color:var(--text);font-family:monospace">FA10012636 / 5 EXAMPLE RD</strong></div>
         </div>
       </div>
 

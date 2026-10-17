@@ -149,6 +149,23 @@ export function loadSettingsUI() {
     const d = getSetting(key, '');
     if (d) { const el = document.getElementById(previewId); if (el) el.innerHTML = `<img src="${d}" style="max-height:70px;object-fit:contain">`; }
   });
+  // Fire Alarm company
+  document.getElementById('s-fire-co-name').value     = getSetting('fire_co_name', '');
+  document.getElementById('s-fire-co-sub').value      = getSetting('fire_co_sub', '');
+  document.getElementById('s-fire-engineer').value    = getSetting('fire_default_engineer', '');
+  document.getElementById('s-fire-niceic-no').value   = getSetting('fire_niceic_scheme_no', getSetting('el_enrol_no', ''));
+  document.getElementById('s-fire-co-address').value  = getSetting('fire_co_address', '');
+  document.getElementById('s-fire-co-postcode').value = getSetting('fire_co_postcode', '');
+  document.getElementById('s-fire-co-phone').value    = getSetting('fire_co_phone', '');
+  document.getElementById('s-fire-co-email').value    = getSetting('fire_co_email', '');
+  document.getElementById('s-fire-co-website').value  = getSetting('fire_co_website', '');
+  document.getElementById('s-fire-ref-prefix').value  = getSetting('fa_ref_prefix', 'FA');
+  document.getElementById('s-fire-ref-start').value   = getSetting('fa_ref_start', '1001');
+  const fireLogoFields = [['fire_logo_data', 'pr-fire-logo'], ['fire_niceic_logo', 'pr-fire-niceic'], ['fire_engg_sig_data', 'pr-fire-sig']];
+  fireLogoFields.forEach(([key, previewId]) => {
+    const d = getSetting(key, '');
+    if (d) { const el = document.getElementById(previewId); if (el) el.innerHTML = `<img src="${d}" style="max-height:70px;object-fit:contain">`; }
+  });
   // Email
   document.getElementById('s-email-method').value     = getSetting('email_method', 'script');
   toggleEmailMethod();
@@ -218,6 +235,17 @@ export async function saveSettings() {
     ['pat_co_vat',        document.getElementById('s-pat-co-vat').value],
     ['pat_co_regno',      document.getElementById('s-pat-co-regno').value],
     ['pat_co_insurance',  document.getElementById('s-pat-co-insurance').value],
+    ['fire_co_name',      document.getElementById('s-fire-co-name').value],
+    ['fire_co_sub',       document.getElementById('s-fire-co-sub').value],
+    ['fire_default_engineer', document.getElementById('s-fire-engineer').value],
+    ['fire_niceic_scheme_no', document.getElementById('s-fire-niceic-no').value],
+    ['fire_co_address',   document.getElementById('s-fire-co-address').value],
+    ['fire_co_postcode',  document.getElementById('s-fire-co-postcode').value],
+    ['fire_co_phone',     document.getElementById('s-fire-co-phone').value],
+    ['fire_co_email',     document.getElementById('s-fire-co-email').value],
+    ['fire_co_website',   document.getElementById('s-fire-co-website').value],
+    ['fa_ref_prefix',     (document.getElementById('s-fire-ref-prefix').value || 'FA').toUpperCase()],
+    ['fa_ref_start',      document.getElementById('s-fire-ref-start').value || '1001'],
     ['gas_co_name',       document.getElementById('s-gas-co-name').value],
     ['gas_default_engineer', document.getElementById('s-gas-engineer').value],
     ['gas_co_address',    document.getElementById('s-gas-co-address').value],
@@ -315,11 +343,15 @@ export function updateRefPreview() {
   const gStart  = parseInt((document.getElementById('s-gas-ref-start') || {}).value) || 210;
   const pPrefix = ((document.getElementById('s-pat-ref-prefix') || {}).value || 'PAT').toUpperCase();
   const pStart  = parseInt((document.getElementById('s-pat-ref-start') || {}).value) || 1;
+  const fPrefix = ((document.getElementById('s-fire-ref-prefix') || {}).value || 'FA').toUpperCase();
+  const fStart  = parseInt((document.getElementById('s-fire-ref-start') || {}).value) || 1001;
   const yy = String(new Date().getFullYear()).slice(-2);
   const gEl = document.getElementById('gas-ref-eg');
   const pEl = document.getElementById('pat-ref-eg');
+  const fEl = document.getElementById('fire-ref-eg');
   if (gEl) gEl.textContent = `${gPrefix}${gStart}${yy}36 / 5 EXAMPLE RD`;
   if (pEl) pEl.textContent = `${pPrefix}${pStart}${yy}44 / 1 MARINA POINT`;
+  if (fEl) fEl.textContent = `${fPrefix}${fStart}${yy}36 / 5 EXAMPLE RD`;
 }
 
 export async function loadRefStats() {
