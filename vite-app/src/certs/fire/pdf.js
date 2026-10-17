@@ -273,6 +273,10 @@ export function fireBuildCertHTML(r) {
       <div class="glass-card">
         ${_ch('System Details')}
         ${specPills ? `<div class="spec-pills">${specPills}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(200,0,28,.06);border:1px solid rgba(200,0,28,.18);border-left:3px solid #c8001c;border-radius:4px;padding:5px 10px;margin-bottom:9px">
+          <span style="font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c8001c;white-space:nowrap;flex-shrink:0">Regulation</span>
+          <span style="font-size:9px;color:#2a2a2a;font-weight:500">${stdLabel}</span>
+        </div>
         <div class="sys-grid">
           <table class="info-table">${sysCol1}</table>
           <table class="info-table">${sysCol2}</table>
