@@ -1,7 +1,7 @@
 {
-  "v": "1.6.4",
-  "build": 45,
+  "v": "1.6.5",
+  "build": 46,
   "changes": [
-    "Added: Fire Alarm history cards now show a View button and a days-remaining expiry pill (next inspection date)."
+    "Added: EL certificate history cards now show a View button and a days-remaining expiry pill (next test date), matching PAT and Fire history cards."
   ]
 }

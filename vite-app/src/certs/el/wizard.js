@@ -1615,6 +1615,24 @@ export async function copyELCert(id) {
   _w = d; navigate('el-new'); elRenderStep();
 }
 
+function _elExpiryPill(d) {
+  var nd = d.nextTestDate; if (!nd) return '';
+  var p = nd.split('/'); if (p.length !== 3) return '';
+  var due = new Date(+p[2], +p[1]-1, +p[0]);
+  var today = new Date(); today.setHours(0,0,0,0);
+  var days = Math.ceil((due - today) / 864e5);
+  var bg, col, bord, sub;
+  if (days < 0)        { bg='#fee2e2'; col='#dc2626'; bord='#fca5a5'; sub='OVERDUE'; }
+  else if (days <= 30) { bg='#fff7ed'; col='#ea580c'; bord='#fed7aa'; sub='DAYS'; }
+  else if (days <= 90) { bg='#fefce8'; col='#ca8a04'; bord='#fef08a'; sub='DAYS'; }
+  else                 { bg='#f0fdf4'; col='#16a34a'; bord='#86efac'; sub='DAYS'; }
+  var num = Math.abs(days);
+  return '<span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;padding:6px 12px;border-radius:10px;background:'+bg+';border:1.5px solid '+bord+';gap:1px;flex-shrink:0">'
+    +'<span style="font-size:16px;font-weight:800;color:'+col+';line-height:1;letter-spacing:-.02em">'+num+'</span>'
+    +'<span style="font-size:8px;font-weight:700;color:'+col+';opacity:.7;text-transform:uppercase;letter-spacing:.1em;line-height:1;margin-top:2px">'+sub+'</span>'
+    +'</span>';
+}
+
 export function renderELList(certs, page, q) {
   page = page || 1; q = q || '';
   var el = document.getElementById('el-list'); if (!el) return;
@@ -1645,18 +1663,21 @@ export function renderELList(certs, page, q) {
     var ocLabel = oc === 'SATISFACTORY' ? 'Satisfactory' : oc === 'UNSATISFACTORY' ? 'Unsatisfactory' : oc || '—';
     var addrHtml = q ? hlText(addrRaw, q) : _escHtml(addrRaw);
     var refHtml  = q ? hlText(r.ref_number||'—', q) : _escHtml(r.ref_number||'—');
+    var pill = _elExpiryPill(d);
     return '<div class="pat-card" data-el-id="'+r.id+'" onclick="elShowPreview(\''+r.id+'\')" style="cursor:pointer">'
       +'<div style="width:36px;height:36px;border-radius:50%;background:'+abg+';color:'+atx+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">'+ini+'</div>'
       +'<div class="pat-card-body">'
         +'<div class="pat-card-top">'
           +'<span class="pat-card-addr">'+addrHtml+'</span>'
-          +'<span style="font-size:11px;font-weight:600;color:'+ocCol+';white-space:nowrap">'+_escHtml(ocLabel)+'</span>'
+          +(pill || '<span style="font-size:11px;font-weight:600;color:'+ocCol+';white-space:nowrap">'+_escHtml(ocLabel)+'</span>')
         +'</div>'
         +'<div class="pat-card-bot">'
           +'<code class="pat-ref-chip">'+refHtml+'</code>'
           +'<span class="pat-card-date">'+_escHtml(r.test_date||d.testDate||'—')+'</span>'
+          +(pill?'<span style="font-size:11px;font-weight:600;color:'+ocCol+'">'+_escHtml(ocLabel)+'</span>':'')
           +'<span class="pat-card-sub">&middot; '+_escHtml(r.cert_type||'EL')+'</span>'
           +'<div class="pat-card-btns">'
+            +_ibtn('View','fa-eye','event.stopPropagation();elShowPreview(\''+r.id+'\')')
             +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();elEditCert(\''+r.id+'\')'):'')
             +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
             +_ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
