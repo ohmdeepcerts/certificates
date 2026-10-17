@@ -16,9 +16,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-QBmuPfRh.js"></script>
+  <script type="module" crossorigin src="./assets/index-BR8Cs0pX.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-Cj6UiNmj.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-N7ZC4CGp.js">
   <link rel="stylesheet" crossorigin href="./assets/index-BzKv8bRX.css">
 </head>
 <body>
@@ -723,6 +723,7 @@
         <button class="settings-tab active" onclick="switchSettingsTab('pat')">PAT</button>
         <button class="settings-tab" onclick="switchSettingsTab('gas')">Gas CP12</button>
         <button class="settings-tab" onclick="switchSettingsTab('el')">⚡ Emergency Lighting</button>
+        <button class="settings-tab" onclick="switchSettingsTab('fire')">🔥 Fire Alarm</button>
         <button class="settings-tab" onclick="switchSettingsTab('ref')">🔢 Reference</button>
         <button class="settings-tab" onclick="switchSettingsTab('email')">Email</button>
         <button class="settings-tab" onclick="switchSettingsTab('integrations')">🔗 Integrations</button>
@@ -1047,6 +1048,67 @@
         </div>
       </div>
 
+      <!-- ─── FIRE ALARM CERTIFICATE SETTINGS ─────────────────────────────── -->
+      <div class="settings-pane" id="pane-fire">
+        <div class="form-section">
+          <div class="form-section-title">Fire Alarm Certificate Settings</div>
+          <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--accent)">
+            <strong>These details auto-fill every new Fire Alarm certificate</strong> — company header, contractor box, and footer.
+          </div>
+          <div class="field-grid">
+            <div class="field-group"><label>Company Name</label><input type="text" id="s-fire-co-name" placeholder="OHM Electrical Engineering Ltd"></div>
+            <div class="field-group"><label>Sub-heading / Trading name</label><input type="text" id="s-fire-co-sub" placeholder="e.g. Fire Safety Division"></div>
+            <div class="field-group"><label>Default Engineer Name</label><input type="text" id="s-fire-engineer" placeholder="Full name — autofills engineer box"></div>
+            <div class="field-group"><label>NICEIC / Scheme No.</label><input type="text" id="s-fire-niceic-no" placeholder="Scheme registration number"></div>
+            <div class="field-group" style="grid-column:1/-1"><label>Address</label><textarea id="s-fire-co-address" placeholder="Street, Town, County" style="height:52px;resize:vertical"></textarea></div>
+            <div class="field-group"><label>Postcode</label><input type="text" id="s-fire-co-postcode" placeholder="SW1A 1AA"></div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="s-fire-co-phone" placeholder="07700 900000"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="s-fire-co-email" placeholder="info@yourcompany.co.uk"></div>
+            <div class="field-group"><label>Website</label><input type="url" id="s-fire-co-website" placeholder="https://www.yourcompany.co.uk"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Logos &amp; Signature</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Company Logo</label>
+              <div class="lprev" id="pr-fire-logo"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-logo').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-fire-logo" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_logo_data','pr-fire-logo')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_logo_data','pr-fire-logo')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">NICEIC / Scheme Logo</label>
+              <div class="lprev" id="pr-fire-niceic"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-niceic').click()"><i class="fa-solid fa-upload"></i> Upload Logo</div>
+              <input type="file" id="f-fire-niceic" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_niceic_logo','pr-fire-niceic')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_niceic_logo','pr-fire-niceic')">✕ Clear</button>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Engineer Signature</label>
+              <div class="lprev" id="pr-fire-sig"><span style="font-size:12px;color:var(--muted)">No Image</span></div>
+              <div class="ldrop" onclick="document.getElementById('f-fire-sig').click()"><i class="fa-solid fa-upload"></i> Upload Signature</div>
+              <input type="file" id="f-fire-sig" accept="image/*" style="display:none" onchange="uploadLogo(this,'fire_engg_sig_data','pr-fire-sig')">
+              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="clearLogo('fire_engg_sig_data','pr-fire-sig')">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🔢 Reference Numbers — Fire Alarm</div>
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Prefix <small style="color:var(--muted);font-weight:400">(letters only, e.g. FA)</small></label>
+              <input type="text" id="s-fire-ref-prefix" placeholder="FA" maxlength="8" oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
+            </div>
+            <div class="field-group">
+              <label>Serial Start <small style="color:var(--muted);font-weight:400">(first number)</small></label>
+              <input type="number" id="s-fire-ref-start" placeholder="1001" min="1" max="99999">
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">Fire certs will be: <strong id="fire-ref-eg" style="color:var(--text);font-family:monospace">FA10012636 / 5 EXAMPLE RD</strong></div>
+        </div>
+      </div>
+
       <div class="settings-pane" id="pane-ref">
         <div class="form-section">
           <div class="form-section-title">🔢 Reference Number System</div>
@@ -1189,7 +1251,7 @@
         <div class="form-section" style="margin-top:16px">
           <div class="form-section-title">📥 Import Directory from Existing Reports</div>
           <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
-            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agents, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
+            Scans all your completed PAT and CP12 certificates and automatically adds any properties, landlords, agencies, and appliances that are not already in your Directory. Safe to run multiple times — duplicates are skipped.
           </div>
           <button class="btn btn-primary" onclick="backfillDirFromReports(this)" id="btn-backfill-dir">⬇ Import from All Reports</button>
           <div id="backfill-result" style="margin-top:12px;font-size:13px"></div>
@@ -1446,21 +1508,36 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
         <div><div class="view-title">EL Certificates</div><div class="view-subtitle">Emergency Lighting history</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportELCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewEL()">+ New EL Cert</button></div>
       </div>
-      <div class="list-controls">
-        <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
-        <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Types</option>
-          <option value="EL.1">EL.1 — Installation</option>
-          <option value="EL.2">EL.2 — Periodic</option>
-          <option value="EL.3">EL.3 — Assessment</option>
-        </select>
-        <select id="el-filter-outcome" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Outcomes</option>
-          <option value="SATISFACTORY">Satisfactory</option>
-          <option value="UNSATISFACTORY">Unsatisfactory</option>
-        </select>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:0 0 400px;min-width:280px;max-width:100%">
+          <div class="list-controls">
+            <input class="search-input" id="el-search" placeholder="Search by premises, reference or engineer…" oninput="filterELList(this.value)">
+            <select id="el-filter-type" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Types</option>
+              <option value="EL.1">EL.1 — Installation</option>
+              <option value="EL.2">EL.2 — Periodic</option>
+              <option value="EL.3">EL.3 — Assessment</option>
+            </select>
+            <select id="el-filter-outcome" onchange="filterELList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Outcomes</option>
+              <option value="SATISFACTORY">Satisfactory</option>
+              <option value="UNSATISFACTORY">Unsatisfactory</option>
+            </select>
+          </div>
+          <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
+        </div>
+        <div id="el-preview-panel" style="flex:1;min-width:320px;position:sticky;top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          <div id="el-preview-empty" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+            <div style="font-size:38px;opacity:.4">💡</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text)">Select a certificate</div>
+            <div style="font-size:12px;color:var(--muted)">Click any row to preview the full<br>certificate and access actions</div>
+          </div>
+          <div id="el-preview-active" style="display:none">
+            <div id="el-preview-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <iframe id="el-preview-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
       </div>
-      <div id="el-list"><p class="empty-state">No EL certificates yet.</p></div>
     </div>
 
     <!-- ===== FIRE NEW (wizard) ===== -->
@@ -1654,105 +1731,6 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
   </div>
 </div>
 
-<div id="print-target" style="display:none"></div>
-
-<script>
-(function(){
-  var VERSION_FILE   = 'version.json';
-  var CHECK_INTERVAL = 2 * 60 * 1000;
-  var STORAGE_KEY    = 'app_version';
-  var _notified = false;
-
-  async function checkVersion() {
-    if (location.protocol === 'file:') return;
-    try {
-      var base = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
-      var res  = await fetch(base + VERSION_FILE + '?_v=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) return;
-      var data = await res.json();
-      var sig  = data.v || data.version || '';
-      if (!sig) return;
-      var badge = document.getElementById('app-version-badge');
-      if (badge && data.build) badge.textContent = 'v1.0.' + data.build;
-
-      var stored = sessionStorage.getItem(STORAGE_KEY);
-      if (!stored) { sessionStorage.setItem(STORAGE_KEY, sig); return; }
-      if (sig !== stored && !_notified) { _notified = true; showBanner(data.changes, data.v); }
-    } catch(e) {}
-  }
-
-  function showBanner(changes, ver) {
-    if (document.getElementById('_updateBanner')) return;
-    var esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-    var changesList = '';
-    if (changes && changes.length) {
-      changesList = '<ul style="margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;">' +
-        changes.map(function(c){
-          return '<li style="display:flex;align-items:flex-start;gap:7px;font-size:12px;font-weight:400;line-height:1.4;opacity:.88;">' +
-            '<span style="color:#4ade80;font-size:11px;margin-top:2px;flex-shrink:0;">✓</span>' + esc(c) + '</li>';
-        }).join('') + '</ul>';
-    }
-    var style = document.createElement('style');
-    style.textContent = '@keyframes _fadeIn{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}';
-    document.head.appendChild(style);
-
-    var overlay = document.createElement('div');
-    overlay.id = '_updateOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px)';
-    overlay.onclick = function(e){ if(e.target===overlay){ overlay.remove(); b.remove(); } };
-    document.body.appendChild(overlay);
-
-    var b = document.createElement('div');
-    b.id = '_updateBanner';
-    b.style.cssText = [
-      'position:fixed','top:50%','left:50%','transform:translate(-50%,-50%)',
-      'z-index:2147483647','width:340px','max-width:calc(100vw - 32px)',
-      'background:var(--card,#fff)','color:var(--text,#1a1a18)',
-      'border-radius:16px','border:1px solid var(--border,#e3e3df)',
-      'padding:20px 20px 16px',
-      'font-family:system-ui,sans-serif','font-size:13px','line-height:1.4',
-      'box-shadow:0 8px 40px rgba(0,0,0,0.18)',
-      'animation:_fadeIn .25s cubic-bezier(.16,1,.3,1)'
-    ].join(';') + ';';
-
-    b.innerHTML =
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
-        '<span style="font-size:20px;line-height:1;">🚀</span>' +
-        '<div style="flex:1;">' +
-          '<div style="font-weight:700;font-size:13px;">Update available — <span style="color:var(--accent,#2563eb)">' + esc(ver) + '</span></div>' +
-        '</div>' +
-        '<button onclick="document.getElementById(\'_updateOverlay\').remove();document.getElementById(\'_updateBanner\').remove()" style="background:none;border:none;color:var(--muted,#64645f);font-size:18px;cursor:pointer;padding:0;line-height:1;margin:-4px -4px 0 0;" title="Dismiss">×</button>' +
-      '</div>' +
-      '<div style="font-size:12px;color:var(--muted,#64645f);margin-bottom:6px;">What\'s new in this update:</div>' +
-      changesList +
-      '<div style="display:flex;gap:8px;margin-top:16px;">' +
-        '<button onclick="window._hardReload()" style="' +
-          'flex:1;background:var(--accent,#2563eb);color:#fff;border:none;border-radius:9px;' +
-          'padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;' +
-        '">↺ Restart Now</button>' +
-        '<button onclick="document.getElementById(\'_updateOverlay\').remove();document.getElementById(\'_updateBanner\').remove()" style="' +
-          'background:var(--surface2,#f4f4f2);color:var(--muted,#64645f);border:1px solid var(--border,#e3e3df);border-radius:9px;' +
-          'padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;' +
-        '">Later</button>' +
-      '</div>';
-    document.body.appendChild(b);
-  }
-
-  window._hardReload = async function() {
-    if ('caches' in window) {
-      try { var keys = await caches.keys(); await Promise.all(keys.map(function(k){ return caches.delete(k); })); } catch(e) {}
-    }
-    if ('serviceWorker' in navigator) {
-      try { var regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(function(r){ return r.unregister(); })); } catch(e) {}
-    }
-    sessionStorage.clear();
-    location.reload(true);
-  };
-
-  checkVersion();
-  setInterval(checkVersion, CHECK_INTERVAL);
-  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkVersion(); });
-})();
-</script>
+<div id="print-target" style="display:none"></div>
 </body>
 </html>

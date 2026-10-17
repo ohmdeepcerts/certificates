@@ -1,7 +1,9 @@
 {
-  "v": "1.6.7",
-  "build": 48,
+  "v": "1.6.8",
+  "build": 49,
   "changes": [
-    "Added: Fire Alarm history page now shows Total / Satisfactory / Unsatisfactory summary cards, matching EL and PAT pages."
+    "Fixed: Fire Alarm settings tab now appears in Settings (deploy.ps1 updated to copy full index.html from build output).",
+    "Fixed: Fire cert company name now shows correctly in the certificate header band.",
+    "Updated: deploy.ps1 now copies dist/index.html to root so HTML changes always deploy."
   ]
 }

@@ -24,11 +24,11 @@ export function fireBuildCertHTML(r) {
     : 'BS 5839-6:2019 — Fire Detection and Alarm Systems for Dwellings — Issued in accordance with Annex G';
   var typeTitle = typeLabels[r.certType] || 'Fire Alarm Certificate';
 
-  var company      = getSetting('fire_co_name', getSetting('company_name','OHM Electrical Engineering Ltd'));
-  var companyAddr  = getSetting('fire_co_address', getSetting('company_address',''));
-  var companyTel   = getSetting('fire_co_phone', getSetting('company_tel',''));
-  var companyEmail = getSetting('fire_co_email', getSetting('company_email',''));
-  var niceicNo       = getSetting('fire_niceic_scheme_no', getSetting('el_enrol_no', getSetting('niceic_scheme_no','')));
+  var company      = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
+  var companyAddr  = getSetting('fire_co_address') || getSetting('company_address') || '';
+  var companyTel   = getSetting('fire_co_phone') || getSetting('company_tel') || '';
+  var companyEmail = getSetting('fire_co_email') || getSetting('company_email') || '';
+  var niceicNo     = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
   var logoData       = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
   var enggSigData    = getSetting('fire_engg_sig_data', '');

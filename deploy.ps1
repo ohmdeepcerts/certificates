@@ -18,10 +18,8 @@ Get-ChildItem $dist | ForEach-Object {
 # Get new main JS hash
 $newJs = (Get-ChildItem "$dist\index-*.js" | Select-Object -First 1).Name
 
-# Update root index.html
-$html = Get-Content "$PSScriptRoot\index.html" -Raw
-$html = $html -replace 'index-[^"]+\.js', $newJs
-Set-Content "$PSScriptRoot\index.html" $html -NoNewline
+# Copy full dist/index.html to root so HTML structure changes are deployed
+Copy-Item "$PSScriptRoot\dist\index.html" "$PSScriptRoot\index.html" -Force
 
 Write-Host "Done. New JS: $newJs" -ForegroundColor Green
 Write-Host "Now update sw.js CACHE version and version.json, then git add/commit/push."
