@@ -1,9 +1,8 @@
 {
-  "v": "1.6.8",
-  "build": 49,
+  "v": "1.6.9",
+  "build": 50,
   "changes": [
-    "Fixed: Fire Alarm settings tab now appears in Settings (deploy.ps1 updated to copy full index.html from build output).",
-    "Fixed: Fire cert company name now shows correctly in the certificate header band.",
-    "Updated: deploy.ps1 now copies dist/index.html to root so HTML changes always deploy."
+    "Fixed: Logo and signature upload buttons now work on all settings pages (PAT, Gas, EL, Fire Alarm).",
+    "Fixed: Clear button for logos and signatures now works correctly."
   ]
 }

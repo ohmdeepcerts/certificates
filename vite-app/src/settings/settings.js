@@ -474,6 +474,30 @@ export async function saveSubAccountDefaults() {
   toast('Sub-account defaults saved', 'success');
 }
 
+// ── Logo upload / clear ────────────────────────────────────────────────────
+export function uploadLogo(input, key, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const data = e.target.result;
+    await upsertSetting(key, data);
+    state.appSettings[key] = data;
+    const el = document.getElementById(previewId);
+    if (el) el.innerHTML = `<img src="${data}" style="max-height:70px;object-fit:contain">`;
+    toast('Image saved ✓', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+export async function clearLogo(key, previewId) {
+  await upsertSetting(key, '');
+  state.appSettings[key] = '';
+  const el = document.getElementById(previewId);
+  if (el) el.innerHTML = '<span style="font-size:12px;color:var(--muted)">No Image</span>';
+  toast('Image cleared', 'info');
+}
+
 // Backward-compat globals for HTML onclick= handlers
 window.toggleEmailMethod    = toggleEmailMethod;
 window.setAppTheme          = setAppTheme;
@@ -487,3 +511,5 @@ window.updateRefPreview     = updateRefPreview;
 window.loadRefStats         = loadRefStats;
 window.runSerialGapCheck    = runSerialGapCheck;
 window.saveSubAccountDefaults = saveSubAccountDefaults;
+window.uploadLogo           = uploadLogo;
+window.clearLogo            = clearLogo;
