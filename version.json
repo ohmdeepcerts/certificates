@@ -1,8 +1,9 @@
 {
   "v": "1.6.9",
-  "build": 50,
+  "build": 51,
   "changes": [
     "Fixed: Logo and signature upload buttons now work on all settings pages (PAT, Gas, EL, Fire Alarm).",
-    "Fixed: Clear button for logos and signatures now works correctly."
+    "Fixed: Clear button for logos and signatures now works correctly.",
+    "Fixed: Removed description text from Category and Grade pills on fire alarm certificate."
   ]
 }

@@ -5,9 +5,8 @@ function _cell(label, val) { return `<tr><td class="lbl">${_esc(label)}</td><td 
 function _ch(title) { return `<div class="card-head"><div class="card-bar"></div><span class="card-title">${title}</span><div class="card-rule"></div></div>`; }
 function _pill(lbl, val, small) { return `<div class="spec-pill"><span class="pill-lbl">${lbl}</span><span class="pill-val${small?' pill-sm':''}">${_esc(val)}</span></div>`; }
 function _pillSplit(lbl, val) {
-  var parts = (val||'').split(' — ');
-  var code = parts[0] || val; var desc = parts.length > 1 ? parts.slice(1).join(' — ') : '';
-  return `<div class="spec-pill"><span class="pill-lbl">${lbl}</span><span class="pill-val pill-bold">${_esc(code)}</span>${desc?`<span class="pill-desc">${_esc(desc)}</span>`:''}</div>`;
+  var code = ((val||'').split(' — ')[0]) || val;
+  return `<div class="spec-pill"><span class="pill-lbl">${lbl}</span><span class="pill-val pill-bold">${_esc(code)}</span></div>`;
 }
 
 export function fireBuildCertHTML(r) {
