@@ -1,7 +1,7 @@
 {
-  "v": "1.6.3",
-  "build": 44,
+  "v": "1.6.4",
+  "build": 45,
   "changes": [
-    "Fixed: Fire Alarm Certificates history now shows proper card layout with coloured initials, address, outcome badge, and action buttons — matching the EL and PAT history pages."
+    "Added: Fire Alarm history cards now show a View button and a days-remaining expiry pill (next inspection date)."
   ]
 }
