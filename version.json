@@ -1,7 +1,7 @@
 {
-  "v": "1.6.6",
-  "build": 47,
+  "v": "1.6.7",
+  "build": 48,
   "changes": [
-    "Added: Fire Alarm Certificate settings tab — upload company logo, NICEIC/scheme logo, and engineer signature; set company details, engineer name, and reference number prefix/start."
+    "Added: Fire Alarm history page now shows Total / Satisfactory / Unsatisfactory summary cards, matching EL and PAT pages."
   ]
 }

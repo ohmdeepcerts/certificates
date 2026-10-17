@@ -736,6 +736,10 @@ function renderFireList(certs, page, q) {
       : '<p class="empty-state">No fire alarm certificates yet.</p>';
     return;
   }
+  var tot   = _fireAllCerts.length;
+  var sat   = _fireAllCerts.filter(function(r){ return (r.outcome||'').toUpperCase()==='SATISFACTORY'; }).length;
+  var unsat = _fireAllCerts.filter(function(r){ return (r.outcome||'').toUpperCase()==='UNSATISFACTORY'; }).length;
+  var tile  = function(n, lbl, col) { return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:90px"><div style="font-size:22px;font-weight:600;color:'+(col||'var(--text)')+';">'+n+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+lbl+'</div></div>'; };
   var isSearch = q.length >= 2;
   var startIdx = (page - 1) * PAGE_SIZE;
   var pageItems = certs.slice(startIdx, startIdx + PAGE_SIZE);
@@ -774,7 +778,7 @@ function renderFireList(certs, page, q) {
       +'</div>'
     +'</div>';
   };
-  var html = '';
+  var html = '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+tile(tot,'Total Fire Certs')+tile(sat,'Satisfactory','#16a34a')+tile(unsat,'Unsatisfactory','#dc2626')+'</div>';
   if (isSearch) {
     html += '<div style="font-size:12px;color:var(--muted);padding:2px 0 10px">'+certs.length+' result'+(certs.length!==1?'s':'')+' matching "<strong style="color:var(--text)">'+q+'</strong>"</div>';
     html += pageItems.map(function(r, i){ return mkRow(r, q, startIdx + i); }).join('');
