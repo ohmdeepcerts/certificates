@@ -1,7 +1,7 @@
 {
-  "v": "1.7.9",
-  "build": 62,
+  "v": "1.8.0",
+  "build": 63,
   "changes": [
-    "Fixed: NICEIC logo on fire cert now matches company logo size."
+    "Fixed: Postcode now shows on the same line as the county in Contractor Details on fire certs."
   ]
 }
