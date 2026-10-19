@@ -1,7 +1,7 @@
 {
-  "v": "1.7.6",
-  "build": 59,
+  "v": "1.7.7",
+  "build": 60,
   "changes": [
-    "Fixed: Fire cert address now displays on separate lines instead of all in one line."
+    "Fixed: Fire cert contractor postcode now shows correctly in the Contractor Details card."
   ]
 }
