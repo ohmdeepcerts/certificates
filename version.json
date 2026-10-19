@@ -1,7 +1,7 @@
 {
-  "v": "1.7.8",
-  "build": 61,
+  "v": "1.7.9",
+  "build": 62,
   "changes": [
-    "Fixed: NICEIC Enrolment No. now shows in the Engineer Sign-off section of fire certs."
+    "Fixed: NICEIC logo on fire cert now matches company logo size."
   ]
 }
