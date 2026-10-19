@@ -1,7 +1,7 @@
 {
-  "v": "1.7.5",
-  "build": 58,
+  "v": "1.7.6",
+  "build": 59,
   "changes": [
-    "Fixed: EL certificate email subject now shows the full reference number instead of just EL1/EL2."
+    "Fixed: Fire cert address now displays on separate lines instead of all in one line."
   ]
 }
