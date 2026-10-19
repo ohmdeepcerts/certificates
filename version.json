@@ -1,7 +1,7 @@
 {
-  "v": "1.7.7",
-  "build": 60,
+  "v": "1.7.8",
+  "build": 61,
   "changes": [
-    "Fixed: Fire cert contractor postcode now shows correctly in the Contractor Details card."
+    "Fixed: NICEIC Enrolment No. now shows in the Engineer Sign-off section of fire certs."
   ]
 }
