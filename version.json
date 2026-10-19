@@ -1,7 +1,7 @@
 {
-  "v": "1.7.1",
-  "build": 54,
+  "v": "1.7.2",
+  "build": 55,
   "changes": [
-    "Fixed: Dashboard Emergency Lighting card now correctly labelled 'Emergency Lighting' instead of 'Electrical / EICR'."
+    "Fixed: Dashboard quick action button now correctly shows 'New EL Cert' instead of 'New EICR'."
   ]
 }
