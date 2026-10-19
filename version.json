@@ -1,12 +1,7 @@
 {
-  "v": "1.7.0",
-  "build": 53,
+  "v": "1.7.1",
+  "build": 54,
   "changes": [
-    "New: Dashboard completely redesigned with compliance health score, 4 cert type cards with sparklines, and quick action buttons.",
-    "New: Monthly volume bar chart and certificate mix doughnut chart on the dashboard.",
-    "New: Upcoming renewals panel shows gas and EICR inspections due in the next 60 days.",
-    "New: Compliance AI chat assistant on the dashboard for UK regulation questions.",
-    "New: Recent activity feed combines PAT, Gas, and Fire cert records in one timeline.",
-    "New: Fire alarm certificates now included in dashboard stats."
+    "Fixed: Dashboard Emergency Lighting card now correctly labelled 'Emergency Lighting' instead of 'Electrical / EICR'."
   ]
 }
