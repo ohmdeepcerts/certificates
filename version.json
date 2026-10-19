@@ -1,7 +1,7 @@
 {
-  "v": "1.7.4",
-  "build": 57,
+  "v": "1.7.5",
+  "build": 58,
   "changes": [
-    "Fixed: Regulation banner now sits inline to the right of the system detail pills."
+    "Fixed: EL certificate email subject now shows the full reference number instead of just EL1/EL2."
   ]
 }
