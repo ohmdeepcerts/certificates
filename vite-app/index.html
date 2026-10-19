@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DeepFlow">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
@@ -202,26 +203,100 @@
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
-      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button></div></div>
-      <div style="position:relative;margin-bottom:20px">
-        <input id="global-search" class="search-input" placeholder="🔍  Search all certificates — PAT, Gas, EL by address, ref, client…" oninput="globalSearch(this.value)" onfocus="document.getElementById('gs-results').hidden=false" onblur="setTimeout(()=>{const r=document.getElementById('gs-results');if(r)r.hidden=true;},200)" style="width:100%;box-sizing:border-box;font-size:14px;padding:11px 16px">
+      <div class="view-header"><div><div class="view-title">Dashboard</div><div class="view-subtitle" id="dash-date-sub">Overview of all certificates</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-secondary btn-sm" onclick="hardRefresh()" title="Hard refresh (clear cache)">↺ Refresh</button></div></div>
+      <!-- Global search -->
+      <div style="position:relative;margin-bottom:14px">
+        <input id="global-search" class="search-input" placeholder="🔍  Search all certificates — PAT, Gas, EL, Fire by address, ref, client…" oninput="globalSearch(this.value)" onfocus="document.getElementById('gs-results').hidden=false" onblur="setTimeout(()=>{const r=document.getElementById('gs-results');if(r)r.hidden=true;},200)" style="width:100%;box-sizing:border-box;font-size:14px;padding:11px 16px">
         <div id="gs-results" hidden style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:200;max-height:380px;overflow-y:auto"></div>
       </div>
-      <div id="expiry-reminder-banner" hidden style="background:var(--warn-bg,#fef3c7);border:1px solid var(--warn-border,#f59e0b);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px"></div>
-      <div class="stat-grid" id="stat-grid">
-        <div class="stat-card accent"><div class="stat-label">Total PAT Tests</div><div class="stat-value" id="stat-pat-total">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card success"><div class="stat-label">PAT Complete</div><div class="stat-value" id="stat-pat-complete">—</div><div class="stat-sub">Issued</div></div>
-        <div class="stat-card warn"><div class="stat-label">PAT Renewals Due</div><div class="stat-value" id="stat-pat-due">—</div><div class="stat-sub">Next 30 days</div></div>
-        <div class="stat-card accent"><div class="stat-label">Total Gas</div><div class="stat-value" id="stat-gas-total">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card success"><div class="stat-label">Gas Complete</div><div class="stat-value" id="stat-gas-complete">—</div><div class="stat-sub">Issued</div></div>
-        <div class="stat-card error"><div class="stat-label">Gas Renewals Due</div><div class="stat-value" id="stat-gas-due">—</div><div class="stat-sub">Next 30 days</div></div>
-        <div class="stat-card accent"><div class="stat-label">Total EL Certs</div><div class="stat-value" id="stat-el-total">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card success"><div class="stat-label">EL Satisfactory</div><div class="stat-value" id="stat-el-sat">—</div><div class="stat-sub">Issued</div></div>
-        <div class="stat-card error"><div class="stat-label">EL Unsatisfactory</div><div class="stat-value" id="stat-el-unsat">—</div><div class="stat-sub">Issued</div></div>
+      <!-- Expiry reminder banner (existing) -->
+      <div id="expiry-reminder-banner" hidden style="background:var(--warn-bg,#fef3c7);border:1px solid var(--warn-border,#f59e0b);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;font-size:13px"></div>
+      <!-- Compliance health score -->
+      <div class="dash-health" id="dash-health">
+        <div class="dash-health-score" id="dash-health-score">—<sup>%</sup></div>
+        <div class="dash-health-info">
+          <h3>Compliance Health Score</h3>
+          <p id="dash-health-sub">Loading certificate data…</p>
+        </div>
+        <div class="dash-health-pills" id="dash-health-pills"></div>
       </div>
-      <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px" id="recent-grids">
-        <div class="card"><div class="card-header"><div class="card-title">Recent PAT Tests</div><a href="#" onclick="navigate('pat-history');return false" style="font-size:12px">View all</a></div><div id="recent-pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Recent Gas Certs</div><a href="#" onclick="navigate('gas-history');return false" style="font-size:12px">View all</a></div><div id="recent-gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div></div></div>
+      <!-- Quick actions -->
+      <div class="dash-qa-grid">
+        <button class="dash-qa pat" onclick="startNewPAT()"><span class="dash-qa-ico">🔌</span><span>New PAT Test</span></button>
+        <button class="dash-qa gas" onclick="startNewGas()"><span class="dash-qa-ico">🔥</span><span>New Gas CP12</span></button>
+        <button class="dash-qa el"  onclick="startNewEL()"><span class="dash-qa-ico">⚡</span><span>New EICR</span></button>
+        <button class="dash-qa fire" onclick="startNewFire()"><span class="dash-qa-ico">🚨</span><span>New Fire Cert</span></button>
+      </div>
+      <!-- 4 cert type stat cards -->
+      <div class="dash-sec-label">Certificate Overview</div>
+      <div class="dash-stats-grid">
+        <div class="dash-stat pat">
+          <div class="dash-stat-top"><div class="dash-stat-lbl">PAT Testing</div><div class="dash-stat-badge pat">OHM</div></div>
+          <div class="dash-stat-num" id="stat-pat-total">—</div>
+          <div class="dash-stat-sub"><span id="stat-pat-complete">—</span> issued &middot; <span id="stat-pat-due" style="color:var(--warn)">—</span> due soon</div>
+          <canvas class="dash-spark" id="spark-pat"></canvas>
+        </div>
+        <div class="dash-stat gas">
+          <div class="dash-stat-top"><div class="dash-stat-lbl">Gas / CP12</div><div class="dash-stat-badge gas">MK</div></div>
+          <div class="dash-stat-num" id="stat-gas-total">—</div>
+          <div class="dash-stat-sub"><span id="stat-gas-complete">—</span> issued &middot; <span id="stat-gas-due" style="color:var(--warn)">—</span> due soon</div>
+          <canvas class="dash-spark" id="spark-gas"></canvas>
+        </div>
+        <div class="dash-stat el">
+          <div class="dash-stat-top"><div class="dash-stat-lbl">Electrical / EICR</div><div class="dash-stat-badge el">OHM</div></div>
+          <div class="dash-stat-num" id="stat-el-total">—</div>
+          <div class="dash-stat-sub"><span id="stat-el-sat">—</span> satisfactory &middot; <span id="stat-el-unsat" style="color:var(--error)">—</span> unsat</div>
+          <canvas class="dash-spark" id="spark-el"></canvas>
+        </div>
+        <div class="dash-stat fire">
+          <div class="dash-stat-top"><div class="dash-stat-lbl">Fire Alarm</div><div class="dash-stat-badge fire">OHM</div></div>
+          <div class="dash-stat-num" id="stat-fire-total">—</div>
+          <div class="dash-stat-sub"><span id="stat-fire-complete">—</span> issued</div>
+          <canvas class="dash-spark" id="spark-fire"></canvas>
+        </div>
+      </div>
+      <!-- Charts row -->
+      <div class="dash-charts-row">
+        <div class="dash-card">
+          <div class="dash-card-title">Monthly Volume</div>
+          <div style="position:relative;height:190px"><canvas id="dash-chart-monthly"></canvas></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-title">Certificate Mix</div>
+          <div style="position:relative;height:190px"><canvas id="dash-chart-mix"></canvas></div>
+        </div>
+      </div>
+      <!-- Renewals + AI chat -->
+      <div class="dash-bottom-row">
+        <div class="dash-card" style="margin-bottom:0">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Upcoming Renewals</div>
+            <a onclick="navigate('compliance')" style="font-size:11px;color:var(--accent);cursor:pointer">See all →</a>
+          </div>
+          <div id="dash-renewals"><div class="empty-state" style="padding:12px 0"><div class="empty-icon">⏳</div><p>Loading…</p></div></div>
+        </div>
+        <div class="dash-ai-card">
+          <div class="dash-ai-hdr">
+            <div class="dash-ai-dot"></div>
+            <div class="dash-ai-hdr-text"><strong>Compliance Assistant</strong><span>Ask about UK regulations</span></div>
+            <div class="dash-ai-badge">BETA</div>
+          </div>
+          <div class="dash-ai-msgs" id="dash-ai-msgs">
+            <div class="dash-msg"><div class="dash-msg-ava ai">AI</div><div class="dash-msg-bub">Hello! Ask me anything about BS 5839, BS 7671, Gas Safety Regulations, PAT testing intervals and more.</div></div>
+          </div>
+          <div class="dash-ai-input-row">
+            <input class="dash-ai-input" id="dash-ai-input" placeholder="Ask about regulations…" onkeydown="if(event.key==='Enter')dashAIChat()">
+            <button class="dash-ai-send" onclick="dashAIChat()">Ask</button>
+          </div>
+        </div>
+      </div>
+      <!-- Recent activity -->
+      <div class="dash-card">
+        <div class="dash-card-header"><div class="dash-card-title">Recent Activity</div></div>
+        <div id="dash-activity"><div class="empty-state" style="padding:8px 0"><div class="empty-icon">⏳</div><p>Loading…</p></div></div>
+        <!-- legacy containers kept for JS compatibility -->
+        <div id="recent-pat-list" hidden></div>
+        <div id="recent-gas-list" hidden></div>
       </div>
     </div>
 

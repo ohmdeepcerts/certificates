@@ -1,10 +1,12 @@
 {
-  "v": "1.6.9",
-  "build": 52,
+  "v": "1.7.0",
+  "build": 53,
   "changes": [
-    "Fixed: Logo and signature upload buttons now work on all settings pages (PAT, Gas, EL, Fire Alarm).",
-    "Fixed: Clear button for logos and signatures now works correctly.",
-    "Fixed: Removed description text from Category and Grade pills on fire alarm certificate.",
-    "Added: Regulation box shown on fire alarm certificate under system detail pills."
+    "New: Dashboard completely redesigned with compliance health score, 4 cert type cards with sparklines, and quick action buttons.",
+    "New: Monthly volume bar chart and certificate mix doughnut chart on the dashboard.",
+    "New: Upcoming renewals panel shows gas and EICR inspections due in the next 60 days.",
+    "New: Compliance AI chat assistant on the dashboard for UK regulation questions.",
+    "New: Recent activity feed combines PAT, Gas, and Fire cert records in one timeline.",
+    "New: Fire alarm certificates now included in dashboard stats."
   ]
 }

@@ -9,6 +9,8 @@ import { hlText, sortByWordStart } from '../lib/search.js';
 
 let _gsTimer = null;
 let _compAll = [];
+let _dashChartMonthly = null;
+let _dashChartMix = null;
 
 // ========== RECYCLE BIN ==========
 export async function loadRecycleBin() {
@@ -161,80 +163,111 @@ export async function globalSearch(q) {
 
 // ========== DASHBOARD ==========
 export async function loadDashboard() {
-  ['stat-pat-total', 'stat-pat-complete', 'stat-pat-due', 'stat-gas-total', 'stat-gas-complete', 'stat-gas-due', 'stat-el-total', 'stat-el-sat', 'stat-el-unsat'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = '<span class="skeleton" style="width:38px;height:22px;vertical-align:middle"></span>'; });
-  ['recent-pat-list', 'recent-gas-list'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = [0, 1, 2].map(() => '<div class="skeleton" style="height:36px;border-radius:6px;margin-bottom:8px;display:block;width:100%"></div>').join(''); });
-  let pats, gases, els;
+  // Update date subtitle
+  const dateSub = document.getElementById('dash-date-sub');
+  if (dateSub) dateSub.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  let pats, gases, els, fires;
   if (!navigator.onLine) {
     try {
       const _dc = JSON.parse(localStorage.getItem('_cache_dashboard') || 'null');
-      if (_dc) { pats = _dc.pats; gases = _dc.gases; els = _dc.els; const _ago = new Date(_dc.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); toast('Offline — showing dashboard loaded at ' + _ago, 'info'); }
+      if (_dc) { pats = _dc.pats; gases = _dc.gases; els = _dc.els; fires = _dc.fires; const _ago = new Date(_dc.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); toast('Offline — showing dashboard loaded at ' + _ago, 'info'); }
     } catch {}
   } else {
-    const [{ data: _dp }, { data: _dg }, { data: _de }] = await Promise.all([
-      sb.from('pat_reports').select('id,status,test_date,appliances').order('created_at', { ascending: false }),
-      sb.from('gas_certs').select('id,status,cert_date,next_check_date,install_address').order('created_at', { ascending: false }),
-      sb.from('el_certs').select('id,data,created_at').order('created_at', { ascending: false })
+    const [{ data: _dp }, { data: _dg }, { data: _de }, { data: _df }] = await Promise.all([
+      sb.from('pat_reports').select('id,ref_number,status,test_date,appliances,property_address,engineer,created_at').order('created_at', { ascending: false }),
+      sb.from('gas_certs').select('id,ref_number,status,cert_date,next_check_date,install_address,engineer,created_at').order('created_at', { ascending: false }),
+      sb.from('el_certs').select('id,ref_number,data,created_at').order('created_at', { ascending: false }),
+      sb.from('fire_certs').select('id,ref_number,status,premises_address,cert_type,created_at').is('deleted_at', null).order('created_at', { ascending: false })
     ]);
-    pats = _dp; gases = _dg; els = _de;
-    try { localStorage.setItem('_cache_dashboard', JSON.stringify({ pats, gases, els, ts: Date.now() })); } catch {}
+    pats = _dp; gases = _dg; els = _de; fires = _df;
+    try { localStorage.setItem('_cache_dashboard', JSON.stringify({ pats, gases, els, fires, ts: Date.now() })); } catch {}
   }
   if (!pats && !gases && !els) {
-    ['recent-pat-list', 'recent-gas-list'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = '<div class="empty-state"><div class="empty-icon">📵</div><p>Offline — no cached data</p></div>'; });
-    ['stat-pat-total','stat-pat-complete','stat-pat-due','stat-gas-total','stat-gas-complete','stat-gas-due','stat-el-total','stat-el-sat','stat-el-unsat'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = '—'; });
+    const actEl = document.getElementById('dash-activity'); if (actEl) actEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📵</div><p>Offline — no cached data</p></div>';
     return;
   }
+
   const today = new Date(); const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
+
+  // PAT stats
   const patTotal = pats?.length || 0;
   const patDone = (pats || []).filter(r => r.status === 'completed').length;
-  // Count appliances with next test date in next 30 days
   let patDue = 0;
   (pats || []).filter(r => r.status === 'completed').forEach(r => {
     (r.appliances || []).forEach(a => { const nt = a.nextTest || a.next_test; if (nt) { const d = new Date(nt); if (d >= today && d <= in30) patDue++; } });
   });
+
+  // Gas stats
   const gasTotal = gases?.length || 0;
   const gasDone = (gases || []).filter(r => r.status === 'completed').length;
   let gasDue = 0;
+  const _gasRenewals = [];
   (gases || []).filter(r => r.status === 'completed' && r.next_check_date).forEach(r => {
-    const d = parseGasDate(r.next_check_date); if (d && d >= today && d <= in30) gasDue++;
+    const d = parseGasDate(r.next_check_date); if (!d) return;
+    if (d >= today && d <= in30) gasDue++;
+    const daysLeft = Math.round((d - today) / 86400000);
+    if (daysLeft <= 60) _gasRenewals.push({ type: 'gas', label: (r.install_address || r.ref_number || '').substring(0, 38), date: d, days: daysLeft, overdue: d < today });
   });
-  document.getElementById('stat-pat-total').textContent = patTotal;
-  document.getElementById('stat-pat-complete').textContent = patDone;
-  document.getElementById('stat-pat-due').textContent = patDue;
-  document.getElementById('stat-gas-total').textContent = gasTotal;
-  document.getElementById('stat-gas-complete').textContent = gasDone;
-  document.getElementById('stat-gas-due').textContent = gasDue;
+
   // EL stats
-  const elCerts = (els || []).map(r => ({ ...(r.data || {}), id: r.id }));
+  const elCerts = (els || []).map(r => ({ ...(r.data || {}), id: r.id, ref_number: r.ref_number, created_at: r.created_at }));
   const elTotal = elCerts.length;
   const elSat = elCerts.filter(r => r.outcome === 'SATISFACTORY').length;
   const elUnsat = elCerts.filter(r => r.outcome === 'UNSATISFACTORY').length;
-  const _elTot = document.getElementById('stat-el-total'); if (_elTot) _elTot.textContent = elTotal;
-  const _elSat = document.getElementById('stat-el-sat'); if (_elSat) _elSat.textContent = elSat;
-  const _elUns = document.getElementById('stat-el-unsat'); if (_elUns) _elUns.textContent = elUnsat;
-  // Update unified compliance badge
+  const _elRenewals = [];
+  elCerts.filter(r => r.nextTestDate || r.nextInspDate).forEach(r => {
+    const nd = r.nextTestDate || r.nextInspDate; if (!nd) return;
+    let d; if (nd.includes('/')) { const p = nd.split('/'); d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])); } else { d = new Date(nd); }
+    if (isNaN(d)) return;
+    const daysLeft = Math.round((d - today) / 86400000);
+    if (daysLeft <= 60) _elRenewals.push({ type: 'el', label: (r.premAddr1 || r.premisesAddress || r.ref_number || '').substring(0, 38), date: d, days: daysLeft, overdue: d < today });
+  });
+
+  // Fire stats
+  const fireTotal = fires?.length || 0;
+  const fireDone = (fires || []).filter(r => r.status === 'completed').length;
+
+  // Populate stat IDs (legacy + new)
+  const _set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  _set('stat-pat-total', patTotal); _set('stat-pat-complete', patDone); _set('stat-pat-due', patDue);
+  _set('stat-gas-total', gasTotal); _set('stat-gas-complete', gasDone); _set('stat-gas-due', gasDue);
+  _set('stat-el-total', elTotal); _set('stat-el-sat', elSat); _set('stat-el-unsat', elUnsat);
+  _set('stat-fire-total', fireTotal); _set('stat-fire-complete', fireDone);
+
+  // Compliance badge
   const compBadge = document.getElementById('compliance-badge');
   if (compBadge) { const tot = patDue + gasDue; compBadge.textContent = tot; compBadge.hidden = tot === 0; }
-  // Recent lists (already ordered by created_at desc, take first 5)
-  const recentPat = (pats || []).slice(0, 5);
-  const recentGas = (gases || []).slice(0, 5);
-  document.getElementById('recent-pat-list').innerHTML = recentPat.length ? recentPat.map(r => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${r.ref_number || r.id.slice(-6).toUpperCase()}</div><div style="color:var(--muted);font-size:11px">${patFd(r.test_date) || 'No date'}</div></div><span class="badge badge-${r.status === 'completed' ? 'done' : 'draft'}">${r.status}</span></div>`).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>No PAT tests yet</p></div>';
-  document.getElementById('recent-gas-list').innerHTML = recentGas.length ? recentGas.map(r => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between"><div><div style="font-weight:600">${(r.ref_number || (r.install_address || 'No address').substring(0, 40))}</div><div style="color:var(--muted);font-size:11px">${patFd(r.cert_date) || 'No date'}</div></div><span class="badge badge-${r.status === 'completed' ? 'done' : 'draft'}">${r.status}</span></div>`).join('') : '<div class="empty-state"><div class="empty-icon">🔥</div><p>No Gas certs yet</p></div>';
-  // Expiry reminders
+
+  // Health score
+  _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal);
+
+  // Sparklines (from last 6 months of created_at)
+  _drawDashSparks(pats, gases, els, fires);
+
+  // Charts
+  _buildDashCharts(pats, gases, els, fires);
+
+  // Renewals widget (combine gas + el, sorted by days)
+  const allRenewals = [..._gasRenewals, ..._elRenewals].sort((a, b) => a.days - b.days).slice(0, 6);
+  _buildDashRenewals(allRenewals);
+
+  // Activity feed
+  _buildDashActivity(pats || [], gases || [], fires || []);
+
+  // Expiry reminders banner (legacy)
   try {
     const _remEnabled = getSetting('reminder_enabled', 'on');
     if (_remEnabled !== 'off') {
       const _remDays = parseInt(getSetting('reminder_days', '30')) || 30;
       const _remCutoff = new Date(today); _remCutoff.setDate(_remCutoff.getDate() + _remDays);
       const _expItems = [];
-      // PAT appliance renewals
       (pats || []).filter(r => r.status === 'completed').forEach(r => {
         (r.appliances || []).forEach(a => { const nt = a.nextTest || a.next_test; if (nt) { const d = new Date(nt); if (d >= today && d <= _remCutoff) _expItems.push({ type: 'PAT', label: `PAT — ${r.ref_number || r.id.slice(-6).toUpperCase()}`, date: nt, days: Math.round((d - today) / 86400000) }); } });
       });
-      // Gas next check
       (gases || []).filter(r => r.status === 'completed' && r.next_check_date).forEach(r => {
         const d = parseGasDate(r.next_check_date); if (d && d >= today && d <= _remCutoff) { const addr = (r.install_address || '').substring(0, 30); _expItems.push({ type: 'Gas', label: `Gas CP12 — ${addr || r.id.slice(-6).toUpperCase()}`, date: r.next_check_date, days: Math.round((d - today) / 86400000) }); }
       });
-      // EL — next inspection dates from data
       elCerts.filter(r => r.nextInspDate).forEach(r => {
         const d = new Date(r.nextInspDate); if (d && d >= today && d <= _remCutoff) { _expItems.push({ type: 'EL', label: `EL — ${r.address1 || r.premAddr1 || r.id || ''}`.substring(0, 40), date: r.nextInspDate, days: Math.round((d - today) / 86400000) }); }
       });
@@ -248,6 +281,153 @@ export async function loadDashboard() {
       }
     }
   } catch (e) { }
+}
+
+function _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal) {
+  const total = patTotal + gasTotal + elTotal + fireTotal;
+  if (!total) { const s = document.getElementById('dash-health-score'); if (s) s.innerHTML = '—<sup>%</sup>'; return; }
+  const issues = patDue + gasDue + elUnsat;
+  const score = Math.max(0, Math.round(100 - (issues / Math.max(total, 1)) * 100));
+  const el = document.getElementById('dash-health-score');
+  if (el) { el.innerHTML = score + '<sup>%</sup>'; el.style.color = score >= 85 ? '#3fb950' : score >= 65 ? '#d29922' : '#f85149'; }
+  const sub = document.getElementById('dash-health-sub');
+  if (sub) sub.textContent = `${total} active certificates · ${issues || 'no'} issue${issues === 1 ? '' : 's'} · updated just now`;
+  const pills = document.getElementById('dash-health-pills'); if (!pills) return;
+  const parts = [];
+  if (patDone > 0) parts.push(`<span class="dhpill dhpill-g">PAT ${patDone} issued</span>`);
+  if (gasDone > 0) parts.push(`<span class="dhpill dhpill-g">Gas ${gasDone} issued</span>`);
+  if (patDue > 0)  parts.push(`<span class="dhpill dhpill-w">${patDue} PAT due</span>`);
+  if (gasDue > 0)  parts.push(`<span class="dhpill dhpill-w">${gasDue} Gas due</span>`);
+  if (elUnsat > 0) parts.push(`<span class="dhpill dhpill-e">${elUnsat} EICR unsatisfactory</span>`);
+  pills.innerHTML = parts.join('');
+}
+
+function _drawDashSparks(pats, gases, els, fires) {
+  const now = new Date();
+  const buckets = () => Array(6).fill(0);
+  const mIdx = d => { const m = Math.floor((now - new Date(d)) / (30.5 * 86400000)); return m >= 0 && m < 6 ? 5 - m : -1; };
+  const pb = buckets(), gb = buckets(), eb = buckets(), fb = buckets();
+  (pats || []).forEach(r => { const i = mIdx(r.created_at); if (i >= 0) pb[i]++; });
+  (gases || []).forEach(r => { const i = mIdx(r.created_at); if (i >= 0) gb[i]++; });
+  (els || []).forEach(r => { const i = mIdx(r.created_at); if (i >= 0) eb[i]++; });
+  (fires || []).forEach(r => { const i = mIdx(r.created_at); if (i >= 0) fb[i]++; });
+  _drawSpark('spark-pat', pb, '#3b82f6');
+  _drawSpark('spark-gas', gb, '#10b981');
+  _drawSpark('spark-el',  eb, '#8b5cf6');
+  _drawSpark('spark-fire', fb, '#ef4444');
+}
+
+function _drawSpark(id, data, color) {
+  const canvas = document.getElementById(id); if (!canvas) return;
+  const W = canvas.offsetWidth || 180, H = 34;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const max = Math.max(...data, 1);
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * W;
+    const y = H - (v / max) * (H - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = color + '28'; ctx.fill();
+}
+
+function _buildDashCharts(pats, gases, els, fires) {
+  const Chart = window.Chart; if (!Chart) return;
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return { label: d.toLocaleString('default', { month: 'short' }), ym: d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0') };
+  });
+  const mkB = () => Object.fromEntries(months.map(m => [m.ym, 0]));
+  const ym = d => { const dt = new Date(d); return dt.getFullYear() + '-' + (dt.getMonth() + 1).toString().padStart(2, '0'); };
+  const pb = mkB(), gb = mkB(), eb = mkB(), fb = mkB();
+  (pats || []).forEach(r => { const k = ym(r.created_at); if (k in pb) pb[k]++; });
+  (gases || []).forEach(r => { const k = ym(r.created_at); if (k in gb) gb[k]++; });
+  (els || []).forEach(r => { const k = ym(r.created_at); if (k in eb) eb[k]++; });
+  (fires || []).forEach(r => { const k = ym(r.created_at); if (k in fb) fb[k]++; });
+  const labels = months.map(m => m.label);
+  const gridC = 'rgba(255,255,255,.06)', tickC = '#8b949e';
+
+  if (_dashChartMonthly) { _dashChartMonthly.destroy(); _dashChartMonthly = null; }
+  const mCtx = document.getElementById('dash-chart-monthly'); if (mCtx) {
+    _dashChartMonthly = new Chart(mCtx, {
+      type: 'bar',
+      data: { labels, datasets: [
+        { label: 'PAT',  data: months.map(m => pb[m.ym]), backgroundColor: '#3b82f680' },
+        { label: 'Gas',  data: months.map(m => gb[m.ym]), backgroundColor: '#10b98180' },
+        { label: 'EL',   data: months.map(m => eb[m.ym]), backgroundColor: '#8b5cf680' },
+        { label: 'Fire', data: months.map(m => fb[m.ym]), backgroundColor: '#ef444480' }
+      ]},
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { size: 10 }, color: tickC } } }, scales: { x: { stacked: true, grid: { color: gridC }, ticks: { color: tickC, font: { size: 10 } } }, y: { stacked: true, grid: { color: gridC }, ticks: { color: tickC, font: { size: 10 } } } } }
+    });
+  }
+
+  if (_dashChartMix) { _dashChartMix.destroy(); _dashChartMix = null; }
+  const xCtx = document.getElementById('dash-chart-mix'); if (xCtx) {
+    const totP = (pats||[]).length, totG = (gases||[]).length, totE = (els||[]).length, totF = (fires||[]).length;
+    _dashChartMix = new Chart(xCtx, {
+      type: 'doughnut',
+      data: { labels: ['PAT','Gas CP12','Electrical','Fire Alarm'], datasets: [{ data: [totP, totG, totE, totF], backgroundColor: ['#3b82f6','#10b981','#8b5cf6','#ef4444'], borderWidth: 0, hoverOffset: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { font: { size: 10 }, color: tickC, padding: 10, boxWidth: 10 } } } }
+    });
+  }
+}
+
+function _buildDashRenewals(items) {
+  const el = document.getElementById('dash-renewals'); if (!el) return;
+  if (!items.length) { el.innerHTML = '<div class="empty-state" style="padding:12px 0"><div class="empty-icon">✓</div><p>No renewals due in next 60 days</p></div>'; return; }
+  el.innerHTML = items.map(i => {
+    const cls = i.overdue ? 'red' : i.days <= 14 ? 'amber' : 'green';
+    const daysTxt = i.overdue ? `<span style="font-size:11px">${Math.abs(i.days)}d ago</span>` : `<span style="font-size:15px">${i.days}</span><span>DAYS</span>`;
+    const typeLbl = i.type === 'gas' ? 'GAS' : i.type === 'el' ? 'EICR' : i.type.toUpperCase();
+    return `<div class="dash-ren-row"><div class="dash-ren-days ${cls}">${daysTxt}</div><div class="dash-ren-info"><strong>${i.label || '—'}</strong><span>${i.type === 'gas' ? 'Annual gas safety check' : 'Periodic inspection due'}</span></div><div class="dash-ren-type ${i.type}">${typeLbl}</div></div>`;
+  }).join('');
+}
+
+function _buildDashActivity(pats, gases, fires) {
+  const el = document.getElementById('dash-activity'); if (!el) return;
+  const rows = [];
+  const fmt = d => { if (!d) return '—'; const dt = new Date(d); const diff = Math.floor((Date.now() - dt) / 86400000); return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : diff + 'd ago'; };
+  (pats || []).slice(0, 4).forEach(r => {
+    rows.push({ type: 'pat', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.property_address || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: r.status === 'completed' ? 'issued' : 'draft', statusLbl: r.status === 'completed' ? 'Issued' : 'Draft' });
+  });
+  (gases || []).slice(0, 4).forEach(r => {
+    rows.push({ type: 'gas', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.install_address || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: r.status === 'completed' ? 'issued' : 'draft', statusLbl: r.status === 'completed' ? 'Issued' : 'Draft' });
+  });
+  (fires || []).slice(0, 3).forEach(r => {
+    rows.push({ type: 'fire', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.premises_address || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: r.status === 'completed' ? 'issued' : 'draft', statusLbl: r.status === 'completed' ? 'Issued' : 'Draft' });
+  });
+  rows.sort((a, b) => (a.time < b.time ? 1 : -1));
+  if (!rows.length) { el.innerHTML = '<div class="empty-state" style="padding:8px 0"><div class="empty-icon">📋</div><p>No certificates yet</p></div>'; return; }
+  el.innerHTML = rows.slice(0, 8).map(r =>
+    `<div class="dash-act-row"><div class="dash-act-dot ${r.type}"></div><div class="dash-act-info"><div class="dash-act-name">${r.name}</div><div class="dash-act-meta">${r.meta}</div></div><div class="dash-act-time">${r.time}</div><div class="dash-act-status das-${r.status}">${r.statusLbl}</div></div>`
+  ).join('');
+}
+
+export function dashAIChat() {
+  const input = document.getElementById('dash-ai-input');
+  const msgs = document.getElementById('dash-ai-msgs');
+  if (!input || !msgs) return;
+  const text = input.value.trim(); if (!text) return;
+  input.value = '';
+  const esc = s => s.replace(/</g, '&lt;');
+  msgs.insertAdjacentHTML('beforeend', `<div class="dash-msg you"><div class="dash-msg-ava you">Me</div><div class="dash-msg-bub">${esc(text)}</div></div>`);
+  msgs.scrollTop = msgs.scrollHeight;
+  const lower = text.toLowerCase();
+  let resp = 'That\'s a great compliance question. Based on current UK standards (BS 5839-1:2025, BS 7671:2018+A2, Gas Safety Regs 1998, IET CoP 5th Ed), I recommend cross-referencing with the relevant BSI standard or your NICEIC technical helpline for a definitive answer on your specific scenario.';
+  if (lower.includes('hmo') || lower.includes('ld2') || lower.includes('grade')) resp = 'For a 2-storey HMO, BS 5839-6:2019+A1:2023 requires a minimum Grade D2, Category LD2 system — mains-powered interlinked detectors with battery backup in all escape routes AND habitable rooms. A Grade D1 system without tamper-proof battery backup does NOT satisfy the standard for HMOs.';
+  else if (lower.includes('c2') || lower.includes('eicr') || lower.includes('7671')) resp = 'Under BS 7671:2018+A2:2022, a C2 code means "potentially dangerous" — the defect presents a risk of injury. Examples: no RCD protection for circuits in bathrooms, accessible live parts, inadequate earthing. A C2 does not make the property uninhabitable but requires remediation. The landlord must act within 28 days under SI 2020/312.';
+  else if (lower.includes('pat') || lower.includes('portable') || lower.includes('interval')) resp = 'Under IET CoP 5th Edition, PAT intervals are risk-based. Recommended intervals: hotel/residential — 1 year; offices — 2–4 years for low-risk; construction sites — 3 months for 110V equipment; schools — annually. There is no single statutory interval — the frequency should reflect the environment and equipment type.';
+  else if (lower.includes('gas') || lower.includes('cp12') || lower.includes('annual')) resp = 'The Gas Safety (Installation & Use) Regs 1998 require landlords to have all gas appliances inspected annually by a Gas Safe registered engineer. There is no grace period — if the CP12 is one day overdue, the landlord is in breach. Tenants must receive a copy within 28 days of issue. Under GSR Reg 36, a copy must also be provided to any new tenant before they move in.';
+  else if (lower.includes('bs 5839') || lower.includes('5839-1') || lower.includes('2025')) resp = 'BS 5839-1:2025 (commercial) is the current edition. Key changes from 2017: updated L-category definitions, enhanced commissioning requirements for L1 life-protection systems, and expanded coverage requirements for L2 systems in high-rise buildings. Your fire alarm certificates already reference the 2025 edition, so you are compliant.';
+  else if (lower.includes('niceic') || lower.includes('scheme')) resp = 'As a NICEIC Approved Contractor, OHM Electrical Engineering Ltd must include the NICEIC scheme number on all EL (Electrical Installation Certificate) and EICR documents. Without it, the certificate may not be accepted by insurers, mortgage lenders, or local authorities. It should also appear on PAT reports for commercial clients.';
+  setTimeout(() => {
+    msgs.insertAdjacentHTML('beforeend', `<div class="dash-msg"><div class="dash-msg-ava ai">AI</div><div class="dash-msg-bub">${esc(resp)}</div></div>`);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 550);
 }
 
 export async function loadCompliance() {
@@ -337,6 +517,7 @@ export { loadRecycleBin as renderRecycleBin };
 Object.assign(window, {
   loadDashboard,
   globalSearch,
+  dashAIChat,
   loadCompliance,
   loadCompliancePage: loadCompliance,
   filterCompliance,
