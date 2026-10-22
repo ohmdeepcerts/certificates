@@ -33,7 +33,7 @@ export function fireBuildCertHTML(r) {
   var niceicNo     = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
   var logoData       = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
-  var enggSigData    = getSetting('fire_engg_sig_data', '');
+  var enggSigData    = r.enggSigData || getSetting('fire_engg_sig_data','') || getSetting('el_sig_data','');
 
   var premAddr   = [r.premAddr1, r.premAddr2, r.premAddr3, r.premPostcode].filter(Boolean).join(', ');
   var clientAddr = [r.clientAddr1, r.clientAddr2, r.clientAddr3, r.clientPostcode].filter(Boolean).join(', ');
@@ -44,14 +44,15 @@ export function fireBuildCertHTML(r) {
   var hasDetModel  = (r.detectors||[]).some(function(d){ return d.model; });
   var hasSerialNo  = (r.detectors||[]).some(function(d){ return d.serialNo; });
   var hasZone      = isComm && (r.detectors||[]).some(function(d){ return d.zone; });
+  var hasBatExpiry = !isComm && (r.detectors||[]).some(function(d){ return d.batExpiry; });
   var detHeaders = isComm
     ? `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}${hasZone?'<th>Zone / Circuit</th>':''}<th>Result</th>`
-    : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}<th>Result</th><th>Battery replaced</th>`;
+    : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}<th>Result</th><th>Battery replaced</th>${hasBatExpiry?'<th>Battery expiry</th>':''}`;
   var detRows = (r.detectors||[]).map(function(d,i) {
     var rCls = d.result==='PASS' ? 'pass' : d.result==='FAIL' ? 'fail' : '';
     return isComm
       ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}${hasZone?`<td>${_esc(d.zone||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td></tr>`
-      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td></tr>`;
+      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td>${hasBatExpiry?`<td>${_esc(d.batExpiry||'—')}</td>`:''}</tr>`;
   }).join('');
 
   // ── Test results ────────────────────────────────────────────────────────────
@@ -63,7 +64,7 @@ export function fireBuildCertHTML(r) {
   var testCols = ['',''];
   if (!isComm) {
     testCols[0] = _tl('Functional test', r.tFunctional) + _tl('Interlinked test', r.tInterlinked);
-    testCols[1] = _tl('Battery backup / standby', r.tBattery) + _tl('CO alarm test', r.tCO);
+    testCols[1] = _tl('Battery backup / standby', r.tBattery) + _tl('CO alarms fitted', r.coAlarmsPresent) + _tl('CO alarm test', r.tCO);
   } else {
     testCols[0] = _tl('Mains supply test', r.tMains)
                 + (r.tMainsVolts ? `<tr><td class="lbl">Mains voltage</td><td class="val">${_esc(r.tMainsVolts)} V</td></tr>` : '')
@@ -352,6 +353,20 @@ export function fireBuildCertHTML(r) {
         <p class="decl">I/We confirm that the fire alarm system described in this certificate has been inspected and tested in accordance with ${_esc(stdLabel)} and that the results stated are a true record of the condition of the installation at the time of inspection. This certificate does not guarantee that the installation will remain free from defects in the future.</p>
       </div>
 
+      <div class="glass-card">
+        ${_ch('Tenant / Occupier Acknowledgment')}
+        <p class="decl" style="margin-bottom:10px">I confirm that the alarm system was tested in my presence and found to be in working order at the time of inspection.</p>
+        <div class="half-row" style="margin-bottom:8px">
+          <table class="info-table">
+            <tr><td class="lbl">Name</td><td class="val" style="font-weight:600">${_esc(r.tenantName||'')}</td></tr>
+            <tr><td class="lbl">Date</td><td class="val">${_esc(r.tenantAckDate||'')}</td></tr>
+          </table>
+        </div>
+        <div class="sig-row">
+          <div class="sig-box"><div class="sig-lbl">Tenant / Occupier signature</div></div>
+        </div>
+      </div>
+
     </div>
 
     <div class="cert-footer">
@@ -361,5 +376,5 @@ export function fireBuildCertHTML(r) {
     </div>
   </div>`;
 
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Fire Alarm Certificate — ${_esc(r.ref||'')}</title><style>${css}</style></head><body>${page1}${page2}</body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${_esc(r.certType||'FA')} Fire Alarm Certificate — ${_esc(r.ref||'')}</title><style>${css}</style></head><body>${page1}${page2}</body></html>`;
 }

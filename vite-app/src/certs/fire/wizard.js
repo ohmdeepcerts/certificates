@@ -92,7 +92,12 @@ export function startNewFire() {
     // engineer
     engineerName: getSetting('fa_engineer', getSetting('default_engineer','')),
     engineerQual: getSetting('fa_engineer_qual', ''),
+    enggSigData: getSetting('fire_engg_sig_data','') || getSetting('el_sig_data',''),
     companyName: getSetting('company_name', 'OHM Electrical Engineering Ltd'),
+    // tenant acknowledgment
+    tenantName: '', tenantAckDate: '',
+    // testing extras
+    coAlarmsPresent: '',
     testDate: todayStr(),
     ref: '', baseRef: ''
   };
@@ -247,7 +252,7 @@ export function fireRenderStep() {
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Serial No.</th>`;
     if (_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Zone / Circuit</th>`;
     html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Result</th>`;
-    if (!_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. replaced</th>`;
+    if (!_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. replaced</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. expiry</th>`;
     html += `<th style="padding:6px 4px;border-bottom:1px solid var(--border)"></th>`;
     html += `</tr></thead><tbody id="fire-det-tbody">`;
     (_w.detectors||[]).forEach((det, i) => {
@@ -269,6 +274,7 @@ export function fireRenderStep() {
       html += _testRow('Functional test (each device activates alarm)', 'tFunctional', ['PASS','FAIL','N/A']);
       html += _testRow('Interlinked test (all sound when one activates)', 'tInterlinked', ['PASS','FAIL','N/A']);
       html += _testRow('Battery backup / standby test', 'tBattery', ['PASS','FAIL','N/A']);
+      html += _testRow('CO alarms fitted?', 'coAlarmsPresent', ['Yes','No','N/A']);
       html += _testRow('CO alarm test (if applicable)', 'tCO', ['PASS','FAIL','N/A']);
     } else {
       // Commercial tests
@@ -347,6 +353,11 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Engineer Name</label><input value="${esc(_w.engineerName)}" oninput="fireSet('engineerName',this.value)" placeholder="Full name"></div>`;
     html += `<div class="wiz-field"><label>Qualification / ID No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.engineerQual)}" oninput="fireSet('engineerQual',this.value)" placeholder="e.g. BAFE SP203 / FIA member no."></div>`;
     html += `<div class="wiz-field"><label>Company Name</label><input value="${esc(_w.companyName)}" oninput="fireSet('companyName',this.value)" placeholder="OHM Electrical Engineering Ltd"></div>`;
+    var _sigPrev = _w.enggSigData ? `<img src="${esc(_w.enggSigData)}" style="max-height:50px;max-width:180px;border:1px solid var(--border);border-radius:4px;padding:4px;background:#fff;display:block">` : `<span style="color:var(--muted);font-size:13px">No signature uploaded</span>`;
+    html += `<div class="wiz-field"><label>Engineer Signature</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">${_sigPrev}<label class="btn-sm" style="cursor:pointer"><i class="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="fireLoadSig(event)"></label>${_w.enggSigData?`<button class="btn-sm" onclick="fireSet('enggSigData','');fireRenderStep()"><i class="fa-solid fa-xmark"></i> Clear</button>`:''}</div></div>`;
+    html += `<h3 style="font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--fg)">Tenant / Occupier Acknowledgment <span style="color:var(--muted);font-size:12px;font-weight:400">(optional)</span></h3>`;
+    html += `<div class="wiz-field"><label>Tenant / Occupier Name</label><input value="${esc(_w.tenantName)}" oninput="fireSet('tenantName',this.value)" placeholder="Full name"></div>`;
+    html += `<div class="wiz-field"><label>Acknowledgment Date</label><input value="${esc(_w.tenantAckDate)}" oninput="fireSet('tenantAckDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 9: Review ────────────────────────────────────────────────────────
@@ -444,6 +455,7 @@ function _detRow(det, i) {
     html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'batReplaced',this.value)">`;
     ['N/A','Yes','No'].forEach(v => { html += `<option${(det.batReplaced||'N/A')===v?' selected':''}>${v}</option>`; });
     html += `</select></td>`;
+    html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.batExpiry||'')}" oninput="fireDetSet(${i},'batExpiry',this.value)" placeholder="MM/YYYY" style="width:80px"></td>`;
   }
   html += `<td style="padding:4px;border-bottom:1px solid var(--border)"><button onclick="fireRemoveDet(${i})" style="border:none;background:none;color:#dc2626;cursor:pointer;padding:4px"><i class="fa-solid fa-trash-can"></i></button></td>`;
   html += `</tr>`;
@@ -468,13 +480,19 @@ export function firePick(key, val) {
   fireRenderStep();
 }
 export function fireSet(key, val)  { _w[key] = val; _schedulePreview(); }
+export function fireLoadSig(evt) {
+  var f = evt.target.files[0]; if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(e) { _w.enggSigData = e.target.result; fireRenderStep(); _schedulePreview(); };
+  reader.readAsDataURL(f);
+}
 export function fireJumpStep(i) {
   if (i >= 0 && i < STEPS.length && i <= _w.step) { _w.step = i; fireRenderStep(); }
 }
 
 export function fireAddDetector() {
   if (!_w.detectors) _w.detectors = [];
-  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'PASS', batReplaced:'N/A' });
+  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'PASS', batReplaced:'N/A', batExpiry:'' });
   fireRenderStep();
 }
 export function fireRemoveDet(i) {
