@@ -1,7 +1,7 @@
 import { getSetting } from '../../lib/settings.js';
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function _cell(label, val) { return `<tr><td class="lbl">${_esc(label)}</td><td class="val">${_esc(val||'—')}</td></tr>`; }
+function _cell(label, val) { if (!val) return ''; return `<tr><td class="lbl">${_esc(label)}</td><td class="val">${_esc(val)}</td></tr>`; }
 function _ch(title) { return `<div class="card-head"><div class="card-bar"></div><span class="card-title">${title}</span><div class="card-rule"></div></div>`; }
 function _pill(lbl, val, small) { return `<div class="spec-pill"><span class="pill-lbl">${lbl}</span><span class="pill-val${small?' pill-sm':''}">${_esc(val)}</span></div>`; }
 function _pillSplit(lbl, val) {
@@ -94,20 +94,18 @@ export function fireBuildCertHTML(r) {
   // ── System detail rows ──────────────────────────────────────────────────────
   var sysCol1 = '', sysCol2 = '', sysCol3 = '';
   if (!isComm) {
-    sysCol1 = _cell('Category', r.sysCategory) + _cell('System grade', r.sysGrade) + _cell('Coverage', r.sysCoverage||'—');
+    sysCol1 = _cell('Category', r.sysCategory) + _cell('System grade', r.sysGrade) + _cell('Coverage', r.sysCoverage);
     sysCol2 = _cell('Power supply', r.sysPowerSupply) + _cell('Interlinked', r.sysInterlinked)
             + ((r.sysMfr||r.sysModel) ? _cell('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' ')) : '')
             + (r.installDate ? _cell('Installation date', r.installDate) : '')
             + (r.prevServiceDate ? _cell('Previous service date', r.prevServiceDate) : '');
     var detCount = (r.detectors||[]).length;
-    sysCol3 = _cell('No. of devices', detCount ? String(detCount) : '—')
-            + _cell('Test date', r.testDate) + _cell('Next inspection due', r.nextInspDate);
+    sysCol3 = _cell('No. of devices', detCount ? String(detCount) : '—');
   } else {
     sysCol1 = _cell('System category', r.sysCategory) + _cell('System type', r.sysCommType);
     sysCol2 = ((r.sysPanelMake||r.sysPanelModel) ? _cell('Control panel', [r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' ')) : '')
             + (r.sysZones ? _cell('Zones', r.sysZones) : '') + (r.sysLoops ? _cell('Loops', r.sysLoops) : '');
-    sysCol3 = (r.sysBafe ? _cell('BAFE scheme no.', r.sysBafe) : '') + (r.sysFia ? _cell('FIA member no.', r.sysFia) : '')
-            + _cell('Test date', r.testDate) + _cell('Next inspection due', r.nextInspDate);
+    sysCol3 = (r.sysBafe ? _cell('BAFE scheme no.', r.sysBafe) : '') + (r.sysFia ? _cell('FIA member no.', r.sysFia) : '');
   }
 
   // ── Defects ─────────────────────────────────────────────────────────────────
@@ -144,7 +142,7 @@ export function fireBuildCertHTML(r) {
     : _rawCoLines;
   var niceicLogoHtml = niceicLogoData
     ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:32px;max-width:90px;object-fit:contain;display:block;margin-top:6px">`
-    : (niceicNo ? `<div class="co-niceic">NICEIC ${_esc(niceicNo)}</div>` : '');
+    : (niceicNo ? `<div class="co-niceic">NICEIC Approved Contractor &middot; No.&nbsp;${_esc(niceicNo)}</div>` : '');
   var coCardBody = `
     <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:5px;letter-spacing:-.01em">${_esc(company)}</div>
     ${coAddrLines.length ? `<div style="font-size:9.5px;color:#5a5a5a;line-height:1.7;margin-bottom:4px">${coAddrLines.map(_esc).join('<br>')}</div>` : ''}
@@ -253,7 +251,7 @@ export function fireBuildCertHTML(r) {
           ${companyAddr ? `<span class="co-band-item">${_esc(companyAddr.split(/[,\n]/)[0].trim())}</span>` : ''}
           ${companyTel  ? `<span class="co-band-item"><strong>T:</strong> ${_esc(companyTel)}</span>` : ''}
           ${companyEmail? `<span class="co-band-item"><strong>E:</strong> ${_esc(companyEmail)}</span>` : ''}
-          ${(!niceicLogoData && niceicNo) ? `<span class="co-niceic">NICEIC ${_esc(niceicNo)}</span>` : ''}
+          ${(!niceicLogoData && niceicNo) ? `<span class="co-niceic">NICEIC Approved Contractor &middot; No.&nbsp;${_esc(niceicNo)}</span>` : ''}
         </div>
       </div>
       ${niceicLogoData ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:48px;max-width:120px;object-fit:contain;display:block;flex-shrink:0;margin-left:auto">` : ''}
