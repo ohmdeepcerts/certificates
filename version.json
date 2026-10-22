@@ -1,7 +1,7 @@
 {
-  "v": "1.8.0",
-  "build": 63,
+  "v": "1.8.1",
+  "build": 64,
   "changes": [
-    "Fixed: Postcode now shows on the same line as the county in Contractor Details on fire certs."
+    "Fixed: Fire cert now cites BS 5839-6:2019+A1:2020 (the current live standard, replacing the withdrawn 2019 base edition)."
   ]
 }

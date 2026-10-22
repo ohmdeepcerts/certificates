@@ -20,11 +20,14 @@ export function fireBuildCertHTML(r) {
   };
   var stdLabel = isComm
     ? 'BS 5839-1:2025 — Fire Detection and Alarm Systems for Buildings'
-    : 'BS 5839-6:2019 — Fire Detection and Alarm Systems for Dwellings — Issued in accordance with Annex G';
+    : 'BS 5839-6:2019+A1:2020 — Fire Detection and Alarm Systems for Dwellings — Issued in accordance with Annex G';
   var typeTitle = typeLabels[r.certType] || 'Fire Alarm Certificate';
 
   var company      = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
-  var companyAddr  = getSetting('fire_co_address') || getSetting('company_address') || '';
+  var _coAddrRaw   = getSetting('fire_co_address') || getSetting('company_address') || '';
+  var _coPostcode  = getSetting('fire_co_postcode') || '';
+  var companyAddr  = (_coAddrRaw && _coPostcode && !_coAddrRaw.includes(_coPostcode))
+    ? _coAddrRaw + '\n' + _coPostcode : _coAddrRaw;
   var companyTel   = getSetting('fire_co_phone') || getSetting('company_tel') || '';
   var companyEmail = getSetting('fire_co_email') || getSetting('company_email') || '';
   var niceicNo     = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
@@ -135,7 +138,10 @@ export function fireBuildCertHTML(r) {
   var issued   = new Date().toLocaleDateString('en-GB');
 
   // ── Company details card content ────────────────────────────────────────────
-  var coAddrLines = companyAddr.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  var _rawCoLines = _coAddrRaw.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  var coAddrLines = (_rawCoLines.length && _coPostcode && !_coAddrRaw.includes(_coPostcode))
+    ? [..._rawCoLines.slice(0, -1), _rawCoLines[_rawCoLines.length - 1] + ' ' + _coPostcode]
+    : _rawCoLines;
   var niceicLogoHtml = niceicLogoData
     ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:32px;max-width:90px;object-fit:contain;display:block;margin-top:6px">`
     : (niceicNo ? `<div class="co-niceic">NICEIC ${_esc(niceicNo)}</div>` : '');
@@ -197,7 +203,7 @@ export function fireBuildCertHTML(r) {
     table.info-table tr+tr td{border-top:1px solid rgba(200,0,28,.07)}
     table.info-table td{padding:3.5px 3px;vertical-align:top;font-size:12px}
     table.info-table .lbl{width:43%;color:#5a5a5a;font-size:11.5px;padding-right:5px}
-    table.info-table .val{font-weight:500;color:#111}
+    table.info-table .val{font-weight:500;color:#111;white-space:pre-line}
     table.data-table{width:100%;border-collapse:collapse;font-size:12px;border:1px solid rgba(200,0,28,.15);border-radius:4px;overflow:hidden}
     table.data-table thead tr{background:rgba(200,0,28,.78)}
     table.data-table th{padding:5px 7px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.95);border-right:1px solid rgba(255,255,255,.10)}
@@ -250,7 +256,7 @@ export function fireBuildCertHTML(r) {
           ${(!niceicLogoData && niceicNo) ? `<span class="co-niceic">NICEIC ${_esc(niceicNo)}</span>` : ''}
         </div>
       </div>
-      ${niceicLogoData ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:40px;max-width:90px;object-fit:contain;display:block;flex-shrink:0;margin-left:auto">` : ''}
+      ${niceicLogoData ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:48px;max-width:120px;object-fit:contain;display:block;flex-shrink:0;margin-left:auto">` : ''}
     </div>
 
     <div class="cert-body">
@@ -258,11 +264,11 @@ export function fireBuildCertHTML(r) {
       <div class="meta-row" style="grid-template-columns:${metaCols}">
         <div class="glass-card">
           ${_ch('Premises')}
-          <table class="info-table">${r.premisesName?_cell('Name', r.premisesName):''}${premAddr?_cell('Address', premAddr):''}</table>
+          <table class="info-table">${r.premisesName?_cell('Name', r.premisesName):''}${premAddr?_cell('Address', [r.premAddr1,r.premAddr2,r.premAddr3,r.premPostcode].filter(Boolean).join('\n')):''}</table>
         </div>
         ${hasClient ? `<div class="glass-card">
           ${_ch('Client / Landlord')}
-          <table class="info-table">${r.clientName?`<tr><td class="lbl">Name</td><td class="val" style="font-weight:700;font-size:12px">${_esc(r.clientName)}</td></tr>`:''}${r.responsiblePerson?_cell('Responsible person', r.responsiblePerson):''}${clientAddr?_cell('Address', clientAddr):''}${r.clientEmail?_cell('Email', r.clientEmail):''}</table>
+          <table class="info-table">${r.clientName?`<tr><td class="lbl">Name</td><td class="val" style="font-weight:700;font-size:12px">${_esc(r.clientName)}</td></tr>`:''}${r.responsiblePerson?_cell('Responsible person', r.responsiblePerson):''}${clientAddr?_cell('Address', [r.clientAddr1,r.clientAddr2,r.clientAddr3,r.clientPostcode].filter(Boolean).join('\n')):''}${r.clientEmail?_cell('Email', r.clientEmail):''}</table>
         </div>` : ''}
         <div class="glass-card">
           ${_ch('Contractor Details')}
@@ -272,10 +278,12 @@ export function fireBuildCertHTML(r) {
 
       <div class="glass-card">
         ${_ch('System Details')}
-        ${specPills ? `<div class="spec-pills">${specPills}</div>` : ''}
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(200,0,28,.06);border:1px solid rgba(200,0,28,.18);border-left:3px solid #c8001c;border-radius:4px;padding:5px 10px;margin-bottom:9px">
-          <span style="font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c8001c;white-space:nowrap;flex-shrink:0">Regulation</span>
-          <span style="font-size:9px;color:#2a2a2a;font-weight:500">${stdLabel}</span>
+        <div style="display:flex;align-items:stretch;gap:5px;margin-bottom:9px">
+          <div class="spec-pills" style="margin-bottom:0;flex-shrink:0">${specPills}</div>
+          <div style="display:flex;align-items:center;gap:7px;background:rgba(200,0,28,.06);border:1px solid rgba(200,0,28,.18);border-left:3px solid #c8001c;border-radius:4px;padding:4px 10px;flex:1">
+            <span style="font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c8001c;white-space:nowrap;flex-shrink:0">Regulation</span>
+            <span style="font-size:9px;color:#2a2a2a;font-weight:500">${stdLabel}</span>
+          </div>
         </div>
         <div class="sys-grid">
           <table class="info-table">${sysCol1}</table>
@@ -332,6 +340,7 @@ export function fireBuildCertHTML(r) {
           <table class="info-table">
             ${_cell('Company', r.companyName)}
             ${_cell('Date of inspection', r.testDate)}
+            ${niceicNo ? _cell('NICEIC Enrolment No.', niceicNo) : ''}
           </table>
         </div>
         <div class="sig-row">

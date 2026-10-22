@@ -706,7 +706,7 @@ export function elEditCert(id) {
 export function elEmailCert(rec) {
   var r2 = (rec && rec.ref) ? rec : Object.assign({}, _w);
   if (!r2.ref) { toast('Certificate has no reference yet','error'); return; }
-  var subject = buildEmailSubject('EL', r2.certType||'EL', r2.ref, r2.testDate||'', r2.premAddr1||r2.premisesAddress||'');
+  var subject = buildEmailSubject('EL', r2.ref, r2.premAddr1||r2.premisesAddress||'');
   var certHtml = elBuildCertHTML(r2);
   var modal = `<div id="el-email-modal" style="position:fixed;inset:0;background:#0009;z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:var(--surface);border-radius:12px;max-width:560px;width:95%;max-height:85vh;display:flex;flex-direction:column"><div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between"><span>Email Certificate</span><button onclick="document.getElementById('el-email-modal').remove()" class="btn-sm">✕</button></div><div style="padding:16px;overflow-y:auto;flex:1"><div class="wiz-field"><label>To</label><input id="el-em-to" value="${esc(r2.clientEmail||'')}" type="email"></div><div class="wiz-field"><label>Subject</label><input id="el-em-sub" value="${esc(subject)}"></div><div class="wiz-field"><label>Message</label><textarea id="el-em-msg" rows="4">Please find attached the emergency lighting certificate for the above property.</textarea></div><div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;height:200px"><iframe srcdoc="${certHtml.replace(/"/g,'&quot;')}" style="width:100%;height:100%;border:none"></iframe></div></div><div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end"><button onclick="document.getElementById('el-email-modal').remove()" class="btn-sm">Cancel</button><button onclick="elSendEmail(${JSON.stringify(r2).replace(/"/g,'&quot;')})" class="btn-primary"><i class='fa-solid fa-paper-plane'></i> Send</button></div></div></div>`;
   document.body.insertAdjacentHTML('beforeend', modal);
@@ -881,7 +881,7 @@ export async function elAutoEmail(rec, silent) {
   var to = (rec.clientEmail||'').trim();
   if (!to) return;
   var co = getSetting('company_name','OHM Electrical Engineering Ltd');
-  var subject = buildEmailSubject('EL', rec.certType||'EL', rec.ref, rec.testDate||'', rec.premAddr1||'');
+  var subject = buildEmailSubject('EL', rec.ref, rec.premAddr1||'');
   var pdfBlob;
   try { pdfBlob = await elGeneratePDF(rec, true); } catch(e) { if (!silent) toast('PDF error: '+e.message,'error'); return; }
   var reader = new FileReader();
