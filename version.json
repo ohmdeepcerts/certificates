@@ -1,7 +1,14 @@
 {
-  "v": "1.8.1",
-  "build": 64,
+  "v": "1.9.1",
+  "build": 67,
   "changes": [
-    "Fixed: Fire cert now cites BS 5839-6:2019+A1:2020 (the current live standard, replacing the withdrawn 2019 base edition)."
+    "Smart: Grade D1 selected — wizard shows why battery replacement is N/A (sealed battery).",
+    "Smart: Grade D2 selected — wizard reminds you to record whether battery was replaced.",
+    "Smart: CO alarm marked N/A — new sub-reason chips appear (No gas appliance / CO alarm not fitted).",
+    "Smart: Any device or test FAIL — outcome step auto-sets UNSATISFACTORY and shows warning.",
+    "Added: PASS/FAIL chips now show tick/cross icons in wizard and certificate PDF.",
+    "Added: Departures/variations field in System step (Annex G).",
+    "Added: Companies House and PI Insurance fields on fire cert PDF (if set in settings).",
+    "Fixed: CO alarm N/A reason now prints on certificate PDF."
   ]
 }
