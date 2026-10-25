@@ -1,14 +1,16 @@
 {
-  "v": "1.9.1",
-  "build": 67,
+  "v": "1.9.2",
+  "build": 68,
   "changes": [
-    "Smart: Grade D1 selected — wizard shows why battery replacement is N/A (sealed battery).",
-    "Smart: Grade D2 selected — wizard reminds you to record whether battery was replaced.",
-    "Smart: CO alarm marked N/A — new sub-reason chips appear (No gas appliance / CO alarm not fitted).",
-    "Smart: Any device or test FAIL — outcome step auto-sets UNSATISFACTORY and shows warning.",
-    "Added: PASS/FAIL chips now show tick/cross icons in wizard and certificate PDF.",
-    "Added: Departures/variations field in System step (Annex G).",
-    "Added: Companies House and PI Insurance fields on fire cert PDF (if set in settings).",
-    "Fixed: CO alarm N/A reason now prints on certificate PDF."
+    "Smart: Test date must be valid DD/MM/YYYY — warns if it is in the future or more than 7 days old.",
+    "Smart: Wizard asks to confirm if no test results are recorded before moving on.",
+    "Smart: Engineer name is now required — certificate cannot be issued without it.",
+    "Smart: Review step shows a reminder if the certificate will be auto-emailed, with a link to change the email.",
+    "Smart: Warns if any device has no location recorded.",
+    "Smart: Asks you to confirm if outcome is SATISFACTORY but some tests or devices have FAIL results.",
+    "Smart: Checks for a recently issued certificate at the same address before saving.",
+    "Audit: Every certificate edit now records who made the change and when.",
+    "Audit: Certificate deletions now record who deleted it.",
+    "Cert: PDF footer now shows the issuing engineer, company name and issue date."
   ]
 }
