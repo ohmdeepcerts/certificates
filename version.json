@@ -1,11 +1,15 @@
 {
-  "v": "1.9.3",
-  "build": 69,
+  "v": "1.9.4",
+  "build": 70,
   "changes": [
-    "Fixed: New devices no longer default to PASS — engineer must explicitly select a test result.",
-    "Smart: Device result dropdown shows a red warning until a result is chosen.",
-    "Smart: Warns if any device has no test result selected before moving on.",
-    "Smart: Blocks progress if a defect row has no description — prevents blank defects on the certificate.",
-    "Smart: Shows a clear warning banner on the Review step when editing an existing certificate."
+    "Fixed: Emergency lighting luminaires no longer default to PASS — engineer must explicitly select a result.",
+    "Smart: Luminaire result shows a red warning until a result is chosen.",
+    "Smart: Warns before moving on if any luminaire has no test result selected.",
+    "Smart: Warns if an EL certificate is marked SATISFACTORY but has FAIL luminaire results.",
+    "Smart: Review screen now shows if a certificate will be auto-emailed and to whom.",
+    "Smart: Shows a clear warning banner on the review screen when editing an existing EL certificate.",
+    "Fixed: PAT items no longer default to Pass — engineer must explicitly select a result.",
+    "Smart: Warns before issuing if any PAT item has no result selected.",
+    "Fixed: Engineer name is now required before issuing PAT and Gas certificates."
   ]
 }
