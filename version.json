@@ -1,7 +1,8 @@
 {
-  "v": "1.9.6",
-  "build": 72,
+  "v": "1.9.7",
+  "build": 73,
   "changes": [
-    "Fixed: App now shows a 'New version available — Refresh' notice automatically when an update is ready. No more needing to hard-refresh manually."
+    "Fixed: PAT certificate PDF no longer clips rows at the bottom of page 1 — rows that don't fit now correctly move to the next page.",
+    "Fixed: On-screen certificate preview now shows exactly what the PDF will look like, so you can spot any layout issues before downloading."
   ]
 }

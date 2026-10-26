@@ -52,7 +52,7 @@ function _doPatPreviewNow() {
   const pat2 = schLogo2 ? `<div class="a4-flogo"><img src="${schLogo2}"></div>` : '';
   const sigData = getSetting('pat_sig_data', '');
   const sigHTML = sigData ? `<img src="${sigData}" style="width:100%;max-height:30px;object-fit:contain;object-position:left center;display:block">` : '________________';
-  const rp1 = 26, rpn = 34;
+  const rp1 = 22, rpn = 34;
   wrap.style.setProperty('--a4td', getSetting('pat_td_font', '12') + 'px');
   const pages = []; let pageItems = [], pNum = 1, rowsUsed = 0;
   patApps.forEach(app => {
