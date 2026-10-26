@@ -1,15 +1,12 @@
 {
-  "v": "1.9.4",
-  "build": 70,
+  "v": "1.9.5",
+  "build": 71,
   "changes": [
-    "Fixed: Emergency lighting luminaires no longer default to PASS — engineer must explicitly select a result.",
-    "Smart: Luminaire result shows a red warning until a result is chosen.",
-    "Smart: Warns before moving on if any luminaire has no test result selected.",
-    "Smart: Warns if an EL certificate is marked SATISFACTORY but has FAIL luminaire results.",
-    "Smart: Review screen now shows if a certificate will be auto-emailed and to whom.",
-    "Smart: Shows a clear warning banner on the review screen when editing an existing EL certificate.",
-    "Fixed: PAT items no longer default to Pass — engineer must explicitly select a result.",
-    "Smart: Warns before issuing if any PAT item has no result selected.",
-    "Fixed: Engineer name is now required before issuing PAT and Gas certificates."
+    "Fixed: Tapping Yes/No/NA or any option button now immediately shows it selected — no more going forward and back to see your choice.",
+    "Fixed: Test result buttons (PASS/FAIL/N/T) in fire certificates now light up instantly when tapped.",
+    "Fixed: All choice buttons in fire certificates now respond instantly — outcome, system type, client type, power supply, premises type, interlinked, and more.",
+    "Fixed: All choice buttons in EL certificates now respond instantly — client type, mode, duration, purpose, arrangement, inspection type, and more.",
+    "Fixed: Live PDF preview in fire certificates now updates immediately when a detector result or defect severity is changed.",
+    "Fixed: Observation code changes in EL certificates now always refresh the screen immediately."
   ]
 }
