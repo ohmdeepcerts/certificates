@@ -135,9 +135,24 @@ async function init() {
   // CP12 form init (gas)
   window.initCP12Form?.();
 
-  // Service worker
+  // Service worker — register and show in-app banner when a new version is ready
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/certificates/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/certificates/sw.js')
+      .then(() => {
+        const hadController = !!navigator.serviceWorker.controller;
+        let _swUpdating = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!hadController || _swUpdating) return;
+          _swUpdating = true;
+          if (document.getElementById('sw-update-banner')) return;
+          const banner = document.createElement('div');
+          banner.id = 'sw-update-banner';
+          banner.style.cssText = 'position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,.5);white-space:nowrap;';
+          banner.innerHTML = '<i class="fa-solid fa-rotate" style="color:#60a5fa"></i><span>New version available</span><button onclick="window.location.reload()" style="background:#3b82f6;border:none;color:#fff;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;margin-left:4px;">Refresh</button>';
+          document.body.appendChild(banner);
+        });
+      })
+      .catch(() => {});
   }
 
   // Online / offline handlers

@@ -1,12 +1,7 @@
 {
-  "v": "1.9.5",
-  "build": 71,
+  "v": "1.9.6",
+  "build": 72,
   "changes": [
-    "Fixed: Tapping Yes/No/NA or any option button now immediately shows it selected — no more going forward and back to see your choice.",
-    "Fixed: Test result buttons (PASS/FAIL/N/T) in fire certificates now light up instantly when tapped.",
-    "Fixed: All choice buttons in fire certificates now respond instantly — outcome, system type, client type, power supply, premises type, interlinked, and more.",
-    "Fixed: All choice buttons in EL certificates now respond instantly — client type, mode, duration, purpose, arrangement, inspection type, and more.",
-    "Fixed: Live PDF preview in fire certificates now updates immediately when a detector result or defect severity is changed.",
-    "Fixed: Observation code changes in EL certificates now always refresh the screen immediately."
+    "Fixed: App now shows a 'New version available — Refresh' notice automatically when an update is ready. No more needing to hard-refresh manually."
   ]
 }

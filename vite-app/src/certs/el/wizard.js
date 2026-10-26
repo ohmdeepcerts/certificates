@@ -150,7 +150,7 @@ export function elRenderStep() {
     html += `<h2 class="wiz-title">Client Details</h2>`;
     html += `<div class="wiz-field"><label>Client Name</label><input value="${esc(_w.clientName)}" oninput="elSet('clientName',this.value)" placeholder="Full name or company"></div>`;
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
-    allClientTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="elSet('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
+    allClientTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="elChoose('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `<button class="chip" onclick="elSaveClientType()">+ Custom</button></div></div>`;
     html += `<div class="wiz-field"><label>Client Address Line 1 <span style="color:#dc2626">*</span></label><input id="el-client-a1" value="${esc(_w.clientAddr1)}" oninput="elSet('clientAddr1',this.value)" placeholder="Address line 1"></div>`;
     html += `<div class="wiz-field"><label>Address Line 2</label><input value="${esc(_w.clientAddr2)}" oninput="elSet('clientAddr2',this.value)"></div>`;
@@ -173,7 +173,7 @@ export function elRenderStep() {
     });
     html += `</div>`;
     html += `<div class="wiz-field" style="margin-top:12px"><label>Operating Mode</label><div class="chip-row">`;
-    MODES.forEach(m => { html += `<button class="chip${_w.mode===m?' on':''}" onclick="elSet('mode','${esc(m)}')">${esc(m)}</button>`; });
+    MODES.forEach(m => { html += `<button class="chip${_w.mode===m?' on':''}" onclick="elChoose('mode','${esc(m)}')">${esc(m)}</button>`; });
     html += `</div></div>`;
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary" ${!_w.systemType?'disabled':''}>Next →</button></div>`;
 
@@ -197,16 +197,16 @@ export function elRenderStep() {
     html += `<table class="wiz-toggle-table"><thead><tr><th>Purpose</th><th>✓</th><th>N/A</th></tr></thead><tbody>`;
     purps.forEach(p => {
       html += `<tr><td>${esc(p.label)}</td>`;
-      html += `<td><button class="tog-btn${_w[p.k]==='✓'?' on':''}" onclick="elSet('${p.k}','✓')">✓</button></td>`;
-      html += `<td><button class="tog-btn${_w[p.k]==='N/A'?' on':''}" onclick="elSet('${p.k}','N/A')">N/A</button></td></tr>`;
+      html += `<td><button class="tog-btn${_w[p.k]==='✓'?' on':''}" onclick="elChoose('${p.k}','✓')">✓</button></td>`;
+      html += `<td><button class="tog-btn${_w[p.k]==='N/A'?' on':''}" onclick="elChoose('${p.k}','N/A')">N/A</button></td></tr>`;
     });
     html += `</tbody></table>`;
     html += `<h3 style="margin:16px 0 8px;font-size:14px">Arrangement</h3>`;
     html += `<table class="wiz-toggle-table"><thead><tr><th>Type</th><th>✓</th><th>N/A</th></tr></thead><tbody>`;
     arrs.forEach(a => {
       html += `<tr><td>${esc(a.label)}</td>`;
-      html += `<td><button class="tog-btn${_w[a.k]==='✓'?' on':''}" onclick="elSet('${a.k}','✓')">✓</button></td>`;
-      html += `<td><button class="tog-btn${_w[a.k]==='N/A'?' on':''}" onclick="elSet('${a.k}','N/A')">N/A</button></td></tr>`;
+      html += `<td><button class="tog-btn${_w[a.k]==='✓'?' on':''}" onclick="elChoose('${a.k}','✓')">✓</button></td>`;
+      html += `<td><button class="tog-btn${_w[a.k]==='N/A'?' on':''}" onclick="elChoose('${a.k}','N/A')">N/A</button></td></tr>`;
     });
     html += `</tbody></table>`;
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary">Next →</button></div>`;
@@ -215,7 +215,7 @@ export function elRenderStep() {
     html += `<h2 class="wiz-title">Rated Duration</h2>`;
     html += `<p style="color:var(--muted);font-size:13px;margin-bottom:12px">Minimum duration the system must operate in emergency mode (BS 5266-1).</p>`;
     html += `<div class="chip-row">`;
-    DURATIONS.forEach(d => { html += `<button class="chip large${_w.ratedDuration===d?' on':''}" onclick="elSet('ratedDuration','${d}')">${esc(d)}</button>`; });
+    DURATIONS.forEach(d => { html += `<button class="chip large${_w.ratedDuration===d?' on':''}" onclick="elChoose('ratedDuration','${d}')">${esc(d)}</button>`; });
     html += `</div>`;
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary">Next →</button></div>`;
 
@@ -226,7 +226,7 @@ export function elRenderStep() {
     html += `<button class="btn-sm" onclick="elSetPeriod('6months')">6 months</button><button class="btn-sm" onclick="elSetPeriod('12months')">12 months</button></div></div>`;
     if (_w.certType === 'EL.2') {
       html += `<div class="wiz-field"><label>Inspection Type</label><div class="chip-row">`;
-      INSPECTION_TYPES.forEach(it => { html += `<button class="chip${_w.inspectionType===it?' on':''}" onclick="elSet('inspectionType','${esc(it)}')">${esc(it)}</button>`; });
+      INSPECTION_TYPES.forEach(it => { html += `<button class="chip${_w.inspectionType===it?' on':''}" onclick="elChoose('inspectionType','${esc(it)}')">${esc(it)}</button>`; });
       html += `</div></div>`;
     }
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary">Next →</button></div>`;
@@ -243,7 +243,7 @@ export function elRenderStep() {
       lumRows.forEach((r,i) => {
         html += `<tr><td><input value="${esc(r.location||'')}" oninput="elSetLumRow(${i},'location',this.value)" placeholder="Location"></td>`;
         html += `<td><input value="${esc(r.duration||'')}" oninput="elSetLumRow(${i},'duration',this.value)" placeholder="${esc(_w.ratedDuration)}" style="max-width:80px"></td>`;
-        html += `<td><button class="tog-btn${r.result==='PASS'?' pass':''}" onclick="elToggleLumResult(${i},'PASS')">PASS</button> <button class="tog-btn${r.result==='FAIL'?' fail':''}" onclick="elToggleLumResult(${i},'FAIL')">FAIL</button></td>`;
+        html += `<td><button class="tog-btn${r.result==='PASS'?' pass':''}" onclick="elToggleLumResult(${i},'PASS')">PASS</button> <button class="tog-btn${r.result==='FAIL'?' fail':''}" onclick="elToggleLumResult(${i},'FAIL')">FAIL</button>${!r.result ? ' <span style="color:#dc2626;font-size:10px;font-weight:600">⚠ required</span>' : ''}</td>`;
         html += `<td>${_ibtn('Remove','fa-trash',`elRemoveLumRow(${i})`,true)}</td></tr>`;
       });
       html += `</tbody></table>`;
@@ -308,7 +308,7 @@ export function elRenderStep() {
     var showDur = _w.outcome === 'SATISFACTORY';
     html += `<div id="el-dur-field" style="display:${showDur?'block':'none'};margin-top:12px">`;
     html += `<div class="wiz-field"><label>Duration Achieved</label><div class="chip-row">`;
-    DURATIONS.forEach(d => { html += `<button class="chip${_w.durationAchieved===d?' on':''}" onclick="elSet('durationAchieved','${d}')">${esc(d)}</button>`; });
+    DURATIONS.forEach(d => { html += `<button class="chip${_w.durationAchieved===d?' on':''}" onclick="elChoose('durationAchieved','${d}')">${esc(d)}</button>`; });
     html += `</div></div></div>`;
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Next →</button></div>`;
 
@@ -369,6 +369,12 @@ export function elRenderStep() {
       html += `<p style="font-size:12px;color:var(--muted)">Reference will be generated on issue.</p>`;
     } else {
       html += `<p style="font-size:13px;color:var(--accent);font-weight:600">Ref: ${esc(_w.ref)}</p>`;
+    }
+    if ((_w.clientEmail||'').trim()) {
+      html += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:12px;color:#1e40af;display:flex;align-items:center;gap:8px"><i class="fa-solid fa-envelope"></i><span>Auto-email will be sent to <strong>${esc(_w.clientEmail)}</strong> on issue.</span></div>`;
+    }
+    if (_w._editId) {
+      html += `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:12px;color:#9a3412;display:flex;align-items:center;gap:10px"><i class="fa-solid fa-pen-to-square" style="color:#ea580c"></i><span><strong>You are editing an existing certificate.</strong> All details above will replace the original when you click Update.</span></div>`;
     }
     html += `<div class="wiz-nav"><button onclick="elBack()" class="btn-sm">← Back</button><button onclick="elPreviewCurrent()" class="btn-sm"><i class="fa-solid fa-eye"></i> Preview</button><button onclick="elSave()" class="btn-primary btn-issue"><i class="fa-solid fa-certificate"></i> ${_w._editId ? 'Update' : 'Issue Certificate'}</button></div>`;
   }
@@ -434,6 +440,10 @@ export function elRenderStep() {
 export function elSet(key, val) {
   _w[key] = val;
   _elDirty = true;
+}
+
+export function elChoose(key, val) {
+  _w[key] = val; _elDirty = true; elRenderStep();
 }
 
 export function elPickFromDirectory() {
@@ -513,7 +523,7 @@ export function elRemoveObsRow(i) {
 }
 
 export function elObsCode(i, val) {
-  if (_w.observationRows[i]) _w.observationRows[i].code = val; _elDirty = true; elAutoOutcomeFromObs();
+  if (_w.observationRows[i]) _w.observationRows[i].code = val; _elDirty = true; elAutoOutcomeFromObs(); elRenderStep();
 }
 
 export function elObsText(i, val) {
@@ -543,7 +553,7 @@ export function elLumCalc() {
 
 export function elAddLumRow() {
   if (!Array.isArray(_w.lumRows)) _w.lumRows = [];
-  _w.lumRows.push({location:'', duration:_w.ratedDuration||'3 hours', result:'PASS'}); _elDirty = true; elRenderStep();
+  _w.lumRows.push({location:'', duration:_w.ratedDuration||'3 hours', result:''}); _elDirty = true; elRenderStep();
 }
 
 export function elRemoveLumRow(i) {
@@ -587,7 +597,7 @@ export function elPick(key, val) {
   elRenderStep();
 }
 
-export function elNext() {
+export async function elNext() {
   var s = _w.step;
   if (s === 0 && !_w.certType) { toast('Please select a certificate type','error'); return; }
   if (s === 1) {
@@ -605,6 +615,9 @@ export function elNext() {
     if (failCount >= 2 && !_w.observationRows.some(r => r.code === 'C2')) {
       _w.observationRows = _w.observationRows || [];
       _w.observationRows.push({code:'C2', text:`${failCount} luminaires failed duration test`});
+    }
+    if (lumRows.some(r => !r.result)) {
+      if (!await confirm2('Some luminaires have no test result selected — continue?')) return;
     }
   }
   if (s === 10 && !_w.outcome) { toast('Please select an outcome','error'); return; }
@@ -635,6 +648,10 @@ async function buildCertRefSeqSafe(addr, pc) {
 
 export async function elSave() {
   var isEdit = !!_w._editId; var editId = _w._editId || null;
+  if (!(_w.engineerName||'').trim()) {
+    toast('Engineer name is required — go back to the Engineer step', 'error');
+    _w.step = 12; elRenderStep(); return;
+  }
   if (!isEdit && (!_w.ref || _w.ref === 'Generating…' || !_w.baseRef)) {
     showOverlay('Generating reference…');
     try {
@@ -646,11 +663,19 @@ export async function elSave() {
   }
   elSyncObs();
   var rec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
+  if (isEdit) {
+    rec.updatedBy = (state.currentUser && state.currentUser.id) ? state.currentUser.id : null;
+    rec.updatedAt = new Date().toISOString();
+  }
   delete rec._editId; delete rec.step;
   var row = {
     ref_number: rec.ref||null, cert_type: rec.certType||null, premises_name: rec.premisesName||null,
     test_date: rec.testDate||null, outcome: rec.outcome||null, updated_at: new Date().toISOString(), data: rec
   };
+  var _elHasFails = Array.isArray(_w.lumRows) && _w.lumRows.some(function(r){ return r.result==='FAIL'; });
+  if (_elHasFails && (_w.outcome||'').toUpperCase() === 'SATISFACTORY') {
+    if (!await confirm2('This certificate has FAIL luminaire results but the outcome is SATISFACTORY — issue anyway?')) return;
+  }
   if (!navigator.onLine) {
     row.created_by = state.currentUser.id;
     await idbEnqueue({type:'el_upsert', form: row, supabaseId: editId||null, userId: state.currentUser.id, ts: Date.now()});

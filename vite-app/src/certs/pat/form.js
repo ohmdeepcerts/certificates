@@ -3,7 +3,7 @@
 
 import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
-import { toast, showOverlay, hideOverlay, openModal, closeModal, _softDelete } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, openModal, closeModal, _softDelete, confirm2 } from '../../lib/utils.js';
 import { buildCertRefSeq } from '../_core/refgen.js';
 import { state } from '../../lib/state.js';
 import { idbEnqueue, idbPatchById, refreshSyncBadge } from '../../lib/offline.js';
@@ -113,7 +113,7 @@ export function addPATRow(data = null) {
     testInstrument: getSetting('pat_default_instrument', ''),
     date: today, retestPeriod: period,
     nextTest: patCalcNext(today, periodMonths),
-    result: getSetting('pat_default_result', 'Pass')
+    result: ''
   };
   patApps.push(a);
   _appendPATRow(patApps.length - 1);
@@ -131,7 +131,7 @@ function _appendPATRow(i) {
     + `<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
     + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
     + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
-    + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':'#dc2626';this.style.fontWeight='700'" style="color:${a.result === 'Pass' ? '#16a34a' : '#dc2626'};font-weight:700"><option value="Pass"${a.result === 'Pass' ? ' selected' : ''}>Pass</option><option value="Fail"${a.result === 'Fail' ? ' selected' : ''}>Fail</option></select></td>`
+    + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
     + `<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
   tbody.appendChild(tr);
   setTimeout(() => { const d = patGe('pat-d' + i); if (d) { patAutoH(d); d.focus(); } }, 0);
@@ -151,7 +151,7 @@ export function renderPATRows(opts = {}) {
       + `<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
       + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
       + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
-      + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':'#dc2626';this.style.fontWeight='700'" style="color:${a.result === 'Pass' ? '#16a34a' : '#dc2626'};font-weight:700"><option value="Pass"${a.result === 'Pass' ? ' selected' : ''}>Pass</option><option value="Fail"${a.result === 'Fail' ? ' selected' : ''}>Fail</option></select></td>`
+      + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
       + `<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   });
@@ -234,7 +234,7 @@ export function populatePATForm(r) {
     date: a.date || r.test_date || '',
     retestPeriod: (() => { const _rp = a.retestPeriod || a.retest_period || '12 Months'; return /^\d+$/.test(_rp.trim()) ? _rp.trim() + ' Months' : _rp; })(),
     nextTest: (() => { const _d = a.date || r.test_date || ''; const _p = (a.retestPeriod || a.retest_period || '12 Months'); return _d ? patCalcNext(_d, parseInt(_p)) : a.nextTest || a.next_test || ''; })(),
-    result: a.result === 'PASS' ? 'Pass' : a.result === 'FAIL' ? 'Fail' : (a.result || 'Pass')
+    result: a.result === 'PASS' ? 'Pass' : a.result === 'FAIL' ? 'Fail' : (a.result || '')
   })));
   if (!patApps.length) { addPATRow(); addPATRow(); } else { renderPATRows(); }
   doPatPreview();
@@ -395,8 +395,13 @@ export async function savePAT() {
 
 export async function completePAT() {
   const d = getPATFormData();
+  const _patEng = (patGv('pat-eng') || '').trim();
+  if (!_patEng) { toast('Engineer name is required — please fill in the engineer field before issuing', 'error'); const _ee = patGe('pat-eng'); if (_ee) _ee.focus(); return; }
   if (!d.property_address || !d.test_date) { toast('Address and date required', 'error'); return; }
   if (!(patGv('pat-postcode') || '').trim()) { toast('Postcode is required — enter it in the Postcode field', 'error'); patGe('pat-postcode').focus(); return; }
+  if (patApps.some(function(a){ return !a.result; })) {
+    if (!await confirm2('Some items have no test result selected. Continue issuing the certificate?')) return;
+  }
   if (patGe('pat-ref').dataset.manual !== 'true') {
     const { ref: r, baseRef: b } = await buildCertRefSeq(d.property_address, (patGv('pat-postcode') || '').trim(), 'pat');
     patGe('pat-ref').value = r; patCurrentBaseRef = b;
@@ -433,6 +438,8 @@ export async function completePAT() {
   doPatPreview();
   toast(`Certificate issued: ${refNum}`, 'success', 5000);
   if (typeof window._autoSaveDirAfterCert === 'function') window._autoSaveDirAfterCert('pat', d).catch(() => {});
+  const _patRecip = getSetting('pat_client_email', '') || getSetting('email_default_recipient', '');
+  if (_patRecip) toast('Auto-email being sent to ' + _patRecip, 'info', 4000);
   import('./email.js').then(m => m.emailPAT(true));
 }
 

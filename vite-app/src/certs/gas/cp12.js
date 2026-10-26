@@ -4,7 +4,7 @@
 // ============================================================
 import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
-import { toast, showOverlay, hideOverlay, esc } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, esc, confirm2 } from '../../lib/utils.js';
 import { state, isAdmin } from '../../lib/state.js';
 import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 import { buildCertRefSeq, _refSettings, _pcScore, _refAddrPart, _extractPC } from '../_core/refgen.js';
@@ -562,7 +562,7 @@ export async function saveGas(_fromMgw) {
   let err;
   const _gasIntNotes = (document.getElementById('gas-internal-notes')?.value || '').trim();
   if (state.editingGasId) {
-    ({ error: err } = await sb.from('gas_certs').update({ ...d, internal_notes: _gasIntNotes, updated_at: new Date().toISOString() }).eq('id', state.editingGasId));
+    ({ error: err } = await sb.from('gas_certs').update({ ...d, internal_notes: _gasIntNotes, updated_at: new Date().toISOString(), updated_by: (state.currentUser && state.currentUser.id) ? state.currentUser.id : null }).eq('id', state.editingGasId));
   } else {
     const { data: c, error: e } = await sb.from('gas_certs').insert({ ...d, internal_notes: _gasIntNotes, status: 'draft', created_by: state.currentUser.id }).select().single();
     err = e; if (c) state.editingGasId = c.id;
@@ -587,6 +587,13 @@ export async function completeGas() {
   if (!cp12RequireAppliance()) return;
   const d = getGasFormData();
   if (!d.install_address || !d.cert_date) { toast('Address and date required', 'error'); return; }
+  const _gasEng = (d.engineer || '').trim();
+  if (!_gasEng) {
+    toast('Engineer name is required — please fill in the engineer field before issuing', 'error');
+    const _engEl = document.querySelector('[data-field="issuer_name"]');
+    if (_engEl) _engEl.focus();
+    return;
+  }
   const saved = await saveGas();
   if (!saved) return;
   showOverlay('Issuing certificate…');
@@ -605,6 +612,9 @@ export async function completeGas() {
   _setGasViewMode(true);
   if (typeof _dirCerts !== 'undefined') _dirCerts = null; // still global
   if (typeof _autoSaveDirAfterCert === 'function') _autoSaveDirAfterCert('gas', getGasFormData()).catch(() => {}); // still global
+  const _gasRecipEl = document.querySelector('[data-field="recipient_email"]');
+  const _gasRecip = (_gasRecipEl ? _gasRecipEl.value : '').trim() || d.recipient_email || '';
+  if (_gasRecip) toast('Auto-email being sent to ' + _gasRecip, 'info', 4000);
   emailGas(true);
 }
 

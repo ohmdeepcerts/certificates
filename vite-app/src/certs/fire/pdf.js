@@ -26,6 +26,8 @@ export function fireBuildCertHTML(r) {
   var company      = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
   var _coAddrRaw   = getSetting('fire_co_address') || getSetting('company_address') || '';
   var _coPostcode  = getSetting('fire_co_postcode') || '';
+  var companyRegNo = getSetting('fire_co_reg') || getSetting('company_reg_no') || '';
+  var companyPiNo  = getSetting('fire_co_pi') || getSetting('company_pi_no') || '';
   var companyAddr  = (_coAddrRaw && _coPostcode && !_coAddrRaw.includes(_coPostcode))
     ? _coAddrRaw + '\n' + _coPostcode : _coAddrRaw;
   var companyTel   = getSetting('fire_co_phone') || getSetting('company_tel') || '';
@@ -50,21 +52,23 @@ export function fireBuildCertHTML(r) {
     : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}<th>Result</th><th>Battery replaced</th>${hasBatExpiry?'<th>Battery expiry</th>':''}`;
   var detRows = (r.detectors||[]).map(function(d,i) {
     var rCls = d.result==='PASS' ? 'pass' : d.result==='FAIL' ? 'fail' : '';
+    var rIcon = d.result==='PASS' ? '&#10003; ' : d.result==='FAIL' ? '&#10007; ' : '';
     return isComm
-      ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}${hasZone?`<td>${_esc(d.zone||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td></tr>`
-      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}<td class="${rCls}">${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td>${hasBatExpiry?`<td>${_esc(d.batExpiry||'—')}</td>`:''}</tr>`;
+      ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}${hasZone?`<td>${_esc(d.zone||'—')}</td>`:''}<td class="${rCls}">${rIcon}${_esc(d.result)}</td></tr>`
+      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model)}</td>`:''}${hasSerialNo?`<td>${_esc(d.serialNo||'—')}</td>`:''}<td class="${rCls}">${rIcon}${_esc(d.result)}</td><td>${_esc(d.batReplaced||'N/A')}</td>${hasBatExpiry?`<td>${_esc(d.batExpiry||'—')}</td>`:''}</tr>`;
   }).join('');
 
   // ── Test results ────────────────────────────────────────────────────────────
   function _tl(label, val) {
     if (!val) return '';
     var cls = val==='PASS' ? 'pass' : val==='FAIL' ? 'fail' : '';
-    return `<tr><td class="lbl">${_esc(label)}</td><td class="val ${cls}">${_esc(val)}</td></tr>`;
+    var icon = val==='PASS' ? '&#10003; ' : val==='FAIL' ? '&#10007; ' : '';
+    return `<tr><td class="lbl">${_esc(label)}</td><td class="val ${cls}">${icon}${_esc(val)}</td></tr>`;
   }
   var testCols = ['',''];
   if (!isComm) {
     testCols[0] = _tl('Functional test', r.tFunctional) + _tl('Interlinked test', r.tInterlinked);
-    testCols[1] = _tl('Battery backup / standby', r.tBattery) + _tl('CO alarms fitted', r.coAlarmsPresent) + _tl('CO alarm test', r.tCO);
+    testCols[1] = _tl('Battery backup / standby', r.tBattery) + _tl('CO alarms fitted', r.coAlarmsPresent) + (r.coAlarmsPresent === 'N/A' && r.coAlarmNaReason ? _tl('CO alarm N/A reason', r.coAlarmNaReason) : '') + _tl('CO alarm test', r.tCO);
   } else {
     testCols[0] = _tl('Mains supply test', r.tMains)
                 + (r.tMainsVolts ? `<tr><td class="lbl">Mains voltage</td><td class="val">${_esc(r.tMainsVolts)} V</td></tr>` : '')
@@ -101,7 +105,7 @@ export function fireBuildCertHTML(r) {
             + (r.installDate ? _cell('Installation date', r.installDate) : '')
             + (r.prevServiceDate ? _cell('Previous service date', r.prevServiceDate) : '');
     var detCount = (r.detectors||[]).length;
-    sysCol3 = _cell('No. of devices', detCount ? String(detCount) : '—');
+    sysCol3 = _cell('No. of devices', detCount ? String(detCount) : '—') + (r.departuresNotes ? _cell('Departures / variations', r.departuresNotes) : '');
   } else {
     sysCol1 = _cell('System category', r.sysCategory) + _cell('System type', r.sysCommType);
     sysCol2 = ((r.sysPanelMake||r.sysPanelModel) ? _cell('Control panel', [r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' ')) : '')
@@ -149,6 +153,8 @@ export function fireBuildCertHTML(r) {
     ${coAddrLines.length ? `<div style="font-size:9.5px;color:#5a5a5a;line-height:1.7;margin-bottom:4px">${coAddrLines.map(_esc).join('<br>')}</div>` : ''}
     ${companyTel   ? `<div style="font-size:9.5px;color:#5a5a5a;margin-bottom:2px"><strong style="color:#333">Tel:</strong> ${_esc(companyTel)}</div>` : ''}
     ${companyEmail ? `<div style="font-size:9.5px;color:#5a5a5a"><strong style="color:#333">Email:</strong> ${_esc(companyEmail)}</div>` : ''}
+    ${companyRegNo ? `<div style="font-size:9.5px;color:#5a5a5a"><strong style="color:#333">Co. Reg:</strong> ${_esc(companyRegNo)}</div>` : ''}
+    ${companyPiNo  ? `<div style="font-size:9.5px;color:#5a5a5a"><strong style="color:#333">PI Insurance:</strong> ${_esc(companyPiNo)}</div>` : ''}
   `;
 
   // ── CSS ─────────────────────────────────────────────────────────────────────
@@ -373,6 +379,7 @@ export function fireBuildCertHTML(r) {
       <span><strong>${_esc(company)}</strong> — Fire Alarm Certificate</span>
       <span>Ref: <strong>${_esc(r.ref||'—')}</strong> · Issued ${issued}</span>
       <span>Keep in a safe place. Present on request.</span>
+      <span style="width:100%;text-align:center;font-size:8px;color:#aaa;margin-top:2px">Electronically issued via OHM Certificates Platform &middot; Issued by: ${_esc(r.engineerName||'—')} &middot; ${_esc(r.companyName||company)} &middot; ${_esc(r.testDate||issued)}</span>
     </div>
   </div>`;
 

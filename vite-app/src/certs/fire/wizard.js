@@ -97,7 +97,8 @@ export function startNewFire() {
     // tenant acknowledgment
     tenantName: '', tenantAckDate: '',
     // testing extras
-    coAlarmsPresent: '',
+    coAlarmsPresent: '', coAlarmNaReason: '',
+    departuresNotes: '',
     testDate: todayStr(),
     ref: '', baseRef: ''
   };
@@ -169,8 +170,8 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Postcode *</label><input value="${esc(_w.premPostcode)}" oninput="fireSet('premPostcode',this.value);fireUpdateSubtitle()" placeholder="e.g. SW1A 1AA" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Property Type</label><div class="chip-row">`;
     var showTypes = _w._ptShowMore ? PREMISES_TYPES : PREMISES_TYPES.slice(0,6);
-    showTypes.forEach(pt => { html += `<button class="chip${_w.premisesType===pt?' on':''}" onclick="fireSet('premisesType','${esc(pt)}')">${esc(pt)}</button>`; });
-    if (!_w._ptShowMore) html += `<button class="chip" onclick="fireSet('_ptShowMore',true);fireRenderStep()">More…</button>`;
+    showTypes.forEach(pt => { html += `<button class="chip${_w.premisesType===pt?' on':''}" onclick="firePick('premisesType','${esc(pt)}')">${esc(pt)}</button>`; });
+    if (!_w._ptShowMore) html += `<button class="chip" onclick="firePick('_ptShowMore',true);fireRenderStep()">More…</button>`;
     html += `</div></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -187,7 +188,7 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Client Name <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.clientName)}" oninput="fireSet('clientName',this.value)" placeholder="Full name or company"></div>`;
     html += `<div class="wiz-field"><label>Responsible Person <span class="lbl-opt">(on-site contact)</span></label><input value="${esc(_w.responsiblePerson)}" oninput="fireSet('responsiblePerson',this.value)" placeholder="Name of person responsible for premises"></div>`;
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
-    cTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="fireSet('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
+    cTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="firePick('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `</div></div>`;
     var addrNote = _w._clientAddrPrefilled ? `<span style="font-size:11px;color:#15803d;font-weight:400;margin-left:6px"><i class="fa-solid fa-clone"></i> Copied from premises — click to change</span>` : '';
     html += `<div class="wiz-field"><label>Client Address Line 1 *${addrNote}</label><div class="aac-wrap"><input id="fa-caddr1" value="${esc(_w.clientAddr1)}" oninput="fireSet('clientAddr1',this.value)" onfocus="fireClientAddrFocus()" placeholder="House no. &amp; street"><div class="aac-drop" style="display:none"></div></div></div>`;
@@ -203,18 +204,23 @@ export function fireRenderStep() {
     if (!_isComm()) {
       // Domestic Grade D
       html += `<div class="wiz-field"><label>System Grade</label><div class="chip-row">`;
-      DOM_GRADES.forEach(g => { html += `<button class="chip${_w.sysGrade===g?' on':''}" onclick="fireSet('sysGrade','${esc(g)}')">${esc(g)}</button>`; });
+      DOM_GRADES.forEach(g => { html += `<button class="chip${_w.sysGrade===g?' on':''}" onclick="firePick('sysGrade','${esc(g)}');fireRenderStep()">${esc(g)}</button>`; });
       html += `</div></div>`;
+      if (_w.sysGrade && _w.sysGrade.startsWith('D1')) {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade D1</strong> — mains-powered with a sealed, tamper-proof lithium battery. Battery replacement records as <em>N/A</em> on all devices.</span></div>`;
+      } else if (_w.sysGrade && _w.sysGrade.startsWith('D2')) {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade D2</strong> — mains-powered with a user-replaceable standby battery (typically 9V PP3). Record whether battery was replaced during this visit.</span></div>`;
+      }
       html += `<div class="wiz-field"><label>System Category</label><div class="chip-row">`;
-      DOM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="fireSet('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
+      DOM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="firePick('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Power Supply</label><div class="chip-row">`;
       ['230V AC mains only','230V AC mains + battery backup','Battery only'].forEach(p => {
-        html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="fireSet('sysPowerSupply','${esc(p)}')">${esc(p)}</button>`;
+        html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="firePick('sysPowerSupply','${esc(p)}')">${esc(p)}</button>`;
       });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Interlinked</label><div class="chip-row">`;
-      ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysInterlinked===v?' on':''}" onclick="fireSet('sysInterlinked','${esc(v)}')">${esc(v)}</button>`; });
+      ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysInterlinked===v?' on':''}" onclick="firePick('sysInterlinked','${esc(v)}')">${esc(v)}</button>`; });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
       html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
@@ -226,10 +232,10 @@ export function fireRenderStep() {
     } else {
       // Commercial Grade A
       html += `<div class="wiz-field"><label>System Category</label><div class="chip-row">`;
-      COM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="fireSet('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
+      COM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="firePick('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>System Type</label><div class="chip-row">`;
-      COM_TYPES.forEach(t => { html += `<button class="chip${_w.sysCommType===t?' on':''}" onclick="fireSet('sysCommType','${esc(t)}')">${esc(t)}</button>`; });
+      COM_TYPES.forEach(t => { html += `<button class="chip${_w.sysCommType===t?' on':''}" onclick="firePick('sysCommType','${esc(t)}')">${esc(t)}</button>`; });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysPanelMake)}" oninput="fireSet('sysPanelMake',this.value)" placeholder="e.g. Advanced, Notifier, Gent"></div>`;
       html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysPanelModel)}" oninput="fireSet('sysPanelModel',this.value)" placeholder="e.g. MX-4200"></div>`;
@@ -238,6 +244,7 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>BAFE Scheme No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysBafe)}" oninput="fireSet('sysBafe',this.value)" placeholder="e.g. SP203"></div>`;
       html += `<div class="wiz-field"><label>FIA Member No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysFia)}" oninput="fireSet('sysFia',this.value)" placeholder="e.g. 12345"></div>`;
     }
+    html += `<div class="wiz-field" style="margin-top:8px"><label>Departures / variations <span class="lbl-opt">(Annex G — optional)</span></label><textarea rows="2" oninput="fireSet('departuresNotes',this.value)" placeholder="Any agreed departures from BS 5839-6 standard requirements, with justification…" style="width:100%;font-size:13px;resize:vertical">${esc(_w.departuresNotes||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 4: Detectors ─────────────────────────────────────────────────────
@@ -274,7 +281,14 @@ export function fireRenderStep() {
       html += _testRow('Functional test (each device activates alarm)', 'tFunctional', ['PASS','FAIL','N/A']);
       html += _testRow('Interlinked test (all sound when one activates)', 'tInterlinked', ['PASS','FAIL','N/A']);
       html += _testRow('Battery backup / standby test', 'tBattery', ['PASS','FAIL','N/A']);
-      html += _testRow('CO alarms fitted?', 'coAlarmsPresent', ['Yes','No','N/A']);
+      html += `<div class="wiz-field"><label>CO alarms fitted?</label><div class="chip-row">`;
+      ['Yes','No','N/A'].forEach(function(v) { html += `<button class="chip${_w.coAlarmsPresent===v?' on':''}" onclick="firePick('coAlarmsPresent','${v}');fireRenderStep()">${v}</button>`; });
+      html += `</div></div>`;
+      if (_w.coAlarmsPresent === 'N/A') {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;margin:-4px 0 8px 0"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:3px;flex-shrink:0"></i><div style="flex:1"><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Why N/A? <span style="font-size:11px">(optional)</span></div><div class="chip-row">`;
+        ['No gas appliance present','CO alarm not fitted'].forEach(function(v) { html += `<button class="chip${_w.coAlarmNaReason===v?' on':''}" onclick="firePick('coAlarmNaReason','${esc(v)}')">${esc(v)}</button>`; });
+        html += `</div></div></div>`;
+      } else if (_w.coAlarmsPresent) { _w.coAlarmNaReason = ''; }
       html += _testRow('CO alarm test (if applicable)', 'tCO', ['PASS','FAIL','N/A']);
     } else {
       // Commercial tests
@@ -331,13 +345,21 @@ export function fireRenderStep() {
   // ── Step 7: Outcome ───────────────────────────────────────────────────────
   } else if (s === 7) {
     html += `<h2 class="wiz-title">Outcome</h2>`;
+    var _hasFailDev = (_w.detectors||[]).some(function(d){ return d.result === 'FAIL'; });
+    var _hasFailTest = ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k] === 'FAIL'; });
+    var _hasFail = _hasFailDev || _hasFailTest;
+    if (_hasFail && !_w.outcome) { _w.outcome = 'UNSATISFACTORY'; }
+    if (_hasFail) {
+      html += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;gap:9px;align-items:flex-start"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;font-size:14px;margin-top:1px;flex-shrink:0"></i><div><div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:2px">Failure detected</div><div style="color:#7f1d1d;font-size:12px;line-height:1.5">A device or test has a FAIL result — outcome auto-set to <strong>UNSATISFACTORY</strong>. You can override if needed.</div></div></div>`;
+    }
     html += `<div class="wiz-field"><label>Overall outcome *</label><div class="chip-row">`;
     ['SATISFACTORY','UNSATISFACTORY','REQUIRES ATTENTION'].forEach(v => {
-      html += `<button class="chip${_w.outcome===v?' on':''}" onclick="fireSet('outcome','${v}')">${v}</button>`;
+      var warn = (_hasFail && v === 'SATISFACTORY') ? `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;margin-left:3px;opacity:.7"></i>` : '';
+      html += `<button class="chip${_w.outcome===v?' on':''}" onclick="firePick('outcome','${v}')">${v}${warn}</button>`;
     });
     html += `</div></div>`;
     html += `<div class="wiz-field"><label>System operational at time of leaving</label><div class="chip-row">`;
-    ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="fireSet('sysOperational','${v}')">${v}</button>`; });
+    ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="firePick('sysOperational','${v}')">${v}</button>`; });
     html += `</div></div>`;
     html += `<div class="wiz-field"><label>Works carried out <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('worksCarried',this.value)" placeholder="Brief description of work carried out during this visit…" style="width:100%">${esc(_w.worksCarried)}</textarea></div>`;
     var nextMonths = _isComm() ? 6 : 12;
@@ -354,7 +376,7 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Qualification / ID No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.engineerQual)}" oninput="fireSet('engineerQual',this.value)" placeholder="e.g. BAFE SP203 / FIA member no."></div>`;
     html += `<div class="wiz-field"><label>Company Name</label><input value="${esc(_w.companyName)}" oninput="fireSet('companyName',this.value)" placeholder="OHM Electrical Engineering Ltd"></div>`;
     var _sigPrev = _w.enggSigData ? `<img src="${esc(_w.enggSigData)}" style="max-height:50px;max-width:180px;border:1px solid var(--border);border-radius:4px;padding:4px;background:#fff;display:block">` : `<span style="color:var(--muted);font-size:13px">No signature uploaded</span>`;
-    html += `<div class="wiz-field"><label>Engineer Signature</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">${_sigPrev}<label class="btn-sm" style="cursor:pointer"><i class="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="fireLoadSig(event)"></label>${_w.enggSigData?`<button class="btn-sm" onclick="fireSet('enggSigData','');fireRenderStep()"><i class="fa-solid fa-xmark"></i> Clear</button>`:''}</div></div>`;
+    html += `<div class="wiz-field"><label>Engineer Signature</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">${_sigPrev}<label class="btn-sm" style="cursor:pointer"><i class="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="fireLoadSig(event)"></label>${_w.enggSigData?`<button class="btn-sm" onclick="firePick('enggSigData','');fireRenderStep()"><i class="fa-solid fa-xmark"></i> Clear</button>`:''}</div></div>`;
     html += `<h3 style="font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--fg)">Tenant / Occupier Acknowledgment <span style="color:var(--muted);font-size:12px;font-weight:400">(optional)</span></h3>`;
     html += `<div class="wiz-field"><label>Tenant / Occupier Name</label><input value="${esc(_w.tenantName)}" oninput="fireSet('tenantName',this.value)" placeholder="Full name"></div>`;
     html += `<div class="wiz-field"><label>Acknowledgment Date</label><input value="${esc(_w.tenantAckDate)}" oninput="fireSet('tenantAckDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
@@ -376,6 +398,12 @@ export function fireRenderStep() {
     html += `<div><span style="color:var(--muted);font-size:12px">Engineer</span><br>${esc(_w.engineerName||'—')}</div>`;
     html += `<div><span style="color:var(--muted);font-size:12px">Next inspection</span><br>${esc(_w.nextInspDate||'—')}</div>`;
     html += `</div></div>`;
+    if (_w._editId) {
+      html += `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 11px;margin-bottom:12px;display:flex;gap:7px;align-items:flex-start"><i class="fa-solid fa-pen-to-square" style="color:#ea580c;font-size:13px;margin-top:1px;flex-shrink:0"></i><span style="font-size:12px;color:#9a3412;line-height:1.5"><strong>You are editing an existing certificate.</strong> All details above will replace the original. Use Back to check each step before re-issuing.</span></div>`;
+    }
+    if ((_w.clientEmail||'').trim()) {
+      html += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-bottom:12px;display:flex;gap:7px;align-items:center;flex-wrap:wrap"><i class="fa-solid fa-envelope" style="color:#2563eb;font-size:13px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;flex:1;min-width:0">Auto-email will be sent to <strong>${esc(_w.clientEmail)}</strong> on issue — verify this is correct</span><button onclick="fireJumpStep(2)" style="font-size:11px;color:#1d4ed8;background:none;border:none;cursor:pointer;text-decoration:underline;white-space:nowrap;padding:0">Change</button></div>`;
+    }
     html += `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">`;
     html += `<button onclick="firePreviewCurrent()" class="btn-sm"><i class="fa-solid fa-eye"></i> Preview certificate</button>`;
     html += `</div>`;
@@ -448,13 +476,17 @@ function _detRow(det, i) {
   html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="Make/model" style="width:100%"></td>`;
   html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.serialNo||'')}" oninput="fireDetSet(${i},'serialNo',this.value)" placeholder="Serial no." style="width:100%;min-width:80px"></td>`;
   if (comm) { html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="Zone/circuit" style="width:100%;min-width:70px"></td>`; }
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'result',this.value)">`;
-  ['PASS','FAIL','N/T'].forEach(r => { html += `<option${(det.result||'PASS')===r?' selected':''}>${r}</option>`; });
+  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'result',this.value)" style="${!det.result?'color:#dc2626;font-weight:600':''}">`;
+  html += `<option value=""${!det.result?' selected':''}>— select —</option>`;
+  ['PASS','FAIL','N/T'].forEach(r => { html += `<option value="${r}"${det.result===r?' selected':''}>${r}</option>`; });
   html += `</select></td>`;
   if (!comm) {
+    var _isD1 = _w.sysGrade && _w.sysGrade.startsWith('D1');
     html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'batReplaced',this.value)">`;
     ['N/A','Yes','No'].forEach(v => { html += `<option${(det.batReplaced||'N/A')===v?' selected':''}>${v}</option>`; });
-    html += `</select></td>`;
+    html += `</select>`;
+    if (_isD1) html += `<div style="font-size:10px;color:#2563eb;margin-top:2px;white-space:nowrap"><i class="fa-solid fa-circle-info" style="font-size:9px"></i> D1: sealed battery</div>`;
+    html += `</td>`;
     html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.batExpiry||'')}" oninput="fireDetSet(${i},'batExpiry',this.value)" placeholder="MM/YYYY" style="width:80px"></td>`;
   }
   html += `<td style="padding:4px;border-bottom:1px solid var(--border)"><button onclick="fireRemoveDet(${i})" style="border:none;background:none;color:#dc2626;cursor:pointer;padding:4px"><i class="fa-solid fa-trash-can"></i></button></td>`;
@@ -466,8 +498,9 @@ function _detRow(det, i) {
 function _testRow(label, key, options) {
   var html = `<div class="wiz-field"><label>${esc(label)}</label><div class="chip-row">`;
   options.forEach(v => {
+    var icon = v==='PASS' ? '<i class="fa-solid fa-check" style="font-size:10px;margin-right:2px"></i>' : v==='FAIL' ? '<i class="fa-solid fa-xmark" style="font-size:10px;margin-right:2px"></i>' : '';
     var color = v==='PASS' ? 'color:#15803d' : v==='FAIL' ? 'color:#dc2626' : '';
-    html += `<button class="chip${_w[key]===v?' on':''}" onclick="fireSet('${key}','${v}')" style="${color}">${v}</button>`;
+    html += `<button class="chip${_w[key]===v?' on':''}" onclick="firePick('${key}','${v}')" style="${color}">${icon}${v}</button>`;
   });
   html += `</div></div>`;
   return html;
@@ -492,7 +525,7 @@ export function fireJumpStep(i) {
 
 export function fireAddDetector() {
   if (!_w.detectors) _w.detectors = [];
-  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'PASS', batReplaced:'N/A', batExpiry:'' });
+  _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'', batReplaced:'N/A', batExpiry:'' });
   fireRenderStep();
 }
 export function fireRemoveDet(i) {
@@ -501,6 +534,7 @@ export function fireRemoveDet(i) {
 }
 export function fireDetSet(i, key, val) {
   if (_w.detectors && _w.detectors[i]) _w.detectors[i][key] = val;
+  _schedulePreview();
 }
 
 export function fireAddDefect() {
@@ -514,9 +548,10 @@ export function fireRemoveDefect(i) {
 }
 export function fireDefectSet(i, key, val) {
   if (_w.defects && _w.defects[i]) _w.defects[i][key] = val;
+  _schedulePreview();
 }
 
-export function fireNext() {
+export async function fireNext() {
   var s = _w.step;
   if (s === 0 && !_w.certType) { toast('Please select a certificate type','error'); return; }
   if (s === 1) {
@@ -528,6 +563,34 @@ export function fireNext() {
     if (!(_w.clientPostcode||'').trim()) { toast('Client postcode is required','error'); return; }
   }
   if (s === 4 && !(_w.detectors||[]).length) { toast('Add at least one detector','error'); return; }
+  if (s === 4 && (_w.detectors||[]).some(function(d){ return !(d.location||'').trim(); })) {
+    if (!await confirm2('Some devices have no location recorded — location helps identify where each device is fitted. Continue without locations?')) return;
+  }
+  if (s === 4 && (_w.detectors||[]).some(function(d){ return !d.result; })) {
+    if (!await confirm2('Some devices have no test result selected (showing "— select —"). Continue without recording a result for them?')) return;
+  }
+  if (s === 5) {
+    var _tdParts = (_w.testDate||'').trim().split('/');
+    if (_tdParts.length !== 3 || isNaN(new Date(+_tdParts[2], +_tdParts[1]-1, +_tdParts[0]).getTime())) {
+      toast('Test date is not valid — please enter DD/MM/YYYY', 'error'); return;
+    }
+    var _tdDate = new Date(+_tdParts[2], +_tdParts[1]-1, +_tdParts[0]); _tdDate.setHours(0,0,0,0);
+    var _tdNow = new Date(); _tdNow.setHours(0,0,0,0);
+    var _tdDiff = Math.round((_tdDate - _tdNow) / 86400000);
+    if (_tdDiff > 0) {
+      if (!await confirm2('Test date ' + (_w.testDate||'') + ' is in the future — is that correct?')) return;
+    } else if (_tdDiff < -7) {
+      if (!await confirm2('Test date ' + (_w.testDate||'') + ' is more than 7 days ago — is that correct?')) return;
+    }
+    var _isCommNow = _w.certType === 'FA.3' || _w.certType === 'FA.4';
+    var _tkeys = _isCommNow ? ['tMains','tBatResult','tSounder','tVisual'] : ['tFunctional','tInterlinked','tBattery'];
+    if (_tkeys.every(function(k){ return !_w[k]; })) {
+      if (!await confirm2('No test results have been recorded. Continue without any test results?')) return;
+    }
+  }
+  if (s === 6 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {
+    toast('Some defect rows have no description — please fill them in or remove the blank rows', 'error'); return;
+  }
   if (s === 7 && !_w.outcome) { toast('Please select an outcome','error'); return; }
   _w.step = s + 1;
   if (_w.step >= STEPS.length) { fireSave(); return; }
@@ -552,6 +615,15 @@ export function fireDiscardAutosave() {
 
 export async function fireSave() {
   var isEdit = !!_w._editId; var editId = _w._editId || null;
+  if (!(_w.engineerName||'').trim()) {
+    toast('Engineer name is required — go back to the Engineer step', 'error');
+    _w.step = 8; fireRenderStep(); return;
+  }
+  var _hasFails = (_w.detectors||[]).some(function(d){ return d.result==='FAIL'; }) ||
+    ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k]==='FAIL'; });
+  if (_hasFails && (_w.outcome||'').toUpperCase() === 'SATISFACTORY') {
+    if (!await confirm2('This certificate has FAIL results but the outcome is SATISFACTORY — this may be incorrect. Issue anyway?')) return;
+  }
   if (!navigator.onLine) {
     var _ofRec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
     delete _ofRec._editId; delete _ofRec.step;
@@ -565,6 +637,21 @@ export async function fireSave() {
     navigate('fire-history');
     return;
   }
+  if (!isEdit && (_w.premAddr1||'').trim()) {
+    try {
+      var _dupCutoff = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+      var _dupQ = await sb.from('fire_certs')
+        .select('ref_number,test_date,outcome')
+        .ilike('premises_address', '%' + (_w.premAddr1||'').trim() + '%')
+        .is('deleted_at', null)
+        .gte('created_at', _dupCutoff)
+        .limit(1);
+      if (_dupQ.data && _dupQ.data.length) {
+        var _dr = _dupQ.data[0];
+        if (!await confirm2('A fire certificate for this address was already issued in the last 30 days (' + esc(_dr.ref_number||'unknown') + ', ' + esc(_dr.test_date||'') + ', ' + esc(_dr.outcome||'') + '). Issue another certificate anyway?')) return;
+      }
+    } catch(e) {}
+  }
   if (!isEdit && (!_w.ref || _w.ref === 'Generating…' || !_w.baseRef)) {
     showOverlay('Generating reference…');
     try {
@@ -576,6 +663,10 @@ export async function fireSave() {
   }
   var rec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
   delete rec._editId; delete rec.step;
+  if (isEdit) {
+    rec.updatedBy = (state.currentUser && state.currentUser.id) ? state.currentUser.id : null;
+    rec.updatedAt = new Date().toISOString();
+  }
   var fullAddr = [_w.premAddr1, _w.premAddr2, _w.premAddr3, _w.premPostcode].filter(Boolean).join(', ');
   var row = {
     ref_number:       rec.ref || null,
@@ -840,7 +931,10 @@ export function fireEditCert(recStr) {
 
 export async function fireDeleteCert(id) {
   if (!await confirm2('Delete this fire alarm certificate? This cannot be undone.')) return;
-  var { error } = await sb.from('fire_certs').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  var { error } = await sb.from('fire_certs').update({
+    deleted_at: new Date().toISOString(),
+    deleted_by: (state.currentUser && state.currentUser.id) ? state.currentUser.id : null
+  }).eq('id', id);
   if (error) { toast('Delete failed: ' + error.message, 'error'); return; }
   toast('Certificate deleted','success');
   loadFireHistory();
