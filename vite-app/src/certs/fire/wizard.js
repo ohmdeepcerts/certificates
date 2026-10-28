@@ -250,26 +250,13 @@ export function fireRenderStep() {
   // ── Step 4: Detectors ─────────────────────────────────────────────────────
   } else if (s === 4) {
     html += `<h2 class="wiz-title">Detectors & Devices</h2>`;
-    html += `<div style="overflow-x:auto">`;
-    html += `<table style="width:100%;border-collapse:collapse;font-size:13px">`;
-    html += `<thead><tr style="background:var(--surface2,#f9fafb)">`;
-    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Location</th>`;
-    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Type</th>`;
-    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Make / Model</th>`;
-    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Serial No.</th>`;
-    if (_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Zone / Circuit</th>`;
-    html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Result</th>`;
-    if (!_isComm()) html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. replaced</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Batt. expiry</th>`;
-    html += `<th style="padding:6px 4px;border-bottom:1px solid var(--border)"></th>`;
-    html += `</tr></thead><tbody id="fire-det-tbody">`;
-    (_w.detectors||[]).forEach((det, i) => {
-      html += _detRow(det, i);
-    });
-    html += `</tbody></table></div>`;
-    html += `<button onclick="fireAddDetector()" class="btn-sm" style="margin-top:10px"><i class="fa-solid fa-plus"></i> Add device</button>`;
     if (!(_w.detectors||[]).length) {
-      html += `<p style="color:var(--muted);font-size:13px;margin-top:8px">Add at least one detector or device to continue.</p>`;
+      html += `<p style="color:var(--muted);font-size:13px;margin-bottom:12px">Add at least one detector or device to continue.</p>`;
     }
+    html += `<div id="fire-det-cards">`;
+    (_w.detectors||[]).forEach((det, i) => { html += _detCard(det, i); });
+    html += `</div>`;
+    html += `<button onclick="fireAddDetector()" class="fire-det-add-btn"><i class="fa-solid fa-plus"></i> Add device</button>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 5: Testing results ───────────────────────────────────────────────
@@ -465,32 +452,33 @@ function _updateLivePreview() {
   } catch(e) {}
 }
 
-// ── Helper: single detector row HTML ─────────────────────────────────────────
-function _detRow(det, i) {
+// ── Helper: single detector card HTML ────────────────────────────────────────
+function _detCard(det, i) {
   var comm = _isComm();
-  var html = `<tr>`;
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.location||'')}" oninput="fireDetSet(${i},'location',this.value)" placeholder="e.g. Hallway" style="width:100%"></td>`;
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'type',this.value)" style="width:100%">`;
+  var isD1 = !comm && _w.sysGrade && _w.sysGrade.startsWith('D1');
+  var html = `<div class="fire-det-card" id="fire-det-${i}">`;
+  html += `<div class="fire-det-header"><div class="fire-det-num">Device ${i+1}</div><button onclick="fireRemoveDet(${i})" class="fire-det-remove"><i class="fa-solid fa-trash-can"></i> Remove</button></div>`;
+  html += `<div class="wiz-field"><label>Location</label><input value="${esc(det.location||'')}" oninput="fireDetSet(${i},'location',this.value)" placeholder="e.g. Hallway, Landing, Kitchen"></div>`;
+  html += `<div class="wiz-field"><label>Type</label><select onchange="fireDetSet(${i},'type',this.value)" style="max-width:260px">`;
   DETECTOR_TYPES.forEach(t => { html += `<option${(det.type||'Smoke (optical)')===t?' selected':''}>${esc(t)}</option>`; });
-  html += `</select></td>`;
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="Make/model" style="width:100%"></td>`;
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.serialNo||'')}" oninput="fireDetSet(${i},'serialNo',this.value)" placeholder="Serial no." style="width:100%;min-width:80px"></td>`;
-  if (comm) { html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="Zone/circuit" style="width:100%;min-width:70px"></td>`; }
-  html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'result',this.value)" style="${!det.result?'color:#dc2626;font-weight:600':''}">`;
-  html += `<option value=""${!det.result?' selected':''}>— select —</option>`;
-  ['PASS','FAIL','N/T'].forEach(r => { html += `<option value="${r}"${det.result===r?' selected':''}>${r}</option>`; });
-  html += `</select></td>`;
+  html += `</select></div>`;
+  html += `<div class="wiz-field"><label>Make / Model <span class="lbl-opt">(optional)</span></label><input value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="e.g. Aico 3000 series"></div>`;
+  html += `<div class="wiz-field"><label>Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(det.serialNo||'')}" oninput="fireDetSet(${i},'serialNo',this.value)" placeholder="e.g. 123456789"></div>`;
+  if (comm) { html += `<div class="wiz-field"><label>Zone / Circuit</label><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="e.g. Zone 1"></div>`; }
+  html += `<div class="wiz-field"><label>Test result</label><div class="chip-row">`;
+  ['PASS','FAIL','N/T'].forEach(v => {
+    var col = v==='PASS'?'color:#15803d':v==='FAIL'?'color:#dc2626':'';
+    var ico = v==='PASS'?'<i class="fa-solid fa-check" style="font-size:10px;margin-right:2px"></i>':v==='FAIL'?'<i class="fa-solid fa-xmark" style="font-size:10px;margin-right:2px"></i>':'';
+    html += `<button class="chip${det.result===v?' on':''}" onclick="fireDetPick(${i},'result','${v}')" style="${col}">${ico}${v}</button>`;
+  });
+  html += `</div></div>`;
   if (!comm) {
-    var _isD1 = _w.sysGrade && _w.sysGrade.startsWith('D1');
-    html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDetSet(${i},'batReplaced',this.value)">`;
-    ['N/A','Yes','No'].forEach(v => { html += `<option${(det.batReplaced||'N/A')===v?' selected':''}>${v}</option>`; });
-    html += `</select>`;
-    if (_isD1) html += `<div style="font-size:10px;color:#2563eb;margin-top:2px;white-space:nowrap"><i class="fa-solid fa-circle-info" style="font-size:9px"></i> D1: sealed battery</div>`;
-    html += `</td>`;
-    html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(det.batExpiry||'')}" oninput="fireDetSet(${i},'batExpiry',this.value)" placeholder="MM/YYYY" style="width:80px"></td>`;
+    html += `<div class="wiz-field"><label>Battery replaced?${isD1?' <span style="color:#2563eb;font-size:11px"><i class="fa-solid fa-circle-info" style="font-size:10px"></i> D1: sealed battery</span>':''}</label><div class="chip-row">`;
+    ['N/A','Yes','No'].forEach(v => { html += `<button class="chip${(det.batReplaced||'N/A')===v?' on':''}" onclick="fireDetPick(${i},'batReplaced','${v}')">${v}</button>`; });
+    html += `</div></div>`;
+    html += `<div class="wiz-field"><label>Battery expiry <span class="lbl-opt">(optional)</span></label><input value="${esc(det.batExpiry||'')}" oninput="fireDetSet(${i},'batExpiry',this.value)" placeholder="MM/YYYY" style="max-width:120px"></div>`;
   }
-  html += `<td style="padding:4px;border-bottom:1px solid var(--border)"><button onclick="fireRemoveDet(${i})" style="border:none;background:none;color:#dc2626;cursor:pointer;padding:4px"><i class="fa-solid fa-trash-can"></i></button></td>`;
-  html += `</tr>`;
+  html += `</div>`;
   return html;
 }
 
@@ -535,6 +523,10 @@ export function fireRemoveDet(i) {
 export function fireDetSet(i, key, val) {
   if (_w.detectors && _w.detectors[i]) _w.detectors[i][key] = val;
   _schedulePreview();
+}
+export function fireDetPick(i, key, val) {
+  if (_w.detectors && _w.detectors[i]) _w.detectors[i][key] = val;
+  fireRenderStep();
 }
 
 export function fireAddDefect() {

@@ -1,9 +1,7 @@
 {
-  "v": "1.9.8",
-  "build": 74,
+  "v": "1.9.9",
+  "build": 75,
   "changes": [
-    "New: Fire alarm certificates now use a premium Heritage design — navy and gold double-border layout across 3 pages, with a formal title page, full detector schedule, test results, and a signed declaration page.",
-    "Improved: Tenant acknowledgment section on fire certs is now optional — only appears on the certificate if a tenant name has been filled in.",
-    "Added: Fire alarm certificate settings now show a description of the upcoming Service History feature, explaining how it will work when it is released."
+    "Improved: Fire alarm detector and device entry is now card by card — each device gets its own form card with clearly labelled fields, toggle buttons for test results and battery, making it much easier to fill in details."
   ]
 }
