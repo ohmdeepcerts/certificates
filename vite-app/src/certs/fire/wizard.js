@@ -297,8 +297,9 @@ export function fireRenderStep() {
   } else if (s === 6) {
     html += `<h2 class="wiz-title">Defects & Recommendations</h2>`;
     html += `<div class="wiz-field"><label>Overall system condition</label><div class="chip-row">`;
+    var _defCls = {'No defects found':'chip-sat','Minor defects (no immediate action)':'chip-attn','Defects requiring attention':'chip-unsat'};
     ['No defects found','Minor defects (no immediate action)','Defects requiring attention'].forEach(v => {
-      html += `<button class="chip${_w.defectsOverall===v?' on':''}" onclick="firePick('defectsOverall','${esc(v)}')">${esc(v)}</button>`;
+      html += `<button class="chip ${_defCls[v]||''}${_w.defectsOverall===v?' on':''}" onclick="firePick('defectsOverall','${esc(v)}')">${esc(v)}</button>`;
     });
     html += `</div></div>`;
     if ((_w.defects||[]).length) {
@@ -325,7 +326,7 @@ export function fireRenderStep() {
       });
       html += `</tbody></table></div>`;
     }
-    html += `<button onclick="fireAddDefect()" class="btn-sm" style="margin-top:10px"><i class="fa-solid fa-plus"></i> Add defect</button>`;
+    html += `<button onclick="fireAddDefect()" class="fire-defect-add-btn"><i class="fa-solid fa-plus"></i> Add defect</button>`;
     html += `<div class="wiz-field" style="margin-top:12px"><label>Additional notes <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('defectsNotes',this.value)" placeholder="Any further observations or notes…" style="width:100%">${esc(_w.defectsNotes)}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -340,9 +341,11 @@ export function fireRenderStep() {
       html += `<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;gap:9px;align-items:flex-start"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;font-size:14px;margin-top:1px;flex-shrink:0"></i><div><div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:2px">Failure detected</div><div style="color:#7f1d1d;font-size:12px;line-height:1.5">A device or test has a FAIL result — outcome auto-set to <strong>UNSATISFACTORY</strong>. You can override if needed.</div></div></div>`;
     }
     html += `<div class="wiz-field"><label>Overall outcome *</label><div class="chip-row">`;
+    var _outCls = {'SATISFACTORY':'chip-sat','UNSATISFACTORY':'chip-unsat','REQUIRES ATTENTION':'chip-attn'};
     ['SATISFACTORY','UNSATISFACTORY','REQUIRES ATTENTION'].forEach(v => {
       var warn = (_hasFail && v === 'SATISFACTORY') ? `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;margin-left:3px;opacity:.7"></i>` : '';
-      html += `<button class="chip${_w.outcome===v?' on':''}" onclick="firePick('outcome','${v}')">${v}${warn}</button>`;
+      var attnIco = v==='REQUIRES ATTENTION' ? `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;margin-left:3px"></i>` : '';
+      html += `<button class="chip ${_outCls[v]}${_w.outcome===v?' on':''}" onclick="firePick('outcome','${v}')">${v}${warn}${attnIco}</button>`;
     });
     html += `</div></div>`;
     html += `<div class="wiz-field"><label>System operational at time of leaving</label><div class="chip-row">`;
@@ -467,9 +470,9 @@ function _detCard(det, i) {
   if (comm) { html += `<div class="wiz-field"><label>Zone / Circuit</label><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="e.g. Zone 1"></div>`; }
   html += `<div class="wiz-field"><label>Test result</label><div class="chip-row">`;
   ['PASS','FAIL','N/T'].forEach(v => {
-    var col = v==='PASS'?'color:#15803d':v==='FAIL'?'color:#dc2626':'';
+    var cls2 = v==='PASS'?'chip-pass':v==='FAIL'?'chip-fail':'chip-na';
     var ico = v==='PASS'?'<i class="fa-solid fa-check" style="font-size:10px;margin-right:2px"></i>':v==='FAIL'?'<i class="fa-solid fa-xmark" style="font-size:10px;margin-right:2px"></i>':'';
-    html += `<button class="chip${det.result===v?' on':''}" onclick="fireDetPick(${i},'result','${v}')" style="${col}">${ico}${v}</button>`;
+    html += `<button class="chip ${cls2}${det.result===v?' on':''}" onclick="fireDetPick(${i},'result','${v}')">${ico}${v}</button>`;
   });
   html += `</div></div>`;
   if (!comm) {
@@ -486,9 +489,9 @@ function _detCard(det, i) {
 function _testRow(label, key, options) {
   var html = `<div class="wiz-field"><label>${esc(label)}</label><div class="chip-row">`;
   options.forEach(v => {
+    var cls = v==='PASS'?'chip-pass':v==='FAIL'?'chip-fail':'chip-na';
     var icon = v==='PASS' ? '<i class="fa-solid fa-check" style="font-size:10px;margin-right:2px"></i>' : v==='FAIL' ? '<i class="fa-solid fa-xmark" style="font-size:10px;margin-right:2px"></i>' : '';
-    var color = v==='PASS' ? 'color:#15803d' : v==='FAIL' ? 'color:#dc2626' : '';
-    html += `<button class="chip${_w[key]===v?' on':''}" onclick="firePick('${key}','${v}')" style="${color}">${icon}${v}</button>`;
+    html += `<button class="chip ${cls}${_w[key]===v?' on':''}" onclick="firePick('${key}','${v}')">${icon}${v}</button>`;
   });
   html += `</div></div>`;
   return html;
@@ -578,6 +581,17 @@ export async function fireNext() {
     var _tkeys = _isCommNow ? ['tMains','tBatResult','tSounder','tVisual'] : ['tFunctional','tInterlinked','tBattery'];
     if (_tkeys.every(function(k){ return !_w[k]; })) {
       if (!await confirm2('No test results have been recorded. Continue without any test results?')) return;
+    }
+  }
+  if (s === 5) {
+    // Auto-populate defects from any FAIL results (only if list is currently empty)
+    if (!(_w.defects||[]).length) {
+      var _autoD = [];
+      var _failTestLbls = {tFunctional:'Functional test',tInterlinked:'Interlinked test (alarm interconnection)',tBattery:'Battery backup / standby test',tCO:'CO alarm test',tMains:'Mains supply test',tBatResult:'Battery standby test',tSounder:'Sounder / beacon test',tVisual:'Visual indicators test',tZoneIso:'Zone isolation test',tFaultSim:'Fault simulation test',tKeySwitch:'Engineer key switch test'};
+      var _isCommNow3 = _w.certType==='FA.3'||_w.certType==='FA.4';
+      (_w.detectors||[]).forEach(function(d){ if(d.result==='FAIL'){ _autoD.push({description:(d.type||'Device')+' at '+(d.location||'unknown location')+' — failed test',severity:'MAJOR',recommendation:'Inspect, repair or replace the device and re-test to confirm rectification.',targetDate:''}); } });
+      Object.keys(_failTestLbls).forEach(function(k){ if(_w[k]==='FAIL'){ _autoD.push({description:_failTestLbls[k]+' — failed',severity:'MAJOR',recommendation:'Investigate cause of failure, rectify fault and re-test.',targetDate:''}); } });
+      if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found') _w.defectsOverall='Defects requiring attention'; }
     }
   }
   if (s === 6 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {

@@ -319,6 +319,16 @@ a{color:var(--accent);text-decoration:none}
 .fire-det-num{font-size:13px;font-weight:700;color:var(--accent)}
 .fire-det-remove{background:none;border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1.4}
 .fire-det-add-btn{width:100%;padding:14px;border:2px dashed var(--border);border-radius:12px;background:transparent;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;box-sizing:border-box}
+.fire-defect-add-btn{width:100%;padding:11px;border:2px dashed var(--border);border-radius:10px;background:transparent;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;box-sizing:border-box;transition:border-color .15s,background .15s}
+.fire-defect-add-btn:hover{border-color:var(--accent);background:rgba(37,99,235,.05)}
+.chip.chip-pass:not(.on){color:#15803d}.chip.chip-fail:not(.on){color:#dc2626}.chip.chip-na:not(.on){color:var(--muted)}
+.chip.chip-pass.on{background:#15803d;border-color:#15803d;color:#fff}
+.chip.chip-fail.on{background:#dc2626;border-color:#dc2626;color:#fff}
+.chip.chip-na.on{background:#6b7280;border-color:#6b7280;color:#fff;opacity:.85}
+.chip.chip-sat:not(.on){color:#15803d}.chip.chip-unsat:not(.on){color:#dc2626}.chip.chip-attn:not(.on){color:#d97706}
+.chip.chip-sat.on{background:#15803d;border-color:#15803d;color:#fff}
+.chip.chip-unsat.on{background:#dc2626;border-color:#dc2626;color:#fff}
+.chip.chip-attn.on{background:#d97706;border-color:#d97706;color:#fff}
 .mgw-defect-add-btn{background:none;border:1px dashed var(--border);border-radius:8px;padding:10px 16px;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;width:100%;box-sizing:border-box}
 .mgw-defect-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;margin-bottom:8px}
 .mgw-defect-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:8px;line-height:1;border-radius:6px}

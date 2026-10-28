@@ -1,7 +1,11 @@
 {
-  "v": "1.9.9",
-  "build": 75,
+  "v": "2.0.0",
+  "build": 76,
   "changes": [
-    "Improved: Fire alarm detector and device entry is now card by card — each device gets its own form card with clearly labelled fields, toggle buttons for test results and battery, making it much easier to fill in details."
+    "Improved: PASS, FAIL and N/A result buttons now show as solid coloured pills — green for pass, red for fail, grey for N/A — making it easy to see results at a glance without reading every line.",
+    "Improved: Fire alarm outcome buttons now colour up when selected — green for Satisfactory, red for Unsatisfactory, amber for Requires Attention.",
+    "Improved: Fire alarm defects condition chips now show in colour — green, amber, and red matching the severity.",
+    "New: When you click Continue after entering test results with any failures, the Defects page is automatically pre-filled with a recommended defect entry for each failed device or test — you can edit or remove them.",
+    "Improved: Add Defect button has a cleaner, more polished style."
   ]
 }
