@@ -1,8 +1,9 @@
 {
-  "v": "1.9.7",
-  "build": 73,
+  "v": "1.9.8",
+  "build": 74,
   "changes": [
-    "Fixed: PAT certificate PDF no longer clips rows at the bottom of page 1 — rows that don't fit now correctly move to the next page.",
-    "Fixed: On-screen certificate preview now shows exactly what the PDF will look like, so you can spot any layout issues before downloading."
+    "New: Fire alarm certificates now use a premium Heritage design — navy and gold double-border layout across 3 pages, with a formal title page, full detector schedule, test results, and a signed declaration page.",
+    "Improved: Tenant acknowledgment section on fire certs is now optional — only appears on the certificate if a tenant name has been filled in.",
+    "Added: Fire alarm certificate settings now show a description of the upcoming Service History feature, explaining how it will work when it is released."
   ]
 }
