@@ -1,8 +1,7 @@
 {
-  "v": "2.0.1",
-  "build": 77,
+  "v": "2.0.2",
+  "build": 78,
   "changes": [
-    "Improved: Fire alarm certificate wizard is now 9 steps instead of 10 — the Engineer Details step has been removed as engineer name, company and signature are already set up in Fire Alarm Settings and are applied automatically.",
-    "Improved: Tenant / Occupier Acknowledgment fields now appear at the top of the Review & Issue step, so you can fill them in just before issuing."
+    "Improved: Fire alarm certificate now shows Next Inspection Date clearly on the right side of the Outcome box on page 1, replacing the system operational and works notes which have moved to the System Details section on page 2."
   ]
 }

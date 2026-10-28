@@ -67,15 +67,10 @@ export function fireBuildCertHTML(r) {
   }
   gridCells += `<div class="cell"><div class="ck">Date of inspection</div><div class="cv">${_esc(r.testDate||'—')}</div></div>`;
   gridCells += `<div class="cell"><div class="ck">Certificate issued</div><div class="cv">${issued}</div></div>`;
-  if (r.nextInspDate) gridCells += `<div class="cell"><div class="ck">Next service due</div><div class="cv">${_esc(r.nextInspDate)}</div></div>`;
-
   // ── Outcome ─────────────────────────────────────────────────────────────────
   var outSat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
   var outClass  = outSat ? '' : ' unsat';
-  var outcomeDetail = [];
-  if (r.sysOperational) outcomeDetail.push(_esc(r.sysOperational));
-  if (r.worksCarried)   outcomeDetail.push('Works: ' + _esc(r.worksCarried));
-  var outcomeDetailHtml = outcomeDetail.length ? `<div class="on">${outcomeDetail.join('<br>')}</div>` : '';
+  var outcomeDetailHtml = r.nextInspDate ? `<div class="on"><div style="font-size:7px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:3px;opacity:.75">Next inspection</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:700;letter-spacing:.02em">${_esc(r.nextInspDate)}</div></div>` : '';
 
   // ── Detector table ──────────────────────────────────────────────────────────
   var hasDetModel  = (r.detectors||[]).some(d=>d.model);
@@ -133,6 +128,8 @@ export function fireBuildCertHTML(r) {
     if (r.sysMfr||r.sysModel) sysDetailCells += `<div class="cell"><div class="ck">Make / model</div><div class="cv">${_esc([r.sysMfr,r.sysModel].filter(Boolean).join(' '))}</div></div>`;
     if (r.installDate)   sysDetailCells += `<div class="cell"><div class="ck">Installation date</div><div class="cv">${_esc(r.installDate)}</div></div>`;
     if (r.departuresNotes) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Departures / variations</div><div class="cv">${_esc(r.departuresNotes)}</div></div>`;
+    if (r.sysOperational) sysDetailCells += `<div class="cell"><div class="ck">System operational at leaving</div><div class="cv">${_esc(r.sysOperational)}</div></div>`;
+    if (r.worksCarried) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Works carried out</div><div class="cv">${_esc(r.worksCarried)}</div></div>`;
   } else {
     if (r.sysCategory)  sysDetailCells += `<div class="cell"><div class="ck">System category</div><div class="cv">${_esc(r.sysCategory)}</div></div>`;
     if (r.sysCommType)  sysDetailCells += `<div class="cell"><div class="ck">System type</div><div class="cv">${_esc(r.sysCommType)}</div></div>`;
@@ -141,6 +138,8 @@ export function fireBuildCertHTML(r) {
     if (r.sysLoops)     sysDetailCells += `<div class="cell"><div class="ck">Loops</div><div class="cv">${_esc(r.sysLoops)}</div></div>`;
     if (r.sysBafe)      sysDetailCells += `<div class="cell"><div class="ck">BAFE scheme no.</div><div class="cv">${_esc(r.sysBafe)}</div></div>`;
     if (r.sysFia)       sysDetailCells += `<div class="cell"><div class="ck">FIA member no.</div><div class="cv">${_esc(r.sysFia)}</div></div>`;
+    if (r.sysOperational) sysDetailCells += `<div class="cell"><div class="ck">System operational at leaving</div><div class="cv">${_esc(r.sysOperational)}</div></div>`;
+    if (r.worksCarried) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Works carried out</div><div class="cv">${_esc(r.worksCarried)}</div></div>`;
   }
 
   // ── Defects ─────────────────────────────────────────────────────────────────
