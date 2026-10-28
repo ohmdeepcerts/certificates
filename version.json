@@ -1,7 +1,7 @@
 {
   "v": "2.0.2",
-  "build": 78,
+  "build": 79,
   "changes": [
-    "Improved: Fire alarm certificate now shows Next Inspection Date clearly on the right side of the Outcome box on page 1, replacing the system operational and works notes which have moved to the System Details section on page 2."
+    "Improved: Fire alarm certificate now shows engineer name, company, and signature on page 1 below the property details."
   ]
 }

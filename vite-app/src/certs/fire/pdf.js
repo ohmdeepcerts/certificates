@@ -39,6 +39,19 @@ export function fireBuildCertHTML(r) {
     ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:44px;max-width:110px;object-fit:contain;display:block">`
     : (niceicNo ? `<div style="text-align:right;font-size:9px;color:#55617a;line-height:1.7">NICEIC Approved Contractor<br>Enrolment No. <strong style="color:var(--ink)">${_esc(niceicNo)}</strong></div>` : '');
 
+  // ── Engineer strip (page 1) ─────────────────────────────────────────────────
+  var engStrip = '';
+  if (r.engineerName || enggSigData) {
+    engStrip  = `<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0;border-bottom:1px solid var(--line)">`;
+    engStrip += `<div><div style="font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Inspected by</div>`;
+    engStrip += `<div style="font-size:10.5px;line-height:1.4">${_esc(r.engineerName||'—')}${r.engineerQual?`<span style="font-size:9px;color:#55617a"> · ${_esc(r.engineerQual)}</span>`:''}</div>`;
+    engStrip += `<div style="font-size:9px;color:#55617a;margin-top:1px">${_esc(r.companyName||company)}</div></div>`;
+    engStrip += enggSigData
+      ? `<div style="text-align:right"><div style="font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#9a9484;margin-bottom:3px">Signature</div><img src="${enggSigData}" style="max-height:30px;max-width:100px;object-fit:contain;object-position:right center;display:block;margin-left:auto"></div>`
+      : `<div style="border-bottom:1px solid var(--ink);width:100px;"></div>`;
+    engStrip += `</div>`;
+  }
+
   // ── Chips ───────────────────────────────────────────────────────────────────
   function _chipCode(val) { return ((val||'').split(' — ')[0]) || (val||'—'); }
   var chipsArr = [];
@@ -256,6 +269,7 @@ tr:nth-child(even) td{background:#f5f2ea}
     <div class="sv num">${_esc(r.ref||'—')}</div>
   </div>
   <div class="grid">${gridCells}</div>
+  ${engStrip}
   <div class="chips">${chipsHtml}</div>
   <div class="outcome${outClass}">
     <div>
