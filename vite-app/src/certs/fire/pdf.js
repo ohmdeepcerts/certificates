@@ -213,7 +213,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:11px 0}
 .chips{display:flex;gap:5px;margin-top:10px}
 .chip{flex:1;border:1px solid var(--ink);text-align:center;padding:6px 4px;background:#fff;min-width:0}
 .chip .ck{font-size:7px;letter-spacing:.12em}
-.chip .cv{font-family:Georgia,serif;font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .cv{font-family:Georgia,serif;font-size:11px;margin-top:2px;line-height:1.3;word-break:break-word}
 .outcome{margin-top:10px;border:2px solid var(--pass);background:#eef7f0;padding:10px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .outcome.unsat{border-color:var(--fail);background:#fdf0f0}
 .ow{font-family:Georgia,serif;font-size:16px;letter-spacing:.12em;color:var(--pass)}
