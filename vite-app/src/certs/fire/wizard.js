@@ -14,8 +14,8 @@ let _fireDirty = false;
 let _fireAllCerts = [];
 let _firePage = 1, _fireFiltered = [], _fireCurrentQ = '';
 
-const STEPS = ['type','premises','client','system','detectors','testing','defects','outcome','engineer','review'];
-const STEP_LABELS = ['Type','Premises','Client','System','Detectors','Testing','Defects','Outcome','Engineer','Review'];
+const STEPS = ['type','premises','client','system','detectors','testing','defects','outcome','review'];
+const STEP_LABELS = ['Type','Premises','Client','System','Detectors','Testing','Defects','Outcome','Review'];
 let _previewTimer = null;
 
 const CERT_TYPES = [
@@ -359,24 +359,16 @@ export function fireRenderStep() {
     if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 8: Engineer ──────────────────────────────────────────────────────
+  // ── Step 8: Review ────────────────────────────────────────────────────────
   } else if (s === 8) {
-    html += `<h2 class="wiz-title">Engineer Details</h2>`;
-    html += `<div class="wiz-field"><label>Engineer Name</label><input value="${esc(_w.engineerName)}" oninput="fireSet('engineerName',this.value)" placeholder="Full name"></div>`;
-    html += `<div class="wiz-field"><label>Qualification / ID No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.engineerQual)}" oninput="fireSet('engineerQual',this.value)" placeholder="e.g. BAFE SP203 / FIA member no."></div>`;
-    html += `<div class="wiz-field"><label>Company Name</label><input value="${esc(_w.companyName)}" oninput="fireSet('companyName',this.value)" placeholder="OHM Electrical Engineering Ltd"></div>`;
-    var _sigPrev = _w.enggSigData ? `<img src="${esc(_w.enggSigData)}" style="max-height:50px;max-width:180px;border:1px solid var(--border);border-radius:4px;padding:4px;background:#fff;display:block">` : `<span style="color:var(--muted);font-size:13px">No signature uploaded</span>`;
-    html += `<div class="wiz-field"><label>Engineer Signature</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">${_sigPrev}<label class="btn-sm" style="cursor:pointer"><i class="fa-solid fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="fireLoadSig(event)"></label>${_w.enggSigData?`<button class="btn-sm" onclick="firePick('enggSigData','');fireRenderStep()"><i class="fa-solid fa-xmark"></i> Clear</button>`:''}</div></div>`;
-    html += `<h3 style="font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--fg)">Tenant / Occupier Acknowledgment <span style="color:var(--muted);font-size:12px;font-weight:400">(optional)</span></h3>`;
-    html += `<div class="wiz-field"><label>Tenant / Occupier Name</label><input value="${esc(_w.tenantName)}" oninput="fireSet('tenantName',this.value)" placeholder="Full name"></div>`;
-    html += `<div class="wiz-field"><label>Acknowledgment Date</label><input value="${esc(_w.tenantAckDate)}" oninput="fireSet('tenantAckDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
-    html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
-
-  // ── Step 9: Review ────────────────────────────────────────────────────────
-  } else if (s === 9) {
     var addr = [_w.premAddr1, _w.premAddr2, _w.premAddr3, _w.premPostcode].filter(Boolean).join(', ');
     var typeLabel = (CERT_TYPES.find(t => t.id === _w.certType)||{}).label || _w.certType;
     html += `<h2 class="wiz-title">Review & Issue</h2>`;
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px">`;
+    html += `<div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">TENANT / OCCUPIER ACKNOWLEDGMENT <span style="font-weight:400;color:var(--muted)">(optional)</span></div>`;
+    html += `<div class="wiz-field" style="margin-bottom:8px"><label>Tenant / Occupier Name</label><input value="${esc(_w.tenantName)}" oninput="fireSet('tenantName',this.value)" placeholder="Leave blank if not applicable"></div>`;
+    html += `<div class="wiz-field" style="margin-bottom:0"><label>Acknowledgment Date</label><input value="${esc(_w.tenantAckDate)}" oninput="fireSet('tenantAckDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+    html += `</div>`;
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;font-size:14px">`;
     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">`;
     html += `<div><span style="color:var(--muted);font-size:12px">Type</span><br>${esc(typeLabel)}</div>`;

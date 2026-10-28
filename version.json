@@ -1,11 +1,8 @@
 {
-  "v": "2.0.0",
-  "build": 76,
+  "v": "2.0.1",
+  "build": 77,
   "changes": [
-    "Improved: PASS, FAIL and N/A result buttons now show as solid coloured pills — green for pass, red for fail, grey for N/A — making it easy to see results at a glance without reading every line.",
-    "Improved: Fire alarm outcome buttons now colour up when selected — green for Satisfactory, red for Unsatisfactory, amber for Requires Attention.",
-    "Improved: Fire alarm defects condition chips now show in colour — green, amber, and red matching the severity.",
-    "New: When you click Continue after entering test results with any failures, the Defects page is automatically pre-filled with a recommended defect entry for each failed device or test — you can edit or remove them.",
-    "Improved: Add Defect button has a cleaner, more polished style."
+    "Improved: Fire alarm certificate wizard is now 9 steps instead of 10 — the Engineer Details step has been removed as engineer name, company and signature are already set up in Fire Alarm Settings and are applied automatically.",
+    "Improved: Tenant / Occupier Acknowledgment fields now appear at the top of the Review & Issue step, so you can fill them in just before issuing."
   ]
 }
