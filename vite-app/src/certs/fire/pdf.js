@@ -28,10 +28,9 @@ export function fireBuildCertHTML(r) {
   var issued    = new Date().toLocaleDateString('en-GB');
 
   // ── Crest ───────────────────────────────────────────────────────────────────
-  var crestInner = logoData
-    ? `<img src="${logoData}" style="max-width:42px;max-height:42px;object-fit:contain">`
-    : _esc((company.match(/\b\w/g)||[]).slice(0,3).join(''));
-  var crestHtml = `<div class="crest">${crestInner}</div>`;
+  var crestHtml = logoData
+    ? `<img src="${logoData}" style="max-height:52px;max-width:130px;object-fit:contain;flex-shrink:0;display:block">`
+    : `<div class="crest">${_esc((company.match(/\b\w/g)||[]).slice(0,3).join(''))}</div>`;
 
   var coAddrLine   = companyAddr ? _esc(companyAddr.split(/[,\n]/)[0].trim()) : '';
   var coContactLine = [coAddrLine, companyTel ? 'T '+_esc(companyTel) : ''].filter(Boolean).join(' · ');
