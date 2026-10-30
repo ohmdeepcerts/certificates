@@ -1,7 +1,7 @@
 {
   "v": "2.0.2",
-  "build": 83,
+  "build": 84,
   "changes": [
-    "Fixed: EL certificate preview now scales to fill the panel — no more cut-off on the right side."
+    "Fixed: EL certificate preview now fits the panel width exactly with no cropping on the right side."
   ]
 }
