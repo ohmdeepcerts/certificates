@@ -1,9 +1,10 @@
 {
   "v": "2.0.2",
-  "build": 80,
+  "build": 81,
   "changes": [
-    "Fixed: Fire Safety permission can now be assigned to restricted staff members, same as PAT, Gas, and EL.",
-    "Fixed: Fire Safety permission chip now appears on each staff card so it can be toggled on or off.",
-    "Improved: Fire alarm certificate now shows engineer name, company, and signature on page 1 below the property details."
+    "Fixed: Engineers with EL permission can now see all EL certificates, not just their own.",
+    "Fixed: Engineers with Fire permission can now see all fire alarm certificates, not just their own.",
+    "Fixed: Fire Safety permission can now be assigned to restricted staff members.",
+    "Fixed: Fire Safety permission chip now appears on each staff card so it can be toggled on or off."
   ]
 }
