@@ -17,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-C2ynGub1.js"></script>
+  <script type="module" crossorigin src="./assets/index-Cq9GH_7d.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-Dts_1F3n.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-DpPuzPCc.js">
   <link rel="stylesheet" crossorigin href="./assets/index-D64tGooD.css">
 </head>
 <body>
@@ -1656,23 +1656,43 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
         <div><div class="view-title">Fire Alarm Certificates</div><div class="view-subtitle">BS 5839-6 Domestic &amp; BS 5839-1 Commercial</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportFireCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewFire()">+ New Fire Cert</button></div>
       </div>
-      <div class="list-controls">
-        <input class="search-input" id="fire-search" placeholder="Search by address, reference or client…" oninput="filterFireList()">
-        <select id="fire-filter-type" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Types</option>
-          <option value="FA.1">FA.1 — Domestic Installation</option>
-          <option value="FA.2">FA.2 — Domestic Inspection</option>
-          <option value="FA.3">FA.3 — Commercial Installation</option>
-          <option value="FA.4">FA.4 — Commercial Service</option>
-        </select>
-        <select id="fire-filter-outcome" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Outcomes</option>
-          <option value="SATISFACTORY">Satisfactory</option>
-          <option value="UNSATISFACTORY">Unsatisfactory</option>
-          <option value="REQUIRES ATTENTION">Requires Attention</option>
-        </select>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:0 0 400px;min-width:280px;max-width:100%">
+          <div class="list-controls">
+            <input class="search-input" id="fire-search" placeholder="Search by address, reference or client…" oninput="filterFireList()">
+            <select id="fire-filter-type" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Types</option>
+              <option value="FA.1">FA.1 — Domestic Installation</option>
+              <option value="FA.2">FA.2 — Domestic Inspection</option>
+              <option value="FA.3">FA.3 — Commercial Installation</option>
+              <option value="FA.4">FA.4 — Commercial Service</option>
+            </select>
+            <select id="fire-filter-outcome" onchange="filterFireList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Outcomes</option>
+              <option value="SATISFACTORY">Satisfactory</option>
+              <option value="UNSATISFACTORY">Unsatisfactory</option>
+              <option value="REQUIRES ATTENTION">Requires Attention</option>
+            </select>
+          </div>
+          <div id="fire-history-list"><p class="empty-state">No fire alarm certificates yet.</p></div>
+        </div>
+        <div id="fire-hist-panel" style="flex:1;min-width:320px;position:sticky;top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          <div id="fire-hist-empty" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+            <div style="font-size:38px;opacity:.4">🔴</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text)">Select a certificate</div>
+            <div style="font-size:12px;color:var(--muted)">Click any row to preview the full<br>certificate and access actions</div>
+          </div>
+          <div id="fire-hist-active" style="display:none">
+            <div id="fire-hist-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <div id="fire-hist-zoom-bar" style="padding:4px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;align-items:center;background:var(--surface)">
+              <button onclick="fireZoomOut()" title="Zoom out" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">−</button>
+              <span id="fire-hist-zoom-pct" style="font-size:11px;min-width:34px;text-align:center;color:var(--muted);font-weight:600"></span>
+              <button onclick="fireZoomIn()" title="Zoom in" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">+</button>
+            </div>
+            <iframe id="fire-hist-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
       </div>
-      <div id="fire-history-list"><p class="empty-state">No fire alarm certificates yet.</p></div>
     </div>
 
   </main>
