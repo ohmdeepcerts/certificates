@@ -17,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-D0L8MAMs.js"></script>
+  <script type="module" crossorigin src="./assets/index-C2ynGub1.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-DZvymgPK.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-Dts_1F3n.js">
   <link rel="stylesheet" crossorigin href="./assets/index-D64tGooD.css">
 </head>
 <body>
@@ -1617,6 +1617,11 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
           </div>
           <div id="el-preview-active" style="display:none">
             <div id="el-preview-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <div id="el-zoom-bar" style="padding:4px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;align-items:center;background:var(--surface)">
+              <button onclick="elZoomOut()" title="Zoom out" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">−</button>
+              <span id="el-zoom-pct" style="font-size:11px;min-width:34px;text-align:center;color:var(--muted);font-weight:600"></span>
+              <button onclick="elZoomIn()" title="Zoom in" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">+</button>
+            </div>
             <iframe id="el-preview-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
           </div>
         </div>
