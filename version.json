@@ -1,6 +1,6 @@
 {
   "v": "2.0.2",
-  "build": 81,
+  "build": 82,
   "changes": [
     "Fixed: Engineers with EL permission can now see all EL certificates, not just their own.",
     "Fixed: Engineers with Fire permission can now see all fire alarm certificates, not just their own.",
