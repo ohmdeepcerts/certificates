@@ -1,7 +1,8 @@
 {
-  "v": "2.0.3",
-  "build": 89,
+  "v": "2.0.4",
+  "build": 90,
   "changes": [
-    "Added: Gas and PAT certificates now have a side-panel preview — click any certificate to see it instantly, with Download, Email, Edit, Delete and zoom in/out buttons."
+    "Fixed: Gas and PAT certificate cards no longer overflow — the bottom row now fits neatly.",
+    "Fixed: Gas and PAT side-panel preview now shows the full certificate, not just the top."
   ]
 }

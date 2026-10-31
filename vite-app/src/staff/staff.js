@@ -15,9 +15,10 @@ function _staffRolePerms(role, perm) {
   const isFull  = isAdmin || (role === 'engineer' && !perm);
   return {
     isAdmin, hasFull: isFull,
-    hasPAT: isFull || (perm || '').includes('pat'),
-    hasGas: isFull || (perm || '').includes('gas'),
-    hasEL:  isFull || (perm || '').includes('el'),
+    hasPAT:  isFull || (perm || '').includes('pat'),
+    hasGas:  isFull || (perm || '').includes('gas'),
+    hasEL:   isFull || (perm || '').includes('el'),
+    hasFire: isFull || (perm || '').includes('fire'),
   };
 }
 
@@ -29,6 +30,7 @@ export function showAddStaffModal() {
   document.getElementById('add-perm-pat').checked  = false;
   document.getElementById('add-perm-gas').checked  = false;
   document.getElementById('add-perm-el').checked   = false;
+  document.getElementById('add-perm-fire').checked = false;
   document.getElementById('add-staff-access-row').style.display = '';
   document.getElementById('add-staff-pw').value    = '';
   document.getElementById('add-staff-error').textContent = '';
@@ -95,14 +97,15 @@ export function renderStaffList(staff) {
     const perm   = s.permissions || '';
     const name   = s.full_name || s.email || 'Unknown';
     const initials = (name[0] || '?').toUpperCase();
-    const { isAdmin: sa, hasFull: sf, hasPAT: sp, hasGas: sg, hasEL: se } = _staffRolePerms(role, perm);
+    const { isAdmin: sa, hasFull: sf, hasPAT: sp, hasGas: sg, hasEL: se, hasFire: sfr } = _staffRolePerms(role, perm);
     const chip = (key, label, on) => `<button type="button" class="perm-chip${on ? ' perm-chip-on' : ''}" data-key="${key}" onclick="setStaffPerm('${s.id}','${key}',this)">${label}</button>`;
     const permsHTML = isMe
       ? `<span style="font-size:11px;font-weight:600;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:6px">${sa ? 'Admin' : sf ? 'Full Access' : 'Staff'}</span>`
       : `<div style="display:flex;gap:4px;flex-wrap:wrap" data-perm-wrap>
-           ${chip('pat', '📋 PAT', sp && !sf)}
-           ${chip('gas', '🔥 Gas', sg && !sf)}
-           ${chip('el',  '💡 EL',  se && !sf)}
+           ${chip('pat',  '📋 PAT',  sp  && !sf)}
+           ${chip('gas',  '🔥 Gas',  sg  && !sf)}
+           ${chip('el',   '💡 EL',   se  && !sf)}
+           ${chip('fire', '🔴 Fire', sfr && !sf)}
            ${chip('full', 'Full', sf && !sa)}
            ${chip('admin', 'Admin', sa)}
          </div>`;
@@ -126,9 +129,10 @@ export async function doAddStaff() {
   const pw    = document.getElementById('add-staff-pw').value;
   const perms = [];
   if (role === 'engineer') {
-    if (document.getElementById('add-perm-pat').checked) perms.push('pat');
-    if (document.getElementById('add-perm-gas').checked) perms.push('gas');
-    if (document.getElementById('add-perm-el').checked)  perms.push('el');
+    if (document.getElementById('add-perm-pat').checked)  perms.push('pat');
+    if (document.getElementById('add-perm-gas').checked)  perms.push('gas');
+    if (document.getElementById('add-perm-el').checked)   perms.push('el');
+    if (document.getElementById('add-perm-fire').checked) perms.push('fire');
   }
   const permissions = perms.join(',');
   const errEl = document.getElementById('add-staff-error');
@@ -173,10 +177,11 @@ export async function setStaffPerm(userId, key, btn) {
   } else if (key === 'full') {
     newRole = 'engineer'; newPerms = '';
   } else {
-    const pat = key === 'pat' ? nowOn : cur['pat'];
-    const gas = key === 'gas' ? nowOn : cur['gas'];
-    const el  = key === 'el'  ? nowOn : cur['el'];
-    const p = []; if (pat) p.push('pat'); if (gas) p.push('gas'); if (el) p.push('el');
+    const pat  = key === 'pat'  ? nowOn : cur['pat'];
+    const gas  = key === 'gas'  ? nowOn : cur['gas'];
+    const el   = key === 'el'   ? nowOn : cur['el'];
+    const fire = key === 'fire' ? nowOn : cur['fire'];
+    const p = []; if (pat) p.push('pat'); if (gas) p.push('gas'); if (el) p.push('el'); if (fire) p.push('fire');
     newRole = 'engineer'; newPerms = p.join(',');
   }
   const { error } = await sb.from('profiles').update({ role: newRole, permissions: newPerms }).eq('id', userId);
@@ -258,9 +263,11 @@ export function approveRequest(requestId, name, email) {
     const pe = document.getElementById('add-perm-pat');
     const pg = document.getElementById('add-perm-gas');
     const pl = document.getElementById('add-perm-el');
+    const pf = document.getElementById('add-perm-fire');
     if (pe) pe.checked = ps.includes('pat');
     if (pg) pg.checked = ps.includes('gas');
     if (pl) pl.checked = ps.includes('el');
+    if (pf) pf.checked = ps.includes('fire');
   }
   document.getElementById('add-staff-pw').value    = '';
   document.getElementById('add-staff-error').textContent = '';

@@ -22,4 +22,7 @@ $newJs = (Get-ChildItem "$dist\index-*.js" | Select-Object -First 1).Name
 Copy-Item "$PSScriptRoot\dist\index.html" "$PSScriptRoot\index.html" -Force
 
 Write-Host "Done. New JS: $newJs" -ForegroundColor Green
-Write-Host "Now update sw.js CACHE version and version.json, then git add/commit/push."
+
+Set-Location $PSScriptRoot
+git add dist/assets/ assets/ dist/index.html index.html sw.js version.json
+Write-Host "Assets staged. Commit and push when ready (sw.js + version.json still need manual bump)." -ForegroundColor Yellow

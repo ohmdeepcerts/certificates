@@ -756,6 +756,76 @@ export async function fireDownloadPDF(rec) {
   }, 600);
 }
 
+// ── History preview panel ─────────────────────────────────────────────────────
+function _fireApplyIfrScale(scale) {
+  var ifr = document.getElementById('fire-hist-iframe');
+  if (!ifr) return;
+  var certW = 794;
+  var s = Math.max(0.2, Math.min(2.0, scale));
+  if (s >= 0.99) {
+    ifr.style.cssText = 'border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block';
+  } else {
+    var desiredH = Math.max(400, window.innerHeight - 140);
+    var cssH = Math.round(desiredH / s);
+    ifr.style.width = certW + 'px';
+    ifr.style.height = cssH + 'px';
+    ifr.style.transformOrigin = '0 0';
+    ifr.style.transform = 'scale(' + s + ')';
+    ifr.style.marginRight = '-' + Math.round(certW * (1 - s)) + 'px';
+    ifr.style.marginBottom = '-' + (cssH - desiredH) + 'px';
+  }
+  window._fireScale = s;
+  var pct = document.getElementById('fire-hist-zoom-pct');
+  if (pct) pct.textContent = Math.round(s * 100) + '%';
+}
+
+export function fireZoomIn() {
+  _fireApplyIfrScale((window._fireScale || 0.7) + 0.05);
+}
+
+export function fireZoomOut() {
+  _fireApplyIfrScale((window._fireScale || 0.7) - 0.05);
+}
+
+export function fireShowPreview(idx) {
+  var r = _fireFiltered[idx]; if (!r) return;
+  var certData = r.data || r;
+  window._fireCertRec = certData;
+  window._fireHistRec = r;
+  var empty = document.getElementById('fire-hist-empty');
+  var active = document.getElementById('fire-hist-active');
+  var toolbar = document.getElementById('fire-hist-toolbar');
+  var ifr = document.getElementById('fire-hist-iframe');
+  if (!ifr) { fireOpenCert(certData); return; }
+  if (empty) empty.style.display = 'none';
+  if (active) active.style.display = 'block';
+  var addr = certData.premAddr1 || certData.premisesName || r.premises_address || '';
+  toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+    +esc(r.ref_number||certData.ref||'—')+(addr?' &mdash; '+esc(addr):'')+'</span>'
+    +_ibtn('Download PDF','fa-download','fireDownloadPDF(window._fireCertRec)')
+    +_ibtn('Email','fa-envelope','fireCertEmailBtn()')
+    +(isAdmin()?_ibtn('Edit','fa-pen','fireEditCert(window._fireHistRec)'):'')
+    +(isAdmin()?_ibtn('Delete','fa-trash',"fireDeleteCert('"+r.id+"')",true):'');
+  var html = fireBuildCertHTML(certData);
+  var blob = new Blob([html], {type:'text/html'});
+  if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
+  var blobUrl = URL.createObjectURL(blob);
+  ifr._blobUrl = blobUrl;
+  ifr.onload = function() {
+    try {
+      var certW = 794;
+      var panel = document.getElementById('fire-hist-panel');
+      var panelW = panel ? Math.max(300, panel.clientWidth - 2) : certW;
+      var base = Math.min(1, panelW / certW) * 0.9;
+      _fireApplyIfrScale(base);
+    } catch(e) {}
+  };
+  ifr.src = blobUrl;
+  document.querySelectorAll('[data-fire-idx]').forEach(function(c){ c.style.outline='none'; c.style.background=''; });
+  var card = document.querySelector('[data-fire-idx="'+idx+'"]');
+  if (card) { card.style.outline='2px solid var(--primary,#0e4d33)'; card.style.background='rgba(14,77,51,.06)'; }
+}
+
 // ── History ───────────────────────────────────────────────────────────────────
 export async function loadFireHistory() {
   if (!state.currentUser) return;
@@ -773,9 +843,7 @@ export async function loadFireHistory() {
     toast('Offline — no cached fire certificates available', 'warn');
     return;
   }
-  var q = sb.from('fire_certs').select('*').is('deleted_at', null).order('created_at', { ascending:false });
-  if (!isAdmin()) q = q.eq('created_by', state.currentUser.id);
-  var { data, error } = await q;
+  var { data, error } = await sb.from('fire_certs').select('*').is('deleted_at', null).order('created_at', { ascending:false });
   if (error) { console.error('loadFireHistory:', error); return; }
   _fireAllCerts = data || [];
   try { localStorage.setItem('_cache_fire_history', JSON.stringify({ data: _fireAllCerts, ts: Date.now() })); } catch {}
@@ -862,7 +930,7 @@ function renderFireList(certs, page, q) {
     var addrHtml = q ? hlText(addrRaw, q) : esc(addrRaw);
     var refHtml  = q ? hlText(r.ref_number||'—', q) : esc(r.ref_number||'—');
     var pill = _fireExpiryPill(d);
-    return '<div class="pat-card" onclick="fireOpenCertIdx('+idx+')" style="cursor:pointer">'
+    return '<div class="pat-card" data-fire-idx="'+idx+'" onclick="fireShowPreview('+idx+')" style="cursor:pointer">'
       +'<div style="width:36px;height:36px;border-radius:50%;background:'+abg+';color:'+atx+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">'+ini+'</div>'
       +'<div class="pat-card-body">'
         +'<div class="pat-card-top">'
@@ -873,14 +941,14 @@ function renderFireList(certs, page, q) {
           +'<code class="pat-ref-chip">'+refHtml+'</code>'
           +'<span class="pat-card-date">'+esc(r.test_date||d.testDate||'—')+'</span>'
           +(pill?'<span style="font-size:11px;font-weight:600;color:'+ocCol+'">'+esc(ocLabel)+'</span>':'')
-          +'<span class="pat-card-sub">&middot; '+esc(typeLabel)+'</span>'
-          +'<div class="pat-card-btns">'
-            +_ibtn('View','fa-eye','event.stopPropagation();fireOpenCertIdx('+idx+')')
-            +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();fireEditCertIdx('+idx+')'):'')
-            +_ibtn('Download PDF','fa-download','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
-            +_ibtn('Email','fa-envelope','event.stopPropagation();fireEmailCertIdx('+idx+')')
-            +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true):'')
-          +'</div>'
+          +'<span class="pat-card-sub">&middot; '+esc(r.cert_type||'—')+'</span>'
+        +'</div>'
+        +'<div class="pat-card-btns" style="margin-top:5px;margin-left:0;justify-content:flex-end">'
+          +_ibtn('View','fa-eye','event.stopPropagation();fireShowPreview('+idx+')')
+          +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();fireEditCertIdx('+idx+')'):'')
+          +_ibtn('Download PDF','fa-download','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
+          +_ibtn('Email','fa-envelope','event.stopPropagation();fireEmailCertIdx('+idx+')')
+          +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true):'')
         +'</div>'
       +'</div>'
     +'</div>';

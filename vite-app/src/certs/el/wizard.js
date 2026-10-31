@@ -953,6 +953,36 @@ export function elCloseCert() {
   loadELHistory();
 }
 
+function _elApplyIfrScale(scale) {
+  var ifr = document.getElementById('el-preview-iframe');
+  if (!ifr) return;
+  var certW = 794;
+  var s = Math.max(0.2, Math.min(2.0, scale));
+  if (s >= 0.99) {
+    ifr.style.cssText = 'border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block';
+  } else {
+    var desiredH = Math.max(400, window.innerHeight - 140);
+    var cssH = Math.round(desiredH / s);
+    ifr.style.width = certW + 'px';
+    ifr.style.height = cssH + 'px';
+    ifr.style.transformOrigin = '0 0';
+    ifr.style.transform = 'scale(' + s + ')';
+    ifr.style.marginRight = '-' + Math.round(certW * (1 - s)) + 'px';
+    ifr.style.marginBottom = '-' + (cssH - desiredH) + 'px';
+  }
+  window._elScale = s;
+  var pct = document.getElementById('el-zoom-pct');
+  if (pct) pct.textContent = Math.round(s * 100) + '%';
+}
+
+export function elZoomIn() {
+  _elApplyIfrScale((window._elScale || 0.7) + 0.05);
+}
+
+export function elZoomOut() {
+  _elApplyIfrScale((window._elScale || 0.7) - 0.05);
+}
+
 export function elShowPreview(id) {
   var rec = window._elAllCerts && window._elAllCerts.find(function(x){ return x.id === id; });
   if (!rec) return;
@@ -980,6 +1010,15 @@ export function elShowPreview(id) {
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
   var blobUrl = URL.createObjectURL(blob);
   ifr._blobUrl = blobUrl;
+  ifr.onload = function() {
+    try {
+      var certW = 794;
+      var panel = document.getElementById('el-preview-panel');
+      var panelW = panel ? Math.max(300, panel.clientWidth - 2) : certW;
+      var base = Math.min(1, panelW / certW) * 0.9;
+      _elApplyIfrScale(base);
+    } catch(e) {}
+  };
   ifr.src = blobUrl;
   document.querySelectorAll('.pat-card[data-el-id]').forEach(function(c){ c.style.outline='none'; c.style.background=''; });
   var card = document.querySelector('.pat-card[data-el-id="'+id+'"]');
@@ -1580,9 +1619,7 @@ export async function loadELHistory() {
     if (_el) _el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div><p>Offline — no cached data yet. Load this page once while online first.</p></div>';
     return;
   }
-  var q = sb.from('el_certs').select('*').order('created_at', {ascending:false});
-  if (!isAdmin()) q = q.eq('created_by', state.currentUser.id);
-  var {data, error} = await q;
+  var {data, error} = await sb.from('el_certs').select('*').order('created_at', {ascending:false});
   if (error) { console.error('loadELHistory:', error); return; }
   _elAllCerts = data || [];
   window._elAllCerts = _elAllCerts;
@@ -1701,14 +1738,14 @@ export function renderELList(certs, page, q) {
           +'<span class="pat-card-date">'+_escHtml(r.test_date||d.testDate||'—')+'</span>'
           +(pill?'<span style="font-size:11px;font-weight:600;color:'+ocCol+'">'+_escHtml(ocLabel)+'</span>':'')
           +'<span class="pat-card-sub">&middot; '+_escHtml(r.cert_type||'EL')+'</span>'
-          +'<div class="pat-card-btns">'
-            +_ibtn('View','fa-eye','event.stopPropagation();elShowPreview(\''+r.id+'\')')
-            +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();elEditCert(\''+r.id+'\')'):'')
-            +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
-            +_ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
-            +_ibtn('Email','fa-envelope','event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
-            +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true):'')
-          +'</div>'
+        +'</div>'
+        +'<div class="pat-card-btns" style="margin-top:5px;margin-left:0;justify-content:flex-end">'
+          +_ibtn('View','fa-eye','event.stopPropagation();elShowPreview(\''+r.id+'\')')
+          +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();elEditCert(\''+r.id+'\')'):'')
+          +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
+          +_ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
+          +_ibtn('Email','fa-envelope','event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
+          +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true):'')
         +'</div>'
       +'</div>'
     +'</div>';

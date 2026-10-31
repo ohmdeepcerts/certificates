@@ -77,13 +77,15 @@ export function renderPATList(reports, page, q) {
   // page slice
   const start = (page - 1) * PAGE_SIZE;
   const pageItems = reports.slice(start, start + PAGE_SIZE);
+  const filtIdxMap = new Map(reports.map((r, i) => [r, i]));
   const mkRow = (r, hl = '', q = '') => {
+    const filtIdx = filtIdxMap.get(r) ?? 0;
     const isDraft = r.status !== 'completed'; const addr = r.property_address || 'No address';
     const [abg, atx] = _addrColor(addr); const ini = (_addrInitials(addr) || '?').toUpperCase();
     const appCount = (r.appliances || []).length;
     const addrHtml = q ? hlText(addr, q) : addr;
     const refHtml  = q ? hlText(r.ref_number || 'DRAFT', q) : (r.ref_number || 'DRAFT');
-    return `<div class="pat-card" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''}">
+    return `<div class="pat-card" data-pat-idx="${filtIdx}" onclick="patShowPreview(${filtIdx})" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''};cursor:pointer">
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
       <div class="pat-card-body">
         <div class="pat-card-top">
@@ -93,13 +95,12 @@ export function renderPATList(reports, page, q) {
         <div class="pat-card-bot">
           <code class="pat-ref-chip">${refHtml}</code>
           <span class="pat-card-date">${patFd(r.test_date) || 'No date'}</span>
-          <span class="pat-card-sub">&middot; ${appCount} appliance${appCount !== 1 ? 's' : ''}</span>
           <div class="pat-card-btns">
-            ${_ibtn('Open', 'fa-eye', `loadPATForm('${r.id}')`)}
-            ${!isDraft ? _ibtn('Copy', 'fa-copy', `copyPAT('${r.id}')`) : ''}
-            ${!isDraft ? _ibtn('PDF', 'fa-file-pdf', `openPATPDF('${r.id}')`) : ''}
-            ${!isDraft ? _ibtn('Email', 'fa-envelope', `emailPATFromList('${r.id}')`) : ''}
-            ${_ibtn('Delete', 'fa-trash', `deletePAT('${r.id}')`, true)}
+            ${_ibtn('Open', 'fa-eye', `event.stopPropagation();loadPATForm('${r.id}')`)}
+            ${!isDraft ? _ibtn('Copy', 'fa-copy', `event.stopPropagation();copyPAT('${r.id}')`) : ''}
+            ${!isDraft ? _ibtn('PDF', 'fa-file-pdf', `event.stopPropagation();openPATPDF('${r.id}')`) : ''}
+            ${!isDraft ? _ibtn('Email', 'fa-envelope', `event.stopPropagation();emailPATFromList('${r.id}')`) : ''}
+            ${_ibtn('Delete', 'fa-trash', `event.stopPropagation();deletePAT('${r.id}')`, true)}
           </div>
         </div>
       </div>
@@ -268,4 +269,127 @@ export function filterCompliance() {
     const action = i.type === 'pat' ? `<button class="btn btn-primary btn-sm" onclick="loadPATForm('${i.id}')">Open PAT</button>` : i.type === 'el' ? `<button class="btn btn-primary btn-sm" onclick="startNewEL()">New EL</button>` : `<button class="btn btn-primary btn-sm" onclick="startNewGas()">New Gas</button>`;
     return `<div class="cert-row"><div class="cert-row-info"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${typeBadge}<span class="cert-ref">${i.ref}</span><span class="badge badge-${urgClass}">${urgLabel}</span></div><div class="cert-address">${i.address}</div><div class="cert-meta">${meta} · Engineer: ${i.engineer}</div></div>${action}</div>`;
   }).join('');
+}
+
+// ── History preview panel ─────────────────────────────────────────────────────
+function _buildPATPreviewHTML(r) {
+  const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const fd = s => { if (!s) return '—'; const p = String(s).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; };
+  const apps = r.appliances || [];
+  const passCount = apps.filter(a => (a.result || '').toLowerCase() === 'pass').length;
+  const failCount = apps.filter(a => (a.result || '').toLowerCase() === 'fail').length;
+  const appsHtml = apps.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#1e3a5f;color:#fff">
+        <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Asset ID</th>
+        <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Description</th>
+        <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Next Test</th>
+        <th style="padding:7px 8px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Result</th>
+      </tr></thead>
+      <tbody>
+        ${apps.map((a, i) => {
+          const pass = (a.result || '').toLowerCase() === 'pass';
+          const fail = (a.result || '').toLowerCase() === 'fail';
+          const desc = a.description || a._d || [a.location, a.type, a.make, a.model].filter(Boolean).join(', ') || '—';
+          return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+            <td style="padding:6px 8px;font-weight:700;color:#1e3a5f">${esc(a.assetId||'—')}</td>
+            <td style="padding:6px 8px;color:#475569">${esc(desc)}</td>
+            <td style="padding:6px 8px;color:#475569">${fd(a.nextTest||a.next_test||'')}</td>
+            <td style="padding:6px 8px;text-align:center"><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${pass?'#dcfce7':fail?'#fee2e2':'#f1f5f9'};color:${pass?'#15803d':fail?'#dc2626':'#64748b'}">${esc(a.result||'—')}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : '<p style="color:#94a3b8;font-size:13px;padding:8px 0">No appliances recorded</p>';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f1f5f9;padding:16px;color:#1e293b}.cert{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}.hdr{background:#1e3a5f;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start}.body{padding:16px 20px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}.ibox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px}.ilbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e3a5f;margin-bottom:8px}.irow{font-size:12px;color:#64748b;margin-bottom:3px}.stitle{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1e3a5f;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid #1e3a5f}</style></head><body>
+  <div class="cert">
+    <div class="hdr">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.04em;opacity:.8">PORTABLE APPLIANCE TEST REPORT</div>
+        <div style="font-size:20px;font-weight:900;margin-top:4px">${esc(r.ref_number||'DRAFT')}</div>
+        <div style="font-size:12px;margin-top:6px;opacity:.85">${esc(r.property_address||'No address')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="background:${r.status==='completed'?'#16a34a':'#f59e0b'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">${r.status==='completed'?'COMPLETED':'DRAFT'}</div>
+        <div style="font-size:11px;margin-top:8px;opacity:.85">Test Date: ${fd(r.test_date)}</div>
+        <div style="font-size:11px;opacity:.85">${apps.length} appliance${apps.length!==1?'s':''}</div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="row3">
+        <div class="ibox"><div class="ilbl">Property</div><div class="irow">${esc(r.property_address||'—')}</div></div>
+        <div class="ibox"><div class="ilbl">Engineer</div><div class="irow"><strong>${esc(r.engineer||'—')}</strong></div>${r.landlord_name?`<div class="irow">${esc(r.landlord_name)}</div>`:''}</div>
+        <div class="ibox">
+          <div class="ilbl">Results</div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <div style="flex:1;text-align:center;background:#dcfce7;border-radius:8px;padding:8px"><div style="font-size:20px;font-weight:800;color:#15803d">${passCount}</div><div style="font-size:10px;color:#15803d;font-weight:700">PASS</div></div>
+            <div style="flex:1;text-align:center;background:${failCount?'#fee2e2':'#f8fafc'};border-radius:8px;padding:8px"><div style="font-size:20px;font-weight:800;color:${failCount?'#dc2626':'#94a3b8'}">${failCount}</div><div style="font-size:10px;color:${failCount?'#dc2626':'#94a3b8'};font-weight:700">FAIL</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="stitle">Appliances</div>
+      ${appsHtml}
+    </div>
+  </div>
+  </body></html>`;
+}
+
+function _patApplyIfrScale(scale) {
+  var ifr = document.getElementById('pat-hist-iframe');
+  if (!ifr) return;
+  var s = Math.max(0.2, Math.min(2.5, scale));
+  var certW = 794;
+  var contentH = 800;
+  try { contentH = Math.max(400, ifr.contentDocument.documentElement.scrollHeight); } catch(e) {}
+  ifr.style.width = certW + 'px';
+  ifr.style.height = contentH + 'px';
+  ifr.style.transformOrigin = '0 0';
+  ifr.style.transform = 'scale(' + s + ')';
+  ifr.style.marginRight = '-' + Math.round(certW * (1 - s)) + 'px';
+  ifr.style.marginBottom = '-' + Math.round(contentH * (1 - s)) + 'px';
+  window._patHistScale = s;
+  var pct = document.getElementById('pat-hist-zoom-pct');
+  if (pct) pct.textContent = Math.round(s * 100) + '%';
+}
+
+export function patHistZoomIn() { _patApplyIfrScale((window._patHistScale || 0.7) + 0.05); }
+export function patHistZoomOut() { _patApplyIfrScale((window._patHistScale || 0.7) - 0.05); }
+
+export function patShowPreview(idx) {
+  var r = _patFiltered[idx]; if (!r) return;
+  window._patHistRec = r;
+  var empty = document.getElementById('pat-hist-empty');
+  var active = document.getElementById('pat-hist-active');
+  var toolbar = document.getElementById('pat-hist-toolbar');
+  var ifr = document.getElementById('pat-hist-iframe');
+  if (!ifr) { loadPATForm(r.id); return; }
+  if (empty) empty.style.display = 'none';
+  if (active) active.style.display = 'block';
+  var isAdm = state.currentProfile?.role === 'admin';
+  var isDraft = r.status !== 'completed';
+  var ref = (r.ref_number || '—').replace(/</g, '&lt;');
+  var addr = (r.property_address || '').replace(/</g, '&lt;');
+  toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+    + ref + (addr ? ' &mdash; ' + addr : '') + '</span>'
+    + (!isDraft ? _ibtn('Download PDF', 'fa-download', 'openPATPDF("' + r.id + '")') : '')
+    + (!isDraft ? _ibtn('Email', 'fa-envelope', 'emailPATFromList("' + r.id + '")') : '')
+    + (isAdm ? _ibtn('Edit', 'fa-pen', 'loadPATForm("' + r.id + '")') : '')
+    + (isAdm ? _ibtn('Delete', 'fa-trash', 'deletePAT("' + r.id + '")', true) : '');
+  var html = _buildPATPreviewHTML(r);
+  var blob = new Blob([html], {type: 'text/html'});
+  if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
+  var blobUrl = URL.createObjectURL(blob);
+  ifr._blobUrl = blobUrl;
+  ifr.onload = function() {
+    try {
+      var panel = document.getElementById('pat-hist-panel');
+      var panelW = panel ? Math.max(300, panel.clientWidth - 2) : 794;
+      var base = Math.min(1, panelW / 794) * 0.9;
+      _patApplyIfrScale(base);
+    } catch(e) {}
+  };
+  ifr.src = blobUrl;
+  document.querySelectorAll('[data-pat-idx]').forEach(function(c) { c.style.outline = 'none'; c.style.background = ''; });
+  var card = document.querySelector('[data-pat-idx="' + idx + '"]');
+  if (card) { card.style.outline = '2px solid var(--primary,#0e4d33)'; card.style.background = 'rgba(14,77,51,.06)'; }
 }

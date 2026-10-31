@@ -50,8 +50,9 @@ export function showEngineerPicker(anchorEl, certType, onSelect) {
   picker.style.left = Math.min(r.left, window.innerWidth - 330) + 'px';
 
   const defaultName =
-    certType === 'gas' ? getSetting('gas_default_engineer', '') :
-    certType === 'pat' ? getSetting('pat_default_engineer', '') :
+    certType === 'gas'  ? getSetting('gas_default_engineer', '') :
+    certType === 'pat'  ? getSetting('pat_default_engineer', '') :
+    certType === 'fire' ? getSetting('fa_engineer', getSetting('default_engineer', '')) :
     getSetting('el_engineer', getSetting('default_engineer', ''));
 
   loadEngineers().then(engineers => {

@@ -66,13 +66,15 @@ export function renderGasList(reports, page, q) {
   const isSearch = q.length >= 2;
   const start = (page - 1) * PAGE_SIZE;
   const pageItems = reports.slice(start, start + PAGE_SIZE);
+  const filtIdxMap = new Map(reports.map((r, i) => [r, i]));
   const mkRow = (r, hl = '', q = '') => {
+    const filtIdx = filtIdxMap.get(r) ?? 0;
     const isDraft = r.status !== 'completed'; const addr = r.install_address || 'No address';
     const [abg, atx] = _addrColor(addr);
     const ini = _addrInitials(addr).toUpperCase() || (addr.slice(0, 2) || '?').toUpperCase();
     const addrHtml = q ? hlText(addr, q) : addr;
     const refHtml  = q ? hlText(r.ref_number || 'DRAFT', q) : (r.ref_number || 'DRAFT');
-    return `<div class="pat-card" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''}">
+    return `<div class="pat-card" data-gas-idx="${filtIdx}" onclick="gasShowPreview(${filtIdx})" style="${hl ? 'border-color:' + hl + ';' : ''}${isDraft ? 'opacity:.82' : ''};cursor:pointer">
       <div style="width:36px;height:36px;border-radius:50%;background:${abg};color:${atx};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${ini}</div>
       <div class="pat-card-body">
         <div class="pat-card-top">
@@ -82,13 +84,12 @@ export function renderGasList(reports, page, q) {
         <div class="pat-card-bot">
           <code class="pat-ref-chip">${refHtml}</code>
           <span class="pat-card-date">${_fmtGasDate(r.cert_date) || 'No date'}</span>
-          <span class="pat-card-sub">&middot; Next: ${_fmtGasDate(r.next_check_date) || '—'}</span>
           <div class="pat-card-btns">
-            ${_ibtn('Open', 'fa-eye', `loadGasForm('${r.id}')`)}
-            ${!isDraft ? _ibtn('Copy', 'fa-copy', `copyGas('${r.id}')`) : ''}
-            ${!isDraft ? _ibtn('PDF', 'fa-file-pdf', `openGasPDF('${r.id}')`) : ''}
-            ${!isDraft ? _ibtn('Email', 'fa-envelope', `emailCP12FromList('${r.id}')`) : ''}
-            ${_ibtn('Delete', 'fa-trash', `deleteGas('${r.id}')`, true)}
+            ${_ibtn('Open', 'fa-eye', `event.stopPropagation();loadGasForm('${r.id}')`)}
+            ${!isDraft ? _ibtn('Copy', 'fa-copy', `event.stopPropagation();copyGas('${r.id}')`) : ''}
+            ${!isDraft ? _ibtn('PDF', 'fa-file-pdf', `event.stopPropagation();openGasPDF('${r.id}')`) : ''}
+            ${!isDraft ? _ibtn('Email', 'fa-envelope', `event.stopPropagation();emailCP12FromList('${r.id}')`) : ''}
+            ${_ibtn('Delete', 'fa-trash', `event.stopPropagation();deleteGas('${r.id}')`, true)}
           </div>
         </div>
       </div>
@@ -379,4 +380,120 @@ export function _gasExpiryPill(r) {
     <span style="font-size:16px;font-weight:800;color:${col};line-height:1;letter-spacing:-.02em">${num}</span>
     <span style="font-size:8px;font-weight:700;color:${col};opacity:.7;text-transform:uppercase;letter-spacing:.1em;line-height:1;margin-top:2px">${sub}</span>
   </span>`;
+}
+
+// ── History preview panel ─────────────────────────────────────────────────────
+function _buildGasPreviewHTML(r) {
+  const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const fd = s => { if (!s) return '—'; const p = String(s).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; };
+  const apps = r.appliances || [];
+  const defs = r.defects || [];
+  const pipework = r.pipework || [];
+  const pipeLabels = ['Gas tight test', 'Working pressure', 'Visual inspection', 'Meter/governor', 'Emergency control'];
+  const appsHtml = apps.length ? apps.map((a, i) => `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:8px">Appliance ${i+1}: ${esc(a.type||'—')} — ${esc(a.location||'—')}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        ${[['Make',a.make],['Model',a.model],['Flue',a.flue_type],['Safe to Use',a.safe_to_use],['Serviced',a.serviced],['CO Alarm',a.co_alarm_fitted]].map(([l,v])=>`<tr><td style="color:#64748b;padding:2px 8px 2px 0;width:40%">${l}</td><td style="font-weight:600;color:#1e293b">${esc(v||'—')}</td></tr>`).join('')}
+      </table>
+    </div>`).join('') : '<p style="color:#94a3b8;font-size:13px;padding:8px 0">No appliances recorded</p>';
+  const defsHtml = defs.length ? defs.map((d, i) => `
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:10px;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;color:#c2410c">Defect ${i+1}</div>
+      <div style="font-size:12px;color:#1e293b;margin-top:4px">${esc(d.description||d.text||'—')}</div>
+      ${d.warning_type ? `<div style="font-size:11px;color:#ea580c;margin-top:3px">Warning: ${esc(d.warning_type)}</div>` : ''}
+    </div>`).join('') : '';
+  const pipeHtml = pipework.map((val, i) => `<tr><td style="font-size:12px;color:#64748b;padding:3px 8px 3px 0;width:55%">${esc(pipeLabels[i]||'')}</td><td style="font-size:12px;font-weight:700;color:${val==='PASS'?'#16a34a':val==='FAIL'?'#dc2626':'#475569'}">${esc(val||'N/A')}</td></tr>`).join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f1f5f9;padding:16px;color:#1e293b}.cert{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}.hdr{background:#1e3a5f;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start}.body{padding:16px 20px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}.ibox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px}.ilbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e3a5f;margin-bottom:8px}.irow{font-size:12px;color:#64748b;margin-bottom:3px}.stitle{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1e3a5f;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid #1e3a5f}</style></head><body>
+  <div class="cert">
+    <div class="hdr">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.04em;opacity:.8">LANDLORD GAS SAFETY CERTIFICATE — CP12</div>
+        <div style="font-size:20px;font-weight:900;margin-top:4px">${esc(r.ref_number||'DRAFT')}</div>
+        <div style="font-size:12px;margin-top:6px;opacity:.85">${esc(r.install_address||'No address')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="background:${r.status==='completed'?'#16a34a':'#f59e0b'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">${r.status==='completed'?'COMPLETED':'DRAFT'}</div>
+        <div style="font-size:11px;margin-top:8px;opacity:.85">Issued: ${fd(r.cert_date)}</div>
+        <div style="font-size:11px;opacity:.85">Next: ${fd(r.next_check_date)}</div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="row3">
+        <div class="ibox"><div class="ilbl">Property</div><div class="irow">${esc(r.install_address||'—')}</div>${r.install_postcode?`<div class="irow">${esc(r.install_postcode)}</div>`:''}</div>
+        <div class="ibox"><div class="ilbl">Landlord / Client</div><div class="irow">${esc(r.landlord_address||'—')}</div>${r.landlord_postcode?`<div class="irow">${esc(r.landlord_postcode)}</div>`:''}</div>
+        <div class="ibox"><div class="ilbl">Engineer</div><div class="irow"><strong>${esc(r.engineer||r.sig_issued_name||'—')}</strong></div>${r.gas_safe_no?`<div class="irow">Gas Safe: <strong>${esc(r.gas_safe_no)}</strong></div>`:''}</div>
+      </div>
+      ${pipework.length?`<div class="stitle">Pipework</div><table style="width:100%;margin-bottom:10px"><tbody>${pipeHtml}</tbody></table>`:''}
+      <div class="stitle">Appliances</div>${appsHtml}
+      ${defs.length?`<div class="stitle">Defects</div>${defsHtml}`:''}
+      ${r.work_details?`<div class="stitle">Work Details</div><p style="font-size:12px;color:#475569;line-height:1.5">${esc(r.work_details)}</p>`:''}
+      ${r.remedial_action?`<div class="stitle">Remedial Action</div><p style="font-size:12px;color:#475569;line-height:1.5;margin-top:14px">${esc(r.remedial_action)}</p>`:''}
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        ${r.sig_issued_name?`<div style="flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f;letter-spacing:.06em;margin-bottom:6px">Issued By</div><div style="font-size:12px;font-weight:600">${esc(r.sig_issued_name)}</div></div>`:''}
+        ${r.sig_received_name?`<div style="flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f;letter-spacing:.06em;margin-bottom:6px">Received By</div><div style="font-size:12px;font-weight:600">${esc(r.sig_received_name)}</div></div>`:''}
+      </div>
+    </div>
+  </div>
+  </body></html>`;
+}
+
+function _gasApplyIfrScale(scale) {
+  var ifr = document.getElementById('gas-hist-iframe');
+  if (!ifr) return;
+  var s = Math.max(0.2, Math.min(2.5, scale));
+  var certW = 794;
+  var contentH = 800;
+  try { contentH = Math.max(400, ifr.contentDocument.documentElement.scrollHeight); } catch(e) {}
+  ifr.style.width = certW + 'px';
+  ifr.style.height = contentH + 'px';
+  ifr.style.transformOrigin = '0 0';
+  ifr.style.transform = 'scale(' + s + ')';
+  ifr.style.marginRight = '-' + Math.round(certW * (1 - s)) + 'px';
+  ifr.style.marginBottom = '-' + Math.round(contentH * (1 - s)) + 'px';
+  window._gasScale = s;
+  var pct = document.getElementById('gas-hist-zoom-pct');
+  if (pct) pct.textContent = Math.round(s * 100) + '%';
+}
+
+export function gasZoomIn() { _gasApplyIfrScale((window._gasScale || 0.7) + 0.05); }
+export function gasZoomOut() { _gasApplyIfrScale((window._gasScale || 0.7) - 0.05); }
+
+export function gasShowPreview(idx) {
+  var r = _gasFiltered[idx]; if (!r) return;
+  window._gasHistRec = r;
+  var empty = document.getElementById('gas-hist-empty');
+  var active = document.getElementById('gas-hist-active');
+  var toolbar = document.getElementById('gas-hist-toolbar');
+  var ifr = document.getElementById('gas-hist-iframe');
+  if (!ifr) { loadGasForm(r.id); return; }
+  if (empty) empty.style.display = 'none';
+  if (active) active.style.display = 'block';
+  var isAdm = state.currentProfile?.role === 'admin';
+  var ref = (r.ref_number || '—').replace(/</g, '&lt;');
+  var addr = (r.install_address || '').replace(/</g, '&lt;');
+  toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+    + ref + (addr ? ' &mdash; ' + addr : '') + '</span>'
+    + _ibtn('Download PDF', 'fa-download', 'openGasPDF("' + r.id + '")')
+    + _ibtn('Email', 'fa-envelope', 'emailCP12FromList("' + r.id + '")')
+    + (isAdm ? _ibtn('Edit', 'fa-pen', 'loadGasForm("' + r.id + '")') : '')
+    + (isAdm ? _ibtn('Delete', 'fa-trash', 'deleteGas("' + r.id + '")', true) : '');
+  var html = _buildGasPreviewHTML(r);
+  var blob = new Blob([html], {type: 'text/html'});
+  if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
+  var blobUrl = URL.createObjectURL(blob);
+  ifr._blobUrl = blobUrl;
+  ifr.onload = function() {
+    try {
+      var panel = document.getElementById('gas-hist-panel');
+      var panelW = panel ? Math.max(300, panel.clientWidth - 2) : 794;
+      var base = Math.min(1, panelW / 794) * 0.9;
+      _gasApplyIfrScale(base);
+    } catch(e) {}
+  };
+  ifr.src = blobUrl;
+  document.querySelectorAll('[data-gas-idx]').forEach(function(c) { c.style.outline = 'none'; c.style.background = ''; });
+  var card = document.querySelector('[data-gas-idx="' + idx + '"]');
+  if (card) { card.style.outline = '2px solid var(--primary,#0e4d33)'; card.style.background = 'rgba(14,77,51,.06)'; }
 }
