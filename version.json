@@ -1,7 +1,7 @@
 {
   "v": "2.0.2",
-  "build": 87,
+  "build": 88,
   "changes": [
-    "Added: Fire Alarm certificates now have a side-panel preview — click any cert to see it, with Download, Email, Edit, Delete and zoom in/out buttons."
+    "Fixed: Fire Alarm certificate cards no longer overflow — the type label in the card is now shorter so everything fits neatly."
   ]
 }
