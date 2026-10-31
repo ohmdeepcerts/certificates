@@ -17,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-CPoSPcMV.js"></script>
+  <script type="module" crossorigin src="./assets/index-v3zqi7th.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-B1zKOk34.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-BaTDFjmn.js">
   <link rel="stylesheet" crossorigin href="./assets/index-D64tGooD.css">
 </head>
 <body>
@@ -452,15 +452,35 @@
     <!-- PAT HISTORY -->
     <div class="view" id="view-pat-history">
       <div class="view-header"><div><div class="view-title">PAT History</div><div class="view-subtitle">All portable appliance test records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportPATCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewPAT()">+ New PAT Test</button></div></div>
-      <div class="list-controls">
-        <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
-        <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
-        <button id="pat-sort-exp-btn" onclick="togglePatExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
-        <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
-        </select>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:0 0 400px;min-width:280px;max-width:100%">
+          <div class="list-controls">
+            <input class="search-input" id="pat-search" placeholder="Search by address or reference…" oninput="filterPATList()">
+            <button id="pat-sort-apps-btn" onclick="togglePatAppSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Appliances</button>
+            <button id="pat-sort-exp-btn" onclick="togglePatExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
+            <select id="pat-filter" onchange="filterPATList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+            </select>
+          </div>
+          <div id="pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>Loading…</p></div></div>
+        </div>
+        <div id="pat-hist-panel" style="flex:1;min-width:320px;position:sticky;top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          <div id="pat-hist-empty" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+            <div style="font-size:38px;opacity:.4">📋</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text)">Select a certificate</div>
+            <div style="font-size:12px;color:var(--muted)">Click any row to preview the full<br>certificate and access actions</div>
+          </div>
+          <div id="pat-hist-active" style="display:none">
+            <div id="pat-hist-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <div id="pat-hist-zoom-bar" style="padding:4px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;align-items:center;background:var(--surface)">
+              <button onclick="patHistZoomOut()" title="Zoom out" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">−</button>
+              <span id="pat-hist-zoom-pct" style="font-size:11px;min-width:34px;text-align:center;color:var(--muted);font-weight:600"></span>
+              <button onclick="patHistZoomIn()" title="Zoom in" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">+</button>
+            </div>
+            <iframe id="pat-hist-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
       </div>
-      <div class="cert-list" id="pat-list"><div class="empty-state"><div class="empty-icon">📋</div><p>Loading…</p></div></div>
     </div>
 
     <!-- COMPLIANCE -->
@@ -781,14 +801,34 @@
     <!-- GAS HISTORY -->
     <div class="view" id="view-gas-history">
       <div class="view-header"><div><div class="view-title">Gas History</div><div class="view-subtitle">All gas safety certificate records</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="exportGasCSV()">⬇ CSV</button><button class="btn btn-primary btn-sm" onclick="startNewGas()">+ New Gas</button></div></div>
-      <div class="list-controls">
-        <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
-        <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
-        <select id="gas-filter" onchange="filterGasList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
-          <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
-        </select>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:0 0 400px;min-width:280px;max-width:100%">
+          <div class="list-controls">
+            <input class="search-input" id="gas-search" placeholder="Search by address or reference…" oninput="filterGasList()">
+            <button id="gas-sort-exp-btn" onclick="toggleGasExpSort()" class="btn btn-secondary btn-sm" style="white-space:nowrap">↕ Expiry</button>
+            <select id="gas-filter" onchange="filterGasList()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <option value="">All Status</option><option value="draft">Drafts</option><option value="completed">Completed</option>
+            </select>
+          </div>
+          <div id="gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>Loading…</p></div></div>
+        </div>
+        <div id="gas-hist-panel" style="flex:1;min-width:320px;position:sticky;top:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)">
+          <div id="gas-hist-empty" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+            <div style="font-size:38px;opacity:.4">🔥</div>
+            <div style="font-weight:600;font-size:14px;color:var(--text)">Select a certificate</div>
+            <div style="font-size:12px;color:var(--muted)">Click any row to preview the full<br>certificate and access actions</div>
+          </div>
+          <div id="gas-hist-active" style="display:none">
+            <div id="gas-hist-toolbar" style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--surface)"></div>
+            <div id="gas-hist-zoom-bar" style="padding:4px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;align-items:center;background:var(--surface)">
+              <button onclick="gasZoomOut()" title="Zoom out" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">−</button>
+              <span id="gas-hist-zoom-pct" style="font-size:11px;min-width:34px;text-align:center;color:var(--muted);font-weight:600"></span>
+              <button onclick="gasZoomIn()" title="Zoom in" style="width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">+</button>
+            </div>
+            <iframe id="gas-hist-iframe" style="border:0;width:100%;height:calc(100vh - 140px);min-height:500px;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
       </div>
-      <div class="cert-list" id="gas-list"><div class="empty-state"><div class="empty-icon">🔥</div><p>Loading…</p></div></div>
     </div>
 
     <!-- SETTINGS -->
