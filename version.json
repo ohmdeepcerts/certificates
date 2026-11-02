@@ -1,7 +1,8 @@
 {
-  "v": "2.0.7",
-  "build": 95,
+  "v": "2.0.8",
+  "build": 96,
   "changes": [
-    "Fixed: PAT and Gas certificate history now shows the actual final certificate — same as what gets emailed to clients."
+    "Fixed: PAT history now shows the actual A4 certificate — same layout as the wizard with company logo, appliance table, test results, and all fields.",
+    "Fixed: Gas history now shows the actual Gas Safety Certificate (CP12) with all appliance details, pipework checks, defects and signatures."
   ]
 }

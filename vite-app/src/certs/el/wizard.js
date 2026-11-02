@@ -1,6 +1,6 @@
 import { sb } from '../../lib/supabase.js';
 import { state, isAdmin } from '../../lib/state.js';
-import { toast, showOverlay, hideOverlay, confirm2, _softDelete, esc, _addrColor, _addrInitials } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, confirm2, _softDelete, _deleteCert, esc, _addrColor, _addrInitials } from '../../lib/utils.js';
 import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 import { getSetting } from '../../lib/settings.js';
 import { navigate } from '../../nav/navigation.js';
@@ -1004,7 +1004,7 @@ export function elShowPreview(id) {
     +_ibtn('Email','fa-envelope','elEmailCert(window._elCertRec)')
     +(isAdmin()?_ibtn('Edit','fa-pen',"elEditCert('"+id+"')"):'')
     +(isAdmin()?_ibtn('Copy','fa-copy',"copyELCert('"+id+"')"):'')
-    +(isAdmin()?_ibtn('Delete','fa-trash',"deleteELCert('"+id+"')",true):'');
+    +_ibtn('Delete','fa-trash',"deleteELCert('"+id+"')",true);
   var html = elBuildCertHTML(full);
   var blob = new Blob([html], {type:'text/html'});
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
@@ -1661,12 +1661,8 @@ export function filterELList(q) {
   renderELList(filtered, 1, _elCurrentQ);
 }
 
-export async function deleteELCert(id) {
-  if (!await confirm2('Delete this EL certificate? This cannot be undone.')) return;
-  var {error} = await sb.from('el_certs').delete().eq('id', id);
-  if (error) { toast('Delete failed: '+error.message,'error'); return; }
-  toast('Certificate deleted','success');
-  loadELHistory();
+export function deleteELCert(id) {
+  _deleteCert('el_certs', id, loadELHistory);
 }
 
 export async function copyELCert(id) {
@@ -1745,7 +1741,7 @@ export function renderELList(certs, page, q) {
           +(isAdmin()?_ibtn('Copy','fa-copy','event.stopPropagation();copyELCert(\''+r.id+'\')'):'')
           +_ibtn('Download PDF','fa-download','event.stopPropagation();elDownloadPDF(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
           +_ibtn('Email','fa-envelope','event.stopPropagation();elEmailCert(Object.assign({},window._elAllCerts.find(x=>x.id===\''+r.id+'\').data,{id:\''+r.id+'\',ref:window._elAllCerts.find(x=>x.id===\''+r.id+'\').ref_number}))')
-          +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true):'')
+          +_ibtn('Delete','fa-trash','event.stopPropagation();deleteELCert(\''+r.id+'\')',true)
         +'</div>'
       +'</div>'
     +'</div>';

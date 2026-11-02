@@ -1,6 +1,6 @@
 import { sb } from '../../lib/supabase.js';
 import { state, isAdmin } from '../../lib/state.js';
-import { toast, showOverlay, hideOverlay, confirm2, _softDelete, esc, _addrColor, _addrInitials, _ibtn } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, confirm2, _softDelete, _deleteCert, esc, _addrColor, _addrInitials, _ibtn } from '../../lib/utils.js';
 import { getSetting } from '../../lib/settings.js';
 import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
@@ -805,7 +805,7 @@ export function fireShowPreview(idx) {
     +_ibtn('Download PDF','fa-download','fireDownloadPDF(window._fireCertRec)')
     +_ibtn('Email','fa-envelope','fireCertEmailBtn()')
     +(isAdmin()?_ibtn('Edit','fa-pen','fireEditCert(window._fireHistRec)'):'')
-    +(isAdmin()?_ibtn('Delete','fa-trash',"fireDeleteCert('"+r.id+"')",true):'');
+    +_ibtn('Delete','fa-trash',"fireDeleteCert('"+r.id+"')",true);
   var html = fireBuildCertHTML(certData);
   var blob = new Blob([html], {type:'text/html'});
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
@@ -948,7 +948,7 @@ function renderFireList(certs, page, q) {
           +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();fireEditCertIdx('+idx+')'):'')
           +_ibtn('Download PDF','fa-download','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
           +_ibtn('Email','fa-envelope','event.stopPropagation();fireEmailCertIdx('+idx+')')
-          +(isAdmin()?_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true):'')
+          +_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true)
         +'</div>'
       +'</div>'
     +'</div>';
@@ -995,15 +995,8 @@ export function fireEditCert(recStr) {
   navigate('fire-new');
 }
 
-export async function fireDeleteCert(id) {
-  if (!await confirm2('Delete this fire alarm certificate? This cannot be undone.')) return;
-  var { error } = await sb.from('fire_certs').update({
-    deleted_at: new Date().toISOString(),
-    deleted_by: (state.currentUser && state.currentUser.id) ? state.currentUser.id : null
-  }).eq('id', id);
-  if (error) { toast('Delete failed: ' + error.message, 'error'); return; }
-  toast('Certificate deleted','success');
-  loadFireHistory();
+export function fireDeleteCert(id) {
+  _deleteCert('fire_certs', id, loadFireHistory);
 }
 
 export async function exportFireCSV() {

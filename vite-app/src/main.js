@@ -80,7 +80,7 @@ async function _loadCertGlobals() {
   Object.assign(window, { showAddStaffModal: staff.showAddStaffModal, hideAddStaffModal: staff.hideAddStaffModal, doAddStaff: staff.doAddStaff, setStaffPerm: staff.setStaffPerm, toggleStaffActive: staff.toggleStaffActive, resetStaffPassword: staff.resetStaffPassword, approveRequest: staff.approveRequest, rejectRequest: staff.rejectRequest, copyStaffSQL: staff.copyStaffSQL, loadStaff: staff.loadStaff, loadPendingRequests: staff.loadPendingRequests });
   Object.assign(window, { renderAuditPage: audit.renderAuditPage, prevAuditPage: audit.prevAuditPage, nextAuditPage: audit.nextAuditPage, loadAuditLog: audit.loadAuditLog });
   Object.assign(window, { exportPATCSV: csv.exportPATCSV, exportGasCSV: csv.exportGasCSV, exportELCSV: csv.exportELCSV });
-  Object.assign(window, { globalSearch: dash.globalSearch, loadDashboard: dash.loadDashboard, loadAnalytics: dash.loadAnalytics, recycleBinRestore: dash.recycleBinRestore, recycleBinPurge: dash.recycleBinPurge, loadCompliance: dash.loadCompliance, filterCompliance: dash.filterCompliance });
+  Object.assign(window, { globalSearch: dash.globalSearch, loadDashboard: dash.loadDashboard, loadAnalytics: dash.loadAnalytics, recycleBinRestore: dash.recycleBinRestore, recycleBinPurge: dash.recycleBinPurge, recycleBinPurgeAll: dash.recycleBinPurgeAll, loadCompliance: dash.loadCompliance, filterCompliance: dash.filterCompliance });
 }
 
 // ── App init ──────────────────────────────────────────────────────────────

@@ -58,33 +58,104 @@ export function toast(msg, type = 'info', duration = null) {
 // ── Modal helpers ──────────────────────────────────────────────────────────
 export function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
 export function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
 export function confirm2(title, msg, cb) {
-  document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-msg').textContent = msg;
-  document.getElementById('confirm-ok').onclick = () => { closeModal('confirm-modal'); cb(); };
-  openModal('confirm-modal');
+  if (typeof cb === 'function') {
+    // Callback mode — used by recycle bin purge etc.
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-msg').textContent = msg;
+    document.getElementById('confirm-ok').onclick = () => { closeModal('confirm-modal'); cb(); };
+    openModal('confirm-modal');
+    return;
+  }
+  // Promise mode — used by wizard validation (await confirm2('…'))
+  return new Promise(resolve => {
+    const modal = document.getElementById('confirm-modal');
+    document.getElementById('confirm-title').textContent = title || 'Confirm';
+    document.getElementById('confirm-msg').textContent = msg ?? '';
+    document.getElementById('confirm-ok').onclick = () => { closeModal('confirm-modal'); resolve(true); };
+    const cancelBtn = modal.querySelector('.modal-footer .btn-secondary');
+    const closeBtn  = modal.querySelector('.modal-close');
+    if (cancelBtn) cancelBtn.onclick = () => { closeModal('confirm-modal'); resolve(false); };
+    if (closeBtn)  closeBtn.onclick  = () => { closeModal('confirm-modal'); resolve(false); };
+    openModal('confirm-modal');
+  });
 }
 
-// ── Soft delete ────────────────────────────────────────────────────────────
-export async function _softDelete(tbl, id, afterFn) {
+// ── Delete helpers (unified across all cert types) ─────────────────────────
+function _softDeleteSilent(tbl, id, afterFn) {
   const ts = new Date().toISOString();
-  if (isAdmin()) {
-    const { error } = await sb.from(tbl).delete().eq('id', id);
-    if (error) { toast('Delete failed: ' + error.message, 'error'); return; }
-    toast('Permanently deleted', 'warn');
-  } else {
-    const { error } = await sb.from(tbl).update({ deleted_at: ts, updated_at: ts }).eq('id', id);
-    if (error) {
-      if ((error.message || '').includes('deleted_at')) {
-        toast('Recycle Bin not set up yet — run SQL migration in Settings → Backend', 'warn', 5000);
-      } else {
-        toast('Delete failed: ' + error.message, 'error');
+  return sb.from(tbl).update({ deleted_at: ts, updated_at: ts, deleted_by: state.currentUser?.id ?? null }).eq('id', id)
+    .then(({ error }) => {
+      if (error) {
+        if ((error.message || '').includes('deleted_at') || (error.message || '').includes('deleted_by')) {
+          toast('Recycle Bin not set up yet — run SQL migration in Settings → Backend', 'warn', 5000);
+        } else {
+          toast('Delete failed: ' + error.message, 'error');
+        }
+        return;
       }
-      return;
-    }
-    toast('Moved to Recycle Bin', 'warn');
+      toast('Certificate deleted', 'success');
+      if (afterFn) afterFn();
+    });
+}
+
+function _showAdminDeleteModal(tbl, id, afterFn) {
+  let modal = document.getElementById('admin-delete-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'admin-delete-modal';
+    modal.className = 'modal-backdrop hidden';
+    modal.innerHTML = `<div class="modal" style="max-width:400px">
+      <div class="modal-header"><div class="modal-title">Delete Certificate</div><button class="modal-close" onclick="closeModal('admin-delete-modal')">×</button></div>
+      <p style="font-size:13px;color:var(--muted);margin:4px 0 16px">Choose how to remove this certificate:</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="adm-del-bin" style="text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:13px">
+          <div style="font-weight:600;color:var(--text)"><i class="fa-solid fa-recycle" style="color:#f59e0b;margin-right:8px;width:14px"></i>Move to Recycle Bin</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;padding-left:22px">Admin can view, restore or purge it later</div>
+        </button>
+        <button id="adm-del-perm" style="text-align:left;padding:12px 14px;border:1px solid #fca5a5;border-radius:8px;background:#fff5f5;cursor:pointer;font-size:13px">
+          <div style="font-weight:600;color:#dc2626"><i class="fa-solid fa-trash" style="margin-right:8px;width:14px"></i>Permanently Delete</div>
+          <div style="font-size:11px;color:#b91c1c;margin-top:3px;padding-left:22px">Cannot be undone — removed from database</div>
+        </button>
+      </div>
+      <div class="modal-footer" style="margin-top:16px"><button class="btn btn-secondary" onclick="closeModal('admin-delete-modal')">Cancel</button></div>
+    </div>`;
+    document.body.appendChild(modal);
   }
-  if (afterFn) afterFn();
+  document.getElementById('adm-del-bin').onclick = async () => {
+    closeModal('admin-delete-modal');
+    const ts = new Date().toISOString();
+    const { error } = await sb.from(tbl).update({ deleted_at: ts, updated_at: ts, deleted_by: state.currentUser?.id ?? null }).eq('id', id);
+    if (error) { toast('Failed: ' + error.message, 'error'); return; }
+    toast('Moved to Recycle Bin', 'warn');
+    if (afterFn) afterFn();
+  };
+  document.getElementById('adm-del-perm').onclick = () => {
+    closeModal('admin-delete-modal');
+    confirm2('Permanently Delete', 'This cannot be undone — delete this certificate forever?', async () => {
+      const { error } = await sb.from(tbl).delete().eq('id', id);
+      if (error) { toast('Delete failed: ' + error.message, 'error'); return; }
+      toast('Permanently deleted', 'warn');
+      if (afterFn) afterFn();
+    });
+  };
+  openModal('admin-delete-modal');
+}
+
+export function _deleteCert(tbl, id, afterFn) {
+  if (isAdmin()) {
+    _showAdminDeleteModal(tbl, id, afterFn);
+  } else {
+    confirm2('Delete Certificate', 'Are you sure you want to delete this certificate?', () => {
+      _softDeleteSilent(tbl, id, afterFn);
+    });
+  }
+}
+
+// Keep for legacy compatibility — now always soft-deletes
+export async function _softDelete(tbl, id, afterFn) {
+  await _softDeleteSilent(tbl, id, afterFn);
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────

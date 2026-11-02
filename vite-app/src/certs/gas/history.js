@@ -4,7 +4,7 @@
 // ============================================================
 import { sb } from '../../lib/supabase.js';
 import { getSetting } from '../../lib/settings.js';
-import { toast, showOverlay, hideOverlay, confirm2, _softDelete, showEmailProgress, finishEmailProgress, _ibtn, _addrColor, _addrInitials } from '../../lib/utils.js';
+import { toast, showOverlay, hideOverlay, confirm2, _softDelete, _deleteCert, showEmailProgress, finishEmailProgress, _ibtn, _addrColor, _addrInitials } from '../../lib/utils.js';
 import { state } from '../../lib/state.js';
 import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 import { logAppEvent } from '../../audit/audit.js';
@@ -160,11 +160,8 @@ export function filterGasList() {
   renderGasList(list, 1, _gasCurrentQ);
 }
 
-export async function deleteGas(id) {
-  const _isAdm = typeof _isAdminUser === 'function' ? _isAdminUser() : (state.currentProfile?.role === 'admin');
-  confirm2('Delete Gas Cert', _isAdm ? 'Permanently delete this certificate?' : 'Move to Recycle Bin? Admins can restore it.', async () => {
-    await _softDelete('gas_certs', id, loadGasHistory);
-  });
+export function deleteGas(id) {
+  _deleteCert('gas_certs', id, loadGasHistory);
 }
 
 export async function copyGas(id) {
@@ -383,6 +380,111 @@ export function _gasExpiryPill(r) {
 }
 
 // ── History preview panel ─────────────────────────────────────────────────────
+function _buildGasCertHTML(r) {
+  const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fd = s => { if (!s) return '—'; const p = String(s).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; };
+
+  const coName = getSetting('gas_co_name', getSetting('company_name', 'MK Heating'));
+  const coPhone = getSetting('gas_co_phone', getSetting('company_phone', ''));
+  const coEmail = getSetting('gas_co_email', getSetting('company_email', ''));
+  const coAddr = getSetting('gas_co_address', getSetting('company_address', ''));
+  const coWeb = getSetting('gas_co_website', '');
+  const logoData = getSetting('gas_logo_data', '');
+
+  const NAVY = '#1e3a5f', AMBER = '#d97706';
+
+  const addrParts = (r.install_address || '').split('\n').map(l => l.trim()).filter(Boolean);
+  if (r.install_postcode && !addrParts.some(p => p === r.install_postcode.trim())) addrParts.push(r.install_postcode.trim());
+  const addrHtml = addrParts.map(esc).join('<br>');
+
+  const eng = r.engineer || r.sig_issued_name || '—';
+  const apps = r.appliances || [];
+  const defs = r.defects || [];
+  const pipework = r.pipework || [];
+  const pipeLabels = ['Gas tight test', 'Working pressure', 'Visual inspection', 'Meter/governor', 'Emergency control'];
+
+  const logoHTML = logoData
+    ? `<img src="${logoData}" style="max-width:120px;max-height:46px;object-fit:contain">`
+    : `<div style="font-size:11px;font-weight:900;color:#fff;text-align:center;line-height:1.2">GAS SAFE<br><span style="font-size:9px;font-weight:400">REGISTERED</span></div>`;
+
+  const appsHTML = apps.length
+    ? apps.map((a, i) => `<div style="border:1px solid #e2cfa0;border-radius:4px;padding:8px 10px;margin-bottom:6px;background:#fffdf7">
+        <div style="font-weight:700;font-size:.8rem;color:${NAVY};margin-bottom:4px">Appliance ${i + 1}: ${esc(a.type || '—')} — <span style="font-weight:500">${esc(a.location || '—')}</span></div>
+        <table style="width:100%;border-collapse:collapse;font-size:.72rem"><tr>
+          <td style="color:#64748b;width:30%;padding:2px 6px 2px 0">Make</td><td style="font-weight:600;color:#1e293b;width:20%">${esc(a.make || '—')}</td>
+          <td style="color:#64748b;width:30%;padding:2px 6px 2px 0">Model</td><td style="font-weight:600;color:#1e293b">${esc(a.model || '—')}</td>
+        </tr><tr>
+          <td style="color:#64748b;padding:2px 6px 2px 0">Flue Type</td><td style="font-weight:600;color:#1e293b">${esc(a.flue_type || '—')}</td>
+          <td style="color:#64748b;padding:2px 6px 2px 0">Safe to Use</td>
+          <td style="font-weight:700;color:${(a.safe_to_use || '').toUpperCase() === 'YES' ? '#16a34a' : '#dc2626'}">${esc(a.safe_to_use || '—')}</td>
+        </tr><tr>
+          <td style="color:#64748b;padding:2px 6px 2px 0">Serviced</td><td style="font-weight:600;color:#1e293b">${esc(a.serviced || '—')}</td>
+          <td style="color:#64748b;padding:2px 6px 2px 0">CO Alarm</td><td style="font-weight:600;color:#1e293b">${esc(a.co_alarm_fitted || '—')}</td>
+        </tr></table>
+      </div>`).join('')
+    : '<p style="color:#94a3b8;font-size:.78rem">No appliances recorded</p>';
+
+  const pipeHTML = pipework.length
+    ? `<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:6px">${pipework.map((val, i) => `<tr><td style="padding:3px 8px 3px 0;color:#64748b;width:55%">${esc(pipeLabels[i] || '')}</td><td style="font-weight:700;color:${val === 'PASS' ? '#16a34a' : val === 'FAIL' ? '#dc2626' : '#475569'}">${esc(val || 'N/A')}</td></tr>`).join('')}</table>`
+    : '';
+
+  const defsHTML = defs.length
+    ? defs.map((d, i) => `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:8px;margin-bottom:4px;font-size:.72rem"><div style="font-weight:700;color:#c2410c">Defect ${i + 1}${d.warning_type ? ' — ' + esc(d.warning_type) : ''}</div><div style="color:#1e293b;margin-top:3px">${esc(d.description || d.text || '—')}</div></div>`).join('')
+    : '';
+
+  const sHdr = t => `<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${NAVY};padding:4px 8px;border-radius:3px;margin:8px 0 5px">${t}</div>`;
+  const isDraft = r.status !== 'completed';
+  const wmDiv = isDraft ? `<div style="opacity:.06;pointer-events:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;font-weight:900;color:${NAVY};white-space:nowrap;user-select:none">DRAFT</div>` : '';
+
+  const css = `@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',Arial,sans-serif;background:#d1d5db;padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center}
+    .a4{background:#fff;width:794px;min-height:1123px;padding:20px 24px;box-sizing:border-box;color:#000;font-size:.7rem;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+    .a4-topbar{display:flex;justify-content:space-between;background:#fef9f0;border:1px solid #e2cfa0;padding:4px 10px;font-size:.72rem;font-weight:600;margin-bottom:6px;border-radius:3px}
+    .a4-box{border:1px solid #e2cfa0;border-radius:4px;padding:8px 10px;background:#fffdf7}
+    .a4-key{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}
+    .a4-val{font-size:.85rem;color:#1e293b;white-space:pre-line;font-weight:500}
+    .a4-foot{margin-top:auto;padding-top:8px;border-top:1px solid #e2cfa0;font-size:.62rem;color:#64748b}`;
+
+  const pageHTML = `<div class="a4">${wmDiv}
+    <div class="a4-topbar"><div><strong>Date:</strong> ${fd(r.cert_date)}</div><div><strong>Ref:</strong> ${esc(r.ref_number) || '—'}</div></div>
+    <div style="display:flex;gap:14px;align-items:center;border-bottom:3px solid ${NAVY};padding-bottom:11px;margin-bottom:10px">
+      <div style="width:130px;height:50px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${NAVY};border-radius:4px;padding:6px">${logoHTML}</div>
+      <div style="flex:1">
+        <div style="font-size:22px;font-weight:900;color:${NAVY};font-family:'DM Sans',Arial,sans-serif">${esc(coName)}</div>
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;color:${AMBER}">GAS SAFETY RECORD — CP12 (LANDLORD)</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="background:${isDraft ? '#f59e0b' : AMBER};color:#fff;padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;display:inline-block">${isDraft ? 'DRAFT' : 'COMPLETED'}</div>
+        ${r.next_check_date ? `<div style="font-size:.67rem;margin-top:4px;color:#92400e;font-weight:700">Next due: ${fd(r.next_check_date)}</div>` : ''}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px">
+      <div class="a4-box"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${addrHtml || '—'}</div></div>
+      <div class="a4-box"><div class="a4-key">Landlord / Client</div><div class="a4-val">${esc(r.landlord_address || '—')}</div></div>
+      <div class="a4-box"><div class="a4-key">Engineer</div><div class="a4-val" style="font-weight:700">${esc(eng)}</div>${r.gas_safe_no ? `<div style="font-size:.67rem;margin-top:3px;color:#94a3b8">Gas Safe No: <strong style="color:${AMBER}">${esc(r.gas_safe_no)}</strong></div>` : ''}</div>
+    </div>
+    ${pipeHTML ? sHdr('Pipework Checks') + pipeHTML : ''}
+    ${sHdr('Gas Appliances')}${appsHTML}
+    ${defsHTML ? sHdr('Defects / Warnings') + defsHTML : ''}
+    ${r.work_details ? sHdr('Work Carried Out') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.work_details)}</p>` : ''}
+    ${r.remedial_action ? sHdr('Remedial Action Required') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.remedial_action)}</p>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+      <div class="a4-box"><div class="a4-key">Issued By</div><div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div>
+      <div class="a4-box"><div class="a4-key">Received By</div><div class="a4-val">${esc(r.sig_received_name || '—')}</div></div>
+    </div>
+    ${coAddr ? `<div style="font-size:.67rem;color:#94a3b8;margin-top:6px">${esc(coAddr)}</div>` : ''}
+    <div class="a4-foot">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+        <div>${[coPhone ? `📞 ${esc(coPhone)}` : '', coEmail ? `✉ ${esc(coEmail)}` : '', coWeb ? `🌐 ${esc(coWeb)}` : ''].filter(Boolean).join(' &nbsp;·&nbsp; ')}</div>
+        <div style="color:#b45309;font-weight:700">Gas Safety (Installation &amp; Use) Regulations 1998</div>
+      </div>
+    </div>
+  </div>`;
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${pageHTML}</body></html>`;
+}
+
 function _buildGasPreviewHTML(r) {
   const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const fd = s => { if (!s) return '—'; const p = String(s).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; };
@@ -479,7 +581,7 @@ export function gasShowPreview(idx) {
     + _ibtn('Email', 'fa-envelope', 'emailCP12FromList("' + r.id + '")')
     + (isAdm ? _ibtn('Edit', 'fa-pen', 'loadGasForm("' + r.id + '")') : '')
     + (isAdm ? _ibtn('Delete', 'fa-trash', 'deleteGas("' + r.id + '")', true) : '');
-  var html = _buildGasPreviewHTML(r);
+  var html = _buildGasCertHTML(r);
   var blob = new Blob([html], {type: 'text/html'});
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
   var blobUrl = URL.createObjectURL(blob);

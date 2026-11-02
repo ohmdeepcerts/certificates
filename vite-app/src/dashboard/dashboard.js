@@ -19,47 +19,82 @@ export async function loadRecycleBin() {
   if (!el) return;
   el.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
   try {
-    // Test if deleted_at column exists
     const _colCheck = await sb.from('pat_reports').select('deleted_at').limit(1);
     if (_colCheck.error && (_colCheck.error.message || '').includes('deleted_at')) {
       el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><p style="max-width:400px">Recycle Bin requires a one-time database migration.<br><br>Go to <strong>Settings → Backend → Staff Setup</strong>, copy the SQL, and run Step 8 in your <a href="https://supabase.com/dashboard/project/iihnfgmsfshrgrhargxz/sql/new" target="_blank" style="color:var(--accent)">Supabase SQL Editor</a>.</p></div>';
       return;
     }
-    const [{ data: pats }, { data: gases }, { data: els }] = await Promise.all([
-      sb.from('pat_reports').select('id,ref_number,status,test_date,client_name,deleted_at').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
-      sb.from('gas_certs').select('id,ref_number,status,cert_date,install_address,deleted_at').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
-      sb.from('el_certs').select('id,ref_number,premises_name,deleted_at,created_at').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
+    const [{ data: pats }, { data: gases }, { data: els }, { data: fires }] = await Promise.all([
+      sb.from('pat_reports').select('id,ref_number,status,test_date,client_name,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
+      sb.from('gas_certs').select('id,ref_number,status,cert_date,install_address,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
+      sb.from('el_certs').select('id,ref_number,premises_name,deleted_at,deleted_by,created_at').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
+      sb.from('fire_certs').select('id,ref_number,premises_address,cert_type,outcome,test_date,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
     ]);
     const items = [
-      ...(pats || []).map(r => ({ tbl: 'pat_reports', type: 'PAT', id: r.id, label: r.ref_number || r.id.slice(-6).toUpperCase(), sub: r.client_name || patFd(r.test_date), deleted_at: r.deleted_at })),
-      ...(gases || []).map(r => ({ tbl: 'gas_certs', type: 'Gas CP12', id: r.id, label: r.ref_number || (r.install_address || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.cert_date), deleted_at: r.deleted_at })),
-      ...(els || []).map(r => ({ tbl: 'el_certs', type: 'EL', id: r.id, label: r.ref_number || r.premises_name || r.id.slice(-6).toUpperCase(), sub: '', deleted_at: r.deleted_at }))
+      ...(pats || []).map(r => ({ tbl: 'pat_reports', type: 'PAT', id: r.id, label: r.ref_number || r.id.slice(-6).toUpperCase(), sub: r.client_name || patFd(r.test_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
+      ...(gases || []).map(r => ({ tbl: 'gas_certs', type: 'Gas CP12', id: r.id, label: r.ref_number || (r.install_address || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.cert_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
+      ...(els || []).map(r => ({ tbl: 'el_certs', type: 'EL', id: r.id, label: r.ref_number || r.premises_name || r.id.slice(-6).toUpperCase(), sub: '', deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
+      ...(fires || []).map(r => ({ tbl: 'fire_certs', type: 'Fire Alarm', id: r.id, label: r.ref_number || (r.premises_address || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.test_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by }))
     ].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
+
+    // Fetch names for all who-deleted UUIDs
+    const byUids = [...new Set(items.map(i => i.deleted_by).filter(Boolean))];
+    const nameMap = {};
+    if (byUids.length) {
+      const { data: profiles } = await sb.from('profiles').select('id,full_name').in('id', byUids);
+      (profiles || []).forEach(p => { nameMap[p.id] = p.full_name || 'Unknown'; });
+    }
+
     if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🗑️</div><p>Recycle Bin is empty</p></div>'; return; }
-    el.innerHTML = `<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">${items.length} deleted item${items.length === 1 ? '' : 's'} — restore or permanently purge below.</div>`
-      + items.map(i => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;background:var(--surface)">
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:13px">${i.label} <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:999px;margin-left:4px">${i.type}</span></div>
-          ${i.sub ? `<div style="font-size:12px;color:var(--muted)">${i.sub}</div>` : ''}
-          <div style="font-size:11px;color:var(--muted)">Deleted ${new Date(i.deleted_at).toLocaleDateString('en-GB')}</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="recycleBinRestore('${i.tbl}','${i.id}')">↩ Restore</button>
-        <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="recycleBinPurge('${i.tbl}','${i.id}')">🗑 Purge</button>
-      </div>`).join('');
+
+    const purgeAllBtn = `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5;margin-bottom:14px" onclick="recycleBinPurgeAll()"><i class="fa-solid fa-trash" style="margin-right:6px"></i>Delete All (${items.length})</button>`;
+
+    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:13px;color:var(--muted)">${items.length} deleted item${items.length === 1 ? '' : 's'}</div>
+        ${purgeAllBtn}
+      </div>`
+      + items.map(i => {
+        const deletedBy = i.deleted_by ? (nameMap[i.deleted_by] || 'Unknown') : 'Unknown';
+        const deletedDate = new Date(i.deleted_at).toLocaleDateString('en-GB');
+        const typeColor = i.type === 'PAT' ? '#1d4ed8' : i.type === 'Gas CP12' ? '#b45309' : i.type === 'EL' ? '#15803d' : '#7c3aed';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;background:var(--surface)">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${i.label} <span style="font-size:11px;background:${typeColor}1a;color:${typeColor};padding:2px 7px;border-radius:999px;margin-left:4px;font-weight:600">${i.type}</span></div>
+            ${i.sub ? `<div style="font-size:12px;color:var(--muted)">${i.sub}</div>` : ''}
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">Deleted ${deletedDate} by <strong>${deletedBy}</strong></div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="recycleBinRestore('${i.tbl}','${i.id}')">↩ Restore</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="recycleBinPurge('${i.tbl}','${i.id}')">🗑 Delete</button>
+        </div>`;
+      }).join('');
   } catch (e) { el.innerHTML = '<div class="empty-state"><p>Error: ' + e.message + '</p></div>'; }
 }
 
 export async function recycleBinRestore(tbl, id) {
-  const { error } = await sb.from(tbl).update({ deleted_at: null }).eq('id', id);
+  const { error } = await sb.from(tbl).update({ deleted_at: null, deleted_by: null }).eq('id', id);
   if (error) { toast('Restore failed: ' + error.message, 'error'); return; }
   toast('Restored', 'success'); loadRecycleBin();
 }
 
 export function recycleBinPurge(tbl, id) {
-  confirm2('Permanently Purge', 'This cannot be undone. Delete forever?', async () => {
+  confirm2('Permanently Delete', 'This cannot be undone. Remove this certificate from the database forever?', async () => {
     const { error } = await sb.from(tbl).delete().eq('id', id);
-    if (error) { toast('Purge failed: ' + error.message, 'error'); return; }
+    if (error) { toast('Delete failed: ' + error.message, 'error'); return; }
     toast('Permanently deleted', 'warn'); loadRecycleBin();
+  });
+}
+
+export function recycleBinPurgeAll() {
+  confirm2('Delete All', 'Permanently delete ALL items in the Recycle Bin? This cannot be undone.', async () => {
+    const tbls = ['pat_reports', 'gas_certs', 'el_certs', 'fire_certs'];
+    const errs = [];
+    for (const tbl of tbls) {
+      const { error } = await sb.from(tbl).delete().not('deleted_at', 'is', null);
+      if (error && !error.message.includes('No rows')) errs.push(tbl + ': ' + error.message);
+    }
+    if (errs.length) { toast('Some deletes failed: ' + errs.join('; '), 'error'); }
+    else { toast('All items permanently deleted', 'warn'); }
+    loadRecycleBin();
   });
 }
 

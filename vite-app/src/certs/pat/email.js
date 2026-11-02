@@ -65,7 +65,7 @@ export async function emailPATFromList(id, autoTriggered = false) {
   }
 }
 
-function _buildPATEmailHTML(r) {
+export function _buildPATEmailHTML(r) {
   const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const co       = getSetting('pat_co_name', getSetting('company_name', 'OHM Electrical Engineering Ltd'));
   const coPhone  = getSetting('pat_co_phone', getSetting('company_phone', ''));
