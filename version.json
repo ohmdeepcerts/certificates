@@ -1,8 +1,10 @@
 {
-  "v": "2.0.5",
-  "build": 93,
+  "v": "2.0.6",
+  "build": 94,
   "changes": [
-    "Fixed: App now always shows the latest version — old cached page was blocking the card layout fix.",
-    "Fixed: Gas and PAT certificate cards no longer bleed — extra text hidden via CSS as well as removed from code."
+    "Fixed: Fire alarm and EL certificates can now be deleted.",
+    "Fixed: Deleting any certificate no longer says 'Recycle Bin' to non-admin staff — just asks 'are you sure'.",
+    "Improved: Admin now sees a choice — move to Recycle Bin or permanently delete — for all certificate types.",
+    "Improved: Recycle Bin now shows all certificate types including Fire Alarm, who deleted each one, and a Delete All button."
   ]
 }
