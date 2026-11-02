@@ -1,10 +1,7 @@
 {
-  "v": "2.0.6",
-  "build": 94,
+  "v": "2.0.7",
+  "build": 95,
   "changes": [
-    "Fixed: Fire alarm and EL certificates can now be deleted.",
-    "Fixed: Deleting any certificate no longer says 'Recycle Bin' to non-admin staff — just asks 'are you sure'.",
-    "Improved: Admin now sees a choice — move to Recycle Bin or permanently delete — for all certificate types.",
-    "Improved: Recycle Bin now shows all certificate types including Fire Alarm, who deleted each one, and a Delete All button."
+    "Fixed: PAT and Gas certificate history now shows the actual final certificate — same as what gets emailed to clients."
   ]
 }
