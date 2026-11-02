@@ -1,8 +1,7 @@
 {
-  "v": "2.0.4",
-  "build": 90,
+  "v": "2.0.5",
+  "build": 91,
   "changes": [
-    "Fixed: Gas and PAT certificate cards no longer overflow — the bottom row now fits neatly.",
-    "Fixed: Gas and PAT side-panel preview now shows the full certificate, not just the top."
+    "Fixed: Gas and PAT certificate cards no longer bleed — extra text hidden via CSS as well as removed from code."
   ]
 }
