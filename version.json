@@ -1,7 +1,8 @@
 {
   "v": "2.0.5",
-  "build": 91,
+  "build": 93,
   "changes": [
+    "Fixed: App now always shows the latest version — old cached page was blocking the card layout fix.",
     "Fixed: Gas and PAT certificate cards no longer bleed — extra text hidden via CSS as well as removed from code."
   ]
 }
