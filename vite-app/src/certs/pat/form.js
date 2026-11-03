@@ -132,7 +132,7 @@ function _appendPATRow(i) {
     + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
     + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
     + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
-    + `<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
+    + `<td><div class="row-actions"><button type="button" class="btn-insert-row" title="Insert row below" onclick="insertPATRow(${i})">+</button><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></div></td>`;
   tbody.appendChild(tr);
   setTimeout(() => { const d = patGe('pat-d' + i); if (d) { patAutoH(d); d.focus(); } }, 0);
   const sum = patGe('pat-app-sum');
@@ -152,7 +152,7 @@ export function renderPATRows(opts = {}) {
       + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
       + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
       + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
-      + `<td style="text-align:center"><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></td>`;
+      + `<td><div class="row-actions"><button type="button" class="btn-insert-row" title="Insert row below" onclick="insertPATRow(${i})">+</button><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></div></td>`;
     tbody.appendChild(tr);
   });
   setTimeout(() => { document.querySelectorAll('#pat-app-body textarea').forEach(patAutoH); }, 0);
@@ -203,6 +203,16 @@ export function applyPATDatesToAll() {
 }
 export function applyPatHeaderDate(v) { patDateChanged(v); }
 export function delPATRow(i) { patApps.splice(i, 1); renderPATRows(); updatePatRef(); doPatPreview(); }
+export function insertPATRow(afterIndex) {
+  const prev = patApps[afterIndex] || {};
+  const m = (prev.assetId || '').match(/^(.*?)(\d+)$/);
+  const nextId = m ? m[1] + String(parseInt(m[2], 10) + 1).padStart(m[2].length, '0') : '';
+  patApps.splice(afterIndex + 1, 0, { assetId: nextId, description: '', testInstrument: prev.testInstrument || getSetting('pat_default_instrument', ''), date: prev.date || '', retestPeriod: prev.retestPeriod || '12 Months', nextTest: '', result: '' });
+  renderPATRows({ focusDesc: afterIndex + 1 });
+  updatePatRef();
+  state._patDirty = true;
+  doPatPreview();
+}
 export function clearPATForm() { if (!confirm('Clear all form data?')) return; newPAT(); }
 
 export function populatePATForm(r) {

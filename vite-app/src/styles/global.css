@@ -181,6 +181,9 @@ a{color:var(--accent);text-decoration:none}
 .result-fail{color:var(--error);font-weight:700}
 .btn-remove-row{background:none;border:none;color:var(--error);font-size:16px;padding:2px 6px;border-radius:4px;cursor:pointer}
 .btn-remove-row:hover{background:var(--red-dim)}
+.btn-insert-row{background:none;border:none;color:var(--success);font-size:16px;padding:2px 6px;border-radius:4px;cursor:pointer;line-height:1}
+.btn-insert-row:hover{background:#dcfce7}
+.row-actions{display:flex;align-items:center;justify-content:center;gap:2px}
 
 /* ---- HISTORY / LIST ---- */
 .list-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
