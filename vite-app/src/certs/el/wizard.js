@@ -148,7 +148,7 @@ export function elRenderStep() {
     try { customTypes = JSON.parse(localStorage.getItem('el_client_types_custom')||'[]'); } catch(e) {}
     var allClientTypes = ['Building Owner','Tenant','Facilities Manager','Landlord','Main Contractor'].concat(customTypes);
     html += `<h2 class="wiz-title">Client Details</h2>`;
-    html += `<div class="wiz-field"><label>Client Name</label><input value="${esc(_w.clientName)}" oninput="elSet('clientName',this.value)" placeholder="Full name or company"></div>`;
+    html += `<div class="wiz-field"><label>Client Name</label><input id="el-client-name" value="${esc(_w.clientName)}" oninput="elSet('clientName',this.value)" placeholder="Full name or company"></div>`;
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
     allClientTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="elChoose('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `<button class="chip" onclick="elSaveClientType()">+ Custom</button></div></div>`;
@@ -423,6 +423,17 @@ export function elRenderStep() {
     });
   }
   if (s === 2) {
+    const _cn = el.querySelector('#el-client-name');
+    if (_cn) window.attachDirACLandlordAgent?.(_cn, function(rec) {
+      var name = rec._dirType === 'agents' ? (rec.agency_name || rec.contact_name || '') : (rec.landlord_name || rec.company_name || '');
+      _w.clientName     = name;
+      _w.clientAddr1    = rec.addr1 || '';
+      _w.clientAddr2    = rec.addr2 || '';
+      _w.clientAddr3    = [rec.town, rec.county].filter(Boolean).join(', ');
+      _w.clientPostcode = rec.postcode || '';
+      _elDirty = true;
+      elRenderStep();
+    });
     const _ca1 = el.querySelector('#el-client-a1');
     if (_ca1) attachAddressAutocomplete(_ca1, {
       onSelect(a) {

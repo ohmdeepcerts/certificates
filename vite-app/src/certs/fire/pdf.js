@@ -39,6 +39,11 @@ export function fireBuildCertHTML(r) {
     ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:44px;max-width:110px;object-fit:contain;display:block">`
     : (niceicNo ? `<div style="text-align:right;font-size:9px;color:#55617a;line-height:1.7">NICEIC Approved Contractor<br>Enrolment No. <strong style="color:var(--ink)">${_esc(niceicNo)}</strong></div>` : '');
 
+  // White-on-crimson version of NICEIC for the stripe header
+  var niceicStripeHtml = niceicLogoData
+    ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:40px;max-width:100px;object-fit:contain;display:block;opacity:.9">`
+    : (niceicNo ? `<div style="text-align:right;font-size:8.5px;color:rgba(255,255,255,.8);line-height:1.7">NICEIC Approved Contractor<br>Enrolment No. <strong style="color:#fff">${_esc(niceicNo)}</strong></div>` : '');
+
   // ── Engineer strip (page 1) ─────────────────────────────────────────────────
   var engStrip = '';
   if (r.engineerName || enggSigData) {
@@ -195,7 +200,7 @@ export function fireBuildCertHTML(r) {
 
   // ── CSS ─────────────────────────────────────────────────────────────────────
   var css = `
-:root{--ink:#1b2a4a;--gold:#a8842c;--gold2:#c9b37a;--paper:#fdfcf8;--line:#ddd6c6;--pass:#1e7a46;--fail:#991b1b}
+:root{--ink:#1a1010;--gold:#8b1c1c;--gold2:#c04040;--paper:#fdfbfb;--line:#e0cccc;--pass:#166534;--fail:#7f1d1d}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--ink);background:var(--paper)}
 @page{size:A4;margin:0}
@@ -203,41 +208,42 @@ body{font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--in
 .page{width:210mm;height:297mm;background:var(--paper);padding:10mm;position:relative;overflow:hidden;display:block}
 .frame{border:1px solid var(--gold);padding:4px;height:100%}
 .inner{border:2px solid var(--ink);padding:11mm 11mm 8mm;height:100%;position:relative;display:flex;flex-direction:column;overflow:hidden}
-.inner::before{content:"";position:absolute;inset:4px;border:1px solid var(--gold2);pointer-events:none}
-.grow{flex:1;overflow:hidden}
+.inner::before{content:"";position:absolute;inset:4px;border:1px solid var(--gold2);pointer-events:none;z-index:0}
+.stripe{background:#7f1d1d;color:#fff;margin:-11mm -11mm 0;padding:9mm 11mm 7mm;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-shrink:0;position:relative;z-index:1}
+.grow{flex:1;overflow:hidden;display:flex;flex-direction:column}
 .mast{display:flex;justify-content:space-between;align-items:flex-start}
 .brand{display:flex;gap:10px;align-items:center}
-.crest{width:48px;height:48px;border:2px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:12px;background:#fff;flex-shrink:0;letter-spacing:.03em;overflow:hidden}
-.brand h1{font-family:Georgia,serif;font-size:14px;letter-spacing:.09em;line-height:1.3}
-.brand p{font-size:8.5px;color:#55617a;letter-spacing:.05em;margin-top:3px}
+.crest{width:50px;height:50px;border:2px solid rgba(255,255,255,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:12px;color:var(--ink);background:#fff;flex-shrink:0;letter-spacing:.03em;overflow:hidden}
+.brand h1{font-family:Georgia,serif;font-size:14px;letter-spacing:.09em;line-height:1.3;color:#fff}
+.brand p{font-size:8.5px;color:rgba(255,255,255,.72);letter-spacing:.05em;margin-top:3px}
 hr.rule{border:none;border-top:1px solid var(--line);margin:11px 0}
-.title{text-align:center;margin:10px 0 3px}
-.kicker{font-size:8px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:5px}
-.title h2{font-family:Georgia,serif;font-size:18px;font-weight:600}
-.title .std{font-size:9px;color:#55617a;margin-top:4px}
-.strip{margin:10px auto 0;max-width:440px;border-top:1px solid var(--gold);border-bottom:1px solid var(--gold);padding:6px 0;text-align:center}
-.strip .sk{font-size:7.5px;letter-spacing:.24em;text-transform:uppercase;color:#55617a}
-.strip .sv{font-family:Georgia,serif;font-size:15px;letter-spacing:.08em;margin-top:2px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-top:12px}
-.cell{padding:6px 0;border-bottom:1px solid var(--line)}
-.ck{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.title{text-align:center;margin:18px 0 6px;padding:0 8mm}
+.kicker{font-size:8px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:7px}
+.title h2{font-family:Georgia,serif;font-size:20px;font-weight:600;line-height:1.3}
+.title .std{font-size:9px;color:#7a6060;margin-top:6px;line-height:1.5}
+.strip{margin:14px auto 0;width:100%;border-top:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);padding:10px 0;text-align:center;background:rgba(139,28,28,.03)}
+.strip .sk{font-size:7.5px;letter-spacing:.28em;text-transform:uppercase;color:#7a6060}
+.strip .sv{font-family:Georgia,serif;font-size:17px;letter-spacing:.1em;margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin-top:16px}
+.cell{padding:9px 0;border-bottom:1px solid var(--line)}
+.ck{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
 .cv{font-size:10.5px;line-height:1.5}
-.chips{display:flex;gap:5px;margin-top:10px}
-.chip{flex:1;border:1px solid var(--ink);text-align:center;padding:6px 4px;background:#fff;min-width:0}
+.chips{display:flex;gap:6px;margin-top:14px}
+.chip{flex:1;border:1px solid var(--ink);text-align:center;padding:8px 4px;background:#fff;min-width:0}
 .chip .ck{font-size:7px;letter-spacing:.12em}
-.chip .cv{font-family:Georgia,serif;font-size:11px;margin-top:2px;line-height:1.3;word-break:break-word}
-.outcome{margin-top:10px;border:2px solid var(--pass);background:#eef7f0;padding:10px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.chip .cv{font-family:Georgia,serif;font-size:11px;margin-top:3px;line-height:1.3;word-break:break-word}
+.outcome{border:2px solid var(--pass);background:#eef7f0;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:58px;margin-top:auto}
 .outcome.unsat{border-color:var(--fail);background:#fdf0f0}
-.ow{font-family:Georgia,serif;font-size:16px;letter-spacing:.12em;color:var(--pass)}
+.ow{font-family:Georgia,serif;font-size:18px;letter-spacing:.12em;color:var(--pass)}
 .outcome.unsat .ow{color:var(--fail)}
-.on{font-size:8.5px;color:#55617a;text-align:right;line-height:1.7;flex-shrink:0}
+.on{font-size:8.5px;color:#7a6060;text-align:right;line-height:1.8;flex-shrink:0}
 .sec{display:flex;align-items:center;gap:9px;margin:13px 0 7px}
-.sec h3{font-size:8.5px;letter-spacing:.20em;text-transform:uppercase;white-space:nowrap;font-weight:700}
+.sec h3{font-size:8.5px;letter-spacing:.20em;text-transform:uppercase;white-space:nowrap;font-weight:700;color:var(--gold)}
 .sec::before,.sec::after{content:"";flex:1;border-top:1px solid var(--line)}
 table{width:100%;border-collapse:collapse;font-size:9.5px;background:#fff}
-th{background:var(--ink);color:#fff;font-size:7.5px;letter-spacing:.11em;text-transform:uppercase;padding:6px 7px;text-align:left}
+th{background:#7f1d1d;color:#fff;font-size:7.5px;letter-spacing:.11em;text-transform:uppercase;padding:6px 7px;text-align:left}
 td{padding:5.5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:nth-child(even) td{background:#f5f2ea}
+tr:nth-child(even) td{background:#f7f0f0}
 .ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid var(--pass);color:var(--pass);font-weight:600}
 .fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid var(--fail);color:var(--fail);font-weight:600}
 .num{font-variant-numeric:tabular-nums}
@@ -245,40 +251,40 @@ tr:nth-child(even) td{background:#f5f2ea}
 .rec b{color:var(--gold)}
 .sig{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
 .sl{border-bottom:1px solid var(--ink);min-height:32px;display:flex;align-items:flex-end;padding-bottom:2px}
-.sc{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#55617a;margin-top:4px}
-.foot{text-align:center;margin-top:10px;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a9484}`;
+.sc{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#7a6060;margin-top:4px}
+.foot{text-align:center;margin-top:10px;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a8888}`;
 
   // ── Page 1 ──────────────────────────────────────────────────────────────────
   var page1 = `
-<div class="page"><div class="frame"><div class="inner"><div class="grow">
-  <div class="mast">
+<div class="page"><div class="frame"><div class="inner">
+  <div class="stripe">
     <div class="brand">
       ${crestHtml}
-      <div><h1>${_esc(company.toUpperCase())}</h1><p>${coContactLine}</p></div>
+      <div><h1>${_esc(company.toUpperCase())}</h1><p>${_esc(coContactLine)}</p></div>
     </div>
-    ${niceicRightHtml}
+    ${niceicStripeHtml}
   </div>
-  <hr class="rule">
-  <div class="title">
-    <div class="kicker">${_esc(typeKicker)}</div>
-    <h2>${_esc(typeTitle)}</h2>
-    <div class="std">${_esc(stdLabel)}</div>
-  </div>
-  <div class="strip">
-    <div class="sk">Certificate Reference</div>
-    <div class="sv num">${_esc(r.ref||'—')}</div>
-  </div>
-  <div class="grid">${gridCells}</div>
-  ${engStrip}
-  <div class="chips">${chipsHtml}</div>
-  <div class="outcome${outClass}">
-    <div>
-      <div style="font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#55617a">Outcome</div>
-      <div class="ow">${_esc(r.outcome||'—')}</div>
+  <div class="grow">
+    <div class="title">
+      <div class="kicker">${_esc(typeKicker)}</div>
+      <h2>${_esc(typeTitle)}</h2>
+      <div class="std">${_esc(stdLabel)}</div>
     </div>
-    ${outcomeDetailHtml}
+    <div class="strip">
+      <div class="sk">Certificate Reference</div>
+      <div class="sv num">${_esc(r.ref||'—')}</div>
+    </div>
+    <div class="grid">${gridCells}</div>
+    ${engStrip}
+    ${chipsArr.length ? `<div class="chips">${chipsHtml}</div>` : ''}
+    <div class="outcome${outClass}">
+      <div>
+        <div style="font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#7a6060">Outcome</div>
+        <div class="ow">${_esc(r.outcome||'—')}</div>
+      </div>
+      ${outcomeDetailHtml}
+    </div>
   </div>
-</div>
   <div class="foot">${_esc(company)} · Page 1 of 3</div>
 </div></div></div>`;
 
