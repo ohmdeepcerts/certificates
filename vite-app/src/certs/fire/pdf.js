@@ -134,7 +134,9 @@ export function fireBuildCertHTML(r) {
   }
 
   // ── Defects ───────────────────────────────────────────────────────────────
-  var SEV_STYLES = {ADVISORY:'',MINOR:'color:#a16207;font-weight:600',MAJOR:'color:#c01818;font-weight:700',CRITICAL:'color:#7a1010;font-weight:700'};
+  var SEV_STYLES = isComm
+    ? {C1:'color:#7a1010;font-weight:700',C2:'color:#c01818;font-weight:700',C3:'color:#a16207;font-weight:600',FI:'color:#1d4ed8;font-weight:600'}
+    : {ADVISORY:'',MINOR:'color:#a16207;font-weight:600',MAJOR:'color:#c01818;font-weight:700',CRITICAL:'color:#7a1010;font-weight:700'};
   var hasDefects = (r.defects||[]).length > 0 || r.defectsNotes;
   var defectsHtml = '';
   if (hasDefects) {
@@ -142,7 +144,8 @@ export function fireBuildCertHTML(r) {
       var sev = d.severity||'ADVISORY';
       return '<tr><td>'+(i+1)+'</td><td>'+_esc(d.description)+'</td><td style="'+(SEV_STYLES[sev]||'')+'">'+_esc(sev)+'</td><td>'+_esc(d.recommendation)+'</td></tr>';
     }).join('');
-    defectsHtml = '<div class="sec-head" style="margin-top:14px">Defects &amp; Recommendations</div>'
+    var _defSectionTitle = isComm ? 'Details of Deviations from the Standards' : 'Defects &amp; Recommendations';
+    defectsHtml = '<div class="sec-head" style="margin-top:14px">'+_defSectionTitle+'</div>'
       +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
       +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
       +(r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
@@ -220,7 +223,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
     if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
     if (r.sysZones)      p1Fields += _field('Zones', r.sysZones);
-    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
+    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate + (r.nextInspInterval ? ' — ' + r.nextInspInterval : ''));
   }
 
   var noteBox = sat
@@ -289,10 +292,16 @@ export function fireBuildCertHTML(r) {
         +'<div class="purp-row"><div class="purp-check purp-check-on"></div><div class="purp-text purp-text-on">'+_esc(purposeTxt)+'</div></div>'
       +'</div>'
       +'<div class="purp-col">'
-        +'<div class="purp-label">Extent of System Covered by this Certificate</div>'
-        +'<div class="purp-extent">'+_esc(extentTxt)+'</div>'
+        +(isComm
+          ? '<div class="purp-label">Extent of Installation Covered</div><div class="purp-extent">'+_esc(extentTxt)+'</div>'
+            +(r.agreedLimitations ? '<div class="purp-label" style="margin-top:10px">Agreed Limitations &amp; With Whom</div><div class="purp-extent">'+_esc(r.agreedLimitations)+'</div>' : '')
+          : '<div class="purp-label">Extent of System Covered by this Certificate</div><div class="purp-extent">'+_esc(extentTxt)+'</div>'
+        )
       +'</div>'
     +'</div>'
+    // Commercial-only: Variations + Reference docs
+    +(isComm && r.departuresNotes ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px"><div class="purp-label">Variations from BS 5839-1:2025 Clause 43</div><div class="purp-extent">'+_esc(r.departuresNotes)+'</div></div>' : '')
+    +(isComm && (r.prevReportRef||r.otherRefDocs) ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px;display:grid;grid-template-columns:1fr 1fr;gap:0 20px"><div>'+(r.prevReportRef ? '<div class="purp-label">Previous Report Reference</div><div class="purp-extent">'+_esc(r.prevReportRef)+'</div>' : '')+'</div><div>'+(r.otherRefDocs ? '<div class="purp-label">Other Reference Documents</div><div class="purp-extent">'+_esc(r.otherRefDocs)+'</div>' : '')+'</div></div>' : '')
     // Outcome band
     +'<div class="outcome-band" style="background:'+obBg+';border-top:1px solid #e08830;border-bottom:1px solid #e08830">'+obText+'</div>'
     // Body

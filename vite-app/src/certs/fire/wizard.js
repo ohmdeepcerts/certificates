@@ -99,6 +99,10 @@ export function startNewFire() {
     // testing extras
     coAlarmsPresent: '', coAlarmNaReason: '',
     departuresNotes: '',
+    agreedLimitations: '',
+    prevReportRef: '',
+    otherRefDocs: '',
+    nextInspInterval: '',
     testDate: todayStr(),
     ref: '', baseRef: ''
   };
@@ -243,8 +247,11 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>Number of Loops (addressable)</label><input type="number" min="0" value="${esc(_w.sysLoops)}" oninput="fireSet('sysLoops',this.value)" style="max-width:100px" placeholder="0"></div>`;
       html += `<div class="wiz-field"><label>BAFE Scheme No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysBafe)}" oninput="fireSet('sysBafe',this.value)" placeholder="e.g. SP203"></div>`;
       html += `<div class="wiz-field"><label>FIA Member No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysFia)}" oninput="fireSet('sysFia',this.value)" placeholder="e.g. 12345"></div>`;
+      html += `<div class="wiz-field"><label>Agreed limitations &amp; with whom <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('agreedLimitations',this.value)" placeholder="e.g. Limited to zones 1–3 only, agreed with client on 01/11/2026" style="width:100%;font-size:13px;resize:vertical">${esc(_w.agreedLimitations||'')}</textarea></div>`;
     }
-    html += `<div class="wiz-field" style="margin-top:8px"><label>Departures / variations <span class="lbl-opt">(Annex G — optional)</span></label><textarea rows="2" oninput="fireSet('departuresNotes',this.value)" placeholder="Any agreed departures from BS 5839-6 standard requirements, with justification…" style="width:100%;font-size:13px;resize:vertical">${esc(_w.departuresNotes||'')}</textarea></div>`;
+    var _deptLabel = _isComm() ? 'Variations from BS 5839-1:2025 Clause 43 <span class="lbl-opt">(optional)</span>' : 'Departures / variations <span class="lbl-opt">(Annex G — optional)</span>';
+    var _deptPlaceholder = _isComm() ? 'Any agreed variations or departures from BS 5839-1:2025 Clause 43 requirements, with justification…' : 'Any agreed departures from BS 5839-6 standard requirements, with justification…';
+    html += `<div class="wiz-field" style="margin-top:8px"><label>${_deptLabel}</label><textarea rows="2" oninput="fireSet('departuresNotes',this.value)" placeholder="${_deptPlaceholder}" style="width:100%;font-size:13px;resize:vertical">${esc(_w.departuresNotes||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 4: Detectors ─────────────────────────────────────────────────────
@@ -295,10 +302,17 @@ export function fireRenderStep() {
 
   // ── Step 6: Defects ───────────────────────────────────────────────────────
   } else if (s === 6) {
-    html += `<h2 class="wiz-title">Defects & Recommendations</h2>`;
+    var _isCommDef = _isComm();
+    var _defTitle = _isCommDef ? 'Details of Deviations from the Standards' : 'Defects & Recommendations';
+    html += `<h2 class="wiz-title">${_defTitle}</h2>`;
     html += `<div class="wiz-field"><label>Overall system condition</label><div class="chip-row">`;
-    var _defCls = {'No defects found':'chip-sat','Minor defects (no immediate action)':'chip-attn','Defects requiring attention':'chip-unsat'};
-    ['No defects found','Minor defects (no immediate action)','Defects requiring attention'].forEach(v => {
+    var _defOverallOpts = _isCommDef
+      ? ['No deviations identified','Deviations — no immediate action','Deviations requiring urgent action']
+      : ['No defects found','Minor defects (no immediate action)','Defects requiring attention'];
+    var _defCls = _isCommDef
+      ? {'No deviations identified':'chip-sat','Deviations — no immediate action':'chip-attn','Deviations requiring urgent action':'chip-unsat'}
+      : {'No defects found':'chip-sat','Minor defects (no immediate action)':'chip-attn','Defects requiring attention':'chip-unsat'};
+    _defOverallOpts.forEach(v => {
       html += `<button class="chip ${_defCls[v]||''}${_w.defectsOverall===v?' on':''}" onclick="firePick('defectsOverall','${esc(v)}')">${esc(v)}</button>`;
     });
     html += `</div></div>`;
@@ -312,12 +326,16 @@ export function fireRenderStep() {
       html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Target date</th>`;
       html += `<th style="padding:6px 4px;border-bottom:1px solid var(--border)"></th>`;
       html += `</tr></thead><tbody>`;
-      var SEV_COLORS = {ADVISORY:'',MINOR:'color:#d97706',MAJOR:'color:#dc2626',CRITICAL:'color:#9b1c1c;font-weight:700'};
+      var SEV_COLORS = _isCommDef
+        ? {C1:'color:#9b1c1c;font-weight:700',C2:'color:#dc2626',C3:'color:#d97706',FI:'color:#1d4ed8'}
+        : {ADVISORY:'',MINOR:'color:#d97706',MAJOR:'color:#dc2626',CRITICAL:'color:#9b1c1c;font-weight:700'};
+      var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['ADVISORY','MINOR','MAJOR','CRITICAL'];
+      var _sevDefault = _isCommDef ? 'C3' : 'ADVISORY';
       (_w.defects||[]).forEach((d, i) => {
         html += `<tr>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.description||'')}" oninput="fireDefectSet(${i},'description',this.value)" placeholder="Describe the defect" style="width:100%;min-width:120px"></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDefectSet(${i},'severity',this.value)" style="min-width:90px">`;
-        ['ADVISORY','MINOR','MAJOR','CRITICAL'].forEach(sv => { html += `<option${(d.severity||'ADVISORY')===sv?' selected':''} style="${SEV_COLORS[sv]||''}">${sv}</option>`; });
+        _sevOptions.forEach(sv => { html += `<option${(d.severity||_sevDefault)===sv?' selected':''} style="${SEV_COLORS[sv]||''}">${sv}</option>`; });
         html += `</select></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.recommendation||'')}" oninput="fireDefectSet(${i},'recommendation',this.value)" placeholder="Recommended action" style="width:100%;min-width:120px"></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.targetDate||'')}" oninput="fireDefectSet(${i},'targetDate',this.value)" placeholder="DD/MM/YYYY" style="min-width:90px"></td>`;
@@ -356,6 +374,11 @@ export function fireRenderStep() {
     var autoNext = _addMonths(_w.testDate, nextMonths);
     if (!_w.nextInspDate && autoNext) { _w.nextInspDate = autoNext; }
     html += `<div class="wiz-field"><label>Next inspection due</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireSetNextInsp(6)">6 months</button><button class="chip" onclick="fireSetNextInsp(12)">1 year</button><input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
+    if (_isComm()) {
+      html += `<div class="wiz-field"><label>Inspection interval <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.nextInspInterval==='6 months'?' on':''}" onclick="firePick('nextInspInterval','6 months')">6 months</button><button class="chip${_w.nextInspInterval==='12 months'?' on':''}" onclick="firePick('nextInspInterval','12 months')">12 months</button><input value="${esc(_w.nextInspInterval||'')}" oninput="fireSet('nextInspInterval',this.value)" placeholder="e.g. 6 months" style="max-width:120px"></div></div>`;
+      html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA4-2024-00123" style="max-width:220px"></div>`;
+      html += `<div class="wiz-field"><label>Other reference documents <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.otherRefDocs||'')}" oninput="fireSet('otherRefDocs',this.value)" placeholder="e.g. Fire risk assessment dated 15/06/2026"></div>`;
+    }
     if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -526,7 +549,7 @@ export function fireDetPick(i, key, val) {
 
 export function fireAddDefect() {
   if (!_w.defects) _w.defects = [];
-  _w.defects.push({ description:'', recommendation:'', severity:'ADVISORY', targetDate:'' });
+  _w.defects.push({ description:'', recommendation:'', severity:_isComm() ? 'C3' : 'ADVISORY', targetDate:'' });
   fireRenderStep();
 }
 export function fireRemoveDefect(i) {
@@ -581,9 +604,10 @@ export async function fireNext() {
       var _autoD = [];
       var _failTestLbls = {tFunctional:'Functional test',tInterlinked:'Interlinked test (alarm interconnection)',tBattery:'Battery backup / standby test',tCO:'CO alarm test',tMains:'Mains supply test',tBatResult:'Battery standby test',tSounder:'Sounder / beacon test',tVisual:'Visual indicators test',tZoneIso:'Zone isolation test',tFaultSim:'Fault simulation test',tKeySwitch:'Engineer key switch test'};
       var _isCommNow3 = _w.certType==='FA.3'||_w.certType==='FA.4';
-      (_w.detectors||[]).forEach(function(d){ if(d.result==='FAIL'){ _autoD.push({description:(d.type||'Device')+' at '+(d.location||'unknown location')+' — failed test',severity:'MAJOR',recommendation:'Inspect, repair or replace the device and re-test to confirm rectification.',targetDate:''}); } });
-      Object.keys(_failTestLbls).forEach(function(k){ if(_w[k]==='FAIL'){ _autoD.push({description:_failTestLbls[k]+' — failed',severity:'MAJOR',recommendation:'Investigate cause of failure, rectify fault and re-test.',targetDate:''}); } });
-      if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found') _w.defectsOverall='Defects requiring attention'; }
+      var _autoSev = _isCommNow3 ? 'C2' : 'MAJOR';
+      (_w.detectors||[]).forEach(function(d){ if(d.result==='FAIL'){ _autoD.push({description:(d.type||'Device')+' at '+(d.location||'unknown location')+' — failed test',severity:_autoSev,recommendation:'Inspect, repair or replace the device and re-test to confirm rectification.',targetDate:''}); } });
+      Object.keys(_failTestLbls).forEach(function(k){ if(_w[k]==='FAIL'){ _autoD.push({description:_failTestLbls[k]+' — failed',severity:_autoSev,recommendation:'Investigate cause of failure, rectify fault and re-test.',targetDate:''}); } });
+      if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found'||_w.defectsOverall==='No deviations identified') { _w.defectsOverall = _isCommNow3 ? 'Deviations requiring urgent action' : 'Defects requiring attention'; } }
     }
   }
   if (s === 6 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {
