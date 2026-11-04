@@ -1,117 +1,90 @@
 import { getSetting } from '../../lib/settings.js';
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _field(label, val) {
+  return '<div class="f"><div class="fl">'+_esc(label)+'</div><div class="fv">'+_esc(val)+'</div></div>';
+}
 
 export function fireBuildCertHTML(r) {
   var isComm = r.certType === 'FA.3' || r.certType === 'FA.4';
 
   var typeKicker = { 'FA.1':'Form FA.1 · Annex G', 'FA.2':'Form FA.2 · Annex G', 'FA.3':'Form FA.3', 'FA.4':'Form FA.4' }[r.certType] || 'Fire Alarm Certificate';
   var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Alarm Service / Verification Certificate' }[r.certType] || 'Fire Alarm Certificate';
-  var stdLabel   = isComm ? 'BS 5839-1:2025 — Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 — Fire detection and alarm systems for dwellings';
+  var stdLabel   = isComm ? 'BS 5839-1:2025 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
 
-  var company        = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
-  var _coAddrRaw     = getSetting('fire_co_address') || getSetting('company_address') || '';
-  var _coPostcode    = getSetting('fire_co_postcode') || '';
-  var companyAddr    = (_coAddrRaw && _coPostcode && !_coAddrRaw.includes(_coPostcode)) ? _coAddrRaw + ', ' + _coPostcode : _coAddrRaw;
-  var companyTel     = getSetting('fire_co_phone') || getSetting('company_tel') || '';
-  var companyEmail   = getSetting('fire_co_email') || getSetting('company_email') || '';
-  var companyRegNo   = getSetting('fire_co_reg') || getSetting('company_reg_no') || '';
-  var companyPiNo    = getSetting('fire_co_pi') || getSetting('company_pi_no') || '';
-  var niceicNo       = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
-  var logoData       = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
+  var company     = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
+  var _coAddrRaw  = getSetting('fire_co_address') || getSetting('company_address') || '';
+  var _coPostcode = getSetting('fire_co_postcode') || '';
+  var companyAddr = (_coAddrRaw && _coPostcode && !_coAddrRaw.includes(_coPostcode)) ? _coAddrRaw + ', ' + _coPostcode : _coAddrRaw;
+  var companyTel  = getSetting('fire_co_phone') || getSetting('company_tel') || '';
+  var companyEmail= getSetting('fire_co_email') || getSetting('company_email') || '';
+  var niceicNo    = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
+  var logoData    = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
-  var enggSigData    = r.enggSigData || getSetting('fire_engg_sig_data','') || getSetting('el_sig_data','');
+  var enggSigData = r.enggSigData || getSetting('fire_engg_sig_data','') || getSetting('el_sig_data','');
 
-  var premAddr  = [r.premAddr1, r.premAddr2, r.premAddr3, r.premPostcode].filter(Boolean).join(', ');
-  var clientAddr= [r.clientAddr1, r.clientAddr2, r.clientAddr3, r.clientPostcode].filter(Boolean).join(', ');
-  var hasClient = !!(r.clientName || r.clientAddr1 || r.clientEmail || r.responsiblePerson);
+  var premAddr  = [r.premAddr1, r.premAddr2, r.premAddr3, r.premPostcode].filter(Boolean);
+  var clientAddr= [r.clientAddr1, r.clientAddr2, r.clientAddr3, r.clientPostcode].filter(Boolean);
   var issued    = new Date().toLocaleDateString('en-GB');
+  var ref       = _esc(r.ref||'—');
+  var tDate     = _esc(r.testDate||issued);
+  var eng       = _esc(r.engineerName||'—');
+  var engPos    = _esc(r.engineerQual||'Fire Alarm Engineer');
+  var coName    = _esc(company);
+  var coAddr    = _esc(companyAddr.split(/[,\n]/)[0].trim());
+  var coTel     = companyTel ? _esc(companyTel) : '';
+  var coEmail   = companyEmail ? _esc(companyEmail) : '';
 
-  // ── Crest ───────────────────────────────────────────────────────────────────
-  var crestHtml = logoData
-    ? `<img src="${logoData}" style="max-height:52px;max-width:130px;object-fit:contain;flex-shrink:0;display:block">`
-    : `<div class="crest">${_esc((company.match(/\b\w/g)||[]).slice(0,3).join(''))}</div>`;
+  // ── Logo / NICEIC badge HTML ──────────────────────────────────────────────
+  var elLogo = logoData
+    ? '<img src="'+logoData+'" style="max-height:40px;max-width:40px;object-fit:contain;border-radius:3px;border:1px solid var(--a)">'
+    : '<div class="ch-logo">'+_esc((company.match(/\b\w/g)||[]).slice(0,3).join('').toUpperCase())+'</div>';
 
-  var coAddrLine   = companyAddr ? _esc(companyAddr.split(/[,\n]/)[0].trim()) : '';
-  var coContactLine = [coAddrLine, companyTel ? 'T '+_esc(companyTel) : ''].filter(Boolean).join(' · ');
+  var bodyBadge = niceicLogoData
+    ? '<div class="niceic-badge" style="padding:4px 8px"><img src="'+niceicLogoData+'" style="max-height:52px;max-width:100px;object-fit:contain"></div>'
+    : (niceicNo
+        ? '<div class="niceic-badge"><div class="nb-title">NICEIC Approved Contractor</div><div class="nb-sub">Enrolment No. '+_esc(niceicNo)+'</div></div>'
+        : '');
 
-  var niceicRightHtml = niceicLogoData
-    ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:44px;max-width:110px;object-fit:contain;display:block">`
-    : (niceicNo ? `<div style="text-align:right;font-size:9px;color:#55617a;line-height:1.7">NICEIC Approved Contractor<br>Enrolment No. <strong style="color:var(--ink)">${_esc(niceicNo)}</strong></div>` : '');
+  var sigImg = enggSigData
+    ? '<img src="'+enggSigData+'" style="max-height:36px;max-width:120px;object-fit:contain;display:block;margin-top:4px">'
+    : '';
 
-  // White-on-crimson version of NICEIC for the stripe header
-  var niceicStripeHtml = niceicLogoData
-    ? `<img src="${niceicLogoData}" alt="NICEIC" style="max-height:40px;max-width:100px;object-fit:contain;display:block;opacity:.9">`
-    : (niceicNo ? `<div style="text-align:right;font-size:8.5px;color:rgba(255,255,255,.8);line-height:1.7">NICEIC Approved Contractor<br>Enrolment No. <strong style="color:#fff">${_esc(niceicNo)}</strong></div>` : '');
+  // ── Device counts for stats bar ───────────────────────────────────────────
+  var devTotal = (r.detectors||[]).length;
+  var devPass  = (r.detectors||[]).filter(function(d){ return d.result==='PASS'; }).length;
+  var devFail  = (r.detectors||[]).filter(function(d){ return d.result==='FAIL'; }).length;
+  var devTested= devPass + devFail;
 
-  // ── Engineer strip (page 1) ─────────────────────────────────────────────────
-  var engStrip = '';
-  if (r.engineerName || enggSigData) {
-    engStrip  = `<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:6px 0;border-bottom:1px solid var(--line)">`;
-    engStrip += `<div><div style="font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Inspected by</div>`;
-    engStrip += `<div style="font-size:10.5px;line-height:1.4">${_esc(r.engineerName||'—')}${r.engineerQual?`<span style="font-size:9px;color:#55617a"> · ${_esc(r.engineerQual)}</span>`:''}</div>`;
-    engStrip += `<div style="font-size:9px;color:#55617a;margin-top:1px">${_esc(r.companyName||company)}</div></div>`;
-    engStrip += enggSigData
-      ? `<div style="text-align:right"><div style="font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#9a9484;margin-bottom:3px">Signature</div><img src="${enggSigData}" style="max-height:30px;max-width:100px;object-fit:contain;object-position:right center;display:block;margin-left:auto"></div>`
-      : `<div style="border-bottom:1px solid var(--ink);width:100px;"></div>`;
-    engStrip += `</div>`;
-  }
+  // ── Outcome ───────────────────────────────────────────────────────────────
+  var sat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
+  var obBg   = sat ? '#1a6b40' : '#7a1010';
+  var obText = sat
+    ? '&#10003; &nbsp; SATISFACTORY &mdash; Annual service complete'
+    : '&#9888; &nbsp; UNSATISFACTORY &mdash; Action required';
 
-  // ── Chips ───────────────────────────────────────────────────────────────────
-  function _chipCode(val) { return ((val||'').split(' — ')[0]) || (val||'—'); }
-  var chipsArr = [];
-  if (!isComm) {
-    if (r.sysCategory)   chipsArr.push({k:'Category',   v:_chipCode(r.sysCategory)});
-    if (r.sysGrade)      chipsArr.push({k:'Grade',      v:_chipCode(r.sysGrade)});
-    if (r.sysPowerSupply)chipsArr.push({k:'Power',      v:_esc(r.sysPowerSupply)});
-    if (r.sysInterlinked)chipsArr.push({k:'Interlinked',v:_esc(r.sysInterlinked)});
-  } else {
-    if (r.sysCategory)   chipsArr.push({k:'Category',   v:_chipCode(r.sysCategory)});
-    if (r.sysCommType)   chipsArr.push({k:'Type',       v:_esc(r.sysCommType)});
-    if (r.sysZones)      chipsArr.push({k:'Zones',      v:_esc(r.sysZones)});
-    if (r.sysLoops)      chipsArr.push({k:'Loops',      v:_esc(r.sysLoops)});
-  }
-  chipsArr.push({k:'Devices', v:String((r.detectors||[]).length||'0')});
-  var chipsHtml = chipsArr.map(c=>`<div class="chip"><div class="ck">${c.k}</div><div class="cv">${c.v}</div></div>`).join('');
-
-  // ── Grid cells page 1 ───────────────────────────────────────────────────────
-  var gridCells = '';
-  var premDisplay = [r.premisesName, premAddr].filter(Boolean).join(', ');
-  gridCells += `<div class="cell"><div class="ck">Premises</div><div class="cv">${_esc(premDisplay||'—')}</div></div>`;
-  if (hasClient) {
-    var clientDisplay = r.clientName || clientAddr || '—';
-    if (r.responsiblePerson && r.responsiblePerson !== r.clientName) clientDisplay += ' (resp: ' + r.responsiblePerson + ')';
-    gridCells += `<div class="cell"><div class="ck">Client / Landlord</div><div class="cv">${_esc(clientDisplay)}</div></div>`;
-  }
-  gridCells += `<div class="cell"><div class="ck">Date of inspection</div><div class="cv">${_esc(r.testDate||'—')}</div></div>`;
-  gridCells += `<div class="cell"><div class="ck">Certificate issued</div><div class="cv">${issued}</div></div>`;
-  // ── Outcome ─────────────────────────────────────────────────────────────────
-  var outSat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
-  var outClass  = outSat ? '' : ' unsat';
-  var outcomeDetailHtml = r.nextInspDate ? `<div class="on"><div style="font-size:7px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:3px;opacity:.75">Next inspection</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:700;letter-spacing:.02em">${_esc(r.nextInspDate)}</div></div>` : '';
-
-  // ── Detector table ──────────────────────────────────────────────────────────
-  var hasDetModel  = (r.detectors||[]).some(d=>d.model);
-  var hasSerialNo  = (r.detectors||[]).some(d=>d.serialNo);
-  var hasZone      = isComm && (r.detectors||[]).some(d=>d.zone);
-  var hasBatExpiry = !isComm && (r.detectors||[]).some(d=>d.batExpiry);
+  // ── Detector table ────────────────────────────────────────────────────────
+  var hasDetModel  = (r.detectors||[]).some(function(d){return d.model;});
+  var hasSerialNo  = (r.detectors||[]).some(function(d){return d.serialNo;});
+  var hasZone      = isComm && (r.detectors||[]).some(function(d){return d.zone;});
+  var hasBatExpiry = !isComm && (r.detectors||[]).some(function(d){return d.batExpiry;});
 
   var detHeaders = isComm
-    ? `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}${hasZone?'<th>Zone / Circuit</th>':''}<th>Result</th>`
-    : `<th>#</th><th>Location</th><th>Device type</th>${hasDetModel?'<th>Make / Model</th>':''}${hasSerialNo?'<th>Serial No.</th>':''}<th>Result</th><th>Battery</th>${hasBatExpiry?'<th>Battery expiry</th>':''}`;
+    ? '<th>#</th><th>Location</th><th>Device type</th>'+(hasDetModel?'<th>Make / Model</th>':'')+(hasSerialNo?'<th>Serial No.</th>':'')+(hasZone?'<th>Zone / Circuit</th>':'')+'<th>Result</th>'
+    : '<th>#</th><th>Location</th><th>Device type</th>'+(hasDetModel?'<th>Make / Model</th>':'')+(hasSerialNo?'<th>Serial No.</th>':'')+'<th>Result</th><th>Battery</th>'+(hasBatExpiry?'<th>Battery expiry</th>':'');
 
   var detRows = (r.detectors||[]).map(function(d,i){
-    var rHtml = d.result==='PASS' ? `<span class="ppill">Pass</span>` : d.result==='FAIL' ? `<span class="fpill">Fail</span>` : _esc(d.result||'—');
+    var rHtml = d.result==='PASS' ? '<span class="ppill">Pass</span>' : d.result==='FAIL' ? '<span class="fpill">Fail</span>' : _esc(d.result||'—');
     return isComm
-      ? `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model||'—')}</td>`:''}${hasSerialNo?`<td class="num">${_esc(d.serialNo||'—')}</td>`:''}${hasZone?`<td>${_esc(d.zone||'—')}</td>`:''}<td>${rHtml}</td></tr>`
-      : `<tr><td>${i+1}</td><td>${_esc(d.location)}</td><td>${_esc(d.type)}</td>${hasDetModel?`<td>${_esc(d.model||'—')}</td>`:''}${hasSerialNo?`<td class="num">${_esc(d.serialNo||'—')}</td>`:''}<td>${rHtml}</td><td>${_esc(d.batReplaced||'—')}</td>${hasBatExpiry?`<td>${_esc(d.batExpiry||'—')}</td>`:''}</tr>`;
+      ? '<tr><td>'+(i+1)+'</td><td>'+_esc(d.location)+'</td><td>'+_esc(d.type)+'</td>'+(hasDetModel?'<td>'+_esc(d.model||'—')+'</td>':'')+(hasSerialNo?'<td class="num">'+_esc(d.serialNo||'—')+'</td>':'')+(hasZone?'<td>'+_esc(d.zone||'—')+'</td>':'')+'<td>'+rHtml+'</td></tr>'
+      : '<tr><td>'+(i+1)+'</td><td>'+_esc(d.location)+'</td><td>'+_esc(d.type)+'</td>'+(hasDetModel?'<td>'+_esc(d.model||'—')+'</td>':'')+(hasSerialNo?'<td class="num">'+_esc(d.serialNo||'—')+'</td>':'')+'<td>'+rHtml+'</td><td>'+_esc(d.batReplaced||'—')+'</td>'+(hasBatExpiry?'<td>'+_esc(d.batExpiry||'—')+'</td>':'')+'</tr>';
   }).join('');
 
-  // ── Test results ────────────────────────────────────────────────────────────
+  // ── Test results ──────────────────────────────────────────────────────────
   function _tRow(label, val) {
     if (!val) return '';
-    var rHtml = val==='PASS' ? `<span class="ppill">Pass</span>` : val==='FAIL' ? `<span class="fpill">Fail</span>` : _esc(val);
-    return `<tr><td>${_esc(label)}</td><td>${rHtml}</td></tr>`;
+    var rHtml = val==='PASS' ? '<span class="ppill">Pass</span>' : val==='FAIL' ? '<span class="fpill">Fail</span>' : _esc(val);
+    return '<tr><td>'+_esc(label)+'</td><td>'+rHtml+'</td></tr>';
   }
   var testRows = '';
   if (!isComm) {
@@ -119,215 +92,388 @@ export function fireBuildCertHTML(r) {
     testRows += _tRow('Interlinked test', r.tInterlinked);
     testRows += _tRow('Battery backup / standby', r.tBattery);
     testRows += _tRow('CO alarms fitted', r.coAlarmsPresent);
-    if (r.coAlarmsPresent === 'N/A' && r.coAlarmNaReason) testRows += `<tr><td>CO alarm N/A reason</td><td>${_esc(r.coAlarmNaReason)}</td></tr>`;
+    if (r.coAlarmsPresent === 'N/A' && r.coAlarmNaReason) testRows += '<tr><td>CO alarm N/A reason</td><td>'+_esc(r.coAlarmNaReason)+'</td></tr>';
     testRows += _tRow('CO alarm test', r.tCO);
   } else {
     testRows += _tRow('Mains supply test', r.tMains);
-    if (r.tMainsVolts) testRows += `<tr><td>Mains voltage</td><td>${_esc(r.tMainsVolts)} V</td></tr>`;
+    if (r.tMainsVolts) testRows += '<tr><td>Mains voltage</td><td>'+_esc(r.tMainsVolts)+' V</td></tr>';
     testRows += _tRow('Battery standby test', r.tBatResult);
-    if (r.tBatDuration) testRows += `<tr><td>Battery standby duration</td><td>${_esc(r.tBatDuration)}</td></tr>`;
-    if (r.tBatVolts)   testRows += `<tr><td>Battery voltage</td><td>${_esc(r.tBatVolts)} V</td></tr>`;
+    if (r.tBatDuration) testRows += '<tr><td>Battery standby duration</td><td>'+_esc(r.tBatDuration)+'</td></tr>';
+    if (r.tBatVolts)   testRows += '<tr><td>Battery voltage</td><td>'+_esc(r.tBatVolts)+' V</td></tr>';
     testRows += _tRow('Sounder / beacon test', r.tSounder);
-    if (r.tSounderDb)  testRows += `<tr><td>Sounder level</td><td>${_esc(r.tSounderDb)} dB</td></tr>`;
+    if (r.tSounderDb)  testRows += '<tr><td>Sounder level</td><td>'+_esc(r.tSounderDb)+' dB</td></tr>';
     testRows += _tRow('Visual indicators test', r.tVisual);
     testRows += _tRow('Zone isolation test', r.tZoneIso);
     testRows += _tRow('Fault simulation test', r.tFaultSim);
     testRows += _tRow('Engineer key switch', r.tKeySwitch);
   }
 
-  // ── System details grid ─────────────────────────────────────────────────────
+  // ── System details grid ───────────────────────────────────────────────────
   var sysDetailCells = '';
   if (!isComm) {
-    if (r.sysCategory)   sysDetailCells += `<div class="cell"><div class="ck">Category</div><div class="cv">${_esc(r.sysCategory)}</div></div>`;
-    if (r.sysGrade)      sysDetailCells += `<div class="cell"><div class="ck">Grade</div><div class="cv">${_esc(r.sysGrade)}</div></div>`;
-    if (r.sysCoverage)   sysDetailCells += `<div class="cell"><div class="ck">Coverage</div><div class="cv">${_esc(r.sysCoverage)}</div></div>`;
-    if (r.sysPowerSupply)sysDetailCells += `<div class="cell"><div class="ck">Power supply</div><div class="cv">${_esc(r.sysPowerSupply)}</div></div>`;
-    if (r.sysInterlinked)sysDetailCells += `<div class="cell"><div class="ck">Interlinked</div><div class="cv">${_esc(r.sysInterlinked)}</div></div>`;
-    if (r.sysMfr||r.sysModel) sysDetailCells += `<div class="cell"><div class="ck">Make / model</div><div class="cv">${_esc([r.sysMfr,r.sysModel].filter(Boolean).join(' '))}</div></div>`;
-    if (r.installDate)   sysDetailCells += `<div class="cell"><div class="ck">Installation date</div><div class="cv">${_esc(r.installDate)}</div></div>`;
-    if (r.departuresNotes) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Departures / variations</div><div class="cv">${_esc(r.departuresNotes)}</div></div>`;
-    if (r.sysOperational) sysDetailCells += `<div class="cell"><div class="ck">System operational at leaving</div><div class="cv">${_esc(r.sysOperational)}</div></div>`;
-    if (r.worksCarried) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Works carried out</div><div class="cv">${_esc(r.worksCarried)}</div></div>`;
+    if (r.sysCategory)   sysDetailCells += _field('Category', r.sysCategory);
+    if (r.sysGrade)      sysDetailCells += _field('Grade', r.sysGrade);
+    if (r.sysCoverage)   sysDetailCells += _field('Coverage', r.sysCoverage);
+    if (r.sysPowerSupply)sysDetailCells += _field('Power supply', r.sysPowerSupply);
+    if (r.sysInterlinked)sysDetailCells += _field('Interlinked', r.sysInterlinked);
+    if (r.sysMfr||r.sysModel) sysDetailCells += _field('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' '));
+    if (r.installDate)   sysDetailCells += _field('Installation date', r.installDate);
+    if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
+    if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
+    if (r.worksCarried)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
   } else {
-    if (r.sysCategory)  sysDetailCells += `<div class="cell"><div class="ck">System category</div><div class="cv">${_esc(r.sysCategory)}</div></div>`;
-    if (r.sysCommType)  sysDetailCells += `<div class="cell"><div class="ck">System type</div><div class="cv">${_esc(r.sysCommType)}</div></div>`;
-    if (r.sysPanelMake||r.sysPanelModel) sysDetailCells += `<div class="cell"><div class="ck">Control panel</div><div class="cv">${_esc([r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' '))}</div></div>`;
-    if (r.sysZones)     sysDetailCells += `<div class="cell"><div class="ck">Zones</div><div class="cv">${_esc(r.sysZones)}</div></div>`;
-    if (r.sysLoops)     sysDetailCells += `<div class="cell"><div class="ck">Loops</div><div class="cv">${_esc(r.sysLoops)}</div></div>`;
-    if (r.sysBafe)      sysDetailCells += `<div class="cell"><div class="ck">BAFE scheme no.</div><div class="cv">${_esc(r.sysBafe)}</div></div>`;
-    if (r.sysFia)       sysDetailCells += `<div class="cell"><div class="ck">FIA member no.</div><div class="cv">${_esc(r.sysFia)}</div></div>`;
-    if (r.sysOperational) sysDetailCells += `<div class="cell"><div class="ck">System operational at leaving</div><div class="cv">${_esc(r.sysOperational)}</div></div>`;
-    if (r.worksCarried) sysDetailCells += `<div class="cell" style="grid-column:1/-1"><div class="ck">Works carried out</div><div class="cv">${_esc(r.worksCarried)}</div></div>`;
+    if (r.sysCategory)  sysDetailCells += _field('System category', r.sysCategory);
+    if (r.sysCommType)  sysDetailCells += _field('System type', r.sysCommType);
+    if (r.sysPanelMake||r.sysPanelModel) sysDetailCells += _field('Control panel', [r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' '));
+    if (r.sysZones)     sysDetailCells += _field('Zones', r.sysZones);
+    if (r.sysLoops)     sysDetailCells += _field('Loops', r.sysLoops);
+    if (r.sysBafe)      sysDetailCells += _field('BAFE scheme no.', r.sysBafe);
+    if (r.sysFia)       sysDetailCells += _field('FIA member no.', r.sysFia);
+    if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
+    if (r.worksCarried) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
   }
 
-  // ── Defects ─────────────────────────────────────────────────────────────────
-  var SEV_STYLES = {ADVISORY:'',MINOR:'color:#a16207;font-weight:600',MAJOR:'color:#b91c1c;font-weight:700',CRITICAL:'color:#7f1d1d;font-weight:700'};
+  // ── Defects ───────────────────────────────────────────────────────────────
+  var SEV_STYLES = {ADVISORY:'',MINOR:'color:#a16207;font-weight:600',MAJOR:'color:#c01818;font-weight:700',CRITICAL:'color:#7a1010;font-weight:700'};
   var hasDefects = (r.defects||[]).length > 0 || r.defectsNotes;
   var defectsHtml = '';
   if (hasDefects) {
-    var defRows = (r.defects||[]).map((d,i)=>{
+    var defRows = (r.defects||[]).map(function(d,i){
       var sev = d.severity||'ADVISORY';
-      return `<tr><td>${i+1}</td><td>${_esc(d.description)}</td><td style="${SEV_STYLES[sev]||''}">${_esc(sev)}</td><td>${_esc(d.recommendation)}</td></tr>`;
+      return '<tr><td>'+(i+1)+'</td><td>'+_esc(d.description)+'</td><td style="'+(SEV_STYLES[sev]||'')+'">'+_esc(sev)+'</td><td>'+_esc(d.recommendation)+'</td></tr>';
     }).join('');
-    defectsHtml = `
-    <div class="sec"><h3>Defects &amp; Recommendations</h3></div>
-    ${r.defectsOverall?`<div class="rec" style="margin-bottom:10px"><b>Overall condition:</b> ${_esc(r.defectsOverall)}</div>`:''}
-    ${defRows?`<table><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>${defRows}</tbody></table>`:''}
-    ${r.defectsNotes?`<div class="rec" style="margin-top:8px">${_esc(r.defectsNotes)}</div>`:''}`;
+    defectsHtml = '<div class="sec-head" style="margin-top:14px">Defects &amp; Recommendations</div>'
+      +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
+      +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
+      +(r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
   }
 
-  // ── Tenant sign-off (conditional) ───────────────────────────────────────────
+  // ── Tenant sign-off ───────────────────────────────────────────────────────
   var tenantHtml = '';
   if (r.tenantName) {
-    tenantHtml = `
-    <div class="sec"><h3>Tenant / Occupier Acknowledgment</h3></div>
-    <div class="rec" style="margin-bottom:10px">I confirm the alarm system was tested in my presence and found to be in working order at the time of inspection.</div>
-    <div class="sig" style="grid-template-columns:1fr 1fr">
-      <div><div class="sl"></div><div class="sc">Tenant / Occupier — ${_esc(r.tenantName)}${r.tenantAckDate?' · '+_esc(r.tenantAckDate):''}</div></div>
-      <div></div>
-    </div>`;
+    tenantHtml = '<div class="sec-head" style="margin-top:14px">Tenant / Occupier Acknowledgment</div>'
+      +'<div class="note-box" style="margin-bottom:10px">I confirm the alarm system was tested in my presence and found to be in working order at the time of inspection.</div>'
+      +'<div class="sig-row">'
+      +'<div><div class="sig-line"></div><div class="sig-cap">Tenant / Occupier — '+_esc(r.tenantName)+(r.tenantAckDate?' · '+_esc(r.tenantAckDate):'')+'</div></div>'
+      +'<div></div>'
+      +'</div>';
   }
 
-  // ── Mini-masthead for continuation pages ────────────────────────────────────
-  var miniMast = `
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div>
-      <div style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em">${_esc(company)}</div>
-      <div style="font-size:8px;color:#55617a;margin-top:2px">${_esc(r.certType||'FA')} — ${_esc(r.ref||'—')} · ${_esc(premAddr)}</div>
-    </div>
-    <div style="text-align:right;font-size:8px;color:#55617a;line-height:1.6">${_esc(stdLabel.split(' — ')[0])}<br>${_esc(typeKicker)}</div>
-  </div>`;
+  // ── Footer helper ─────────────────────────────────────────────────────────
+  function footer(loc, pageNum, total) {
+    return '<div class="cert-footer">'
+      +'<div class="cf-left">'+_esc(loc)+'</div>'
+      +'<div class="cf-ref">'+ref+' &nbsp;&middot;&nbsp; Page '+pageNum+' of '+total+'</div>'
+      +'</div>';
+  }
 
-  // ── CSS ─────────────────────────────────────────────────────────────────────
+  // ── Continuation header (pages 2+) ────────────────────────────────────────
+  function contHead(subtitle, pageNum, total) {
+    return '<div class="ch-cont">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">'
+      +'<div>'
+      +'<div class="ch-cont-eyebrow">'+_esc(typeKicker)+'</div>'
+      +'<div class="ch-cont-title">'+_esc(subtitle)+'</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-family:monospace;font-size:11px;font-weight:700;color:#e08830;letter-spacing:.04em">'+ref+'</div>'
+      +'<div style="font-size:9.5px;color:rgba(255,255,255,.55);margin-top:2px">Page '+pageNum+' of '+total+'</div>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  // ── Purpose panel content ─────────────────────────────────────────────────
+  var purposeMap = {
+    'FA.1':'To certify the design, installation and commissioning of a new fire alarm system in accordance with BS 5839-6:2019',
+    'FA.2':'To certify continued compliance — annual inspection and testing of an existing fire alarm system',
+    'FA.3':'To certify the installation, commissioning and testing of a new fire detection and alarm system in accordance with BS 5839-1:2025',
+    'FA.4':'To certify the periodic service, inspection and verification of an existing fire detection and alarm system'
+  };
+  var extentMap = {
+    'FA.1':'Design, installation and commissioning — 100% of the new fire alarm system at the premises identified on this certificate.',
+    'FA.2':'Annual inspection and testing — 100% of the fire detection and alarm system including all detectors, sounders, control panel, and interconnections at the premises.',
+    'FA.3':'Complete installation, commissioning and testing — 100% of the new fire detection and alarm system in accordance with BS 5839-1:2025.',
+    'FA.4':'Periodic service, inspection and verification — 100% of the existing fire detection and alarm system at the premises identified on this certificate.'
+  };
+  var purposeTxt = purposeMap[r.certType] || purposeMap['FA.2'];
+  var extentTxt  = extentMap[r.certType]  || extentMap['FA.2'];
+
+  // ── Page 1 ────────────────────────────────────────────────────────────────
+  var totalPages = 3;
+
+  var premName = _esc(r.premisesName||'');
+  var premAddrLines = premAddr.map(function(l){return _esc(l);}).join('<br>');
+  var premType = _esc(r.premisesType||'');
+  var clientName = _esc(r.clientName||'—');
+  var clientAddrLines = clientAddr.map(function(l){return _esc(l);}).join('<br>');
+
+  // Page 1 body summary fields
+  var p1Fields = '';
+  if (!isComm) {
+    if (r.sysCategory)   p1Fields += _field('Category', r.sysCategory);
+    if (r.sysGrade)      p1Fields += _field('Grade', r.sysGrade);
+    if (r.sysPowerSupply)p1Fields += _field('Power Supply', r.sysPowerSupply);
+    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
+    else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
+  } else {
+    if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
+    if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
+    if (r.sysZones)      p1Fields += _field('Zones', r.sysZones);
+    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
+  }
+
+  var noteBox = sat
+    ? '<div class="note-box"><div class="nb-lbl">&#10003; System Satisfactory</div><p style="font-size:11.5px;color:#3a2a2a;line-height:1.6">This fire alarm system has been inspected and tested in accordance with '+_esc(stdLabel.split(' ·')[0])+'. '+( devTotal>0 ? 'All '+devTotal+' detection devices were tested and '+devPass+' passed.' : 'The system satisfies the requirements of the standard.')+'</p></div>'
+    : '<div class="obs-box"><div class="ob-lbl">&#9888; Action Required — Unsatisfactory</div><p style="font-size:11.5px;color:#3a1010;line-height:1.6">'+devFail+' device'+(devFail===1?'':'s')+' recorded as failed — full details with recommended remedial actions are on the following pages of this certificate.</p></div>';
+
+  var page1 = '<div class="cert-page">'
+    +'<div class="cert-top-strip"></div>'
+    +'<div class="ch-ref-bar"><div class="ch-date">Date of Issue: '+tDate+'</div><div class="ch-ref">Cert Ref No. '+ref+'</div></div>'
+    +'<div class="ch">'
+      +'<div class="ch-top-row">'
+        +'<div class="ch-logo-row">'
+          +elLogo
+          +'<div style="flex:1;min-width:0">'
+          +'<div class="ch-company">'+coName+'</div>'
+          +(companyAddr?'<div class="ch-company-sub">'+coAddr+'</div>':'')
+          +'<div class="ch-company-sub">'
+          +(coTel?'<a href="tel:'+coTel.replace(/\s/g,'')+'">'+coTel+'</a>':'')
+          +(coTel&&(companyEmail)?'&nbsp;&bull;&nbsp;':'')
+          +(companyEmail?'<a href="mailto:'+coEmail+'">'+coEmail+'</a>':'')
+          +'</div>'
+          +'</div>'
+        +'</div>'
+        +bodyBadge
+      +'</div>'
+      +'<div class="ch-title-row">'
+        +'<div class="ch-cert-eyebrow">'+_esc(typeKicker)+'</div>'
+        +'<div class="ch-cert-title">'+_esc(typeTitle)+'</div>'
+        +'<div class="ch-cert-std">'+_esc(stdLabel)+'</div>'
+      +'</div>'
+    +'</div>'
+    // Address panel: LEFT = Client/Landlord + Property (split); RIGHT = Engineer
+    +'<div class="addr-panel">'
+      +'<div class="addr-col addr-col-left" style="padding:0">'
+        +'<div style="display:flex;height:100%">'
+          +'<div style="flex:1;padding:12px 14px 16px 28px;border-right:1px solid #e2d4d4">'
+            +'<div class="addr-col-label">Landlord / Client</div>'
+            +(clientName!=='—'?'<div class="addr-name">'+clientName+'</div>':'')
+            +(clientAddrLines?'<div class="addr-line">'+clientAddrLines+'</div>':'')
+            +(r.responsiblePerson&&r.responsiblePerson!==r.clientName?'<div class="addr-sub" style="margin-top:5px">Resp: '+_esc(r.responsiblePerson)+'</div>':'')
+            +(clientName==='—'&&!clientAddrLines?'<div style="color:#9a948e;font-size:12px;margin-top:4px">—</div>':'')
+          +'</div>'
+          +'<div style="flex:1;padding:12px 24px 16px 14px">'
+            +'<div class="addr-col-label">Property</div>'
+            +(premName?'<div class="addr-name">'+premName+'</div>':'')
+            +(premAddrLines?'<div class="addr-line">'+premAddrLines+'</div>':'')
+            +(premType?'<div class="addr-sub" style="margin-top:5px">'+premType+'</div>':'')
+            +(!premName&&!premAddrLines?'<div style="color:#9a948e;font-size:12px;margin-top:4px">—</div>':'')
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="addr-col">'
+        +'<div class="addr-col-label">Inspecting Engineer</div>'
+        +'<div style="margin-bottom:6px">'
+          +'<div class="addr-engineer-name">'+eng+'</div>'
+          +'<div class="addr-line">'+engPos+'<br>'+coName+'</div>'
+        +'</div>'
+        +(coTel?'<div class="addr-detail-row"><span class="addr-detail-lbl">Tel:</span><span class="addr-detail-val">'+coTel+'</span></div>':'')
+        +(companyEmail?'<div class="addr-detail-row"><span class="addr-detail-lbl">Email:</span><span class="addr-detail-val">'+coEmail+'</span></div>':'')
+      +'</div>'
+    +'</div>'
+    // Purpose panel
+    +'<div class="purp-panel">'
+      +'<div class="purp-col purp-col-left">'
+        +'<div class="purp-label">Purpose of Certificate</div>'
+        +'<div class="purp-row"><div class="purp-check purp-check-on"></div><div class="purp-text purp-text-on">'+_esc(purposeTxt)+'</div></div>'
+      +'</div>'
+      +'<div class="purp-col">'
+        +'<div class="purp-label">Extent of System Covered by this Certificate</div>'
+        +'<div class="purp-extent">'+_esc(extentTxt)+'</div>'
+      +'</div>'
+    +'</div>'
+    // Outcome band
+    +'<div class="outcome-band" style="background:'+obBg+';border-top:1px solid #e08830;border-bottom:1px solid #e08830">'+obText+'</div>'
+    // Body
+    +'<div class="cb">'
+      +'<div class="sec-head">System Summary</div>'
+      +'<div class="stats-bar">'
+        +'<div class="stat-cell"><span class="stat-num">'+devTotal+'</span><span class="stat-lbl">Devices</span></div>'
+        +'<div class="stat-cell"><span class="stat-num">'+devTested+'</span><span class="stat-lbl">Tested</span></div>'
+        +'<div class="stat-cell stat-pass"><span class="stat-num">'+devPass+'</span><span class="stat-lbl">Passed</span></div>'
+        +'<div class="stat-cell stat-fail"><span class="stat-num">'+devFail+'</span><span class="stat-lbl">Failed</span></div>'
+      +'</div>'
+      +(p1Fields?'<div class="fg">'+p1Fields+'</div>':'')
+      +noteBox
+    +'</div>'
+    +footer(r.premisesName||premAddr[0]||company, 1, totalPages)
+  +'</div>';
+
+  // ── Page 2 ────────────────────────────────────────────────────────────────
+  var page2 = '<div class="cert-page">'
+    +contHead('Schedule of Devices &amp; Test Results', 2, totalPages)
+    +'<div class="cb">'
+      +((r.detectors||[]).length?'<div class="sec-head">Schedule of Detectors &amp; Devices</div><table class="ltbl"><thead><tr>'+detHeaders+'</tr></thead><tbody>'+detRows+'</tbody></table>':'')
+      +'<div class="sec-head" style="margin-top:14px">Test Results</div>'
+      +'<table class="ltbl"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>'+(testRows||'<tr><td colspan="2" style="color:#9a948e;font-style:italic">No test results recorded</td></tr>')+'</tbody></table>'
+      +(sysDetailCells?'<div class="sec-head" style="margin-top:14px">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
+    +'</div>'
+    +footer(r.premisesName||premAddr[0]||company, 2, totalPages)
+  +'</div>';
+
+  // ── Page 3 ────────────────────────────────────────────────────────────────
+  var declText = r.certType==='FA.1'||r.certType==='FA.3'
+    ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the fire alarm system has been installed, commissioned and tested in accordance with '+stdLabel.split(' ·')[0]+', and was found to be '+(r.outcome||'—')+' on the date of issue.'
+    : 'I, the undersigned, being the competent person who carried out the inspection and testing described in this certificate, declare that the fire alarm system has been inspected and tested in accordance with '+stdLabel.split(' ·')[0]+', and was found to be '+(r.outcome||'—')+' on the date of issue.';
+
+  var page3 = '<div class="cert-page">'
+    +contHead('Declaration &amp; Sign-off', 3, totalPages)
+    +'<div class="cb">'
+      +defectsHtml
+      +'<div class="sec-head" style="margin-top:14px">Competent Person Declaration</div>'
+      +'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;font-size:11.5px;margin-bottom:14px">'
+        +'<div style="display:flex;border-bottom:1px solid #e2d4d4">'
+          +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Trading Title</div>'
+          +'<div style="padding:7px 10px;font-weight:600;color:#1c1010;flex:1">'+coName+'</div>'
+        +'</div>'
+        +(companyAddr?'<div style="display:flex;border-bottom:1px solid #e2d4d4">'
+          +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Contractor Address</div>'
+          +'<div style="padding:7px 10px;color:#1c1010;flex:1">'+_esc(companyAddr)+'</div>'
+          +'</div>':'')
+        +'<div style="padding:9px 10px;border-bottom:1px solid #e2d4d4;color:#3a2a2a;line-height:1.6;font-size:11px">'+_esc(declText)+'</div>'
+        +'<div style="display:flex">'
+          +'<div style="flex:1;border-right:1px solid #e2d4d4">'
+            +'<div style="display:flex;border-bottom:1px solid #e2d4d4">'
+              +'<div style="padding:10px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Name</div>'
+              +'<div style="padding:10px 10px;flex:1;font-size:14px;font-weight:700;color:#1c1010">'+eng+'</div>'
+            +'</div>'
+            +'<div style="display:flex;border-bottom:1px solid #e2d4d4">'
+              +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Post</div>'
+              +'<div style="padding:7px 10px;flex:1">'+engPos+'</div>'
+            +'</div>'
+            +'<div style="display:flex">'
+              +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Date</div>'
+              +'<div style="padding:7px 10px;flex:1">'+tDate+'</div>'
+            +'</div>'
+          +'</div>'
+          +'<div style="flex:1;padding:10px;display:flex;flex-direction:column;justify-content:flex-end">'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a7858;margin-bottom:4px">Signature</div>'
+            +sigImg
+            +'<div style="border-bottom:1px solid #1c1010;margin-top:4px;min-height:30px"></div>'
+            +'<div style="font-size:9px;color:#9a7858;margin-top:3px">For '+coName+(niceicNo?' · NICEIC '+_esc(niceicNo):'')+'</div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +tenantHtml
+    +'</div>'
+    +footer(r.premisesName||premAddr[0]||company, 3, totalPages)
+  +'</div>';
+
+  // ── CSS ───────────────────────────────────────────────────────────────────
   var css = `
-:root{--ink:#1a1010;--gold:#8b1c1c;--gold2:#c04040;--paper:#fdfbfb;--line:#e0cccc;--pass:#166534;--fail:#7f1d1d}
+/* Ember & Flame — Fire Alarm Certificate
+   dark:#7a1010  mid:#c01818  accent:#e08830  paper:#fdfaf8  pa:#f8edcc */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;600;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;color:var(--ink);background:var(--paper)}
+body{font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#1c1010;background:#fdfaf8}
 @page{size:A4;margin:0}
-@media print{body{background:var(--paper)}.page{page-break-after:always;break-after:page}.page:last-of-type{page-break-after:auto;break-after:auto}}
-.page{width:210mm;height:297mm;background:var(--paper);padding:10mm;position:relative;overflow:hidden;display:block}
-.frame{border:1px solid var(--gold);padding:4px;height:100%}
-.inner{border:2px solid var(--ink);padding:11mm 11mm 8mm;height:100%;position:relative;display:flex;flex-direction:column;overflow:hidden}
-.inner::before{content:"";position:absolute;inset:4px;border:1px solid var(--gold2);pointer-events:none;z-index:0}
-.stripe{background:#7f1d1d;color:#fff;margin:-11mm -11mm 0;padding:9mm 11mm 7mm;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-shrink:0;position:relative;z-index:1}
-.grow{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.mast{display:flex;justify-content:space-between;align-items:flex-start}
-.brand{display:flex;gap:10px;align-items:center}
-.crest{width:50px;height:50px;border:2px solid rgba(255,255,255,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:12px;color:var(--ink);background:#fff;flex-shrink:0;letter-spacing:.03em;overflow:hidden}
-.brand h1{font-family:Georgia,serif;font-size:14px;letter-spacing:.09em;line-height:1.3;color:#fff}
-.brand p{font-size:8.5px;color:rgba(255,255,255,.72);letter-spacing:.05em;margin-top:3px}
-hr.rule{border:none;border-top:1px solid var(--line);margin:11px 0}
-.title{text-align:center;margin:18px 0 6px;padding:0 8mm}
-.kicker{font-size:8px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:7px}
-.title h2{font-family:Georgia,serif;font-size:20px;font-weight:600;line-height:1.3}
-.title .std{font-size:9px;color:#7a6060;margin-top:6px;line-height:1.5}
-.strip{margin:14px auto 0;width:100%;border-top:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);padding:10px 0;text-align:center;background:rgba(139,28,28,.03)}
-.strip .sk{font-size:7.5px;letter-spacing:.28em;text-transform:uppercase;color:#7a6060}
-.strip .sv{font-family:Georgia,serif;font-size:17px;letter-spacing:.1em;margin-top:4px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin-top:16px}
-.cell{padding:9px 0;border-bottom:1px solid var(--line)}
-.ck{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
-.cv{font-size:10.5px;line-height:1.5}
-.chips{display:flex;gap:6px;margin-top:14px}
-.chip{flex:1;border:1px solid var(--ink);text-align:center;padding:8px 4px;background:#fff;min-width:0}
-.chip .ck{font-size:7px;letter-spacing:.12em}
-.chip .cv{font-family:Georgia,serif;font-size:11px;margin-top:3px;line-height:1.3;word-break:break-word}
-.outcome{border:2px solid var(--pass);background:#eef7f0;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:58px;margin-top:auto}
-.outcome.unsat{border-color:var(--fail);background:#fdf0f0}
-.ow{font-family:Georgia,serif;font-size:18px;letter-spacing:.12em;color:var(--pass)}
-.outcome.unsat .ow{color:var(--fail)}
-.on{font-size:8.5px;color:#7a6060;text-align:right;line-height:1.8;flex-shrink:0}
-.sec{display:flex;align-items:center;gap:9px;margin:13px 0 7px}
-.sec h3{font-size:8.5px;letter-spacing:.20em;text-transform:uppercase;white-space:nowrap;font-weight:700;color:var(--gold)}
-.sec::before,.sec::after{content:"";flex:1;border-top:1px solid var(--line)}
-table{width:100%;border-collapse:collapse;font-size:9.5px;background:#fff}
-th{background:#7f1d1d;color:#fff;font-size:7.5px;letter-spacing:.11em;text-transform:uppercase;padding:6px 7px;text-align:left}
-td{padding:5.5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:nth-child(even) td{background:#f7f0f0}
-.ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid var(--pass);color:var(--pass);font-weight:600}
-.fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid var(--fail);color:var(--fail);font-weight:600}
+@media print{body{background:#fdfaf8}.cert-page{page-break-after:always;break-after:page}.cert-page:last-of-type{page-break-after:auto;break-after:auto}}
+a{color:inherit;text-decoration:none}
+
+/* ── Page wrapper ── */
+.cert-page{background:#fdfaf8;width:794px;min-height:1123px;font-size:13px;color:#1c1010;line-height:1.5;display:flex;flex-direction:column;font-family:Inter,"Helvetica Neue",Arial,sans-serif}
+
+/* ── Top strip ── */
+.cert-top-strip{background:linear-gradient(90deg,#7a1010,#c01818 55%,#e08830);height:7px;flex-shrink:0}
+
+/* ── Ref bar ── */
+.ch-ref-bar{background:linear-gradient(90deg,#7a1010,#c01818);border-top:1px solid #e08830;padding:8px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.ch-date{font-size:11.5px;color:rgba(255,255,255,.75)}
+.ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#f8edcc;letter-spacing:.05em}
+
+/* ── Header ── */
+.ch{background:#fdfaf8;padding:9px 28px 0;flex-shrink:0}
+.ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:9px;border-bottom:1.5px solid #e2d4d4}
+.ch-logo-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
+.ch-company{font-size:20px;font-weight:900;color:#1c1010;letter-spacing:-.02em;line-height:1.1}
+.ch-company-sub{font-size:9.5px;color:#666;margin-top:2px}
+.niceic-badge{border:1.5px solid #e08830;border-radius:4px;padding:7px 14px;background:#f8edcc;text-align:center;flex-shrink:0}
+.nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a1010}
+.nb-sub{font-size:7.5px;color:#666;margin-top:1px}
+.ch-title-row{padding:7px 0 7px}
+.ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#e08830;margin-bottom:4px}
+.ch-cert-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:29px;font-weight:700;color:#c01818;line-height:1.15}
+.ch-cert-std{font-size:9.5px;color:#666;margin-top:5px;line-height:1.6}
+
+/* ── Address panel ── */
+.addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid #e08830;flex-shrink:0}
+.addr-col{padding:12px 28px 14px}
+.addr-col-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e08830;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.07);margin-bottom:9px}
+.addr-name{font-size:15px;font-weight:700;color:#1c1010;margin-bottom:3px;line-height:1.2}
+.addr-line{font-size:12px;color:#666;line-height:1.75}
+.addr-sub{font-size:10.5px;color:#999}
+.addr-engineer-name{font-size:15px;font-weight:700;color:#1c1010;margin-bottom:3px}
+.addr-detail-row{display:flex;gap:6px;font-size:11px;color:#666;margin-top:3px}
+.addr-detail-lbl{font-weight:700;color:#444}
+.addr-detail-val{color:#666}
+
+/* ── Purpose panel ── */
+.purp-panel{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e2d4d4;flex-shrink:0}
+.purp-col{padding:10px 28px 12px}
+.purp-col-left{border-right:1px solid #e2d4d4}
+.purp-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e08830;margin-bottom:8px}
+.purp-row{display:flex;align-items:flex-start;gap:8px}
+.purp-check{width:13px;height:13px;border:2px solid #e08830;border-radius:2px;flex-shrink:0;margin-top:1px}
+.purp-check-on{background:#c01818;border-color:#c01818}
+.purp-text{font-size:11.5px;color:#3a2a2a;line-height:1.55}
+.purp-text-on{font-weight:600;color:#1c1010}
+.purp-extent{font-size:11.5px;color:#3a2a2a;line-height:1.6}
+
+/* ── Outcome band ── */
+.outcome-band{padding:11px 28px;text-align:center;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#fff;flex-shrink:0}
+
+/* ── Body ── */
+.cb{padding:16px 28px;flex:1;display:flex;flex-direction:column}
+.sec-head{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c01818;padding-bottom:6px;border-bottom:2px solid #e08830;margin-bottom:12px}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e08830;border-radius:5px;overflow:hidden;margin-bottom:14px}
+.stat-cell{padding:14px 10px;text-align:center;border-right:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
+.stat-cell:last-child{border-right:none}
+.stat-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:42px;font-weight:700;line-height:1;color:#c01818}
+.stat-lbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-top:4px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-bottom:12px}
+.f{padding-bottom:9px;border-bottom:1px solid #ede0e0;margin-bottom:9px}
+.fl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:2px}
+.fv{font-size:13px;font-weight:600;color:#1c1010}
+.note-box{border:1px solid #d4c0a8;border-radius:4px;padding:11px 14px;background:#fdf5ec;flex:1}
+.nb-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c01818;margin-bottom:7px}
+.obs-box{border-left:4px solid #c01818;border-radius:4px;padding:11px 14px;background:#fdf0ee;flex:1}
+.ob-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;margin-bottom:7px}
+
+/* ── Continuation header ── */
+.ch-cont{background:#7a1010;border-bottom:2px solid #e08830;padding:16px 28px 14px;flex-shrink:0}
+.ch-cont-eyebrow{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:4px}
+.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#fff}
+
+/* ── Tables ── */
+.ltbl{width:100%;border-collapse:collapse;font-size:9.5px;background:#fdfaf8;margin-bottom:12px}
+.ltbl th{background:#7a1010;color:#fff;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;text-align:left}
+.ltbl td{padding:5.5px 8px;border-bottom:1px solid #ede0e0;vertical-align:top}
+.ltbl tr:nth-child(even) td{background:#fdf5ec}
+.ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #166534;color:#166534;font-weight:600}
+.fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #7a1010;color:#7a1010;font-weight:600}
 .num{font-variant-numeric:tabular-nums}
-.rec{border:1px solid var(--line);background:#fff;padding:9px 11px;font-size:9.5px;line-height:1.9}
-.rec b{color:var(--gold)}
-.sig{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
-.sl{border-bottom:1px solid var(--ink);min-height:32px;display:flex;align-items:flex-end;padding-bottom:2px}
-.sc{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#7a6060;margin-top:4px}
-.foot{text-align:center;margin-top:10px;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a8888}`;
 
-  // ── Page 1 ──────────────────────────────────────────────────────────────────
-  var page1 = `
-<div class="page"><div class="frame"><div class="inner">
-  <div class="stripe">
-    <div class="brand">
-      ${crestHtml}
-      <div><h1>${_esc(company.toUpperCase())}</h1><p>${_esc(coContactLine)}</p></div>
-    </div>
-    ${niceicStripeHtml}
-  </div>
-  <div class="grow">
-    <div class="title">
-      <div class="kicker">${_esc(typeKicker)}</div>
-      <h2>${_esc(typeTitle)}</h2>
-      <div class="std">${_esc(stdLabel)}</div>
-    </div>
-    <div class="strip">
-      <div class="sk">Certificate Reference</div>
-      <div class="sv num">${_esc(r.ref||'—')}</div>
-    </div>
-    <div class="grid">${gridCells}</div>
-    ${engStrip}
-    ${chipsArr.length ? `<div class="chips">${chipsHtml}</div>` : ''}
-    <div class="outcome${outClass}">
-      <div>
-        <div style="font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#7a6060">Outcome</div>
-        <div class="ow">${_esc(r.outcome||'—')}</div>
-      </div>
-      ${outcomeDetailHtml}
-    </div>
-  </div>
-  <div class="foot">${_esc(company)} · Page 1 of 3</div>
-</div></div></div>`;
+/* ── Signature ── */
+.sig-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+.sig-line{border-bottom:1px solid #1c1010;min-height:32px;display:flex;align-items:flex-end;padding-bottom:2px}
+.sig-cap{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#7a6060;margin-top:4px}
 
-  // ── Page 2 ──────────────────────────────────────────────────────────────────
-  var page2 = `
-<div class="page"><div class="frame"><div class="inner"><div class="grow">
-  ${miniMast}
-  <hr class="rule">
-  ${(r.detectors||[]).length ? `
-  <div class="sec"><h3>Schedule of Detectors &amp; Devices</h3></div>
-  <table><thead><tr>${detHeaders}</tr></thead><tbody>${detRows}</tbody></table>` : ''}
-  <div class="sec"><h3>Test Results</h3></div>
-  <table><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>${testRows||'<tr><td colspan="2" style="color:#9a9484">—</td></tr>'}</tbody></table>
-  ${sysDetailCells ? `
-  <div class="sec"><h3>System Details</h3></div>
-  <div class="grid">${sysDetailCells}</div>` : ''}
-</div>
-  <div class="foot">${_esc(company)} · Page 2 of 3</div>
-</div></div></div>`;
+/* ── Footer ── */
+.cert-footer{background:#7a1010;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cf-left{font-size:10px;color:rgba(255,255,255,.45)}
+.cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}`;
 
-  // ── Page 3 ──────────────────────────────────────────────────────────────────
-  var page3 = `
-<div class="page"><div class="frame"><div class="inner"><div class="grow">
-  ${miniMast}
-  <hr class="rule">
-  ${defectsHtml}
-  <div class="sec"><h3>Declaration</h3></div>
-  <div class="rec">I confirm the fire alarm system described in this certificate has been inspected and tested in accordance with ${_esc(stdLabel)} and that the results stated are a true record of the condition of the installation at the time of inspection. This certificate does not guarantee that the installation will remain free from defects in the future.</div>
-  <div class="sec"><h3>Sign-off</h3></div>
-  <div class="sig">
-    <div>
-      <div class="sl">${enggSigData?`<img src="${enggSigData}" style="max-height:28px;max-width:100px;object-fit:contain">`:''}</div>
-      <div class="sc">Engineer — ${_esc(r.engineerName||'—')}${r.engineerQual?' · '+_esc(r.engineerQual):''} · ${_esc(r.testDate||issued)}</div>
-    </div>
-    <div>
-      <div class="sl"></div>
-      <div class="sc">For ${_esc(r.companyName||company)}${niceicNo?' · NICEIC '+_esc(niceicNo):''}</div>
-    </div>
-  </div>
-  ${tenantHtml}
-</div>
-  <div class="foot">${_esc(company)} · Page 3 of 3 · Ref: ${_esc(r.ref||'—')} · Issued ${issued}</div>
-</div></div></div>`;
-
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${_esc(r.certType||'FA')} Certificate — ${_esc(r.ref||'')}</title><style>${css}</style></head><body>${page1}${page2}${page3}</body></html>`;
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+'</body></html>';
 }
