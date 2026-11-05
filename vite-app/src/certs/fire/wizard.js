@@ -106,6 +106,12 @@ export function startNewFire() {
     falseAlarms12m: '',
     falseAlarmAction: '',
     annexGChecks: {},
+    changeOfOrg: '',
+    prevOrgName: '',
+    prevOrgContact: '',
+    prevOrgDate: '',
+    handoverCondition: '',
+    handoverNotes: '',
     testDate: todayStr(),
     ref: '', baseRef: ''
   };
@@ -394,6 +400,15 @@ export function fireRenderStep() {
       html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">False Alarm Statistics</p></div>`;
       html += `<div class="wiz-field"><label>False alarms in past 12 months <span class="lbl-opt">(optional)</span></label><input type="number" min="0" max="999" value="${esc(_w.falseAlarms12m||'')}" oninput="fireSet('falseAlarms12m',this.value)" placeholder="0" style="max-width:100px"></div>`;
       html += `<div class="wiz-field"><label>Action taken to reduce false alarms <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.falseAlarmAction==='None required'?' on':''}" onclick="firePick('falseAlarmAction','None required')">None required</button><button class="chip${_w.falseAlarmAction==='Under investigation'?' on':''}" onclick="firePick('falseAlarmAction','Under investigation')">Under investigation</button><button class="chip${_w.falseAlarmAction==='Devices adjusted'?' on':''}" onclick="firePick('falseAlarmAction','Devices adjusted')">Devices adjusted</button><button class="chip${_w.falseAlarmAction==='Settings changed'?' on':''}" onclick="firePick('falseAlarmAction','Settings changed')">Settings changed</button><button class="chip${_w.falseAlarmAction==='Complete'?' on':''}" onclick="firePick('falseAlarmAction','Complete')">Complete</button></div></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Change of Servicing Organisation</p></div>`;
+      html += `<div class="wiz-field"><label>Has the servicing organisation changed? <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.changeOfOrg==='yes'?' on chip-sat':''}" onclick="firePick('changeOfOrg','yes')">Yes</button><button class="chip${_w.changeOfOrg==='no'?' on':''}" onclick="firePick('changeOfOrg','no')">No</button></div></div>`;
+      if (_w.changeOfOrg === 'yes') {
+        html += `<div class="wiz-field"><label>Previous organisation name</label><input value="${esc(_w.prevOrgName||'')}" oninput="fireSet('prevOrgName',this.value)" placeholder="e.g. ABC Fire &amp; Security Ltd"></div>`;
+        html += `<div class="wiz-field"><label>Previous organisation contact <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevOrgContact||'')}" oninput="fireSet('prevOrgContact',this.value)" placeholder="Name or phone number"></div>`;
+        html += `<div class="wiz-field"><label>Date of transfer <span class="lbl-opt">(optional)</span></label><input type="date" value="${esc(_w.prevOrgDate||'')}" oninput="fireSet('prevOrgDate',this.value)"></div>`;
+        html += `<div class="wiz-field"><label>System condition at handover <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.handoverCondition==='Satisfactory'?' on chip-sat':''}" onclick="firePick('handoverCondition','Satisfactory')">Satisfactory</button><button class="chip${_w.handoverCondition==='Unsatisfactory'?' on chip-unsat':''}" onclick="firePick('handoverCondition','Unsatisfactory')">Unsatisfactory</button><button class="chip${_w.handoverCondition==='Unknown'?' on':''}" onclick="firePick('handoverCondition','Unknown')">Unknown</button></div></div>`;
+        html += `<div class="wiz-field"><label>Outstanding defects / notes at handover <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('handoverNotes',this.value)" placeholder="e.g. Zone 3 detector requires replacement">${esc(_w.handoverNotes||'')}</textarea></div>`;
+      }
     }
     if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;

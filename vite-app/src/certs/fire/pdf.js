@@ -203,7 +203,7 @@ export function fireBuildCertHTML(r) {
   var extentTxt  = extentMap[r.certType]  || extentMap['FA.2'];
 
   // ── Page 1 ────────────────────────────────────────────────────────────────
-  var totalPages = isComm ? 4 : 3;
+  var totalPages = isComm ? (r.changeOfOrg === 'yes' ? 5 : 4) : 3;
 
   var premName = _esc(r.premisesName||'');
   var premAddrLines = premAddr.map(function(l){return _esc(l);}).join('<br>');
@@ -467,6 +467,68 @@ export function fireBuildCertHTML(r) {
     +'</div>';
   }
 
+  // ── Page 5: Change of Servicing Organisation (commercial + changeOfOrg) ───
+  var page5 = '';
+  if (isComm && r.changeOfOrg === 'yes') {
+    var _transDate = r.prevOrgDate
+      ? (function(d) { var p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d; })(r.prevOrgDate)
+      : '—';
+    var _condCol = r.handoverCondition === 'Satisfactory' ? '#1a6b40'
+      : r.handoverCondition === 'Unsatisfactory' ? '#7a1010'
+      : '#9a7858';
+    page5 = '<div class="cert-page">'
+      +contHead('Change of Servicing Organisation', 5, totalPages)
+      +'<div class="cb">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">'
+          +'<div class="ob-box">'
+            +'<div class="ob-lbl">Outgoing Organisation</div>'
+            +_field('Organisation', r.prevOrgName || '—')
+            +(r.prevOrgContact ? _field('Contact', r.prevOrgContact) : '')
+            +_field('Date of Transfer', _transDate)
+          +'</div>'
+          +'<div class="ob-box">'
+            +'<div class="ob-lbl">Incoming Organisation</div>'
+            +_field('Organisation', coName)
+            +_field('Engineer', eng)
+            +_field('Certificate Ref', ref)
+          +'</div>'
+        +'</div>'
+        +(r.handoverCondition
+          ? '<div class="ob-box" style="margin-bottom:14px">'
+              +'<div class="ob-lbl">System Condition at Handover</div>'
+              +'<div style="display:flex;align-items:center;gap:8px">'
+                +'<div style="width:10px;height:10px;border-radius:50%;background:'+_condCol+'"></div>'
+                +'<span style="font-size:14px;font-weight:700;color:'+_condCol+'">'+_esc(r.handoverCondition)+'</span>'
+              +'</div>'
+            +'</div>'
+          : '')
+        +(r.handoverNotes
+          ? '<div class="ob-box" style="margin-bottom:14px">'
+              +'<div class="ob-lbl">Outstanding Defects / Notes at Handover</div>'
+              +'<div style="font-size:12.5px;color:#1c1010;line-height:1.6;white-space:pre-wrap">'+_esc(r.handoverNotes)+'</div>'
+            +'</div>'
+          : '')
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">'
+          +'<div class="ob-box">'
+            +'<div class="ob-lbl">Outgoing Organisation Signature</div>'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a7858;margin-bottom:4px">Signature</div>'
+            +'<div style="border-bottom:1px solid #1c1010;min-height:40px;margin-bottom:4px"></div>'
+            +'<div style="font-size:9px;color:#9a7858">For '+_esc(r.prevOrgName||'Outgoing Organisation')+'</div>'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a7858;margin-top:10px;margin-bottom:4px">Date</div>'
+            +'<div style="border-bottom:1px solid #1c1010;min-height:20px"></div>'
+          +'</div>'
+          +'<div class="ob-box">'
+            +'<div class="ob-lbl">Incoming Organisation Signature</div>'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a7858;margin-bottom:4px">Signature</div>'
+            +sigImg
+            +'<div style="font-size:9px;color:#9a7858">For '+coName+(niceicNo?' · NICEIC '+_esc(niceicNo):'')+'</div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +footer(r.premisesName||premAddr[0]||company, 5, totalPages)
+    +'</div>';
+  }
+
   // ── CSS ───────────────────────────────────────────────────────────────────
   var css = `
 /* Ember & Flame — Fire Alarm Certificate
@@ -576,5 +638,5 @@ a{color:inherit;text-decoration:none}
 .cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
 .ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
 
-  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+page4+'</body></html>';
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+page4+page5+'</body></html>';
 }
