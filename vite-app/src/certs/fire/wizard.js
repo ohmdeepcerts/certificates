@@ -103,6 +103,9 @@ export function startNewFire() {
     prevReportRef: '',
     otherRefDocs: '',
     nextInspInterval: '',
+    falseAlarms12m: '',
+    falseAlarmAction: '',
+    annexGChecks: {},
     testDate: todayStr(),
     ref: '', baseRef: ''
   };
@@ -297,6 +300,16 @@ export function fireRenderStep() {
       html += _testRow('Zone isolation test', 'tZoneIso', ['PASS','FAIL','N/A']);
       html += _testRow('Fault simulation test', 'tFaultSim', ['PASS','FAIL','N/A']);
       html += _testRow('Engineer key switch / access control', 'tKeySwitch', ['PASS','FAIL','N/A']);
+      var _annexG = _w.annexGChecks || {};
+      var _AG = [['Control Equipment',[['ctrl_panel','Control panel — all indicators operational'],['fault_log','Fault log reviewed and entries noted'],['weekly_log','Weekly test log reviewed and up to date']]],['Power Supply',[['mains_supply','Mains supply confirmed operational'],['bat_inspect','Battery terminals and connections inspected'],['bat_voltage','Battery voltage measured and recorded'],['standby_dur','Standby battery duration test satisfactory']]],['Detection',[['call_pts','Manual call points tested (all or rotation)'],['det_rotation','Detectors tested on rotation basis per schedule'],['beam_det','Beam detectors aligned and tested (if installed)'],['aspirating','Aspirating detection system tested (if installed)']]],['Warning Devices',[['sounders','All sounders tested — dB levels adequate'],['visual_alarms','Visual alarm devices tested and operational']]],['Ancillary Functions',[['zone_iso','Zone isolation tested and restored'],['fault_sim','Fault simulation tested and cleared'],['remote_mon','Remote monitoring / receiving centre checked']]],['Documentation',[['drawings','As-installed drawings present and up to date'],['cause_effect','Cause and effect documentation available'],['log_book','Log book available with entries up to date'],['repair_arr','24-hour emergency callout arrangements confirmed']]]];
+      html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Annex G Inspection Checklist</p></div>`;
+      _AG.forEach(function(g) {
+        html += `<p style="font-size:11px;font-weight:600;color:var(--fg);margin:8px 0 2px;letter-spacing:.02em">${g[0]}</p>`;
+        g[1].forEach(function(item) {
+          var id=item[0],lbl=item[1],v=_annexG[id]||'';
+          html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;flex:1;line-height:1.3">${lbl}</span><div style="display:flex;gap:3px;flex-shrink:0"><button class="chip chip-sm${v==='PASS'?' on chip-sat':''}" onclick="fireSetAnnexG('${id}','PASS')">P</button><button class="chip chip-sm${v==='FAIL'?' on chip-unsat':''}" onclick="fireSetAnnexG('${id}','FAIL')">F</button><button class="chip chip-sm${v==='N/A'?' on':''}" onclick="fireSetAnnexG('${id}','N/A')">N/A</button></div></div>`;
+        });
+      });
     }
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -378,6 +391,9 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>Inspection interval <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.nextInspInterval==='6 months'?' on':''}" onclick="firePick('nextInspInterval','6 months')">6 months</button><button class="chip${_w.nextInspInterval==='12 months'?' on':''}" onclick="firePick('nextInspInterval','12 months')">12 months</button><input value="${esc(_w.nextInspInterval||'')}" oninput="fireSet('nextInspInterval',this.value)" placeholder="e.g. 6 months" style="max-width:120px"></div></div>`;
       html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA4-2024-00123" style="max-width:220px"></div>`;
       html += `<div class="wiz-field"><label>Other reference documents <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.otherRefDocs||'')}" oninput="fireSet('otherRefDocs',this.value)" placeholder="e.g. Fire risk assessment dated 15/06/2026"></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">False Alarm Statistics</p></div>`;
+      html += `<div class="wiz-field"><label>False alarms in past 12 months <span class="lbl-opt">(optional)</span></label><input type="number" min="0" max="999" value="${esc(_w.falseAlarms12m||'')}" oninput="fireSet('falseAlarms12m',this.value)" placeholder="0" style="max-width:100px"></div>`;
+      html += `<div class="wiz-field"><label>Action taken to reduce false alarms <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.falseAlarmAction==='None required'?' on':''}" onclick="firePick('falseAlarmAction','None required')">None required</button><button class="chip${_w.falseAlarmAction==='Under investigation'?' on':''}" onclick="firePick('falseAlarmAction','Under investigation')">Under investigation</button><button class="chip${_w.falseAlarmAction==='Devices adjusted'?' on':''}" onclick="firePick('falseAlarmAction','Devices adjusted')">Devices adjusted</button><button class="chip${_w.falseAlarmAction==='Settings changed'?' on':''}" onclick="firePick('falseAlarmAction','Settings changed')">Settings changed</button><button class="chip${_w.falseAlarmAction==='Complete'?' on':''}" onclick="firePick('falseAlarmAction','Complete')">Complete</button></div></div>`;
     }
     if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
@@ -519,6 +535,11 @@ export function firePick(key, val) {
   fireRenderStep();
 }
 export function fireSet(key, val)  { _w[key] = val; _schedulePreview(); }
+export function fireSetAnnexG(id, val) {
+  if (!_w.annexGChecks) _w.annexGChecks = {};
+  _w.annexGChecks[id] = (_w.annexGChecks[id] === val) ? '' : val;
+  fireRenderStep();
+}
 export function fireLoadSig(evt) {
   var f = evt.target.files[0]; if (!f) return;
   var reader = new FileReader();

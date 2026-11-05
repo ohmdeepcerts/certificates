@@ -203,7 +203,7 @@ export function fireBuildCertHTML(r) {
   var extentTxt  = extentMap[r.certType]  || extentMap['FA.2'];
 
   // ── Page 1 ────────────────────────────────────────────────────────────────
-  var totalPages = 3;
+  var totalPages = isComm ? 4 : 3;
 
   var premName = _esc(r.premisesName||'');
   var premAddrLines = premAddr.map(function(l){return _esc(l);}).join('<br>');
@@ -224,6 +224,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
     if (r.sysZones)      p1Fields += _field('Zones', r.sysZones);
     if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate + (r.nextInspInterval ? ' — ' + r.nextInspInterval : ''));
+    if (r.falseAlarmAction) p1Fields += _field('False alarm action', r.falseAlarmAction);
   }
 
   var noteBox = sat
@@ -312,6 +313,9 @@ export function fireBuildCertHTML(r) {
         +'<div class="stat-cell"><span class="stat-num">'+devTested+'</span><span class="stat-lbl">Tested</span></div>'
         +'<div class="stat-cell stat-pass"><span class="stat-num">'+devPass+'</span><span class="stat-lbl">Passed</span></div>'
         +'<div class="stat-cell stat-fail"><span class="stat-num">'+devFail+'</span><span class="stat-lbl">Failed</span></div>'
+        +(isComm && r.falseAlarms12m !== '' && r.falseAlarms12m !== null && r.falseAlarms12m !== undefined
+          ? '<div class="stat-cell stat-warn"><span class="stat-num">'+_esc(String(r.falseAlarms12m))+'</span><span class="stat-lbl">False Alarms (12m)</span></div>'
+          : '')
       +'</div>'
       +(p1Fields?'<div class="fg">'+p1Fields+'</div>':'')
       +noteBox
@@ -378,6 +382,90 @@ export function fireBuildCertHTML(r) {
     +'</div>'
     +footer(r.premisesName||premAddr[0]||company, 3, totalPages)
   +'</div>';
+
+  // ── Page 4: Annex G Checklist (commercial only) ───────────────────────────
+  var _annexGDefs = [
+    ['Control Equipment (BS 5839-1 Cl.44.2)',[
+      ['ctrl_panel','Control panel inspected — all indicators operational'],
+      ['fault_log','Fault log reviewed and all entries noted'],
+      ['weekly_log','Weekly test log reviewed and up to date'],
+    ]],
+    ['Power Supply (Cl.44.3)',[
+      ['mains_supply','Mains supply confirmed operational'],
+      ['bat_inspect','Battery terminals and connections inspected'],
+      ['bat_voltage','Battery voltage measured and recorded'],
+      ['standby_dur','Standby battery duration test satisfactory'],
+    ]],
+    ['Detection (Cl.44.4)',[
+      ['call_pts','Manual call points tested (all or on rotation)'],
+      ['det_rotation','Detectors tested on rotation basis per schedule'],
+      ['beam_det','Beam detectors aligned and tested (if installed)'],
+      ['aspirating','Aspirating detection system tested (if installed)'],
+    ]],
+    ['Warning Devices (Cl.44.5)',[
+      ['sounders','All sounders tested — dB levels confirmed adequate'],
+      ['visual_alarms','Visual alarm devices tested and confirmed operational'],
+    ]],
+    ['Ancillary Functions (Cl.44.6)',[
+      ['zone_iso','Zone isolation tested and restored correctly'],
+      ['fault_sim','Fault simulation tested and panel cleared'],
+      ['remote_mon','Remote monitoring / alarm receiving centre checked'],
+    ]],
+    ['Documentation &amp; Arrangements (Cl.44.7)',[
+      ['drawings','As-installed drawings present and up to date'],
+      ['cause_effect','Cause and effect documentation available'],
+      ['log_book','Log book available with entries up to date'],
+      ['repair_arr','24-hour emergency callout arrangements confirmed'],
+    ]],
+  ];
+
+  var page4 = '';
+  if (isComm) {
+    var _chks4 = r.annexGChecks || {};
+    var _rn4 = 0;
+    var _chklBody = '';
+    _annexGDefs.forEach(function(g) {
+      _chklBody += '<tr><td colspan="5" class="ag-grp">'+g[0]+'</td></tr>';
+      g[1].forEach(function(item) {
+        _rn4++;
+        var id4=item[0], lbl4=item[1], v4=_chks4[id4]||'';
+        var pCell4 = v4==='PASS'
+          ? '<span style="color:#1a6b40;font-size:14px;font-weight:700">&#10003;</span>'
+          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
+        var fCell4 = v4==='FAIL'
+          ? '<span style="color:#7a1010;font-size:13px;font-weight:700">&#10007;</span>'
+          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
+        var naCell4 = v4==='N/A'
+          ? '<span style="color:#666;font-size:11px">&#8212;</span>'
+          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
+        var rowBg4 = _rn4 % 2 === 0 ? '#fdfaf8' : '#fdf5f0';
+        _chklBody += '<tr style="background:'+rowBg4+';border-bottom:1px solid #ede0e0">'
+          +'<td style="padding:5px 8px;color:#999;font-size:10px;text-align:center;width:28px;border-right:1px solid #ede0e0">'+_rn4+'</td>'
+          +'<td style="padding:5px 10px;font-size:11.5px;color:#1c1010">'+_esc(lbl4)+'</td>'
+          +'<td style="padding:5px 8px;text-align:center;width:32px;border-left:1px solid #ede0e0">'+pCell4+'</td>'
+          +'<td style="padding:5px 8px;text-align:center;width:32px;border-left:1px solid #ede0e0">'+fCell4+'</td>'
+          +'<td style="padding:5px 8px;text-align:center;width:36px;border-left:1px solid #ede0e0">'+naCell4+'</td>'
+          +'</tr>';
+      });
+    });
+    page4 = '<div class="cert-page">'
+      +contHead('Annex G — Systematic Inspection Checklist', 4, totalPages)
+      +'<div class="cb">'
+        +'<table style="width:100%;border-collapse:collapse;border:1px solid #e08830;border-radius:4px;overflow:hidden;margin-bottom:14px;font-size:12px">'
+          +'<thead><tr style="background:#7a1010">'
+            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:28px;text-align:center">#</th>'
+            +'<th style="padding:7px 10px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
+            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:32px;text-align:center">Pass</th>'
+            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:32px;text-align:center">Fail</th>'
+            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
+          +'</tr></thead>'
+          +'<tbody>'+_chklBody+'</tbody>'
+        +'</table>'
+        +'<div style="font-size:9.5px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:8px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable or not installed. Items marked Fail should be recorded as deviations. This checklist forms part of the BS 5839-1:2025 Annex G service certificate.</div>'
+      +'</div>'
+      +footer(r.premisesName||premAddr[0]||company, 4, totalPages)
+    +'</div>';
+  }
 
   // ── CSS ───────────────────────────────────────────────────────────────────
   var css = `
@@ -446,7 +534,10 @@ a{color:inherit;text-decoration:none}
 /* ── Body ── */
 .cb{padding:16px 28px;flex:1;display:flex;flex-direction:column}
 .sec-head{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c01818;padding-bottom:6px;border-bottom:2px solid #e08830;margin-bottom:12px}
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e08830;border-radius:5px;overflow:hidden;margin-bottom:14px}
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));border:1px solid #e08830;border-radius:5px;overflow:hidden;margin-bottom:14px}
+.stat-pass .stat-num{color:#1a6b40}
+.stat-fail .stat-num{color:#7a1010}
+.stat-warn .stat-num{color:#a16207}
 .stat-cell{padding:14px 10px;text-align:center;border-right:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
 .stat-cell:last-child{border-right:none}
 .stat-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:42px;font-weight:700;line-height:1;color:#c01818}
@@ -482,7 +573,8 @@ a{color:inherit;text-decoration:none}
 /* ── Footer ── */
 .cert-footer{background:#7a1010;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .cf-left{font-size:10px;color:rgba(255,255,255,.45)}
-.cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}`;
+.cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
+.ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
 
-  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+'</body></html>';
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+page4+'</body></html>';
 }
