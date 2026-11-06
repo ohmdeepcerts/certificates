@@ -58,10 +58,12 @@ export function fireBuildCertHTML(r) {
 
   // ── Outcome ───────────────────────────────────────────────────────────────
   var sat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
-  var obBg   = sat ? '#1a6b40' : '#7a1010';
+  var attn   = (r.outcome||'').toUpperCase() === 'REQUIRES ATTENTION';
+  var satText = {'FA.1':'Installation &amp; commissioning complete','FA.2':'Annual service and inspection complete','FA.3':'Installation, commissioning &amp; testing complete','FA.4':'Periodic service and verification complete'}[r.certType] || 'Annual service complete';
+  var obBg   = sat ? '#1a6b40' : (attn ? '#a16207' : '#7a1010');
   var obText = sat
-    ? '&#10003; &nbsp; SATISFACTORY &mdash; Annual service complete'
-    : '&#9888; &nbsp; UNSATISFACTORY &mdash; Action required';
+    ? '&#10003; &nbsp; SATISFACTORY &mdash; ' + satText
+    : (attn ? '&#9651; &nbsp; REQUIRES ATTENTION &mdash; Remedial work needed' : '&#9888; &nbsp; UNSATISFACTORY &mdash; Action required');
 
   // ── Detector table ────────────────────────────────────────────────────────
   var hasDetModel  = (r.detectors||[]).some(function(d){return d.model;});
@@ -264,7 +266,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
     else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
     if (r.prevServiceDate) p1Fields += _field('Previous Service Date', r.prevServiceDate);
-    if (r.prevReportRef)  p1Fields += _field('Previous Report Reference', r.prevReportRef);
+    if (r.certType === 'FA.2' && r.prevReportRef) p1Fields += _field('Previous Report Reference', r.prevReportRef);
     if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
   } else {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
