@@ -27,8 +27,8 @@ const CERT_TYPES = [
 
 const PREMISES_TYPES = ['House','Flat / Apartment','HMO','Bedsit','Bungalow','Commercial Office','Retail / Shop','Care Home','School / College','Warehouse','Hotel','Restaurant / Café','Other'];
 const DETECTOR_TYPES = ['Smoke (optical)','Smoke (ionisation)','Heat','CO (carbon monoxide)','Multi-sensor','Sounder / base','Call point','Beam detector','Sprinkler flow switch','Other'];
-const DOM_GRADES  = ['D1 — mains-powered + battery backup','D2 — battery only'];
-const DOM_CATS    = ['LD1 — whole building coverage','LD2 — escape routes + high-risk areas','LD3 — escape routes only'];
+const DOM_GRADES  = ['A — full CIE panel','B — domestic panel','C — alarm controller','D1 — mains-powered + battery backup','D2 — battery only','E — mains-powered, no backup','F1 — primary cell battery','F2 — rechargeable battery'];
+const DOM_CATS    = ['LD1 — whole building coverage','LD2 — escape routes + high-risk areas','LD3 — escape routes only','PD1 — whole property (property protection)','PD2 — specific area (property protection)'];
 const COM_CATS    = ['M — manual alarm only','L1 — whole building','L2 — defined areas','L3 — escape routes','L4 — circulation areas','L5 — specific risk only','P1 — whole building (property)','P2 — specific area (property)'];
 const COM_TYPES   = ['Conventional','Addressable','Combined'];
 
@@ -71,7 +71,8 @@ export function startNewFire() {
     responsiblePerson: '',
     // system — domestic
     sysGrade: '', sysCategory: '', sysMfr: '', sysModel: '',
-    sysInterlinked: '', sysPowerSupply: '',
+    sysDomPanelMake: '', sysDomPanelModel: '', sysDomZones: '',
+    sysInterlinkMethod: '', sysInterlinked: '', sysPowerSupply: '',
     // system — commercial extra
     sysPanelMake: '', sysPanelModel: '', sysCommType: '',
     sysZones: '', sysLoops: '', sysBafe: '', sysFia: '',
@@ -215,28 +216,41 @@ export function fireRenderStep() {
   } else if (s === 3) {
     html += `<h2 class="wiz-title">System Details</h2>`;
     if (!_isComm()) {
-      // Domestic Grade D
+      // Domestic grades A–F
+      var _isDomPnl = /^[ABC]/.test(_w.sysGrade||'');
       html += `<div class="wiz-field"><label>System Grade</label><div class="chip-row">`;
       DOM_GRADES.forEach(g => { html += `<button class="chip${_w.sysGrade===g?' on':''}" onclick="firePick('sysGrade','${esc(g)}');fireRenderStep()">${esc(g)}</button>`; });
       html += `</div></div>`;
-      if (_w.sysGrade && _w.sysGrade.startsWith('D1')) {
+      if (_isDomPnl) {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#fdf5f0;border:1px solid #fca5a5;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#dc2626;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#991b1b;line-height:1.5"><strong>Panel grade (${_w.sysGrade.charAt(0)})</strong> — this installation includes a control panel. Enter panel details below. Interlink is handled through the panel.</span></div>`;
+      } else if (_w.sysGrade && _w.sysGrade.startsWith('D1')) {
         html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade D1</strong> — mains-powered with a sealed, tamper-proof lithium battery. Battery replacement records as <em>N/A</em> on all devices.</span></div>`;
       } else if (_w.sysGrade && _w.sysGrade.startsWith('D2')) {
         html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade D2</strong> — mains-powered with a user-replaceable standby battery (typically 9V PP3). Record whether battery was replaced during this visit.</span></div>`;
+      } else if (_w.sysGrade && _w.sysGrade.startsWith('E')) {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade E</strong> — mains-powered only, no standby battery. Not recommended for new installations per BS 5839-6:2019.</span></div>`;
+      } else if (_w.sysGrade && _w.sysGrade.startsWith('F')) {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#1e40af;line-height:1.5"><strong>Grade F</strong> — battery-powered only. F1 uses a primary (non-rechargeable) cell; F2 uses a rechargeable cell. Suitable for temporary or supplementary protection only.</span></div>`;
       }
       html += `<div class="wiz-field"><label>System Category</label><div class="chip-row">`;
       DOM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="firePick('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
       html += `</div></div>`;
-      html += `<div class="wiz-field"><label>Power Supply</label><div class="chip-row">`;
-      ['230V AC mains only','230V AC mains + battery backup','Battery only'].forEach(p => {
-        html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="firePick('sysPowerSupply','${esc(p)}')">${esc(p)}</button>`;
-      });
+      if (_isDomPnl) {
+        html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysDomPanelMake||'')}" oninput="fireSet('sysDomPanelMake',this.value)" placeholder="e.g. Advanced, EMS, Morley"></div>`;
+        html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysDomPanelModel||'')}" oninput="fireSet('sysDomPanelModel',this.value)" placeholder="e.g. MX-4100"></div>`;
+        html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysDomZones||'')}" oninput="fireSet('sysDomZones',this.value)" style="max-width:100px" placeholder="e.g. 2"></div>`;
+      } else {
+        html += `<div class="wiz-field"><label>Power Supply</label><div class="chip-row">`;
+        ['230V AC mains only','230V AC mains + battery backup','Battery only'].forEach(p => {
+          html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="firePick('sysPowerSupply','${esc(p)}')">${esc(p)}</button>`;
+        });
+        html += `</div></div>`;
+        html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
+        html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
+      }
+      html += `<div class="wiz-field"><label>Interlink Method</label><div class="chip-row">`;
+      ['Wired','Radio (RF)','Not interlinked'].forEach(v => { html += `<button class="chip${_w.sysInterlinkMethod===v?' on':''}" onclick="firePick('sysInterlinkMethod','${esc(v)}')">${esc(v)}</button>`; });
       html += `</div></div>`;
-      html += `<div class="wiz-field"><label>Interlinked</label><div class="chip-row">`;
-      ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysInterlinked===v?' on':''}" onclick="firePick('sysInterlinked','${esc(v)}')">${esc(v)}</button>`; });
-      html += `</div></div>`;
-      html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
-      html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
       if (_w.certType === 'FA.1') {
         html += `<div class="wiz-field"><label>Installation Date <span class="lbl-opt">(date system first fitted)</span></label><input value="${esc(_w.installDate||_w.testDate||todayStr())}" oninput="fireSet('installDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
       } else if (_w.certType === 'FA.2') {
@@ -281,9 +295,17 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Test Date</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireAdjTestDate(-1)" title="Previous day"><i class="fa-solid fa-chevron-left"></i> Prev</button><button class="chip${_w.testDate===todayStr()?' on':''}" onclick="fireAdjTestDate(0)">Today</button><button class="chip" onclick="fireAdjTestDate(1)" title="Next day">Next <i class="fa-solid fa-chevron-right"></i></button><input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:120px"></div></div>`;
     if (!_isComm()) {
       // Domestic tests
+      var _isDomPnlTest = /^[ABC]/.test(_w.sysGrade||'');
+      if (_isDomPnlTest) {
+        html += _testRow('Mains supply test', 'tMains', ['PASS','FAIL','N/A']);
+        html += _testRow('Battery / PSU standby test', 'tBattery', ['PASS','FAIL','N/A']);
+        html += _testRow('Fault simulation test', 'tFaultSim', ['PASS','FAIL','N/A']);
+      }
       html += _testRow('Functional test (each device activates alarm)', 'tFunctional', ['PASS','FAIL','N/A']);
       html += _testRow('Interlinked test (all sound when one activates)', 'tInterlinked', ['PASS','FAIL','N/A']);
-      html += _testRow('Battery backup / standby test', 'tBattery', ['PASS','FAIL','N/A']);
+      if (!_isDomPnlTest) {
+        html += _testRow('Battery backup / standby test', 'tBattery', ['PASS','FAIL','N/A']);
+      }
       html += `<div class="wiz-field"><label>CO alarms fitted?</label><div class="chip-row">`;
       ['Yes','No','N/A'].forEach(function(v) { html += `<button class="chip${_w.coAlarmsPresent===v?' on':''}" onclick="firePick('coAlarmsPresent','${v}');fireRenderStep()">${v}</button>`; });
       html += `</div></div>`;

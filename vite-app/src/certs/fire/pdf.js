@@ -115,7 +115,10 @@ export function fireBuildCertHTML(r) {
     if (r.sysGrade)      sysDetailCells += _field('Grade', r.sysGrade);
     if (r.sysCoverage)   sysDetailCells += _field('Coverage', r.sysCoverage);
     if (r.sysPowerSupply)sysDetailCells += _field('Power supply', r.sysPowerSupply);
-    if (r.sysInterlinked)sysDetailCells += _field('Interlinked', r.sysInterlinked);
+    if (r.sysInterlinkMethod) sysDetailCells += _field('Interlink method', r.sysInterlinkMethod);
+    else if (r.sysInterlinked)sysDetailCells += _field('Interlinked', r.sysInterlinked);
+    if (r.sysDomPanelMake||r.sysDomPanelModel) sysDetailCells += _field('Control panel', [r.sysDomPanelMake,r.sysDomPanelModel].filter(Boolean).join(' '));
+    if (r.sysDomZones)   sysDetailCells += _field('Zones', r.sysDomZones);
     if (r.sysMfr||r.sysModel) sysDetailCells += _field('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' '));
     if (r.installDate)   sysDetailCells += _field('Installation date', r.installDate);
     if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
@@ -218,7 +221,8 @@ export function fireBuildCertHTML(r) {
     if (r.sysGrade)      p1Fields += _field('Grade', r.sysGrade);
     if (r.sysPowerSupply)p1Fields += _field('Power Supply', r.sysPowerSupply);
     if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
-    else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
+    else if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
+    else if (r.sysInterlinked)     p1Fields += _field('Interlinked', r.sysInterlinked);
   } else {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
     if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
