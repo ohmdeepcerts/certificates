@@ -108,6 +108,40 @@ export function fireBuildCertHTML(r) {
     testRows += _tRow('Engineer key switch', r.tKeySwitch);
   }
 
+  // ── Inspection / commissioning checklist ──────────────────────────────────
+  var faChecksHtml = '';
+  if (!isComm && r.annexFa2Checks && Object.keys(r.annexFa2Checks).some(function(k){return r.annexFa2Checks[k];})) {
+    var _checksMap = r.certType === 'FA.2' ? [
+      {id:'s01', label:'Each detector tested and alarm activated'},
+      {id:'s02', label:'All sounders audible throughout the property'},
+      {id:'s03', label:'Interlink confirmed (all devices sound when one triggers)'},
+      {id:'s04', label:'Battery / power supply checked and serviceable'},
+      {id:'s05', label:'No building alterations requiring additional coverage'},
+      {id:'s06', label:'Detectors correctly positioned and not obstructed'},
+      {id:'s07', label:'Detector heads free from contamination'},
+      {id:'s08', label:'Cables and wiring secure and undamaged'},
+      {id:'s09', label:'Previous inspection recommendations actioned'},
+      {id:'s10', label:'Maintenance documentation updated'},
+    ] : [
+      {id:'c01', label:'All detectors installed and confirmed operational'},
+      {id:'c02', label:'Sounders audible in all sleeping areas and escape routes'},
+      {id:'c03', label:'Installation in accordance with agreed specification'},
+      {id:'c04', label:'Cable routes and fixings neat, secure and undamaged'},
+      {id:'c05', label:'Client / occupant briefing carried out'},
+      {id:'c06', label:'User documentation and operating instructions supplied'},
+    ];
+    var _checkRows = _checksMap.filter(function(c){return r.annexFa2Checks[c.id];}).map(function(c){
+      var v = r.annexFa2Checks[c.id];
+      var rHtml = v==='PASS'?'<span class="ppill">Pass</span>':v==='FAIL'?'<span class="fpill">Fail</span>':_esc(v);
+      return '<tr><td>'+_esc(c.label)+'</td><td>'+rHtml+'</td></tr>';
+    }).join('');
+    if (_checkRows) {
+      var _checkTitle = r.certType==='FA.2' ? 'Routine Inspection Checks (BS 5839-6 Annex B)' : 'Commissioning Checks (BS 5839-6 Annex C)';
+      faChecksHtml = '<div class="sec-head" style="margin-top:14px">'+_esc(_checkTitle)+'</div>'
+        +'<table class="ltbl"><thead><tr><th>Check item</th><th>Result</th></tr></thead><tbody>'+_checkRows+'</tbody></table>';
+    }
+  }
+
   // ── System details grid ───────────────────────────────────────────────────
   var sysDetailCells = '';
   if (!isComm) {
@@ -334,6 +368,7 @@ export function fireBuildCertHTML(r) {
       +((r.detectors||[]).length?'<div class="sec-head">Schedule of Detectors &amp; Devices</div><table class="ltbl"><thead><tr>'+detHeaders+'</tr></thead><tbody>'+detRows+'</tbody></table>':'')
       +'<div class="sec-head" style="margin-top:14px">Test Results</div>'
       +'<table class="ltbl"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>'+(testRows||'<tr><td colspan="2" style="color:#9a948e;font-style:italic">No test results recorded</td></tr>')+'</tbody></table>'
+      +faChecksHtml
       +(sysDetailCells?'<div class="sec-head" style="margin-top:14px">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
     +'</div>'
     +footer(r.premisesName||premAddr[0]||company, 2, totalPages)

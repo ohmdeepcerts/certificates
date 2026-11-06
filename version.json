@@ -1,8 +1,9 @@
 {
-  "v": "2.0.8",
-  "build": 96,
+  "v": "2.0.9",
+  "build": 97,
   "changes": [
-    "Fixed: PAT history now shows the actual A4 certificate — same layout as the wizard with company logo, appliance table, test results, and all fields.",
-    "Fixed: Gas history now shows the actual Gas Safety Certificate (CP12) with all appliance details, pipework checks, defects and signatures."
+    "New: FA.1 now includes a Commissioning Checklist (BS 5839-6 Annex C) in the Testing step — 6 items covering detectors, sounders, installation spec, cables, client briefing and documentation.",
+    "New: FA.2 now includes a Periodic Inspection Checklist (BS 5839-6 Annex B) in the Testing step — 10 items covering each device test, sounders, interlink, battery, building alterations, detector positioning, contamination, wiring, previous recommendations and log update.",
+    "Both checklists print on the certificate (Page 2) as a formal Routine Inspection Checks or Commissioning Checks table."
   ]
 }

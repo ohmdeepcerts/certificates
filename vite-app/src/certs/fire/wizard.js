@@ -32,6 +32,27 @@ const DOM_CATS    = ['LD1 — whole building coverage','LD2 — escape routes + 
 const COM_CATS    = ['M — manual alarm only','L1 — whole building','L2 — defined areas','L3 — escape routes','L4 — circulation areas','L5 — specific risk only','P1 — whole building (property)','P2 — specific area (property)'];
 const COM_TYPES   = ['Conventional','Addressable','Combined'];
 
+const FA1_CHECKS = [
+  {id:'c01', label:'All detectors installed and confirmed operational'},
+  {id:'c02', label:'Sounders audible in all sleeping areas and escape routes'},
+  {id:'c03', label:'Installation in accordance with agreed specification'},
+  {id:'c04', label:'Cable routes and fixings neat, secure and undamaged'},
+  {id:'c05', label:'Client / occupant briefing carried out'},
+  {id:'c06', label:'User documentation and operating instructions supplied'},
+];
+const FA2_CHECKS = [
+  {id:'s01', label:'Each detector tested and alarm activated'},
+  {id:'s02', label:'All sounders audible throughout the property'},
+  {id:'s03', label:'Interlink confirmed (all devices sound when one triggers)'},
+  {id:'s04', label:'Battery / power supply checked and serviceable'},
+  {id:'s05', label:'No building alterations requiring additional coverage'},
+  {id:'s06', label:'Detectors correctly positioned and not obstructed'},
+  {id:'s07', label:'Detector heads free from contamination (dust, insects, paint)'},
+  {id:'s08', label:'Cables and wiring secure and undamaged'},
+  {id:'s09', label:'Previous inspection recommendations actioned'},
+  {id:'s10', label:'Maintenance documentation updated'},
+];
+
 function _isComm() { return _w.certType === 'FA.3' || _w.certType === 'FA.4'; }
 
 function todayStr() {
@@ -106,7 +127,7 @@ export function startNewFire() {
     nextInspInterval: '',
     falseAlarms12m: '',
     falseAlarmAction: '',
-    annexGChecks: {},
+    annexGChecks: {}, annexFa2Checks: {},
     changeOfOrg: '',
     prevOrgName: '',
     prevOrgContact: '',
@@ -315,6 +336,23 @@ export function fireRenderStep() {
         html += `</div></div></div>`;
       } else if (_w.coAlarmsPresent) { _w.coAlarmNaReason = ''; }
       html += _testRow('CO alarm test (if applicable)', 'tCO', ['PASS','FAIL','N/A']);
+      // BS 5839-6 inspection / commissioning checklist
+      var _faChecks = _w.certType === 'FA.2' ? FA2_CHECKS : (_w.certType === 'FA.1' ? FA1_CHECKS : null);
+      if (_faChecks) {
+        var _checkTitle = _w.certType === 'FA.2' ? 'Inspection Checks (BS 5839-6 Annex B)' : 'Commissioning Checks (BS 5839-6 Annex C)';
+        html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${_checkTitle}</div>`;
+        _faChecks.forEach(function(c) {
+          var v = (_w.annexFa2Checks||{})[c.id] || '';
+          html += `<div class="wiz-field" style="margin-bottom:8px"><label style="font-size:12.5px">${esc(c.label)}</label><div class="chip-row">`;
+          ['PASS','FAIL','N/A'].forEach(function(opt) {
+            var cls2 = opt==='PASS'?'chip-pass':opt==='FAIL'?'chip-fail':'chip-na';
+            var ico = opt==='PASS'?'<i class="fa-solid fa-check" style="font-size:10px;margin-right:2px"></i>':opt==='FAIL'?'<i class="fa-solid fa-xmark" style="font-size:10px;margin-right:2px"></i>':'';
+            html += `<button class="chip ${cls2}${v===opt?' on':''}" onclick="fireSetFaCheck('${c.id}','${opt}')">${ico}${opt}</button>`;
+          });
+          html += `</div></div>`;
+        });
+        html += `</div>`;
+      }
     } else {
       // Commercial tests
       html += _testRow('Mains supply test', 'tMains', ['PASS','FAIL']);
@@ -602,6 +640,11 @@ export function fireDetSet(i, key, val) {
 }
 export function fireDetPick(i, key, val) {
   if (_w.detectors && _w.detectors[i]) _w.detectors[i][key] = val;
+  fireRenderStep();
+}
+export function fireSetFaCheck(id, val) {
+  if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
+  _w.annexFa2Checks[id] = (_w.annexFa2Checks[id] === val) ? '' : val;
   fireRenderStep();
 }
 
