@@ -1,7 +1,8 @@
 {
-  "v": "2.1.3",
-  "build": 101,
+  "v": "2.1.4",
+  "build": 102,
   "changes": [
+    "New: Fire alarm certificates now include a Service History table on Page 3 — every previous inspection for the same property is automatically fetched and printed, showing date, certificate type, outcome, and reference number.",
     "Fixed: Certificate outcome text now matches the cert type — FA.1 says 'Installation & commissioning complete', FA.2 says 'Annual service and inspection complete', etc.",
     "Fixed: 'Requires Attention' outcome now shows an amber band on the certificate instead of red — only Unsatisfactory stays red.",
     "Fixed: Previous Report Reference only appears on FA.2 periodic inspection certs, not on FA.1 installation certs."
