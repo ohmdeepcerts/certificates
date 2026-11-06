@@ -407,9 +407,9 @@ export function fireRenderStep() {
       html += `</tr></thead><tbody>`;
       var SEV_COLORS = _isCommDef
         ? {C1:'color:#9b1c1c;font-weight:700',C2:'color:#dc2626',C3:'color:#d97706',FI:'color:#1d4ed8'}
-        : {ADVISORY:'',MINOR:'color:#d97706',MAJOR:'color:#dc2626',CRITICAL:'color:#9b1c1c;font-weight:700'};
-      var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['ADVISORY','MINOR','MAJOR','CRITICAL'];
-      var _sevDefault = _isCommDef ? 'C3' : 'ADVISORY';
+        : {'Immediate Action':'color:#9b1c1c;font-weight:700','Action Required':'color:#d97706','Advisory':''};
+      var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['Immediate Action','Action Required','Advisory'];
+      var _sevDefault = _isCommDef ? 'C3' : 'Advisory';
       (_w.defects||[]).forEach((d, i) => {
         html += `<tr>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.description||'')}" oninput="fireDefectSet(${i},'description',this.value)" placeholder="Describe the defect" style="width:100%;min-width:120px"></td>`;
@@ -650,7 +650,7 @@ export function fireSetFaCheck(id, val) {
 
 export function fireAddDefect() {
   if (!_w.defects) _w.defects = [];
-  _w.defects.push({ description:'', recommendation:'', severity:_isComm() ? 'C3' : 'ADVISORY', targetDate:'' });
+  _w.defects.push({ description:'', recommendation:'', severity:_isComm() ? 'C3' : 'Advisory', targetDate:'' });
   fireRenderStep();
 }
 export function fireRemoveDefect(i) {
@@ -705,7 +705,7 @@ export async function fireNext() {
       var _autoD = [];
       var _failTestLbls = {tFunctional:'Functional test',tInterlinked:'Interlinked test (alarm interconnection)',tBattery:'Battery backup / standby test',tCO:'CO alarm test',tMains:'Mains supply test',tBatResult:'Battery standby test',tSounder:'Sounder / beacon test',tVisual:'Visual indicators test',tZoneIso:'Zone isolation test',tFaultSim:'Fault simulation test',tKeySwitch:'Engineer key switch test'};
       var _isCommNow3 = _w.certType==='FA.3'||_w.certType==='FA.4';
-      var _autoSev = _isCommNow3 ? 'C2' : 'MAJOR';
+      var _autoSev = _isCommNow3 ? 'C2' : 'Action Required';
       (_w.detectors||[]).forEach(function(d){ if(d.result==='FAIL'){ _autoD.push({description:(d.type||'Device')+' at '+(d.location||'unknown location')+' — failed test',severity:_autoSev,recommendation:'Inspect, repair or replace the device and re-test to confirm rectification.',targetDate:''}); } });
       Object.keys(_failTestLbls).forEach(function(k){ if(_w[k]==='FAIL'){ _autoD.push({description:_failTestLbls[k]+' — failed',severity:_autoSev,recommendation:'Investigate cause of failure, rectify fault and re-test.',targetDate:''}); } });
       if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found'||_w.defectsOverall==='No deviations identified') { _w.defectsOverall = _isCommNow3 ? 'Deviations requiring urgent action' : 'Defects requiring attention'; } }

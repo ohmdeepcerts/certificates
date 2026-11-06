@@ -180,12 +180,12 @@ export function fireBuildCertHTML(r) {
   // ── Defects ───────────────────────────────────────────────────────────────
   var SEV_STYLES = isComm
     ? {C1:'color:#7a1010;font-weight:700',C2:'color:#c01818;font-weight:700',C3:'color:#a16207;font-weight:600',FI:'color:#1d4ed8;font-weight:600'}
-    : {ADVISORY:'',MINOR:'color:#a16207;font-weight:600',MAJOR:'color:#c01818;font-weight:700',CRITICAL:'color:#7a1010;font-weight:700'};
+    : {'Immediate Action':'color:#7a1010;font-weight:700','Action Required':'color:#a16207;font-weight:600','Advisory':''};
   var hasDefects = (r.defects||[]).length > 0 || r.defectsNotes;
   var defectsHtml = '';
   if (hasDefects) {
     var defRows = (r.defects||[]).map(function(d,i){
-      var sev = d.severity||'ADVISORY';
+      var sev = d.severity||'Advisory';
       return '<tr><td>'+(i+1)+'</td><td>'+_esc(d.description)+'</td><td style="'+(SEV_STYLES[sev]||'')+'">'+_esc(sev)+'</td><td>'+_esc(d.recommendation)+'</td></tr>';
     }).join('');
     var _defSectionTitle = isComm ? 'Details of Deviations from the Standards' : 'Defects &amp; Recommendations';

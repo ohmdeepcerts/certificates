@@ -1,9 +1,8 @@
 {
-  "v": "2.1.0",
-  "build": 98,
+  "v": "2.1.1",
+  "build": 99,
   "changes": [
-    "Fixed: FA.1/FA.2 certs with panel grades (A, B, C) now show Mains supply test, Battery/PSU standby, and Fault simulation test on the printed certificate — these were recorded in the wizard but not printing.",
-    "Fixed: Interlink method now always shows on the cert summary page, even when a Next Inspection date is set.",
-    "New: FA.2 certs now show the Previous Service Date on the cert summary and system details pages."
+    "Updated: FA.1 and FA.2 defect severity now uses standard BS 5839-6 language — Immediate Action, Action Required, and Advisory — instead of generic labels.",
+    "Auto-detected FAIL results now default to Action Required severity on domestic certs."
   ]
 }
