@@ -1,9 +1,9 @@
 {
-  "v": "2.0.9",
-  "build": 97,
+  "v": "2.1.0",
+  "build": 98,
   "changes": [
-    "New: FA.1 now includes a Commissioning Checklist (BS 5839-6 Annex C) in the Testing step — 6 items covering detectors, sounders, installation spec, cables, client briefing and documentation.",
-    "New: FA.2 now includes a Periodic Inspection Checklist (BS 5839-6 Annex B) in the Testing step — 10 items covering each device test, sounders, interlink, battery, building alterations, detector positioning, contamination, wiring, previous recommendations and log update.",
-    "Both checklists print on the certificate (Page 2) as a formal Routine Inspection Checks or Commissioning Checks table."
+    "Fixed: FA.1/FA.2 certs with panel grades (A, B, C) now show Mains supply test, Battery/PSU standby, and Fault simulation test on the printed certificate — these were recorded in the wizard but not printing.",
+    "Fixed: Interlink method now always shows on the cert summary page, even when a Next Inspection date is set.",
+    "New: FA.2 certs now show the Previous Service Date on the cert summary and system details pages."
   ]
 }

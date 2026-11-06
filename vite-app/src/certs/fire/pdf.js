@@ -88,9 +88,15 @@ export function fireBuildCertHTML(r) {
   }
   var testRows = '';
   if (!isComm) {
+    var _isDomPnl = /^[ABC]/.test(r.sysGrade||'');
+    if (_isDomPnl) {
+      testRows += _tRow('Mains supply test', r.tMains);
+      testRows += _tRow('Battery / PSU standby test', r.tBattery);
+      testRows += _tRow('Fault simulation test', r.tFaultSim);
+    }
     testRows += _tRow('Functional test', r.tFunctional);
     testRows += _tRow('Interlinked test', r.tInterlinked);
-    testRows += _tRow('Battery backup / standby', r.tBattery);
+    if (!_isDomPnl) testRows += _tRow('Battery backup / standby', r.tBattery);
     testRows += _tRow('CO alarms fitted', r.coAlarmsPresent);
     if (r.coAlarmsPresent === 'N/A' && r.coAlarmNaReason) testRows += '<tr><td>CO alarm N/A reason</td><td>'+_esc(r.coAlarmNaReason)+'</td></tr>';
     testRows += _tRow('CO alarm test', r.tCO);
@@ -155,6 +161,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysDomZones)   sysDetailCells += _field('Zones', r.sysDomZones);
     if (r.sysMfr||r.sysModel) sysDetailCells += _field('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' '));
     if (r.installDate)   sysDetailCells += _field('Installation date', r.installDate);
+    if (r.prevServiceDate) sysDetailCells += _field('Previous service date', r.prevServiceDate);
     if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
@@ -254,9 +261,10 @@ export function fireBuildCertHTML(r) {
     if (r.sysCategory)   p1Fields += _field('Category', r.sysCategory);
     if (r.sysGrade)      p1Fields += _field('Grade', r.sysGrade);
     if (r.sysPowerSupply)p1Fields += _field('Power Supply', r.sysPowerSupply);
+    if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
+    else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
+    if (r.prevServiceDate) p1Fields += _field('Previous Service Date', r.prevServiceDate);
     if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
-    else if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
-    else if (r.sysInterlinked)     p1Fields += _field('Interlinked', r.sysInterlinked);
   } else {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
     if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
