@@ -15,6 +15,13 @@ Get-ChildItem $dist | ForEach-Object {
     Copy-Item $_.FullName $dest -Force
 }
 
+# Remove stale assets no longer in dist/
+$distFiles = Get-ChildItem $dist | Select-Object -ExpandProperty Name
+Get-ChildItem $root | Where-Object { $distFiles -notcontains $_.Name } | ForEach-Object {
+    git rm --quiet "assets/$($_.Name)" 2>$null
+    Remove-Item $_.FullName -Force
+}
+
 # Get new main JS hash
 $newJs = (Get-ChildItem "$dist\index-*.js" | Select-Object -First 1).Name
 

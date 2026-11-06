@@ -453,6 +453,9 @@ export function fireRenderStep() {
     var autoNext = _addMonths(_w.testDate, nextMonths);
     if (!_w.nextInspDate && autoNext) { _w.nextInspDate = autoNext; }
     html += `<div class="wiz-field"><label>Next inspection due</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireSetNextInsp(6)">6 months</button><button class="chip" onclick="fireSetNextInsp(12)">1 year</button><input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
+    if (_w.certType === 'FA.2') {
+      html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA2-2024-00123" style="max-width:220px"></div>`;
+    }
     if (_isComm()) {
       html += `<div class="wiz-field"><label>Inspection interval <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.nextInspInterval==='6 months'?' on':''}" onclick="firePick('nextInspInterval','6 months')">6 months</button><button class="chip${_w.nextInspInterval==='12 months'?' on':''}" onclick="firePick('nextInspInterval','12 months')">12 months</button><input value="${esc(_w.nextInspInterval||'')}" oninput="fireSet('nextInspInterval',this.value)" placeholder="e.g. 6 months" style="max-width:120px"></div></div>`;
       html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA4-2024-00123" style="max-width:220px"></div>`;

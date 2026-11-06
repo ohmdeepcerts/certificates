@@ -264,6 +264,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
     else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
     if (r.prevServiceDate) p1Fields += _field('Previous Service Date', r.prevServiceDate);
+    if (r.prevReportRef)  p1Fields += _field('Previous Report Reference', r.prevReportRef);
     if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
   } else {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);

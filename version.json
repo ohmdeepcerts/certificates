@@ -1,8 +1,8 @@
 {
-  "v": "2.1.1",
-  "build": 99,
+  "v": "2.1.2",
+  "build": 100,
   "changes": [
-    "Updated: FA.1 and FA.2 defect severity now uses standard BS 5839-6 language — Immediate Action, Action Required, and Advisory — instead of generic labels.",
-    "Auto-detected FAIL results now default to Action Required severity on domestic certs."
+    "New: FA.2 periodic inspection certs now have a Previous Report Reference field — record the cert number from the last annual visit.",
+    "Fixed: Old build bundles are now automatically cleaned up on each deploy — the assets folder no longer grows with every build."
   ]
 }
