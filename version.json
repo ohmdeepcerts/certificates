@@ -1,7 +1,8 @@
 {
-  "v": "2.1.13",
-  "build": 112,
+  "v": "2.1.14",
+  "build": 113,
   "changes": [
+    "Fixed: When a new app update is available, a full popup now appears showing exactly what changed in plain language — the app reloads itself automatically after 5 seconds.",
     "New: Fire certificate Detectors step now shows a Total / Passed / Failed / Tested summary at the top — enter counts directly without adding individual device records. Failed is auto-calculated.",
     "Fixed: Fire certificates no longer require you to add at least one device — you can skip the device list entirely and the device table is hidden from the PDF if nothing is recorded.",
     "New: Fire certificate System Details now auto-selects the correct power supply when you choose a grade — D1 sets mains + battery, D2/F sets battery only, E sets mains only. If you override with a conflicting choice, a warning asks you to confirm.",

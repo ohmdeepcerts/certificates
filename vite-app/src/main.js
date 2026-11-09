@@ -135,21 +135,49 @@ async function init() {
   // CP12 form init (gas)
   window.initCP12Form?.();
 
-  // Service worker — register and show in-app banner when a new version is ready
+  // Service worker — detect updates and show full-screen update modal with changelog
   if ('serviceWorker' in navigator) {
-    // Capture controller state and attach listener BEFORE register() to avoid a
-    // race where the new SW activates and fires controllerchange before .then() runs
     const hadController = !!navigator.serviceWorker.controller;
     let _swUpdating = false;
+
+    function _showUpdateModal(vData) {
+      if (document.getElementById('sw-upd-modal')) return;
+      const changes = vData?.changes || [];
+      const version = vData?.v ? ' v' + vData.v : '';
+      const changesHtml = changes.length
+        ? '<ul style="margin:14px 0 0;padding-left:18px;text-align:left;max-height:260px;overflow-y:auto">'
+          + changes.map(c => '<li style="margin-bottom:6px;font-size:13px;line-height:1.5;color:#e2e8f0">' + c + '</li>').join('')
+          + '</ul>'
+        : '';
+      const overlay = document.createElement('div');
+      overlay.id = 'sw-upd-modal';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+      overlay.innerHTML =
+        '<div style="background:#1e293b;color:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.85);text-align:center">'
+        + '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:30px;color:#60a5fa;display:block;margin-bottom:12px"></i>'
+        + '<div style="font-size:18px;font-weight:700;margin-bottom:6px">App Updated' + version + '</div>'
+        + '<div style="font-size:13px;color:#94a3b8">Here\'s what\'s new in this update</div>'
+        + changesHtml
+        + '<div id="sw-upd-cnt" style="font-size:12px;color:#94a3b8;margin-top:16px">Reloading in <strong style="color:#60a5fa">5</strong></div>'
+        + '<button onclick="clearInterval(window._swTick);window.location.reload()" style="margin-top:12px;background:#3b82f6;border:none;color:#fff;padding:11px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;width:100%">Reload Now</button>'
+        + '</div>';
+      document.body.appendChild(overlay);
+      let n = 5;
+      window._swTick = setInterval(() => {
+        n--;
+        const el = document.getElementById('sw-upd-cnt');
+        if (el) el.innerHTML = n > 0 ? 'Reloading in <strong style="color:#60a5fa">' + n + '</strong>' : 'Reloading…';
+        if (n <= 0) { clearInterval(window._swTick); window.location.reload(); }
+      }, 1000);
+    }
+
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadController || _swUpdating) return;
       _swUpdating = true;
-      if (document.getElementById('sw-update-banner')) return;
-      const banner = document.createElement('div');
-      banner.id = 'sw-update-banner';
-      banner.style.cssText = 'position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,.5);white-space:nowrap;';
-      banner.innerHTML = '<i class="fa-solid fa-rotate" style="color:#60a5fa"></i><span>New version available</span><button onclick="window.location.reload()" style="background:#3b82f6;border:none;color:#fff;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;margin-left:4px;">Refresh</button>';
-      document.body.appendChild(banner);
+      fetch('/certificates/version.json?t=' + Date.now())
+        .then(r => r.json())
+        .then(vData => _showUpdateModal(vData))
+        .catch(() => _showUpdateModal(null));
     });
     navigator.serviceWorker.register('/certificates/sw.js')
       .then(reg => { setInterval(() => reg.update(), 60000); })
