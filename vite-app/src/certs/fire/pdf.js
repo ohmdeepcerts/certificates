@@ -680,9 +680,9 @@ a{color:inherit;text-decoration:none}
 .f{padding-bottom:9px;border-bottom:1px solid #ede0e0;margin-bottom:9px}
 .fl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:2px}
 .fv{font-size:13px;font-weight:600;color:#1c1010}
-.note-box{border:1px solid #d4c0a8;border-radius:4px;padding:11px 14px;background:#fdf5ec;flex:1}
+.note-box{border:1px solid #d4c0a8;border-radius:4px;padding:11px 14px;background:#fdf5ec}
 .nb-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c01818;margin-bottom:7px}
-.obs-box{border-left:4px solid #c01818;border-radius:4px;padding:11px 14px;background:#fdf0ee;flex:1}
+.obs-box{border-left:4px solid #c01818;border-radius:4px;padding:11px 14px;background:#fdf0ee}
 .ob-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;margin-bottom:7px}
 
 /* ── Continuation header ── */
