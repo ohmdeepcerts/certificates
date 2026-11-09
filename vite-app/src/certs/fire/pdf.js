@@ -356,7 +356,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     +'<div class="purp-panel">'
       +'<div class="purp-col purp-col-left">'
         +'<div class="purp-label">Purpose of Certificate</div>'
-        +'<div class="purp-row"><div class="purp-check purp-check-on"></div><div class="purp-text purp-text-on">'+_esc(purposeTxt)+'</div></div>'
+        +'<div class="purp-row"><div class="purp-check purp-check-on"><span class="purp-tick">&#10003;</span></div><div class="purp-text purp-text-on">'+_esc(purposeTxt)+'</div></div>'
       +'</div>'
       +'<div class="purp-col">'
         +(isComm
@@ -655,8 +655,9 @@ a{color:inherit;text-decoration:none}
 .purp-col-left{border-right:1px solid #e2d4d4}
 .purp-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e08830;margin-bottom:8px}
 .purp-row{display:flex;align-items:flex-start;gap:8px}
-.purp-check{width:13px;height:13px;border:2px solid #e08830;border-radius:2px;flex-shrink:0;margin-top:1px}
+.purp-check{width:13px;height:13px;border:2px solid #e08830;border-radius:2px;flex-shrink:0;margin-top:1px;position:relative;overflow:visible}
 .purp-check-on{background:#c01818;border-color:#c01818}
+.purp-check-on>.purp-tick{position:absolute;color:white;font-size:17px;font-weight:900;line-height:1;top:-3px;left:-1px;pointer-events:none}
 .purp-text{font-size:11.5px;color:#3a2a2a;line-height:1.55}
 .purp-text-on{font-weight:600;color:#1c1010}
 .purp-extent{font-size:11.5px;color:#3a2a2a;line-height:1.6}
