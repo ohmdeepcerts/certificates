@@ -244,7 +244,7 @@ export function fireRenderStep() {
       // Domestic grades A–F
       var _isDomPnl = /^[ABC]/.test(_w.sysGrade||'');
       html += `<div class="wiz-field"><label>System Grade</label><div class="chip-row">`;
-      DOM_GRADES.forEach(g => { html += `<button class="chip${_w.sysGrade===g?' on':''}" onclick="firePick('sysGrade','${esc(g)}');fireRenderStep()">${esc(g)}</button>`; });
+      DOM_GRADES.forEach(g => { html += `<button class="chip${_w.sysGrade===g?' on':''}" onclick="firePickGrade('${esc(g)}')">${esc(g)}</button>`; });
       html += `</div></div>`;
       if (_isDomPnl) {
         html += `<div style="display:flex;gap:7px;align-items:flex-start;background:#fdf5f0;border:1px solid #fca5a5;border-radius:6px;padding:8px 11px;margin-top:-4px;margin-bottom:4px"><i class="fa-solid fa-circle-info" style="color:#dc2626;font-size:12px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#991b1b;line-height:1.5"><strong>Panel grade (${_w.sysGrade.charAt(0)})</strong> — this installation includes a control panel. Enter panel details below. Interlink is handled through the panel.</span></div>`;
@@ -265,11 +265,16 @@ export function fireRenderStep() {
         html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysDomPanelModel||'')}" oninput="fireSet('sysDomPanelModel',this.value)" placeholder="e.g. MX-4100"></div>`;
         html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysDomZones||'')}" oninput="fireSet('sysDomZones',this.value)" style="max-width:100px" placeholder="e.g. 2"></div>`;
       } else {
+        var _autoPs = _gradeDefaultPower(_w.sysGrade||'');
         html += `<div class="wiz-field"><label>Power Supply</label><div class="chip-row">`;
         ['230V AC mains only','230V AC mains + battery backup','Battery only'].forEach(p => {
-          html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="firePick('sysPowerSupply','${esc(p)}')">${esc(p)}</button>`;
+          html += `<button class="chip${_w.sysPowerSupply===p?' on':''}" onclick="firePickPowerSupply('${esc(p)}')">${esc(p)}</button>`;
         });
-        html += `</div></div>`;
+        html += `</div>`;
+        if (_autoPs && _w.sysPowerSupply === _autoPs) {
+          html += `<div style="font-size:11px;color:var(--muted);margin-top:3px"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:3px"></i>Auto-set from grade — override above if needed</div>`;
+        }
+        html += `</div>`;
         html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
         html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
       }
@@ -1238,6 +1243,35 @@ export async function exportFireCSV() {
   a.href = 'data:text/csv,' + encodeURIComponent(csv);
   a.download = 'fire-certs-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+function _gradeDefaultPower(grade) {
+  if (!grade) return '';
+  if (grade.startsWith('D1')) return '230V AC mains + battery backup';
+  if (grade.startsWith('D2') || grade.startsWith('F')) return 'Battery only';
+  if (grade.startsWith('E')) return '230V AC mains only';
+  return '';
+}
+
+export function firePickGrade(grade) {
+  _w.sysGrade = grade;
+  var suggested = _gradeDefaultPower(grade);
+  if (suggested) _w.sysPowerSupply = suggested;
+  _fireDirty = true;
+  fireRenderStep();
+}
+
+export function firePickPowerSupply(val) {
+  var implied = _gradeDefaultPower(_w.sysGrade || '');
+  if (implied && val !== implied) {
+    var gradeCode = (_w.sysGrade || '').split(' ')[0];
+    confirm2('Power supply mismatch',
+      'Grade ' + gradeCode + ' implies “' + implied + '”. Are you sure you want to set “' + val + '” instead?',
+      function() { _w.sysPowerSupply = val; _fireDirty = true; fireRenderStep(); }
+    );
+    return;
+  }
+  _w.sysPowerSupply = val; _fireDirty = true; fireRenderStep();
 }
 
 export function firePickFromDirectory() {
