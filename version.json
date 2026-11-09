@@ -1,7 +1,9 @@
 {
-  "v": "2.1.6",
-  "build": 105,
+  "v": "2.1.7",
+  "build": 106,
   "changes": [
+    "Fixed: Fire certificate page 1 now shows category and grade as short codes (LD3, D2) — full descriptions remain on the system details page.",
+    "Fixed: Outcome on fire certificate page 1 is now a clean info field instead of a warning box.",
     "New: Engineer qualification and registration number fields added to Fire Alarm Settings — these now print on the declaration block of every fire certificate.",
     "Fixed: Fire certificate labels incorrectly showed 'Annex G' on domestic FA.1 and FA.2 forms — now correctly labelled Installation Certificate and Inspection & Service Certificate.",
     "Fixed: BS 5839-1 version number corrected on all commercial fire certificates.",
