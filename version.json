@@ -1,7 +1,8 @@
 {
-  "v": "2.1.8",
-  "build": 107,
+  "v": "2.1.9",
+  "build": 108,
   "changes": [
+    "Fixed: Fire certificate footer now shows only the certificate reference and page number — the property name was already contained within the reference and was removed.",
     "Fixed: Fire certificate continuation pages no longer repeat the form type or certificate reference in the section header — that information now appears only in the footer.",
     "Fixed: Engineer column on fire certificates no longer repeats the company name (already shown in the main header).",
     "Fixed: Fire certificate page 1 now shows category and grade as short codes (LD3, D2) — full descriptions remain on the system details page.",
