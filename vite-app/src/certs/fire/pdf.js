@@ -243,7 +243,7 @@ export function fireBuildCertHTML(r, siteHistory) {
       +'</div>'
       +'<div style="text-align:right">'
       +'<div style="font-family:monospace;font-size:11px;font-weight:700;color:#e08830;letter-spacing:.04em">'+ref+'</div>'
-      +'<div style="font-size:9.5px;color:rgba(255,255,255,.55);margin-top:2px">Page '+pageNum+' of '+total+'</div>'
+      +'<div style="font-size:9.5px;color:#999;margin-top:2px">Page '+pageNum+' of '+total+'</div>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -686,13 +686,13 @@ a{color:inherit;text-decoration:none}
 .ob-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;margin-bottom:7px}
 
 /* ── Continuation header ── */
-.ch-cont{background:#7a1010;border-bottom:2px solid #e08830;padding:16px 28px 14px;flex-shrink:0}
-.ch-cont-eyebrow{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:4px}
-.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#fff}
+.ch-cont{background:#fdfaf8;border-left:5px solid #c01818;border-bottom:2px solid #e08830;padding:16px 28px 14px;flex-shrink:0}
+.ch-cont-eyebrow{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#999;margin-bottom:4px}
+.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#1c1010}
 
 /* ── Tables ── */
 .ltbl{width:100%;border-collapse:collapse;font-size:9.5px;background:#fdfaf8;margin-bottom:12px}
-.ltbl th{background:#7a1010;color:#fff;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;text-align:left}
+.ltbl th{background:#f8edcc;color:#7a1010;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;text-align:left}
 .ltbl td{padding:5.5px 8px;border-bottom:1px solid #ede0e0;vertical-align:top}
 .ltbl tr:nth-child(even) td{background:#fdf5ec}
 .ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #166534;color:#166534;font-weight:600}
@@ -706,8 +706,8 @@ a{color:inherit;text-decoration:none}
 .sig-cap{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#7a6060;margin-top:4px}
 
 /* ── Footer ── */
-.cert-footer{background:#7a1010;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.cf-left{font-size:10px;color:rgba(255,255,255,.45)}
+.cert-footer{background:#fdfaf8;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cf-left{font-size:10px;color:#9a7858}
 .cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
 .ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
 
