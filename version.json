@@ -1,7 +1,8 @@
 {
-  "v": "2.1.16",
-  "build": 115,
+  "v": "2.1.17",
+  "build": 116,
   "changes": [
+    "New: Limitations of inspection field added to the Testing step — note anything you couldn't access or inspect (e.g. concealed cables, locked areas). Prints on the certificate under Test Results.",
     "Fixed: Selecting 'Not interlinked' on the System Details step now automatically marks the Interlinked test as N/A on the Testing step — no need to set it manually.",
     "Fixed: Fire certificate live preview no longer jumps or scrolls when you tap a chip — it now stays exactly where you left it.",
     "Fixed: When a new app update is available, a full popup now appears showing exactly what changed in plain language — the app reloads itself automatically after 5 seconds.",

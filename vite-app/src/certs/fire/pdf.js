@@ -388,6 +388,7 @@ export function fireBuildCertHTML(r, siteHistory) {
       +((r.detectors||[]).length?'<div class="sec-head">Schedule of Detectors &amp; Devices</div><table class="ltbl"><thead><tr>'+detHeaders+'</tr></thead><tbody>'+detRows+'</tbody></table>':'')
       +'<div class="sec-head" style="margin-top:14px">Test Results</div>'
       +'<table class="ltbl"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>'+(testRows||'<tr><td colspan="2" style="color:#9a948e;font-style:italic">No test results recorded</td></tr>')+'</tbody></table>'
+      +(r.inspLimitations?'<div style="margin-top:10px;padding:8px 10px;background:#f8f5ef;border-left:3px solid #c9b87a;border-radius:0 4px 4px 0"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7a6a3a;margin-bottom:3px">Limitations of inspection</div><div style="font-size:11px;line-height:1.5;color:#3d3d3d">'+_esc(r.inspLimitations)+'</div></div>':'')
       +faChecksHtml
       +(sysDetailCells?'<div class="sec-head" style="margin-top:14px">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
     +'</div>'

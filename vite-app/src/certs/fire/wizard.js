@@ -125,6 +125,7 @@ export function startNewFire() {
     coAlarmsPresent: '', coAlarmNaReason: '',
     departuresNotes: '',
     agreedLimitations: '',
+    inspLimitations: '',
     prevReportRef: '',
     otherRefDocs: '',
     nextInspInterval: '',
@@ -408,6 +409,7 @@ export function fireRenderStep() {
         });
       });
     }
+    html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('inspLimitations',this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 6: Defects ───────────────────────────────────────────────────────
