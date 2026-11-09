@@ -1,7 +1,11 @@
 {
-  "v": "2.1.10",
-  "build": 109,
+  "v": "2.1.11",
+  "build": 110,
   "changes": [
+    "New: Fire certificate premises step now shows your saved properties when typing an address — pick from your directory with one tap.",
+    "New: Fire certificate premises step now has a Pick from directory button to browse all saved properties.",
+    "New: Fire certificate client name now shows suggestions from your landlords and agents directory as you type.",
+    "Fixed: Responsible Person field on fire certificates moved to the bottom of the client section for a cleaner flow.",
     "Fixed: New version available notification now appears reliably every time an update is published — previously it could miss updates if the page loaded before the update check completed.",
     "Fixed: Fire certificate footer now shows only the certificate reference and page number — the property name was already contained within the reference and was removed.",
     "Fixed: Fire certificate continuation pages no longer repeat the form type or certificate reference in the section header — that information now appears only in the footer.",

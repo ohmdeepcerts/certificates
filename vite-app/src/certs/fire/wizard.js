@@ -10,6 +10,7 @@ import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/se
 import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 
 let _w = {};
+let _dir = { properties: null };
 let _fireDirty = false;
 let _fireAllCerts = [];
 let _firePage = 1, _fireFiltered = [], _fireCurrentQ = '';
@@ -210,6 +211,7 @@ export function fireRenderStep() {
     showTypes.forEach(pt => { html += `<button class="chip${_w.premisesType===pt?' on':''}" onclick="firePick('premisesType','${esc(pt)}')">${esc(pt)}</button>`; });
     if (!_w._ptShowMore) html += `<button class="chip" onclick="firePick('_ptShowMore',true);fireRenderStep()">More…</button>`;
     html += `</div></div>`;
+    html += `<div style="margin-bottom:8px"><button onclick="firePickFromDirectory()" class="btn-sm"><i class="fa-solid fa-address-book"></i> Pick from directory</button></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 2: Client ────────────────────────────────────────────────────────
@@ -222,8 +224,7 @@ export function fireRenderStep() {
     }
     var cTypes = ['Building Owner','Landlord','Tenant','Facilities Manager','Managing Agent','Main Contractor'];
     html += `<h2 class="wiz-title">Client Details</h2>`;
-    html += `<div class="wiz-field"><label>Client Name <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.clientName)}" oninput="fireSet('clientName',this.value)" placeholder="Full name or company"></div>`;
-    html += `<div class="wiz-field"><label>Responsible Person <span class="lbl-opt">(on-site contact)</span></label><input value="${esc(_w.responsiblePerson)}" oninput="fireSet('responsiblePerson',this.value)" placeholder="Name of person responsible for premises"></div>`;
+    html += `<div class="wiz-field"><label>Client Name <span class="lbl-opt">(optional)</span></label><input id="fa-client-name" value="${esc(_w.clientName)}" oninput="fireSet('clientName',this.value)" placeholder="Full name or company"></div>`;
     html += `<div class="wiz-field"><label>Client Type</label><div class="chip-row">`;
     cTypes.forEach(ct => { html += `<button class="chip${_w.clientType===ct?' on':''}" onclick="firePick('clientType','${esc(ct)}')">${esc(ct)}</button>`; });
     html += `</div></div>`;
@@ -233,6 +234,7 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.clientAddr3)}" oninput="fireSet('clientAddr3',this.value)"></div>`;
     html += `<div class="wiz-field"><label>Postcode *</label><input value="${esc(_w.clientPostcode)}" oninput="fireSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Client Email (for auto-send)</label><input type="email" value="${esc(_w.clientEmail)}" oninput="fireSet('clientEmail',this.value)" placeholder="client@example.com"></div>`;
+    html += `<div class="wiz-field"><label>Responsible Person <span class="lbl-opt">(on-site contact)</span></label><input value="${esc(_w.responsiblePerson)}" oninput="fireSet('responsiblePerson',this.value)" placeholder="Name of person responsible for premises"></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 3: System details ────────────────────────────────────────────────
@@ -531,6 +533,9 @@ export function fireRenderStep() {
 
   // Address autocomplete on step 1
   if (s === 1) {
+    if (!_dir.properties) {
+      window.dirLoad?.('properties').then(data => { if (data) _dir.properties = data; });
+    }
     var _a1 = document.getElementById('fa-addr1');
     if (_a1) attachAddressAutocomplete(_a1, {
       onSelect(a) {
@@ -539,6 +544,28 @@ export function fireRenderStep() {
         _w.premAddr3   = a.town;
         _w.premPostcode = a.postcode;
         _fireDirty = true; fireRenderStep();
+      },
+      localSuggest(q) {
+        var props = _dir.properties;
+        if (!props || !props.length) return [];
+        var lq = q.toLowerCase();
+        return props
+          .filter(function(p) { return (p.addr1||'').toLowerCase().includes(lq) || (p.name||'').toLowerCase().includes(lq); })
+          .slice(0, 6)
+          .map(function(p) { return {
+            label: '<strong>'+esc(p.addr1||'')+'</strong>'+(p.name?' &mdash; <span style="color:var(--muted,#6b7280)">'+esc(p.name)+'</span>':'')+(p.postcode?' <span style="color:var(--muted,#6b7280)">('+esc(p.postcode)+')</span>':''),
+            onPick: function() {
+              _w.premisesName  = p.name    || _w.premisesName;
+              _w.premAddr1     = p.addr1   || p.address || '';
+              _w.premAddr2     = p.addr2   || '';
+              _w.premAddr3     = p.addr3   || p.town    || '';
+              _w.premPostcode  = p.postcode || '';
+              if (p.type) _w.premisesType = p.type;
+              _fireDirty = true;
+              fireRenderStep();
+              fireUpdateSubtitle();
+            }
+          }; });
       }
     });
     // Trigger ref reservation on step 1 when address is filled
@@ -549,6 +576,17 @@ export function fireRenderStep() {
     }
   }
   if (s === 2) {
+    var _cn2 = document.getElementById('fa-client-name');
+    if (_cn2) window.attachDirACLandlordAgent?.(_cn2, function(rec) {
+      var name = rec._dirType === 'agents' ? (rec.agency_name || rec.contact_name || '') : (rec.landlord_name || rec.company_name || '');
+      _w.clientName     = name;
+      _w.clientAddr1    = rec.addr1 || '';
+      _w.clientAddr2    = rec.addr2 || '';
+      _w.clientAddr3    = [rec.town, rec.county].filter(Boolean).join(', ');
+      _w.clientPostcode = rec.postcode || '';
+      _fireDirty = true;
+      fireRenderStep();
+    });
     var _ca = document.getElementById('fa-caddr1');
     if (_ca) attachAddressAutocomplete(_ca, {
       onSelect(a) {
@@ -1200,6 +1238,38 @@ export async function exportFireCSV() {
   a.href = 'data:text/csv,' + encodeURIComponent(csv);
   a.download = 'fire-certs-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+export function firePickFromDirectory() {
+  if (!_dir.properties) {
+    window.dirLoad?.('properties').then(function(data) {
+      if (data) { _dir.properties = data; firePickFromDirectory(); }
+      else toast('Property directory is empty. Add properties in Settings → Directory.', 'info');
+    });
+    return;
+  }
+  var props = _dir.properties;
+  if (!props.length) { toast('Property directory is empty. Add properties in Settings → Directory.', 'info'); return; }
+  var items = props.map(function(p,i) {
+    return '<div class="dir-item" onclick="window._fireDirPick('+i+')" style="padding:10px;cursor:pointer;border-bottom:1px solid var(--border)">'+esc(p.addr1||p.address||p.name||'')+(p.postcode?' <span style="color:var(--muted,#6b7280)">('+esc(p.postcode)+')</span>':'')+'</div>';
+  }).join('');
+  var modal = '<div id="fire-dir-modal" style="position:fixed;inset:0;background:#0009;z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:var(--surface);border-radius:12px;max-width:440px;width:90%;max-height:70vh;display:flex;flex-direction:column"><div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600">Pick Property</div><div style="overflow-y:auto;flex:1">'+items+'</div><div style="padding:12px;border-top:1px solid var(--border)"><button onclick="document.getElementById(\'fire-dir-modal\').remove()" class="btn-sm">Cancel</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', modal);
+  window._fireDirPick = function(i) {
+    var p = props[i];
+    if (p) {
+      _w.premisesName = p.name || '';
+      _w.premAddr1 = p.addr1 || p.address || '';
+      _w.premAddr2 = p.addr2 || '';
+      _w.premAddr3 = p.addr3 || p.town || '';
+      _w.premPostcode = p.postcode || '';
+      if (p.type) _w.premisesType = p.type;
+      _fireDirty = true;
+    }
+    document.getElementById('fire-dir-modal').remove();
+    fireRenderStep();
+    fireUpdateSubtitle();
+  };
 }
 
 export function fireClientAddrFocus() {
