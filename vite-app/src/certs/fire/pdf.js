@@ -5,12 +5,12 @@ function _field(label, val) {
   return '<div class="f"><div class="fl">'+_esc(label)+'</div><div class="fv">'+_esc(val)+'</div></div>';
 }
 
-export function fireBuildCertHTML(r) {
+export function fireBuildCertHTML(r, siteHistory) {
   var isComm = r.certType === 'FA.3' || r.certType === 'FA.4';
 
-  var typeKicker = { 'FA.1':'Form FA.1 · Annex G', 'FA.2':'Form FA.2 · Annex G', 'FA.3':'Form FA.3', 'FA.4':'Form FA.4' }[r.certType] || 'Fire Alarm Certificate';
+  var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection &amp; Service Certificate', 'FA.3':'Form FA.3', 'FA.4':'Form FA.4' }[r.certType] || 'Fire Alarm Certificate';
   var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Alarm Service / Verification Certificate' }[r.certType] || 'Fire Alarm Certificate';
-  var stdLabel   = isComm ? 'BS 5839-1:2025 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
+  var stdLabel   = isComm ? 'BS 5839-1:2017+A2:2024 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
 
   var company     = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
   var _coAddrRaw  = getSetting('fire_co_address') || getSetting('company_address') || '';
@@ -22,6 +22,7 @@ export function fireBuildCertHTML(r) {
   var logoData    = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
   var enggSigData = r.enggSigData || getSetting('fire_engg_sig_data','') || getSetting('el_sig_data','');
+  var engineerRegNo = r.engineerRegNo || getSetting('fa_engineer_reg_no','');
 
   var premAddr  = [r.premAddr1, r.premAddr2, r.premAddr3, r.premPostcode].filter(Boolean);
   var clientAddr= [r.clientAddr1, r.clientAddr2, r.clientAddr3, r.clientPostcode].filter(Boolean);
@@ -63,7 +64,7 @@ export function fireBuildCertHTML(r) {
   var obBg   = sat ? '#1a6b40' : (attn ? '#a16207' : '#7a1010');
   var obText = sat
     ? '&#10003; &nbsp; SATISFACTORY &mdash; ' + satText
-    : (attn ? '&#9651; &nbsp; REQUIRES ATTENTION &mdash; Remedial work needed' : '&#9888; &nbsp; UNSATISFACTORY &mdash; Action required');
+    : (attn ? (isComm ? '&#9651; &nbsp; REQUIRES ATTENTION &mdash; Remedial work needed' : '&#9651; &nbsp; UNSATISFACTORY &mdash; Remedial works required') : '&#9888; &nbsp; UNSATISFACTORY &mdash; Action required');
 
   // ── Detector table ────────────────────────────────────────────────────────
   var hasDetModel  = (r.detectors||[]).some(function(d){return d.model;});
@@ -144,7 +145,7 @@ export function fireBuildCertHTML(r) {
       return '<tr><td>'+_esc(c.label)+'</td><td>'+rHtml+'</td></tr>';
     }).join('');
     if (_checkRows) {
-      var _checkTitle = r.certType==='FA.2' ? 'Routine Inspection Checks (BS 5839-6 Annex B)' : 'Commissioning Checks (BS 5839-6 Annex C)';
+      var _checkTitle = r.certType==='FA.2' ? 'Routine Inspection Checks (BS 5839-6 Clause 15)' : 'Commissioning Checks (BS 5839-6 Clause 14)';
       faChecksHtml = '<div class="sec-head" style="margin-top:14px">'+_esc(_checkTitle)+'</div>'
         +'<table class="ltbl"><thead><tr><th>Check item</th><th>Result</th></tr></thead><tbody>'+_checkRows+'</tbody></table>';
     }
@@ -164,6 +165,7 @@ export function fireBuildCertHTML(r) {
     if (r.sysMfr||r.sysModel) sysDetailCells += _field('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' '));
     if (r.installDate)   sysDetailCells += _field('Installation date', r.installDate);
     if (r.prevServiceDate) sysDetailCells += _field('Previous service date', r.prevServiceDate);
+    if (r.designRef)       sysDetailCells += _field('Design / scheme ref', r.designRef);
     if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
@@ -195,6 +197,21 @@ export function fireBuildCertHTML(r) {
       +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
       +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
       +(r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
+  }
+
+  // ── Service history ───────────────────────────────────────────────────────
+  var serviceHistoryHtml = '';
+  if (siteHistory && siteHistory.length) {
+    var histRows = siteHistory.map(function(h) {
+      var out = (h.outcome||'').toUpperCase();
+      var pill = out === 'SATISFACTORY' ? '<span class="ppill">'+_esc(h.outcome)+'</span>'
+                : out === 'REQUIRES ATTENTION' ? '<span class="apill">'+_esc(h.outcome)+'</span>'
+                : out === 'UNSATISFACTORY' ? '<span class="fpill">'+_esc(h.outcome)+'</span>'
+                : _esc(h.outcome||'—');
+      return '<tr><td>'+_esc(h.test_date||'—')+'</td><td>'+_esc(h.cert_type||'—')+'</td><td>'+pill+'</td><td>'+_esc(h.ref_number||'—')+'</td></tr>';
+    }).join('');
+    serviceHistoryHtml = '<div class="sec-head" style="margin-top:14px">Service History for this Property</div>'
+      +'<table class="ltbl"><thead><tr><th>Date</th><th>Type</th><th>Outcome</th><th>Reference</th></tr></thead><tbody>'+histRows+'</tbody></table>';
   }
 
   // ── Tenant sign-off ───────────────────────────────────────────────────────
@@ -236,13 +253,13 @@ export function fireBuildCertHTML(r) {
   var purposeMap = {
     'FA.1':'To certify the design, installation and commissioning of a new fire alarm system in accordance with BS 5839-6:2019',
     'FA.2':'To certify continued compliance — annual inspection and testing of an existing fire alarm system',
-    'FA.3':'To certify the installation, commissioning and testing of a new fire detection and alarm system in accordance with BS 5839-1:2025',
+    'FA.3':'To certify the installation, commissioning and testing of a new fire detection and alarm system in accordance with BS 5839-1:2017+A2:2024',
     'FA.4':'To certify the periodic service, inspection and verification of an existing fire detection and alarm system'
   };
   var extentMap = {
     'FA.1':'Design, installation and commissioning — 100% of the new fire alarm system at the premises identified on this certificate.',
     'FA.2':'Annual inspection and testing — 100% of the fire detection and alarm system including all detectors, sounders, control panel, and interconnections at the premises.',
-    'FA.3':'Complete installation, commissioning and testing — 100% of the new fire detection and alarm system in accordance with BS 5839-1:2025.',
+    'FA.3':'Complete installation, commissioning and testing — 100% of the new fire detection and alarm system in accordance with BS 5839-1:2017+A2:2024.',
     'FA.4':'Periodic service, inspection and verification — 100% of the existing fire detection and alarm system at the premises identified on this certificate.'
   };
   var purposeTxt = purposeMap[r.certType] || purposeMap['FA.2'];
@@ -350,7 +367,7 @@ export function fireBuildCertHTML(r) {
       +'</div>'
     +'</div>'
     // Commercial-only: Variations + Reference docs
-    +(isComm && r.departuresNotes ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px"><div class="purp-label">Variations from BS 5839-1:2025 Clause 43</div><div class="purp-extent">'+_esc(r.departuresNotes)+'</div></div>' : '')
+    +(isComm && r.departuresNotes ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px"><div class="purp-label">Variations from BS 5839-1:2017+A2:2024 Clause 43</div><div class="purp-extent">'+_esc(r.departuresNotes)+'</div></div>' : '')
     +(isComm && (r.prevReportRef||r.otherRefDocs) ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px;display:grid;grid-template-columns:1fr 1fr;gap:0 20px"><div>'+(r.prevReportRef ? '<div class="purp-label">Previous Report Reference</div><div class="purp-extent">'+_esc(r.prevReportRef)+'</div>' : '')+'</div><div>'+(r.otherRefDocs ? '<div class="purp-label">Other Reference Documents</div><div class="purp-extent">'+_esc(r.otherRefDocs)+'</div>' : '')+'</div></div>' : '')
     // Outcome band
     +'<div class="outcome-band" style="background:'+obBg+';border-top:1px solid #e08830;border-bottom:1px solid #e08830">'+obText+'</div>'
@@ -393,6 +410,7 @@ export function fireBuildCertHTML(r) {
   var page3 = '<div class="cert-page">'
     +contHead('Declaration &amp; Sign-off', 3, totalPages)
     +'<div class="cb">'
+      +serviceHistoryHtml
       +defectsHtml
       +'<div class="sec-head" style="margin-top:14px">Competent Person Declaration</div>'
       +'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;font-size:11.5px;margin-bottom:14px">'
@@ -415,6 +433,7 @@ export function fireBuildCertHTML(r) {
               +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Post</div>'
               +'<div style="padding:7px 10px;flex:1">'+engPos+'</div>'
             +'</div>'
+            +(engineerRegNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Reg. / Ref. No.</div><div style="padding:7px 10px;flex:1">'+_esc(engineerRegNo)+'</div></div>':'')
             +'<div style="display:flex">'
               +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Date</div>'
               +'<div style="padding:7px 10px;flex:1">'+tDate+'</div>'
@@ -428,6 +447,8 @@ export function fireBuildCertHTML(r) {
           +'</div>'
         +'</div>'
       +'</div>'
+      +(r.satJustification?'<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:9px 11px;margin-bottom:10px;font-size:11px;line-height:1.6"><strong style="color:#7a1010">Override justification (Satisfactory with recorded failures):</strong> '+_esc(r.satJustification)+'</div>':'')
+      +(r.certType==='FA.1'?'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;margin-bottom:14px;display:flex;font-size:11px"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Operating instructions<br>provided to occupier</div><div style="padding:7px 10px;flex:1;font-weight:600;color:'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'#1a6b40':r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'#7a1010':'#555')+'">'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'&#10003; Yes':(r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'&#10007; No':'Not recorded'))+'</div></div>':'')
       +tenantHtml
     +'</div>'
     +footer(r.premisesName||premAddr[0]||company, 3, totalPages)
@@ -511,7 +532,7 @@ export function fireBuildCertHTML(r) {
           +'</tr></thead>'
           +'<tbody>'+_chklBody+'</tbody>'
         +'</table>'
-        +'<div style="font-size:9.5px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:8px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable or not installed. Items marked Fail should be recorded as deviations. This checklist forms part of the BS 5839-1:2025 Annex G service certificate.</div>'
+        +'<div style="font-size:9.5px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:8px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable or not installed. Items marked Fail should be recorded as deviations. This checklist forms part of the BS 5839-1:2017+A2:2024 Annex G service certificate.</div>'
       +'</div>'
       +footer(r.premisesName||premAddr[0]||company, 4, totalPages)
     +'</div>';
@@ -675,6 +696,7 @@ a{color:inherit;text-decoration:none}
 .ltbl tr:nth-child(even) td{background:#fdf5ec}
 .ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #166534;color:#166534;font-weight:600}
 .fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #7a1010;color:#7a1010;font-weight:600}
+.apill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #a16207;color:#a16207;font-weight:600}
 .num{font-variant-numeric:tabular-nums}
 
 /* ── Signature ── */

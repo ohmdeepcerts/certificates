@@ -109,11 +109,12 @@ export function startNewFire() {
     defects: [],
     defectsOverall: '', defectsNotes: '',
     // outcome
-    outcome: '', nextInspDate: '', worksCarried: '', sysOperational: '',
+    outcome: '', nextInspDate: '', worksCarried: '', sysOperational: '', satJustification: '',
     _clientAddrPrefilled: false,
     // engineer
     engineerName: getSetting('fa_engineer', getSetting('default_engineer','')),
     engineerQual: getSetting('fa_engineer_qual', ''),
+    engineerRegNo: getSetting('fa_engineer_reg_no', ''),
     enggSigData: getSetting('fire_engg_sig_data','') || getSetting('el_sig_data',''),
     companyName: getSetting('company_name', 'OHM Electrical Engineering Ltd'),
     // tenant acknowledgment
@@ -127,6 +128,7 @@ export function startNewFire() {
     nextInspInterval: '',
     falseAlarms12m: '',
     falseAlarmAction: '',
+    designRef: '',
     annexGChecks: {}, annexFa2Checks: {},
     changeOfOrg: '',
     prevOrgName: '',
@@ -274,6 +276,7 @@ export function fireRenderStep() {
       html += `</div></div>`;
       if (_w.certType === 'FA.1') {
         html += `<div class="wiz-field"><label>Installation Date <span class="lbl-opt">(date system first fitted)</span></label><input value="${esc(_w.installDate||_w.testDate||todayStr())}" oninput="fireSet('installDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+        html += `<div class="wiz-field"><label>Design / scheme reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.designRef||'')}" oninput="fireSet('designRef',this.value)" placeholder="e.g. drawing ref, specification no." style="max-width:280px"></div>`;
       } else if (_w.certType === 'FA.2') {
         html += `<div class="wiz-field"><label>Previous Service Date <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevServiceDate||'')}" oninput="fireSet('prevServiceDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
       }
@@ -293,8 +296,8 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>FIA Member No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysFia)}" oninput="fireSet('sysFia',this.value)" placeholder="e.g. 12345"></div>`;
       html += `<div class="wiz-field"><label>Agreed limitations &amp; with whom <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('agreedLimitations',this.value)" placeholder="e.g. Limited to zones 1–3 only, agreed with client on 01/11/2026" style="width:100%;font-size:13px;resize:vertical">${esc(_w.agreedLimitations||'')}</textarea></div>`;
     }
-    var _deptLabel = _isComm() ? 'Variations from BS 5839-1:2025 Clause 43 <span class="lbl-opt">(optional)</span>' : 'Departures / variations <span class="lbl-opt">(Annex G — optional)</span>';
-    var _deptPlaceholder = _isComm() ? 'Any agreed variations or departures from BS 5839-1:2025 Clause 43 requirements, with justification…' : 'Any agreed departures from BS 5839-6 standard requirements, with justification…';
+    var _deptLabel = _isComm() ? 'Variations from BS 5839-1 Clause 43 <span class="lbl-opt">(optional)</span>' : 'Departures / variations <span class="lbl-opt">(optional)</span>';
+    var _deptPlaceholder = _isComm() ? 'Any agreed variations or departures from BS 5839-1 Clause 43 requirements, with justification…' : 'Any agreed departures from BS 5839-6 standard requirements, with justification…';
     html += `<div class="wiz-field" style="margin-top:8px"><label>${_deptLabel}</label><textarea rows="2" oninput="fireSet('departuresNotes',this.value)" placeholder="${_deptPlaceholder}" style="width:100%;font-size:13px;resize:vertical">${esc(_w.departuresNotes||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -332,14 +335,14 @@ export function fireRenderStep() {
       html += `</div></div>`;
       if (_w.coAlarmsPresent === 'N/A') {
         html += `<div style="display:flex;gap:7px;align-items:flex-start;margin:-4px 0 8px 0"><i class="fa-solid fa-circle-info" style="color:#2563eb;font-size:12px;margin-top:3px;flex-shrink:0"></i><div style="flex:1"><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Why N/A? <span style="font-size:11px">(optional)</span></div><div class="chip-row">`;
-        ['No gas appliance present','CO alarm not fitted'].forEach(function(v) { html += `<button class="chip${_w.coAlarmNaReason===v?' on':''}" onclick="firePick('coAlarmNaReason','${esc(v)}')">${esc(v)}</button>`; });
-        html += `</div></div></div>`;
+        ['No combustion appliance present'].forEach(function(v) { html += `<button class="chip${_w.coAlarmNaReason===v?' on':''}" onclick="firePick('coAlarmNaReason','${esc(v)}')">${esc(v)}</button>`; });
+        html += `</div><div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4">If a combustion appliance is present and no CO alarm is fitted, record as a defect in the Defects step.</div></div></div></div>`;
       } else if (_w.coAlarmsPresent) { _w.coAlarmNaReason = ''; }
       html += _testRow('CO alarm test (if applicable)', 'tCO', ['PASS','FAIL','N/A']);
       // BS 5839-6 inspection / commissioning checklist
       var _faChecks = _w.certType === 'FA.2' ? FA2_CHECKS : (_w.certType === 'FA.1' ? FA1_CHECKS : null);
       if (_faChecks) {
-        var _checkTitle = _w.certType === 'FA.2' ? 'Inspection Checks (BS 5839-6 Annex B)' : 'Commissioning Checks (BS 5839-6 Annex C)';
+        var _checkTitle = _w.certType === 'FA.2' ? 'Inspection Checks (BS 5839-6 Clause 15)' : 'Commissioning Checks (BS 5839-6 Clause 14)';
         html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${_checkTitle}</div>`;
         _faChecks.forEach(function(c) {
           var v = (_w.annexFa2Checks||{})[c.id] || '';
@@ -440,11 +443,23 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Overall outcome *</label><div class="chip-row">`;
     var _outCls = {'SATISFACTORY':'chip-sat','UNSATISFACTORY':'chip-unsat','REQUIRES ATTENTION':'chip-attn'};
     ['SATISFACTORY','UNSATISFACTORY','REQUIRES ATTENTION'].forEach(v => {
+      var label = (!_isComm() && v === 'REQUIRES ATTENTION') ? 'UNSATISFACTORY — Remedial works' : v;
       var warn = (_hasFail && v === 'SATISFACTORY') ? `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;margin-left:3px;opacity:.7"></i>` : '';
       var attnIco = v==='REQUIRES ATTENTION' ? `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;margin-left:3px"></i>` : '';
-      html += `<button class="chip ${_outCls[v]}${_w.outcome===v?' on':''}" onclick="firePick('outcome','${v}')">${v}${warn}${attnIco}</button>`;
+      html += `<button class="chip ${_outCls[v]}${_w.outcome===v?' on':''}" onclick="firePick('outcome','${v}')">${label}${warn}${attnIco}</button>`;
     });
     html += `</div></div>`;
+    if (_hasFail && _w.outcome === 'SATISFACTORY') {
+      html += `<div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px">`;
+      html += `<div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:5px"><i class="fa-solid fa-circle-exclamation" style="margin-right:5px"></i>Justification required</div>`;
+      html += `<div style="font-size:11.5px;color:#7f1d1d;margin-bottom:8px;line-height:1.5">Failure results recorded — enter a written justification (minimum 20 characters) to override with Satisfactory. This will be printed on the certificate.</div>`;
+      html += `<textarea rows="3" oninput="fireSet('satJustification',this.value);fireRenderStep()" placeholder="e.g. Failed device at landing replaced during this visit and re-tested — all devices now operational" style="width:100%;font-size:12.5px;resize:vertical;box-sizing:border-box">${esc(_w.satJustification||'')}</textarea>`;
+      var _satJLen = (_w.satJustification||'').trim().length;
+      html += _satJLen < 20
+        ? `<div style="font-size:11px;color:#dc2626;margin-top:4px"><i class="fa-solid fa-xmark" style="margin-right:3px"></i>${_satJLen}/20 characters minimum</div>`
+        : `<div style="font-size:11px;color:#1a6b40;margin-top:4px"><i class="fa-solid fa-check" style="margin-right:3px"></i>Justification accepted</div>`;
+      html += `</div>`;
+    }
     html += `<div class="wiz-field"><label>System operational at time of leaving</label><div class="chip-row">`;
     ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="firePick('sysOperational','${v}')">${v}</button>`; });
     html += `</div></div>`;
@@ -468,7 +483,7 @@ export function fireRenderStep() {
       if (_w.changeOfOrg === 'yes') {
         html += `<div class="wiz-field"><label>Previous organisation name</label><input value="${esc(_w.prevOrgName||'')}" oninput="fireSet('prevOrgName',this.value)" placeholder="e.g. ABC Fire &amp; Security Ltd"></div>`;
         html += `<div class="wiz-field"><label>Previous organisation contact <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevOrgContact||'')}" oninput="fireSet('prevOrgContact',this.value)" placeholder="Name or phone number"></div>`;
-        html += `<div class="wiz-field"><label>Date of transfer <span class="lbl-opt">(optional)</span></label><input type="date" value="${esc(_w.prevOrgDate||'')}" oninput="fireSet('prevOrgDate',this.value)"></div>`;
+        html += `<div class="wiz-field"><label>Date of transfer <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevOrgDate||'')}" oninput="fireSet('prevOrgDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
         html += `<div class="wiz-field"><label>System condition at handover <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.handoverCondition==='Satisfactory'?' on chip-sat':''}" onclick="firePick('handoverCondition','Satisfactory')">Satisfactory</button><button class="chip${_w.handoverCondition==='Unsatisfactory'?' on chip-unsat':''}" onclick="firePick('handoverCondition','Unsatisfactory')">Unsatisfactory</button><button class="chip${_w.handoverCondition==='Unknown'?' on':''}" onclick="firePick('handoverCondition','Unknown')">Unknown</button></div></div>`;
         html += `<div class="wiz-field"><label>Outstanding defects / notes at handover <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('handoverNotes',this.value)" placeholder="e.g. Zone 3 detector requires replacement">${esc(_w.handoverNotes||'')}</textarea></div>`;
       }
@@ -671,6 +686,10 @@ export async function fireNext() {
   if (s === 1) {
     if (!(_w.premAddr1||'').trim()) { toast('Address Line 1 is required','error'); return; }
     if (!(_w.premPostcode||'').trim()) { toast('Postcode is required','error'); return; }
+    var _isCommType = _w.certType === 'FA.3' || _w.certType === 'FA.4';
+    if (!_isCommType && _w.premisesType === 'HMO') {
+      if (!await confirm2('HMOs may require a Grade A system under BS 5839-1 depending on size and local authority licence conditions — confirm the correct standard applies with the client before continuing with this domestic certificate type. Continue?')) return;
+    }
   }
   if (s === 2) {
     if (!(_w.clientAddr1||'').trim()) { toast('Client address line 1 is required','error'); return; }
@@ -718,6 +737,12 @@ export async function fireNext() {
     toast('Some defect rows have no description — please fill them in or remove the blank rows', 'error'); return;
   }
   if (s === 7 && !_w.outcome) { toast('Please select an outcome','error'); return; }
+  if (s === 7) {
+    var _hasFails7 = (_w.detectors||[]).some(function(d){return d.result==='FAIL';}) || ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){return _w[k]==='FAIL';});
+    if (_hasFails7 && (_w.outcome||'').toUpperCase() === 'SATISFACTORY' && (!_w.satJustification || _w.satJustification.trim().length < 20)) {
+      toast('Enter a justification (minimum 20 characters) to override with a Satisfactory outcome', 'error'); return;
+    }
+  }
   _w.step = s + 1;
   if (_w.step >= STEPS.length) { fireSave(); return; }
   fireRenderStep();
@@ -748,7 +773,10 @@ export async function fireSave() {
   var _hasFails = (_w.detectors||[]).some(function(d){ return d.result==='FAIL'; }) ||
     ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k]==='FAIL'; });
   if (_hasFails && (_w.outcome||'').toUpperCase() === 'SATISFACTORY') {
-    if (!await confirm2('This certificate has FAIL results but the outcome is SATISFACTORY — this may be incorrect. Issue anyway?')) return;
+    if (!_w.satJustification || _w.satJustification.trim().length < 20) {
+      toast('A justification (minimum 20 characters) is required to issue a Satisfactory certificate when failure results are recorded — go back to the Outcome step', 'error');
+      _w.step = 7; fireRenderStep(); return;
+    }
   }
   if (!navigator.onLine) {
     var _ofRec = Object.assign({}, _w, { savedAt: new Date().toISOString() });
@@ -831,15 +859,35 @@ export function firePreviewCurrent() {
   fireOpenCert(previewRec);
 }
 
-export function fireOpenCert(rec) {
-  var certHtml = fireBuildCertHTML(rec);
+async function _fetchSiteHistory(rec) {
+  try {
+    var matchTerm = (rec.premPostcode || '').trim() || (rec.premAddr1 || rec.premisesName || '').trim();
+    if (!matchTerm) return [];
+    var { data } = await sb.from('fire_certs')
+      .select('ref_number,test_date,outcome,cert_type')
+      .ilike('premises_address', '%' + matchTerm + '%')
+      .neq('ref_number', rec.ref || '')
+      .is('deleted_at', null)
+      .order('test_date', { ascending: false })
+      .limit(10);
+    return data || [];
+  } catch(e) { return []; }
+}
+
+export async function fireOpenCert(rec) {
+  var siteHistory = await _fetchSiteHistory(rec);
+  var certHtml = fireBuildCertHTML(rec, siteHistory);
   var blob = new Blob([certHtml], { type:'text/html' });
   var url = URL.createObjectURL(blob);
   window._fireCertRec = rec;
+  var prevBtn = (rec.certType === 'FA.2' && rec.prevReportRef)
+    ? '<button onclick="fireOpenByRef(\'' + esc(rec.prevReportRef) + '\')" title="Open previous report" style="background:#78350f;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-clock-rotate-left"></i> ' + esc(rec.prevReportRef) + '</button>'
+    : '';
   var modal = `<div id="fire-cert-modal" style="position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 14px;background:#1c1917;flex-shrink:0;gap:8px">
     <span style="color:#fff;font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" id="fire-cert-modal-title">Fire Alarm Certificate — ${esc(rec.ref||'PREVIEW')}</span>
     <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
+      ${prevBtn}
       <button onclick="firePrintCert()" style="background:#b91c1c;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-print"></i> Print</button>
       <button onclick="fireDownloadPDF(window._fireCertRec)" style="background:#1d4ed8;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-download"></i> PDF</button>
       <button onclick="fireCertEmailBtn()" style="background:#15803d;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-envelope"></i> Email</button>
@@ -868,10 +916,21 @@ export function fireCloseCert() {
   window._fireCertRec = null;
 }
 
+export async function fireOpenByRef(refNum) {
+  if (!refNum) return;
+  var found = _fireAllCerts.find(function(r) { return (r.ref_number||'').toLowerCase() === refNum.toLowerCase(); });
+  if (found) { fireOpenCert(found.data || found); return; }
+  toast('Looking up ' + refNum + '…', 'info', 2000);
+  var { data } = await sb.from('fire_certs').select('*').eq('ref_number', refNum).is('deleted_at', null).limit(1);
+  if (data && data[0]) { fireOpenCert(data[0].data || data[0]); return; }
+  toast('Certificate ' + refNum + ' not found', 'error');
+}
+
 export async function fireDownloadPDF(rec) {
   if (!rec) return;
+  var siteHistory = await _fetchSiteHistory(rec);
   var { default: html2pdf } = await import('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js').catch(() => ({}));
-  var certHtml = fireBuildCertHTML(rec);
+  var certHtml = fireBuildCertHTML(rec, siteHistory);
   var iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none';
   document.body.appendChild(iframe);
@@ -915,7 +974,7 @@ export function fireZoomOut() {
   _fireApplyIfrScale((window._fireScale || 0.7) - 0.05);
 }
 
-export function fireShowPreview(idx) {
+export async function fireShowPreview(idx) {
   var r = _fireFiltered[idx]; if (!r) return;
   var certData = r.data || r;
   window._fireCertRec = certData;
@@ -932,9 +991,11 @@ export function fireShowPreview(idx) {
     +esc(r.ref_number||certData.ref||'—')+(addr?' &mdash; '+esc(addr):'')+'</span>'
     +_ibtn('Download PDF','fa-download','fireDownloadPDF(window._fireCertRec)')
     +_ibtn('Email','fa-envelope','fireCertEmailBtn()')
+    +(certData.certType==='FA.2'&&certData.prevReportRef ? _ibtn('Previous: '+certData.prevReportRef,'fa-clock-rotate-left',"fireOpenByRef('"+certData.prevReportRef+"')") : '')
     +(isAdmin()?_ibtn('Edit','fa-pen','fireEditCert(window._fireHistRec)'):'')
     +_ibtn('Delete','fa-trash',"fireDeleteCert('"+r.id+"')",true);
-  var html = fireBuildCertHTML(certData);
+  var siteHistory = await _fetchSiteHistory(certData);
+  var html = fireBuildCertHTML(certData, siteHistory);
   var blob = new Blob([html], {type:'text/html'});
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
   var blobUrl = URL.createObjectURL(blob);

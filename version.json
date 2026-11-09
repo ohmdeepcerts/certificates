@@ -1,9 +1,17 @@
 {
-  "v": "2.1.5",
-  "build": 103,
+  "v": "2.1.6",
+  "build": 104,
   "changes": [
-    "New: FA.2 periodic inspection certs now show a 'Prev Cert' button — click it to instantly open the previous report referenced on that certificate.",
-    "Improved: Service history now matches by postcode first (more accurate), falling back to address line if no postcode is set.",
-    "Previous: Fire alarm certificates automatically include a Service History table showing every prior inspection at the same property."
+    "Fixed: Fire certificate labels incorrectly showed 'Annex G' on domestic FA.1 and FA.2 forms — now correctly labelled Installation Certificate and Inspection & Service Certificate.",
+    "Fixed: BS 5839-1 version number corrected on all commercial fire certificates.",
+    "Fixed: Fire certificate checklist headings referenced wrong annex numbers — now show correct clause references.",
+    "Fixed: Selecting Satisfactory outcome when failure results are recorded now requires a written justification — previously just showed a soft warning.",
+    "Fixed: CO alarm Not Applicable reason updated — 'No combustion appliance present' replaces the previous narrower wording.",
+    "Fixed: Date of transfer field for change-of-organisation now uses DD/MM/YYYY format consistently.",
+    "New: HMO premises now shows a reminder that Grade A under BS 5839-1 may be required.",
+    "New: FA.1 certificates now show whether operating instructions were provided to the occupier.",
+    "New: Engineer registration/reference number field added to fire certificates.",
+    "New: Design/scheme reference field added to FA.1 installation certificates.",
+    "New: Override justification (when Satisfactory is issued with failures recorded) is now printed on the certificate."
   ]
 }
