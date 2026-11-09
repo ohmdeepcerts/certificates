@@ -1,7 +1,8 @@
 {
-  "v": "2.1.19",
-  "build": 118,
+  "v": "2.1.20",
+  "build": 119,
   "changes": [
+    "New: Calendar picker button added to both Test Date and Next Inspection Date — tap the calendar icon to pick a date without typing.",
     "Fixed: Step tabs now show a green tick only for steps you have actually visited — previously ticking forward by accident made earlier steps appear complete when they had not been filled in.",
     "Fixed: Failed device count on the Detectors step can now be typed manually — it was locked and could not be changed.",
     "New: Test date and next inspection date moved to the first step (Type) so you can set both before filling in any details — includes 6 months and 12 months quick-pick buttons.",
