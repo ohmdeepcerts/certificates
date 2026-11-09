@@ -228,7 +228,6 @@ export function fireBuildCertHTML(r, siteHistory) {
   // ── Footer helper ─────────────────────────────────────────────────────────
   function footer(loc, pageNum, total) {
     return '<div class="cert-footer">'
-      +'<div class="cf-left">'+_esc(loc)+'</div>'
       +'<div class="cf-ref">'+ref+' &nbsp;&middot;&nbsp; Page '+pageNum+' of '+total+'</div>'
       +'</div>';
   }
@@ -236,16 +235,7 @@ export function fireBuildCertHTML(r, siteHistory) {
   // ── Continuation header (pages 2+) ────────────────────────────────────────
   function contHead(subtitle, pageNum, total) {
     return '<div class="ch-cont">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px">'
-      +'<div>'
-      +'<div class="ch-cont-eyebrow">'+_esc(typeKicker)+'</div>'
       +'<div class="ch-cont-title">'+_esc(subtitle)+'</div>'
-      +'</div>'
-      +'<div style="text-align:right">'
-      +'<div style="font-family:monospace;font-size:11px;font-weight:700;color:#e08830;letter-spacing:.04em">'+ref+'</div>'
-      +'<div style="font-size:9.5px;color:#999;margin-top:2px">Page '+pageNum+' of '+total+'</div>'
-      +'</div>'
-      +'</div>'
       +'</div>';
   }
 
@@ -277,8 +267,8 @@ export function fireBuildCertHTML(r, siteHistory) {
   // Page 1 body summary fields
   var p1Fields = '';
   if (!isComm) {
-    if (r.sysCategory)   p1Fields += _field('Category', r.sysCategory);
-    if (r.sysGrade)      p1Fields += _field('Grade', r.sysGrade);
+    if (r.sysCategory)   p1Fields += _field('Category', r.sysCategory.split(' — ')[0]);
+    if (r.sysGrade)      p1Fields += _field('Grade', r.sysGrade.split(' — ')[0]);
     if (r.sysPowerSupply)p1Fields += _field('Power Supply', r.sysPowerSupply);
     if (r.sysInterlinkMethod) p1Fields += _field('Interlink Method', r.sysInterlinkMethod);
     else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
@@ -293,9 +283,10 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.falseAlarmAction) p1Fields += _field('False alarm action', r.falseAlarmAction);
   }
 
-  var noteBox = sat
-    ? '<div class="note-box"><div class="nb-lbl">&#10003; System Satisfactory</div><p style="font-size:11.5px;color:#3a2a2a;line-height:1.6">This fire alarm system has been inspected and tested in accordance with '+_esc(stdLabel.split(' ·')[0])+'. '+( devTotal>0 ? 'All '+devTotal+' detection devices were tested and '+devPass+' passed.' : 'The system satisfies the requirements of the standard.')+'</p></div>'
-    : '<div class="obs-box"><div class="ob-lbl">&#9888; Action Required — Unsatisfactory</div><p style="font-size:11.5px;color:#3a1010;line-height:1.6">'+devFail+' device'+(devFail===1?'':'s')+' recorded as failed — full details with recommended remedial actions are on the following pages of this certificate.</p></div>';
+  p1Fields += sat
+    ? '<div class="f" style="grid-column:1/-1"><div class="fl">Outcome</div><div class="fv" style="color:#16a34a">&#10003; System Satisfactory</div></div>'
+    : '<div class="f" style="grid-column:1/-1"><div class="fl">Outcome</div><div class="fv" style="color:#c01818">&#9888; Unsatisfactory &mdash; '+devFail+' device'+(devFail===1?'':'s')+' recorded as failed</div></div>';
+  var noteBox = '';
 
   var page1 = '<div class="cert-page">'
     +'<div class="cert-top-strip"></div>'
@@ -346,7 +337,7 @@ export function fireBuildCertHTML(r, siteHistory) {
         +'<div class="addr-col-label">Inspecting Engineer</div>'
         +'<div style="margin-bottom:6px">'
           +'<div class="addr-engineer-name">'+eng+'</div>'
-          +'<div class="addr-line">'+engPos+'<br>'+coName+'</div>'
+          +'<div class="addr-line">'+engPos+'</div>'
         +'</div>'
         +(coTel?'<div class="addr-detail-row"><span class="addr-detail-lbl">Tel:</span><span class="addr-detail-val">'+coTel+'</span></div>':'')
         +(companyEmail?'<div class="addr-detail-row"><span class="addr-detail-lbl">Email:</span><span class="addr-detail-val">'+coEmail+'</span></div>':'')
@@ -706,7 +697,7 @@ a{color:inherit;text-decoration:none}
 .sig-cap{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;color:#7a6060;margin-top:4px}
 
 /* ── Footer ── */
-.cert-footer{background:#fdfaf8;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cert-footer{background:#fdfaf8;border-top:2px solid #e08830;padding:11px 28px;display:flex;justify-content:flex-end;align-items:center;flex-shrink:0}
 .cf-left{font-size:10px;color:#9a7858}
 .cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
 .ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
