@@ -1,7 +1,9 @@
 {
-  "v": "2.1.12",
-  "build": 111,
+  "v": "2.1.13",
+  "build": 112,
   "changes": [
+    "New: Fire certificate Detectors step now shows a Total / Passed / Failed / Tested summary at the top — enter counts directly without adding individual device records. Failed is auto-calculated.",
+    "Fixed: Fire certificates no longer require you to add at least one device — you can skip the device list entirely and the device table is hidden from the PDF if nothing is recorded.",
     "New: Fire certificate System Details now auto-selects the correct power supply when you choose a grade — D1 sets mains + battery, D2/F sets battery only, E sets mains only. If you override with a conflicting choice, a warning asks you to confirm.",
     "New: Fire certificate premises step now shows your saved properties when typing an address — pick from your directory with one tap.",
     "New: Fire certificate premises step now has a Pick from directory button to browse all saved properties.",

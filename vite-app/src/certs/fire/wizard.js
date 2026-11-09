@@ -101,6 +101,7 @@ export function startNewFire() {
     installDate: '', prevServiceDate: '',
     // detectors
     detectors: [],
+    detTotal: '', detPass: '', detFail: '', detTested: '',
     // testing — domestic
     tFunctional: '', tInterlinked: '', tBattery: '', tCO: '',
     // testing — commercial
@@ -310,12 +311,31 @@ export function fireRenderStep() {
 
   // ── Step 4: Detectors ─────────────────────────────────────────────────────
   } else if (s === 4) {
-    html += `<h2 class="wiz-title">Detectors & Devices</h2>`;
-    if (!(_w.detectors||[]).length) {
-      html += `<p style="color:var(--muted);font-size:13px;margin-bottom:12px">Add at least one detector or device to continue.</p>`;
+    var _dets4 = _w.detectors || [];
+    var _hasDetList = _dets4.length > 0;
+    var _autoTotal4 = _hasDetList ? String(_dets4.length) : '';
+    var _autoPass4  = _hasDetList ? String(_dets4.filter(function(d){return d.result==='PASS';}).length) : '';
+    var _autoFail4  = _hasDetList ? String(_dets4.filter(function(d){return d.result==='FAIL';}).length) : '';
+    var _autoTest4  = _hasDetList ? String(_dets4.filter(function(d){return d.result==='PASS'||d.result==='FAIL';}).length) : '';
+    var _sTotal  = _hasDetList ? _autoTotal4 : (_w.detTotal||'');
+    var _sPass   = _hasDetList ? _autoPass4  : (_w.detPass||'');
+    var _sFail   = _hasDetList ? _autoFail4  : (_w.detFail||'');
+    var _sTested = _hasDetList ? _autoTest4  : (_w.detTested||'');
+    var _rdonly  = _hasDetList ? ' readonly style="background:var(--surface2);color:var(--muted)"' : '';
+    html += `<h2 class="wiz-title">Detectors &amp; Devices</h2>`;
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px;background:var(--surface2);border-radius:8px;padding:12px">`;
+    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em">Total</label><input type="number" min="0" value="${esc(_sTotal)}"${_rdonly} oninput="fireSet('detTotal',this.value);fireDetCalc()" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;max-width:100%"></div>`;
+    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#15803d">Passed</label><input type="number" min="0" value="${esc(_sPass)}"${_rdonly} oninput="fireSet('detPass',this.value);fireDetCalc()" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;color:#15803d;max-width:100%"></div>`;
+    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#dc2626">Failed</label><input type="number" min="0" value="${esc(_sFail)}" readonly style="text-align:center;font-size:18px;font-weight:700;padding:6px;color:#dc2626;background:var(--surface2);max-width:100%"></div>`;
+    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em">Tested</label><input type="number" min="0" value="${esc(_sTested)}"${_rdonly} oninput="fireSet('detTested',this.value)" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;max-width:100%"></div>`;
+    html += `</div>`;
+    if (_hasDetList) {
+      html += `<div style="font-size:11px;color:var(--muted);margin:-4px 0 10px"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:3px"></i>Counts auto-calculated from device list below</div>`;
+    } else {
+      html += `<div style="font-size:11px;color:var(--muted);margin:-4px 0 10px">Enter summary counts above, or add individual device records below — both optional.</div>`;
     }
     html += `<div id="fire-det-cards">`;
-    (_w.detectors||[]).forEach((det, i) => { html += _detCard(det, i); });
+    _dets4.forEach(function(det, i) { html += _detCard(det, i); });
     html += `</div>`;
     html += `<button onclick="fireAddDetector()" class="fire-det-add-btn"><i class="fa-solid fa-plus"></i> Add device</button>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
@@ -686,6 +706,18 @@ export function fireJumpStep(i) {
   if (i >= 0 && i < STEPS.length && i <= _w.step) { _w.step = i; fireRenderStep(); }
 }
 
+export function fireDetCalc() {
+  if ((_w.detectors||[]).length) return; // list takes priority
+  var t = parseInt(_w.detTotal)||0;
+  var p = parseInt(_w.detPass)||0;
+  var f = parseInt(_w.detFail)||0;
+  var changed = false;
+  if (t && p && !f)      { _w.detFail = String(Math.max(0,t-p)); changed = true; }
+  else if (t && !p && f) { _w.detPass = String(Math.max(0,t-f)); changed = true; }
+  if (t && !_w.detTested){ _w.detTested = String(t); changed = true; }
+  if (changed) { _fireDirty = true; fireRenderStep(); }
+}
+
 export function fireAddDetector() {
   if (!_w.detectors) _w.detectors = [];
   _w.detectors.push({ location:'', type:'Smoke (optical)', model:'', serialNo:'', zone:'', result:'', batReplaced:'N/A', batExpiry:'' });
@@ -738,7 +770,6 @@ export async function fireNext() {
     if (!(_w.clientAddr1||'').trim()) { toast('Client address line 1 is required','error'); return; }
     if (!(_w.clientPostcode||'').trim()) { toast('Client postcode is required','error'); return; }
   }
-  if (s === 4 && !(_w.detectors||[]).length) { toast('Add at least one detector','error'); return; }
   if (s === 4 && (_w.detectors||[]).some(function(d){ return !(d.location||'').trim(); })) {
     if (!await confirm2('Some devices have no location recorded — location helps identify where each device is fitted. Continue without locations?')) return;
   }

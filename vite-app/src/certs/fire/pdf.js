@@ -52,10 +52,11 @@ export function fireBuildCertHTML(r, siteHistory) {
     : '';
 
   // ── Device counts for stats bar ───────────────────────────────────────────
-  var devTotal = (r.detectors||[]).length;
-  var devPass  = (r.detectors||[]).filter(function(d){ return d.result==='PASS'; }).length;
-  var devFail  = (r.detectors||[]).filter(function(d){ return d.result==='FAIL'; }).length;
-  var devTested= devPass + devFail;
+  var _hasDetList = (r.detectors||[]).length > 0;
+  var devTotal = _hasDetList ? (r.detectors||[]).length                                              : (parseInt(r.detTotal)||0);
+  var devPass  = _hasDetList ? (r.detectors||[]).filter(function(d){return d.result==='PASS';}).length : (parseInt(r.detPass)||0);
+  var devFail  = _hasDetList ? (r.detectors||[]).filter(function(d){return d.result==='FAIL';}).length : (parseInt(r.detFail)||0);
+  var devTested= _hasDetList ? (devPass + devFail)                                                   : (parseInt(r.detTested)||(devPass+devFail));
 
   // ── Outcome ───────────────────────────────────────────────────────────────
   var sat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
