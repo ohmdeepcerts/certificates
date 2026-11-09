@@ -1,8 +1,9 @@
 {
-  "v": "2.1.23",
-  "build": 122,
-  "new": 2,
+  "v": "2.1.24",
+  "build": 123,
+  "new": 1,
   "changes": [
+    "Fixed: Device summary bar no longer appears on the fire certificate PDF when no devices were recorded — it is now hidden when the device section was left blank.",
     "Fixed: App update popup now matches the app theme — it was always showing in dark mode even when the app was set to light.",
     "Fixed: App update popup now shows only what changed in the latest update — it was incorrectly listing every update since the beginning.",
     "Fixed: Company logo on fire certificates is now larger and clearer — NICEIC logo is also larger so it no longer appears blurred, and the company name is bigger to fill the header properly.",
