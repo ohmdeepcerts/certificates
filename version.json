@@ -1,7 +1,8 @@
 {
-  "v": "2.1.21",
-  "build": 120,
+  "v": "2.1.22",
+  "build": 121,
   "changes": [
+    "Fixed: Company logo on fire certificates is now larger and clearer — NICEIC logo is also larger so it no longer appears blurred, and the company name is bigger to fill the header properly.",
     "Fixed: Login page could become completely broken after an update — the app now always loads a fresh copy on startup so this cannot happen again.",
     "New: Calendar picker button added to both Test Date and Next Inspection Date — tap the calendar icon to pick a date without typing.",
     "Fixed: Step tabs now show a green tick only for steps you have actually visited — previously ticking forward by accident made earlier steps appear complete when they had not been filled in.",
