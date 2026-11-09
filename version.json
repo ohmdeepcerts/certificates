@@ -1,7 +1,10 @@
 {
-  "v": "2.1.22",
-  "build": 121,
+  "v": "2.1.23",
+  "build": 122,
+  "new": 2,
   "changes": [
+    "Fixed: App update popup now matches the app theme — it was always showing in dark mode even when the app was set to light.",
+    "Fixed: App update popup now shows only what changed in the latest update — it was incorrectly listing every update since the beginning.",
     "Fixed: Company logo on fire certificates is now larger and clearer — NICEIC logo is also larger so it no longer appears blurred, and the company name is bigger to fill the header properly.",
     "Fixed: Login page could become completely broken after an update — the app now always loads a fresh copy on startup so this cannot happen again.",
     "New: Calendar picker button added to both Test Date and Next Inspection Date — tap the calendar icon to pick a date without typing.",
