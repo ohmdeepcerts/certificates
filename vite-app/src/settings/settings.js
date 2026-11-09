@@ -153,6 +153,8 @@ export function loadSettingsUI() {
   document.getElementById('s-fire-co-name').value     = getSetting('fire_co_name', '');
   document.getElementById('s-fire-co-sub').value      = getSetting('fire_co_sub', '');
   document.getElementById('s-fire-engineer').value    = getSetting('fire_default_engineer', '');
+  document.getElementById('s-fire-engineer-qual').value = getSetting('fa_engineer_qual', '');
+  document.getElementById('s-fire-engineer-reg').value  = getSetting('fa_engineer_reg_no', '');
   document.getElementById('s-fire-niceic-no').value   = getSetting('fire_niceic_scheme_no', getSetting('el_enrol_no', ''));
   document.getElementById('s-fire-co-address').value  = getSetting('fire_co_address', '');
   document.getElementById('s-fire-co-postcode').value = getSetting('fire_co_postcode', '');
@@ -238,6 +240,8 @@ export async function saveSettings() {
     ['fire_co_name',      document.getElementById('s-fire-co-name').value],
     ['fire_co_sub',       document.getElementById('s-fire-co-sub').value],
     ['fire_default_engineer', document.getElementById('s-fire-engineer').value],
+    ['fa_engineer_qual',      document.getElementById('s-fire-engineer-qual').value],
+    ['fa_engineer_reg_no',    document.getElementById('s-fire-engineer-reg').value],
     ['fire_niceic_scheme_no', document.getElementById('s-fire-niceic-no').value],
     ['fire_co_address',   document.getElementById('s-fire-co-address').value],
     ['fire_co_postcode',  document.getElementById('s-fire-co-postcode').value],

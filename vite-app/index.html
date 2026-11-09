@@ -1170,6 +1170,8 @@
             <div class="field-group"><label>Company Name</label><input type="text" id="s-fire-co-name" placeholder="OHM Electrical Engineering Ltd"></div>
             <div class="field-group"><label>Sub-heading / Trading name</label><input type="text" id="s-fire-co-sub" placeholder="e.g. Fire Safety Division"></div>
             <div class="field-group"><label>Default Engineer Name</label><input type="text" id="s-fire-engineer" placeholder="Full name — autofills engineer box"></div>
+            <div class="field-group"><label>Engineer Qualification</label><input type="text" id="s-fire-engineer-qual" placeholder="e.g. FIA Level 3, BAFE SP203"></div>
+            <div class="field-group"><label>Engineer Reg. / Ref. No.</label><input type="text" id="s-fire-engineer-reg" placeholder="e.g. FIA membership no., BAFE ref."></div>
             <div class="field-group"><label>NICEIC / Scheme No.</label><input type="text" id="s-fire-niceic-no" placeholder="Scheme registration number"></div>
             <div class="field-group" style="grid-column:1/-1"><label>Address</label><textarea id="s-fire-co-address" placeholder="Street, Town, County" style="height:52px;resize:vertical"></textarea></div>
             <div class="field-group"><label>Postcode</label><input type="text" id="s-fire-co-postcode" placeholder="SW1A 1AA"></div>
@@ -1219,11 +1221,10 @@
           <div style="font-size:12px;color:var(--muted);margin-top:8px">Fire certs will be: <strong id="fire-ref-eg" style="color:var(--text);font-family:monospace">FA10012636 / 5 EXAMPLE RD</strong></div>
         </div>
         <div class="form-section">
-          <div class="form-section-title">Upcoming Feature — Service History</div>
-          <div style="background:rgba(168,132,44,.08);border:1px solid rgba(168,132,44,.35);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--text);line-height:1.7">
-            <strong style="color:#a8842c">Coming soon:</strong> Fire alarm certificates will include a full service history table showing every previous inspection for that property — date, visit type, outcome, and engineer name.<br><br>
-            How it will work: each time you save a new fire alarm certificate for a property, the record is automatically added to a running history log. When you open the next certificate for the same address, the history table is fetched and printed on the certificate so the client can see the full service record at a glance.<br><br>
-            <span style="font-size:12px;color:var(--muted)">No action needed now — this will be enabled in a future update. All certificates you create today will automatically appear in the history once the feature is live.</span>
+          <div class="form-section-title">Service History</div>
+          <div style="background:rgba(22,101,52,.08);border:1px solid rgba(22,101,52,.35);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--text);line-height:1.7">
+            <strong style="color:#166534">&#10003; Active:</strong> Fire alarm certificates automatically include a service history table on Page 3 showing every previous inspection for the same property — date, cert type, outcome, and reference number.<br><br>
+            Each time you save a fire alarm certificate, the record is added to the running history. When you open or download any certificate for that address, the history is fetched from the database and printed on the cert so the client can see the full service record at a glance.
           </div>
         </div>
       </div>

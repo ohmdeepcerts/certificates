@@ -1,7 +1,8 @@
 {
   "v": "2.1.6",
-  "build": 104,
+  "build": 105,
   "changes": [
+    "New: Engineer qualification and registration number fields added to Fire Alarm Settings — these now print on the declaration block of every fire certificate.",
     "Fixed: Fire certificate labels incorrectly showed 'Annex G' on domestic FA.1 and FA.2 forms — now correctly labelled Installation Certificate and Inspection & Service Certificate.",
     "Fixed: BS 5839-1 version number corrected on all commercial fire certificates.",
     "Fixed: Fire certificate checklist headings referenced wrong annex numbers — now show correct clause references.",
