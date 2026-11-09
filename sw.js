@@ -1,4 +1,4 @@
-const CACHE = 'ohm-certs-v105';
+const CACHE = 'ohm-certs-v106';
 const SHELL = ['/certificates/', '/certificates/index.html'];
 
 self.addEventListener('install', e => {
@@ -14,11 +14,14 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Navigation — always serve shell
+  // Navigation — network first so index.html is always fresh; cache only as offline fallback
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      caches.match('/certificates/index.html')
-        .then(c => c || fetch(e.request))
+      fetch('/certificates/index.html')
+        .then(response => {
+          if (response.ok) caches.open(CACHE).then(c => c.put('/certificates/index.html', response.clone()));
+          return response;
+        })
         .catch(() => caches.match('/certificates/index.html'))
     );
     return;
