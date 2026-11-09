@@ -1,7 +1,11 @@
 {
-  "v": "2.1.17",
-  "build": 116,
+  "v": "2.1.18",
+  "build": 117,
   "changes": [
+    "Fixed: Failed device count on the Detectors step can now be typed manually — it was locked and could not be changed.",
+    "New: Test date and next inspection date moved to the first step (Type) so you can set both before filling in any details — includes 6 months and 12 months quick-pick buttons.",
+    "Fixed: You can now tap any step tab at the top to jump directly to that step — previously you could only go back to steps you had already visited.",
+    "Fixed: App update popup no longer auto-reloads — it now shows Update Now and Update Later buttons so you can choose when to reload.",
     "New: Limitations of inspection field added to the Testing step — note anything you couldn't access or inspect (e.g. concealed cables, locked areas). Prints on the certificate under Test Results.",
     "Fixed: Selecting 'Not interlinked' on the System Details step now automatically marks the Interlinked test as N/A on the Testing step — no need to set it manually.",
     "Fixed: Fire certificate live preview no longer jumps or scrolls when you tap a chip — it now stays exactly where you left it.",
