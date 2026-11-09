@@ -342,6 +342,7 @@ export function fireRenderStep() {
 
   // ── Step 5: Testing results ───────────────────────────────────────────────
   } else if (s === 5) {
+    if (_w.sysInterlinkMethod === 'Not interlinked' && !_w.tInterlinked) _w.tInterlinked = 'N/A';
     html += `<h2 class="wiz-title">Testing Results</h2>`;
     html += `<div class="wiz-field"><label>Test Date</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireAdjTestDate(-1)" title="Previous day"><i class="fa-solid fa-chevron-left"></i> Prev</button><button class="chip${_w.testDate===todayStr()?' on':''}" onclick="fireAdjTestDate(0)">Today</button><button class="chip" onclick="fireAdjTestDate(1)" title="Next day">Next <i class="fa-solid fa-chevron-right"></i></button><input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:120px"></div></div>`;
     if (!_isComm()) {
@@ -697,6 +698,10 @@ function _testRow(label, key, options) {
 export function firePick(key, val) {
   _w[key] = val;
   if (key === 'defectsOverall' && !(_w.defectsNotes||'').trim()) _w.defectsNotes = val;
+  if (key === 'sysInterlinkMethod') {
+    if (val === 'Not interlinked') { if (!_w.tInterlinked) _w.tInterlinked = 'N/A'; }
+    else if (_w.tInterlinked === 'N/A') { _w.tInterlinked = ''; }
+  }
   fireRenderStep();
 }
 export function fireSet(key, val)  { _w[key] = val; _schedulePreview(); }
