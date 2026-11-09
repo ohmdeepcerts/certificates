@@ -1,8 +1,13 @@
 {
-  "v": "2.1.24",
-  "build": 123,
-  "new": 1,
+  "v": "2.1.25",
+  "build": 124,
+  "new": 5,
   "changes": [
+    "Fixed: Engineer name and company name on fire certificates now auto-fill correctly from your settings — they were reading from the wrong settings keys and showing blank.",
+    "New: Fire certificate Testing step now opens with all tests pre-selected to PASS — change only the ones that failed or are not applicable.",
+    "New: Inspection checks also open pre-set to PASS, with Cables and wiring defaulting to N/A. Tests that don't apply auto-set to N/A based on your system settings (not interlinked, CO alarms absent, mains-only power).",
+    "New: Limitations of inspection field now saves what you type and shows suggestions when you start typing — works like the address picker.",
+    "New: N/A now shows as a grey pill in the PDF certificate tables, matching the green Pass and red Fail pill style.",
     "Fixed: Device summary bar no longer appears on the fire certificate PDF when no devices were recorded — it is now hidden when the device section was left blank.",
     "Fixed: App update popup now matches the app theme — it was always showing in dark mode even when the app was set to light.",
     "Fixed: App update popup now shows only what changed in the latest update — it was incorrectly listing every update since the beginning.",
