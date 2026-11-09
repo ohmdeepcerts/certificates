@@ -1,7 +1,8 @@
 {
-  "v": "2.1.14",
-  "build": 113,
+  "v": "2.1.15",
+  "build": 114,
   "changes": [
+    "Fixed: Fire certificate live preview no longer jumps or scrolls when you tap a chip — it now stays exactly where you left it.",
     "Fixed: When a new app update is available, a full popup now appears showing exactly what changed in plain language — the app reloads itself automatically after 5 seconds.",
     "New: Fire certificate Detectors step now shows a Total / Passed / Failed / Tested summary at the top — enter counts directly without adding individual device records. Failed is auto-calculated.",
     "Fixed: Fire certificates no longer require you to add at least one device — you can skip the device list entirely and the device table is hidden from the PDF if nothing is recorded.",

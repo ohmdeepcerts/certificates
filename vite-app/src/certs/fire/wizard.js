@@ -635,10 +635,19 @@ function _updateLivePreview() {
   var iframe = document.getElementById('fire-live-preview');
   if (!iframe) return;
   try {
+    var scrollY = 0;
+    try { scrollY = iframe.contentWindow.scrollY || 0; } catch(e) {}
     var html = fireBuildCertHTML(Object.assign({}, _w));
     iframe.contentDocument.open();
     iframe.contentDocument.write(html);
     iframe.contentDocument.close();
+    if (scrollY > 0) {
+      try {
+        iframe.contentWindow.requestAnimationFrame(function() {
+          iframe.contentWindow.scrollTo(0, scrollY);
+        });
+      } catch(e) {}
+    }
   } catch(e) {}
 }
 
