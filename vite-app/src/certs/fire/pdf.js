@@ -8,8 +8,8 @@ function _field(label, val) {
 export function fireBuildCertHTML(r, siteHistory) {
   var isComm = r.certType === 'FA.3' || r.certType === 'FA.4';
 
-  var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection &amp; Service Certificate', 'FA.3':'Form FA.3', 'FA.4':'Form FA.4' }[r.certType] || 'Fire Alarm Certificate';
-  var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Alarm Service / Verification Certificate' }[r.certType] || 'Fire Alarm Certificate';
+  var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection &amp; Service Certificate', 'FA.3':'Form FA.3 · Installation / Commissioning Certificate', 'FA.4':'Form FA.4 · Inspection &amp; Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
+  var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Detection & Alarm System Inspection and Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
   var stdLabel   = isComm ? 'BS 5839-1:2017+A2:2024 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
 
   var company     = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
@@ -61,7 +61,7 @@ export function fireBuildCertHTML(r, siteHistory) {
   // ── Outcome ───────────────────────────────────────────────────────────────
   var sat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
   var attn   = (r.outcome||'').toUpperCase() === 'REQUIRES ATTENTION';
-  var satText = {'FA.1':'Installation &amp; commissioning complete','FA.2':'Annual service and inspection complete','FA.3':'Installation, commissioning &amp; testing complete','FA.4':'Periodic service and verification complete'}[r.certType] || 'Annual service complete';
+  var satText = {'FA.1':'Installation &amp; commissioning complete','FA.2':'Annual service and inspection complete','FA.3':'Installation, commissioning &amp; testing complete','FA.4':'Inspection and servicing complete'}[r.certType] || 'Annual service complete';
   var obBg   = sat ? '#1a6b40' : (attn ? '#a16207' : '#7a1010');
   var obText = sat
     ? '&#10003; &nbsp; SATISFACTORY &mdash; ' + satText

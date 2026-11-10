@@ -1,8 +1,9 @@
 {
-  "v": "2.1.33",
-  "build": 132,
+  "v": "2.1.34",
+  "build": 133,
   "new": 1,
   "changes": [
+    "Fixed: FA.4 commercial fire certificate is now correctly titled 'Fire Detection & Alarm System Inspection and Servicing Report' — matches BS 5839-1 industry standard wording.",
     "Fixed: Date bar on fire certificates is slightly lighter — easier to read against the dark background.",
     "Fixed: Opening an existing gas certificate in wizard mode no longer wipes out the address and all other fields — the data now loads correctly from the saved certificate.",
     "New: Gas certificate wizard now shows all steps as tabs at the top — tap any completed step to jump back to it, and see exactly where you are at a glance.",

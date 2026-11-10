@@ -23,7 +23,7 @@ const CERT_TYPES = [
   { id:'FA.1', label:'FA.1 — Installation Certificate', sub:'New domestic fire alarm installation — BS 5839-6 (Grade D)', domestic:true },
   { id:'FA.2', label:'FA.2 — Inspection & Service Certificate', sub:'Annual domestic inspection and service — BS 5839-6 (Grade D)', domestic:true },
   { id:'FA.3', label:'FA.3 — Installation/Commissioning Certificate', sub:'Commercial fire alarm installation — BS 5839-1 (Grade A)', domestic:false },
-  { id:'FA.4', label:'FA.4 — Service/Verification Certificate', sub:'Commercial periodic inspection and service — BS 5839-1 (Grade A)', domestic:false },
+  { id:'FA.4', label:'FA.4 — Inspection & Servicing Report', sub:'Commercial fire detection & alarm system — BS 5839-1 (Grade A)', domestic:false },
 ];
 
 const PREMISES_TYPES = ['House','Flat / Apartment','HMO','Bedsit','Bungalow','Commercial Office','Retail / Shop','Care Home','School / College','Warehouse','Hotel','Restaurant / Café','Other'];
