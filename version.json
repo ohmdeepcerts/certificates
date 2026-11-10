@@ -1,8 +1,9 @@
 {
-  "v": "2.1.39",
-  "build": 138,
+  "v": "2.1.40",
+  "build": 139,
   "new": 1,
   "changes": [
+    "Fixed: Fire certificate Declaration page no longer shows the same 'No defects found' message twice — the second box only appears when actual defects are listed.",
     "Fixed: Pass / Fail / N/A result pills on fire certificates now line up consistently on the right side of every table — previously the result column floated in the middle on some tables.",
     "Fixed: Company name on fire certificates has a cleaner, more professional style — refined weight and size with a red underline accent that matches the certificate colour scheme.",
     "Fixed: Company logo on fire certificates is larger — increased from 64px to 90px so it is easy to read and clearly visible at the top of the certificate.",
