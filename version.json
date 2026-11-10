@@ -1,8 +1,9 @@
 {
-  "v": "2.1.40",
-  "build": 139,
+  "v": "2.1.41",
+  "build": 140,
   "new": 1,
   "changes": [
+    "Fixed: Fire certificates now print correctly on the right number of A4 pages — tables and sections that cross a page boundary now move to the next page instead of splitting mid-row. System Details moved to the Declaration page to reduce content on page 2.",
     "Fixed: Fire certificate Declaration page no longer shows the same 'No defects found' message twice — the second box only appears when actual defects are listed.",
     "Fixed: Pass / Fail / N/A result pills on fire certificates now line up consistently on the right side of every table — previously the result column floated in the middle on some tables.",
     "Fixed: Company name on fire certificates has a cleaner, more professional style — refined weight and size with a red underline accent that matches the certificate colour scheme.",
