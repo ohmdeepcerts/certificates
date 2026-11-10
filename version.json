@@ -1,8 +1,9 @@
 {
-  "v": "2.1.30",
-  "build": 129,
+  "v": "2.1.31",
+  "build": 130,
   "new": 1,
   "changes": [
+    "New: Gas certificate wizard now shows all steps as tabs at the top — tap any completed step to jump back to it, and see exactly where you are at a glance.",
     "Fixed: Edit and Delete buttons on Gas CP12 certificates in the history panel were broken and did nothing when clicked — they now work correctly.",
     "Fixed: NICEIC scheme number now appears as its own row in the declaration block on fire certificates — it was only shown in small text below the signature and not as a proper field.",
     "New: Fire certificate Testing step now opens with all tests pre-selected to PASS — change only the ones that failed or are not applicable.",

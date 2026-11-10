@@ -508,13 +508,22 @@ export function gwInitState() {
 
 export function gwRender() {
   var body = document.getElementById('gw-body'); if (!body) return;
+  if (_gw.step == null || isNaN(_gw.step)) _gw.step = 0;
   var s = _gw.step, total = _GW_STEPS.length;
   function esc(v) { return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  var pct = Math.round(s / (total - 1) * 100);
-  var html = '<div style="padding:20px 20px 0">'
-    + '<div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:8px">'
-    + '<div style="height:4px;border-radius:2px;background:var(--accent,#b91c1c);width:' + pct + '%;transition:width .3s"></div></div>'
-    + '<div style="font-size:11px;color:var(--muted);margin-bottom:18px">Step ' + (s + 1) + ' of ' + total + ' — ' + _GW_STEPS[s] + '</div>';
+  var tabsHtml = '<div style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px">';
+  _GW_STEPS.forEach(function(name, i) {
+    var isCur = i === s, isDone = i < s;
+    var bg = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'var(--surface2)' : 'var(--surface2)');
+    var col = isCur ? '#fff' : (isDone ? 'var(--accent,#b91c1c)' : 'var(--muted)');
+    var bord = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'var(--accent,#b91c1c)' : 'var(--border)');
+    var click = isDone ? 'onclick="_gw.step=' + i + ';gwRender()" style="cursor:pointer;' : 'style="cursor:default;';
+    tabsHtml += '<div ' + click + 'display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:' + bg + ';color:' + col + ';border:1px solid ' + bord + ';font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0">'
+      + (isDone ? '<span style="font-size:10px">&#10003;</span> ' : '<span style="opacity:.6">' + (i + 1) + '.</span> ')
+      + name + '</div>';
+  });
+  tabsHtml += '</div>';
+  var html = '<div style="padding:20px 20px 0">' + tabsHtml;
   if (s === 0) {
     var _cdP0 = _gwParseDate(_gw.certDate);
     _gwCalState['gw-cert-date'] = { cy: _cdP0 ? _cdP0.y : new Date().getFullYear(), cm0: _cdP0 ? _cdP0.m0 : new Date().getMonth(), showYear: false, ypStart: (_cdP0 ? _cdP0.y : new Date().getFullYear()) - 7 };
