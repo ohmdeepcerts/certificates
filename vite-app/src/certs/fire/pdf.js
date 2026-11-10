@@ -42,7 +42,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     : '<div class="ch-logo">'+_esc((company.match(/\b\w/g)||[]).slice(0,3).join('').toUpperCase())+'</div>';
 
   var bodyBadge = niceicLogoData
-    ? '<div class="niceic-badge" style="padding:6px 10px"><img src="'+niceicLogoData+'" style="max-height:68px;max-width:140px;object-fit:contain;image-rendering:crisp-edges"></div>'
+    ? '<div class="niceic-badge" style="padding:8px 12px"><img src="'+niceicLogoData+'" style="max-height:88px;max-width:110px;object-fit:contain;image-rendering:crisp-edges"></div>'
     : (niceicNo
         ? '<div class="niceic-badge"><div class="nb-title">NICEIC Approved Contractor</div><div class="nb-sub">Enrolment No. '+_esc(niceicNo)+'</div></div>'
         : '');
