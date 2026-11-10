@@ -142,33 +142,30 @@ async function init() {
 
     function _showUpdateModal(vData) {
       if (document.getElementById('sw-upd-modal')) return;
-      const changes = vData?.changes || [];
+      const allChanges = vData?.changes || [];
+      const newCount = vData?.new || Math.min(3, allChanges.length);
+      const changes = allChanges.slice(0, newCount);
       const version = vData?.v ? ' v' + vData.v : '';
       const changesHtml = changes.length
-        ? '<ul style="margin:14px 0 0;padding-left:18px;text-align:left;max-height:260px;overflow-y:auto">'
-          + changes.map(c => '<li style="margin-bottom:6px;font-size:13px;line-height:1.5;color:#e2e8f0">' + c + '</li>').join('')
+        ? '<ul style="margin:14px 0 0;padding:0 0 0 18px;text-align:left;max-height:200px;overflow-y:auto">'
+          + changes.map(c => '<li style="margin-bottom:6px;font-size:13px;line-height:1.5;color:var(--text)">' + c + '</li>').join('')
           + '</ul>'
         : '';
       const overlay = document.createElement('div');
       overlay.id = 'sw-upd-modal';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
       overlay.innerHTML =
-        '<div style="background:#1e293b;color:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.85);text-align:center">'
-        + '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:30px;color:#60a5fa;display:block;margin-bottom:12px"></i>'
+        '<div style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.35);text-align:center">'
+        + '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:30px;color:var(--accent);display:block;margin-bottom:12px"></i>'
         + '<div style="font-size:18px;font-weight:700;margin-bottom:6px">App Updated' + version + '</div>'
-        + '<div style="font-size:13px;color:#94a3b8">Here\'s what\'s new in this update</div>'
+        + '<div style="font-size:13px;color:var(--muted)">Here\'s what\'s new in this update</div>'
         + changesHtml
-        + '<div id="sw-upd-cnt" style="font-size:12px;color:#94a3b8;margin-top:16px">Reloading in <strong style="color:#60a5fa">5</strong></div>'
-        + '<button onclick="clearInterval(window._swTick);window.location.reload()" style="margin-top:12px;background:#3b82f6;border:none;color:#fff;padding:11px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;width:100%">Reload Now</button>'
+        + '<div style="display:flex;gap:8px;margin-top:18px">'
+        + '<button onclick="document.getElementById(\'sw-upd-modal\').remove()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:11px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Update Later</button>'
+        + '<button onclick="window.location.reload()" style="flex:2;background:var(--accent);border:none;color:#fff;padding:11px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700">Update Now</button>'
+        + '</div>'
         + '</div>';
       document.body.appendChild(overlay);
-      let n = 5;
-      window._swTick = setInterval(() => {
-        n--;
-        const el = document.getElementById('sw-upd-cnt');
-        if (el) el.innerHTML = n > 0 ? 'Reloading in <strong style="color:#60a5fa">' + n + '</strong>' : 'Reloading…';
-        if (n <= 0) { clearInterval(window._swTick); window.location.reload(); }
-      }, 1000);
     }
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {

@@ -61,6 +61,11 @@ function todayStr() {
   return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
 }
 
+function _toIso(ddmmyyyy) {
+  var p = (ddmmyyyy||'').split('/');
+  return p.length === 3 && p[2].length === 4 ? p[2]+'-'+p[1]+'-'+p[0] : '';
+}
+
 function _addMonths(dateStr, months) {
   var p = (dateStr||'').split('/');
   if (p.length !== 3) return '';
@@ -103,7 +108,7 @@ export function startNewFire() {
     detectors: [],
     detTotal: '', detPass: '', detFail: '', detTested: '',
     // testing — domestic
-    tFunctional: '', tInterlinked: '', tBattery: '', tCO: '',
+    tFunctional: 'PASS', tInterlinked: 'PASS', tBattery: 'PASS', tCO: 'PASS',
     // testing — commercial
     tMains: '', tBatDuration: '', tBatResult: '', tSounder: '', tVisual: '', tZoneIso: '', tFaultSim: '', tKeySwitch: '',
     tMainsVolts: '', tBatVolts: '', tSounderDb: '',
@@ -114,11 +119,11 @@ export function startNewFire() {
     outcome: '', nextInspDate: '', worksCarried: '', sysOperational: '', satJustification: '',
     _clientAddrPrefilled: false,
     // engineer
-    engineerName: getSetting('fa_engineer', getSetting('default_engineer','')),
+    engineerName: getSetting('fire_default_engineer', getSetting('fa_engineer', getSetting('default_engineer',''))),
     engineerQual: getSetting('fa_engineer_qual', ''),
     engineerRegNo: getSetting('fa_engineer_reg_no', ''),
     enggSigData: getSetting('fire_engg_sig_data','') || getSetting('el_sig_data',''),
-    companyName: getSetting('company_name', 'OHM Electrical Engineering Ltd'),
+    companyName: getSetting('fire_co_name', getSetting('company_name', 'OHM Electrical Engineering Ltd')),
     // tenant acknowledgment
     tenantName: '', tenantAckDate: '',
     // testing extras
@@ -132,7 +137,7 @@ export function startNewFire() {
     falseAlarms12m: '',
     falseAlarmAction: '',
     designRef: '',
-    annexGChecks: {}, annexFa2Checks: {},
+    annexGChecks: {}, annexFa2Checks: {s01:'PASS',s02:'PASS',s03:'PASS',s04:'PASS',s05:'PASS',s06:'PASS',s07:'PASS',s08:'N/A',s09:'PASS',s10:'PASS'},
     changeOfOrg: '',
     prevOrgName: '',
     prevOrgContact: '',
@@ -140,7 +145,8 @@ export function startNewFire() {
     handoverCondition: '',
     handoverNotes: '',
     testDate: todayStr(),
-    ref: '', baseRef: ''
+    ref: '', baseRef: '',
+    _visited: {}
   };
   navigate('fire-new');
 }
@@ -169,12 +175,15 @@ export function fireUpdateSubtitle() {
 export function fireRenderStep() {
   var el = document.getElementById('fire-wizard-body'); if (!el) return;
   var s = _w.step;
+  if (!_w._visited) _w._visited = {};
+  _w._visited[s] = true;
   var tabsEl = document.getElementById('fire-step-tabs');
   var pbarEl = document.getElementById('fire-pbar-fill');
   if (tabsEl) {
     tabsEl.innerHTML = STEP_LABELS.map((lbl,i) => {
-      var cls = i === s ? 'active' : i < s ? 'done' : '';
-      return `<button class="wiz-step-tab ${cls}" onclick="fireJumpStep(${i})" title="${lbl}"><span class="tab-num">${i < s ? '&#10003;' : i+1}</span><span class="tab-lbl">&nbsp;${lbl}</span></button>`;
+      var visited = !!_w._visited[i];
+      var cls = i === s ? 'active' : visited ? 'done' : '';
+      return `<button class="wiz-step-tab ${cls}" onclick="fireJumpStep(${i})" title="${lbl}"><span class="tab-num">${visited && i !== s ? '&#10003;' : i+1}</span><span class="tab-lbl">&nbsp;${lbl}</span></button>`;
     }).join('');
   }
   if (pbarEl) pbarEl.style.width = Math.round(s / (STEPS.length - 1) * 100) + '%';
@@ -198,6 +207,15 @@ export function fireRenderStep() {
       html += `<div class="wiz-card${_w.certType===ct.id?' sel':''}" onclick="firePick('certType','${ct.id}')"><strong>${esc(ct.label)}</strong><span>${esc(ct.sub)}</span></div>`;
     });
     html += `</div>`;
+    if (_w.certType) {
+      html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">`;
+      html += `<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px"><i class="fa-solid fa-calendar-days" style="margin-right:5px"></i>Certificate Dates</div>`;
+      var _calBtn = (key) => `<label style="position:relative;cursor:pointer;display:inline-flex;flex-shrink:0"><span class="chip" style="pointer-events:none"><i class="fa-solid fa-calendar-days"></i></span><input type="date" value="${esc(_toIso(_w[key]))}" onchange="fireFromDateInput('${key}',this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%"></label>`;
+      html += `<div class="wiz-field"><label>Test / Visit Date</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireAdjTestDate(-1)"><i class="fa-solid fa-chevron-left"></i> Prev</button><button class="chip${_w.testDate===todayStr()?' on':''}" onclick="fireAdjTestDate(0)">Today</button><button class="chip" onclick="fireAdjTestDate(1)">Next <i class="fa-solid fa-chevron-right"></i></button>${_calBtn('testDate')}<input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:120px"></div></div>`;
+      var _nextLbl0 = _w.certType === 'FA.1' ? 'Next service due <span class="lbl-opt">(optional)</span>' : 'Next inspection due';
+      html += `<div class="wiz-field"><label>${_nextLbl0}</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip${_w.nextInspDate===_addMonths(_w.testDate,6)?' on':''}" onclick="fireSetNextInsp(6)">6 months</button><button class="chip${_w.nextInspDate===_addMonths(_w.testDate,12)?' on':''}" onclick="fireSetNextInsp(12)">12 months</button>${_calBtn('nextInspDate')}<input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
+      html += `</div>`;
+    }
     html += `<div class="wiz-nav"><button onclick="fireNext()" class="btn-primary" ${!_w.certType?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 1: Premises ──────────────────────────────────────────────────────
@@ -327,7 +345,8 @@ export function fireRenderStep() {
     html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px;background:var(--surface2);border-radius:8px;padding:12px">`;
     html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em">Total</label><input type="number" min="0" value="${esc(_sTotal)}"${_rdonly} oninput="fireSet('detTotal',this.value);fireDetCalc()" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;max-width:100%"></div>`;
     html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#15803d">Passed</label><input type="number" min="0" value="${esc(_sPass)}"${_rdonly} oninput="fireSet('detPass',this.value);fireDetCalc()" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;color:#15803d;max-width:100%"></div>`;
-    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#dc2626">Failed</label><input type="number" min="0" value="${esc(_sFail)}" readonly style="text-align:center;font-size:18px;font-weight:700;padding:6px;color:#dc2626;background:var(--surface2);max-width:100%"></div>`;
+    var _rdFailStyle = _hasDetList ? ';background:var(--surface2)' : '';
+    html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#dc2626">Failed</label><input type="number" min="0" value="${esc(_sFail)}"${_hasDetList?' readonly':''} oninput="fireSet('detFail',this.value)" style="text-align:center;font-size:18px;font-weight:700;padding:6px;color:#dc2626${_rdFailStyle};max-width:100%"></div>`;
     html += `<div class="wiz-field" style="margin:0"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.04em">Tested</label><input type="number" min="0" value="${esc(_sTested)}"${_rdonly} oninput="fireSet('detTested',this.value)" placeholder="0" style="text-align:center;font-size:18px;font-weight:700;padding:6px;max-width:100%"></div>`;
     html += `</div>`;
     if (_hasDetList) {
@@ -343,9 +362,11 @@ export function fireRenderStep() {
 
   // ── Step 5: Testing results ───────────────────────────────────────────────
   } else if (s === 5) {
-    if (_w.sysInterlinkMethod === 'Not interlinked' && !_w.tInterlinked) _w.tInterlinked = 'N/A';
+    if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
+    if (_w.sysInterlinkMethod === 'Not interlinked') { _w.tInterlinked = 'N/A'; _w.annexFa2Checks.s03 = 'N/A'; }
+    if (_w.coAlarmsPresent === 'No' || _w.coAlarmsPresent === 'N/A') _w.tCO = 'N/A';
+    if (_w.sysPowerSupply === 'Mains') { _w.tBattery = 'N/A'; _w.annexFa2Checks.s04 = 'N/A'; }
     html += `<h2 class="wiz-title">Testing Results</h2>`;
-    html += `<div class="wiz-field"><label>Test Date</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireAdjTestDate(-1)" title="Previous day"><i class="fa-solid fa-chevron-left"></i> Prev</button><button class="chip${_w.testDate===todayStr()?' on':''}" onclick="fireAdjTestDate(0)">Today</button><button class="chip" onclick="fireAdjTestDate(1)" title="Next day">Next <i class="fa-solid fa-chevron-right"></i></button><input value="${esc(_w.testDate)}" oninput="fireSet('testDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:120px"></div></div>`;
     if (!_isComm()) {
       // Domestic tests
       var _isDomPnlTest = /^[ABC]/.test(_w.sysGrade||'');
@@ -409,7 +430,7 @@ export function fireRenderStep() {
         });
       });
     }
-    html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('inspLimitations',this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea></div>`;
+    html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><div style="position:relative"><textarea rows="2" oninput="fireInspLimInput(this.value)" onblur="fireLimBlur(this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea><div id="fire-lim-sugg" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:100;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)"></div></div></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 6: Defects ───────────────────────────────────────────────────────
@@ -494,10 +515,6 @@ export function fireRenderStep() {
     ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="firePick('sysOperational','${v}')">${v}</button>`; });
     html += `</div></div>`;
     html += `<div class="wiz-field"><label>Works carried out <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('worksCarried',this.value)" placeholder="Brief description of work carried out during this visit…" style="width:100%">${esc(_w.worksCarried)}</textarea></div>`;
-    var nextMonths = _isComm() ? 6 : 12;
-    var autoNext = _addMonths(_w.testDate, nextMonths);
-    if (!_w.nextInspDate && autoNext) { _w.nextInspDate = autoNext; }
-    html += `<div class="wiz-field"><label>Next inspection due</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip" onclick="fireSetNextInsp(6)">6 months</button><button class="chip" onclick="fireSetNextInsp(12)">1 year</button><input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
     if (_w.certType === 'FA.2') {
       html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA2-2024-00123" style="max-width:220px"></div>`;
     }
@@ -699,14 +716,60 @@ function _testRow(label, key, options) {
 // ── Exported wizard actions (called from HTML onclick) ────────────────────────
 export function firePick(key, val) {
   _w[key] = val;
+  if (key === 'certType' && !_w.nextInspDate && _w.testDate) {
+    _w.nextInspDate = _addMonths(_w.testDate, (val === 'FA.3' || val === 'FA.4') ? 6 : 12);
+  }
   if (key === 'defectsOverall' && !(_w.defectsNotes||'').trim()) _w.defectsNotes = val;
   if (key === 'sysInterlinkMethod') {
-    if (val === 'Not interlinked') { if (!_w.tInterlinked) _w.tInterlinked = 'N/A'; }
-    else if (_w.tInterlinked === 'N/A') { _w.tInterlinked = ''; }
+    if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
+    if (val === 'Not interlinked') { _w.tInterlinked = 'N/A'; _w.annexFa2Checks.s03 = 'N/A'; }
+    else { if (_w.tInterlinked === 'N/A') _w.tInterlinked = 'PASS'; if (_w.annexFa2Checks.s03 === 'N/A') _w.annexFa2Checks.s03 = 'PASS'; }
+  }
+  if (key === 'coAlarmsPresent') {
+    if (val === 'No' || val === 'N/A') { _w.tCO = 'N/A'; }
+    else if (val === 'Yes') { if (_w.tCO === 'N/A') _w.tCO = 'PASS'; }
+  }
+  if (key === 'sysPowerSupply') {
+    if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
+    if (val === 'Mains') { _w.tBattery = 'N/A'; _w.annexFa2Checks.s04 = 'N/A'; }
+    else { if (_w.tBattery === 'N/A') _w.tBattery = 'PASS'; if (_w.annexFa2Checks.s04 === 'N/A') _w.annexFa2Checks.s04 = 'PASS'; }
   }
   fireRenderStep();
 }
 export function fireSet(key, val)  { _w[key] = val; _schedulePreview(); }
+
+var _limSugg = [];
+export function fireInspLimInput(val) {
+  _w.inspLimitations = val;
+  _fireDirty = true;
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem('fire_lim_history') || '[]'); } catch {}
+  _limSugg = val.length >= 2
+    ? hist.filter(function(h) { return h.toLowerCase().includes(val.toLowerCase()); }).slice(0, 8)
+    : [];
+  var ddEl = document.getElementById('fire-lim-sugg');
+  if (ddEl) {
+    if (_limSugg.length > 0) {
+      ddEl.innerHTML = _limSugg.map(function(s, i) {
+        return '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)" onmousedown="firePickLimitation(' + i + ')">' + esc(s) + '</div>';
+      }).join('');
+      ddEl.style.display = 'block';
+    } else {
+      ddEl.style.display = 'none';
+    }
+  }
+}
+export function firePickLimitation(idx) {
+  if (_limSugg[idx] !== undefined) { _w.inspLimitations = _limSugg[idx]; _fireDirty = true; fireRenderStep(); }
+}
+export function fireLimBlur(val) {
+  if (!val || !val.trim()) return;
+  try {
+    var hist = JSON.parse(localStorage.getItem('fire_lim_history') || '[]');
+    var trimmed = val.trim();
+    if (!hist.includes(trimmed)) { hist.unshift(trimmed); hist = hist.slice(0, 20); localStorage.setItem('fire_lim_history', JSON.stringify(hist)); }
+  } catch {}
+}
 export function fireSetAnnexG(id, val) {
   if (!_w.annexGChecks) _w.annexGChecks = {};
   _w.annexGChecks[id] = (_w.annexGChecks[id] === val) ? '' : val;
@@ -719,7 +782,7 @@ export function fireLoadSig(evt) {
   reader.readAsDataURL(f);
 }
 export function fireJumpStep(i) {
-  if (i >= 0 && i < STEPS.length && i <= _w.step) { _w.step = i; fireRenderStep(); }
+  if (i >= 0 && i < STEPS.length) { _w.step = i; fireRenderStep(); }
 }
 
 export function fireDetCalc() {
@@ -1361,6 +1424,15 @@ export function fireClientAddrFocus() {
     fireRenderStep();
     setTimeout(function() { var el = document.getElementById('fa-caddr1'); if (el) el.focus(); }, 10);
   }
+}
+
+export function fireFromDateInput(key, isoVal) {
+  if (!isoVal) return;
+  var p = isoVal.split('-');
+  if (p.length !== 3) return;
+  _w[key] = p[2]+'/'+p[1]+'/'+p[0];
+  _fireDirty = true;
+  fireRenderStep();
 }
 
 export function fireAdjTestDate(delta) {

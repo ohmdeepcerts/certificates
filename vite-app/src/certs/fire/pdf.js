@@ -38,11 +38,11 @@ export function fireBuildCertHTML(r, siteHistory) {
 
   // ── Logo / NICEIC badge HTML ──────────────────────────────────────────────
   var elLogo = logoData
-    ? '<img src="'+logoData+'" style="max-height:40px;max-width:40px;object-fit:contain;border-radius:3px;border:1px solid var(--a)">'
+    ? '<img src="'+logoData+'" style="max-height:64px;max-width:64px;object-fit:contain;border-radius:4px;border:1px solid var(--a);flex-shrink:0">'
     : '<div class="ch-logo">'+_esc((company.match(/\b\w/g)||[]).slice(0,3).join('').toUpperCase())+'</div>';
 
   var bodyBadge = niceicLogoData
-    ? '<div class="niceic-badge" style="padding:4px 8px"><img src="'+niceicLogoData+'" style="max-height:52px;max-width:100px;object-fit:contain"></div>'
+    ? '<div class="niceic-badge" style="padding:6px 10px"><img src="'+niceicLogoData+'" style="max-height:68px;max-width:140px;object-fit:contain;image-rendering:crisp-edges"></div>'
     : (niceicNo
         ? '<div class="niceic-badge"><div class="nb-title">NICEIC Approved Contractor</div><div class="nb-sub">Enrolment No. '+_esc(niceicNo)+'</div></div>'
         : '');
@@ -78,7 +78,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     : '<th>#</th><th>Location</th><th>Device type</th>'+(hasDetModel?'<th>Make / Model</th>':'')+(hasSerialNo?'<th>Serial No.</th>':'')+'<th>Result</th><th>Battery</th>'+(hasBatExpiry?'<th>Battery expiry</th>':'');
 
   var detRows = (r.detectors||[]).map(function(d,i){
-    var rHtml = d.result==='PASS' ? '<span class="ppill">Pass</span>' : d.result==='FAIL' ? '<span class="fpill">Fail</span>' : _esc(d.result||'—');
+    var rHtml = d.result==='PASS' ? '<span class="ppill">Pass</span>' : d.result==='FAIL' ? '<span class="fpill">Fail</span>' : d.result==='N/A' ? '<span class="napill">N/A</span>' : _esc(d.result||'—');
     return isComm
       ? '<tr><td>'+(i+1)+'</td><td>'+_esc(d.location)+'</td><td>'+_esc(d.type)+'</td>'+(hasDetModel?'<td>'+_esc(d.model||'—')+'</td>':'')+(hasSerialNo?'<td class="num">'+_esc(d.serialNo||'—')+'</td>':'')+(hasZone?'<td>'+_esc(d.zone||'—')+'</td>':'')+'<td>'+rHtml+'</td></tr>'
       : '<tr><td>'+(i+1)+'</td><td>'+_esc(d.location)+'</td><td>'+_esc(d.type)+'</td>'+(hasDetModel?'<td>'+_esc(d.model||'—')+'</td>':'')+(hasSerialNo?'<td class="num">'+_esc(d.serialNo||'—')+'</td>':'')+'<td>'+rHtml+'</td><td>'+_esc(d.batReplaced||'—')+'</td>'+(hasBatExpiry?'<td>'+_esc(d.batExpiry||'—')+'</td>':'')+'</tr>';
@@ -87,7 +87,7 @@ export function fireBuildCertHTML(r, siteHistory) {
   // ── Test results ──────────────────────────────────────────────────────────
   function _tRow(label, val) {
     if (!val) return '';
-    var rHtml = val==='PASS' ? '<span class="ppill">Pass</span>' : val==='FAIL' ? '<span class="fpill">Fail</span>' : _esc(val);
+    var rHtml = val==='PASS' ? '<span class="ppill">Pass</span>' : val==='FAIL' ? '<span class="fpill">Fail</span>' : val==='N/A' ? '<span class="napill">N/A</span>' : _esc(val);
     return '<tr><td>'+_esc(label)+'</td><td>'+rHtml+'</td></tr>';
   }
   var testRows = '';
@@ -142,7 +142,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     ];
     var _checkRows = _checksMap.filter(function(c){return r.annexFa2Checks[c.id];}).map(function(c){
       var v = r.annexFa2Checks[c.id];
-      var rHtml = v==='PASS'?'<span class="ppill">Pass</span>':v==='FAIL'?'<span class="fpill">Fail</span>':_esc(v);
+      var rHtml = v==='PASS'?'<span class="ppill">Pass</span>':v==='FAIL'?'<span class="fpill">Fail</span>':v==='N/A'?'<span class="napill">N/A</span>':_esc(v);
       return '<tr><td>'+_esc(c.label)+'</td><td>'+rHtml+'</td></tr>';
     }).join('');
     if (_checkRows) {
@@ -335,10 +335,10 @@ export function fireBuildCertHTML(r, siteHistory) {
         +'</div>'
       +'</div>'
       +'<div class="addr-col">'
-        +'<div class="addr-col-label">Inspecting Engineer</div>'
+        +'<div class="addr-col-label">Issued By</div>'
         +'<div style="margin-bottom:6px">'
           +'<div class="addr-engineer-name">'+eng+'</div>'
-          +'<div class="addr-line">'+engPos+'</div>'
+          +'<div class="addr-line">'+(engPos?engPos+'<br>':'')+coName+'</div>'
         +'</div>'
         +(coTel?'<div class="addr-detail-row"><span class="addr-detail-lbl">Tel:</span><span class="addr-detail-val">'+coTel+'</span></div>':'')
         +(companyEmail?'<div class="addr-detail-row"><span class="addr-detail-lbl">Email:</span><span class="addr-detail-val">'+coEmail+'</span></div>':'')
@@ -366,15 +366,17 @@ export function fireBuildCertHTML(r, siteHistory) {
     // Body
     +'<div class="cb">'
       +'<div class="sec-head">System Summary</div>'
-      +'<div class="stats-bar">'
-        +'<div class="stat-cell"><span class="stat-num">'+devTotal+'</span><span class="stat-lbl">Devices</span></div>'
-        +'<div class="stat-cell"><span class="stat-num">'+devTested+'</span><span class="stat-lbl">Tested</span></div>'
-        +'<div class="stat-cell stat-pass"><span class="stat-num">'+devPass+'</span><span class="stat-lbl">Passed</span></div>'
-        +'<div class="stat-cell stat-fail"><span class="stat-num">'+devFail+'</span><span class="stat-lbl">Failed</span></div>'
-        +(isComm && r.falseAlarms12m !== '' && r.falseAlarms12m !== null && r.falseAlarms12m !== undefined
-          ? '<div class="stat-cell stat-warn"><span class="stat-num">'+_esc(String(r.falseAlarms12m))+'</span><span class="stat-lbl">False Alarms (12m)</span></div>'
-          : '')
-      +'</div>'
+      +(_hasDetList || devTotal > 0 || devTested > 0
+        ? '<div class="stats-bar">'
+          +'<div class="stat-cell"><span class="stat-num">'+devTotal+'</span><span class="stat-lbl">Devices</span></div>'
+          +'<div class="stat-cell"><span class="stat-num">'+devTested+'</span><span class="stat-lbl">Tested</span></div>'
+          +'<div class="stat-cell stat-pass"><span class="stat-num">'+devPass+'</span><span class="stat-lbl">Passed</span></div>'
+          +'<div class="stat-cell stat-fail"><span class="stat-num">'+devFail+'</span><span class="stat-lbl">Failed</span></div>'
+          +(isComm && r.falseAlarms12m !== '' && r.falseAlarms12m !== null && r.falseAlarms12m !== undefined
+            ? '<div class="stat-cell stat-warn"><span class="stat-num">'+_esc(String(r.falseAlarms12m))+'</span><span class="stat-lbl">False Alarms (12m)</span></div>'
+            : '')
+          +'</div>'
+        : '')
       +(p1Fields?'<div class="fg">'+p1Fields+'</div>':'')
       +noteBox
     +'</div>'
@@ -426,6 +428,7 @@ export function fireBuildCertHTML(r, siteHistory) {
               +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Post</div>'
               +'<div style="padding:7px 10px;flex:1">'+engPos+'</div>'
             +'</div>'
+            +(niceicNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">NICEIC No.</div><div style="padding:7px 10px;flex:1">'+_esc(niceicNo)+'</div></div>':'')
             +(engineerRegNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Reg. / Ref. No.</div><div style="padding:7px 10px;flex:1">'+_esc(engineerRegNo)+'</div></div>':'')
             +'<div style="display:flex">'
               +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Date</div>'
@@ -619,8 +622,8 @@ a{color:inherit;text-decoration:none}
 .ch{background:#fdfaf8;padding:9px 28px 0;flex-shrink:0}
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:9px;border-bottom:1.5px solid #e2d4d4}
 .ch-logo-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
-.ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
-.ch-company{font-size:20px;font-weight:900;color:#1c1010;letter-spacing:-.02em;line-height:1.1}
+.ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
+.ch-company{font-size:24px;font-weight:900;color:#1c1010;letter-spacing:-.02em;line-height:1.1}
 .ch-company-sub{font-size:9.5px;color:#666;margin-top:2px}
 .niceic-badge{border:1.5px solid #e08830;border-radius:4px;padding:7px 14px;background:#f8edcc;text-align:center;flex-shrink:0}
 .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a1010}
@@ -633,6 +636,7 @@ a{color:inherit;text-decoration:none}
 /* ── Address panel ── */
 .addr-panel{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid #e08830;flex-shrink:0}
 .addr-col{padding:12px 28px 14px}
+.addr-col-left{border-right:1px solid #e2d4d4}
 .addr-col-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e08830;padding-bottom:7px;border-bottom:1px solid rgba(0,0,0,.07);margin-bottom:9px}
 .addr-name{font-size:15px;font-weight:700;color:#1c1010;margin-bottom:3px;line-height:1.2}
 .addr-line{font-size:12px;color:#666;line-height:1.75}
@@ -691,6 +695,7 @@ a{color:inherit;text-decoration:none}
 .ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #166534;color:#166534;font-weight:600}
 .fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #7a1010;color:#7a1010;font-weight:600}
 .apill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #a16207;color:#a16207;font-weight:600}
+.napill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #9ca3af;color:#6b7280;font-weight:600}
 .num{font-variant-numeric:tabular-nums}
 
 /* ── Signature ── */
