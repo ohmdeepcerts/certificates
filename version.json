@@ -1,8 +1,9 @@
 {
-  "v": "2.1.36",
-  "build": 135,
+  "v": "2.1.37",
+  "build": 136,
   "new": 1,
   "changes": [
+    "Fixed: Company logo on fire certificates is larger — increased from 64px to 90px so it is easy to read and clearly visible at the top of the certificate.",
     "Fixed: NICEIC logo on fire certificates is larger and clearer — increased from 68px to 88px tall so it is easy to read when printed and submitted to authorities.",
     "Fixed: FA.4 commercial fire certificate is now correctly titled 'Fire Detection & Alarm System Inspection and Servicing Report' — matches BS 5839-1 industry standard wording.",
     "Fixed: Date bar on fire certificates is slightly lighter — easier to read against the dark background.",
