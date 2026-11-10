@@ -1,8 +1,9 @@
 {
-  "v": "2.1.26",
-  "build": 125,
-  "new": 1,
+  "v": "2.1.27",
+  "build": 126,
+  "new": 2,
   "changes": [
+    "Fixed: Dividing line now appears between the Property column and the Inspecting Engineer column in the fire certificate address panel — it was missing and the two sections ran together.",
     "Fixed: NICEIC scheme number now appears as its own row in the declaration block on fire certificates — it was only shown in small text below the signature and not as a proper field.",
     "New: Fire certificate Testing step now opens with all tests pre-selected to PASS — change only the ones that failed or are not applicable.",
     "New: Inspection checks also open pre-set to PASS, with Cables and wiring defaulting to N/A. Tests that don't apply auto-set to N/A based on your system settings (not interlinked, CO alarms absent, mains-only power).",
