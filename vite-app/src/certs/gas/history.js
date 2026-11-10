@@ -577,10 +577,10 @@ export function gasShowPreview(idx) {
   var addr = (r.install_address || '').replace(/</g, '&lt;');
   toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
     + ref + (addr ? ' &mdash; ' + addr : '') + '</span>'
-    + _ibtn('Download PDF', 'fa-download', 'openGasPDF("' + r.id + '")')
-    + _ibtn('Email', 'fa-envelope', 'emailCP12FromList("' + r.id + '")')
-    + (isAdm ? _ibtn('Edit', 'fa-pen', 'loadGasForm("' + r.id + '")') : '')
-    + (isAdm ? _ibtn('Delete', 'fa-trash', 'deleteGas("' + r.id + '")', true) : '');
+    + _ibtn('Download PDF', 'fa-download', "openGasPDF('" + r.id + "')")
+    + _ibtn('Email', 'fa-envelope', "emailCP12FromList('" + r.id + "')")
+    + (isAdm ? _ibtn('Edit', 'fa-pen', "loadGasForm('" + r.id + "')") : '')
+    + (isAdm ? _ibtn('Delete', 'fa-trash', "deleteGas('" + r.id + "')", true) : '');
   var html = _buildGasCertHTML(r);
   var blob = new Blob([html], {type: 'text/html'});
   if (ifr._blobUrl) URL.revokeObjectURL(ifr._blobUrl);
