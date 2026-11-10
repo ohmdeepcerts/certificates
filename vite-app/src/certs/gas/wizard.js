@@ -506,6 +506,52 @@ export function gwInitState() {
   };
 }
 
+export function gwInitStateFromRecord(r) {
+  var toUK = function(iso) {
+    if (!iso) return '';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(iso)) return iso;
+    var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : iso;
+  };
+  var iLines = (r.install_address || '').split('\n');
+  var laLines = (r.landlord_address || '').split('\n');
+  var landlordName = '', landlordA1 = '', landlordA2 = '', landlordA3 = '';
+  if (laLines.length > 1) {
+    landlordName = laLines[0] || '';
+    landlordA1   = laLines[1] || '';
+    landlordA2   = laLines[2] || '';
+    landlordA3   = laLines[3] || '';
+  } else {
+    landlordA1 = laLines[0] || '';
+  }
+  var apps = (r.appliances || []).filter(function(a) { return a.location || a.type; });
+  var gwApps = apps.map(function(a) {
+    return { location: a.location || '', type: a.type || '', make: a.make || '', model: a.model || '',
+      flueType: a.flue_type || 'RS', combustionReading: a.combustion || 'N/A',
+      coFitted: a.co_alarm_fitted || 'Yes', coInDate: a.co_alarm_in_date || 'Yes', coTest: a.co_alarm_test || 'Yes' };
+  });
+  if (!gwApps.length) gwApps = [{ location: '', type: '', make: '', model: '', flueType: 'RS', combustionReading: 'N/A', coFitted: 'Yes', coInDate: 'Yes', coTest: 'Yes' }];
+  var gwDefs = (r.defects || []).filter(function(d) { return d.description && d.description !== 'N/A'; })
+    .map(function(d) { return { text: d.description || '', warn: d.warning_type || 'N/A' }; });
+  _gw = {
+    step: 0,
+    certDate: toUK(r.cert_date) || '',
+    nextCheckDate: toUK(r.next_check_date) || '',
+    installAddr1: iLines[0] || '', installAddr2: iLines[1] || '', installAddr3: iLines[2] || '',
+    installPostcode: r.install_postcode || '',
+    landlordName: landlordName, landlordAddr1: landlordA1, landlordAddr2: landlordA2, landlordAddr3: landlordA3,
+    landlordPostcode: r.landlord_postcode || '',
+    recipientEmail: r.recipient_email || getSetting('gas_client_email_default', getSetting('el_client_email_default', '')),
+    engineerName: r.engineer || getSetting('gas_default_engineer', ''),
+    gasSafeNo: r.gas_safe_no || getSetting('gas_safe_no', ''),
+    licenceNo: r.engineer_licence_no || getSetting('gas_licence', ''),
+    appliances: gwApps,
+    defects: gwDefs,
+    workDetails: r.work_details || 'Annual gas safety inspection and landlord gas safety record (CP12) completed.',
+    remedialAction: r.remedial_action || 'N/A'
+  };
+}
+
 export function gwRender() {
   var body = document.getElementById('gw-body'); if (!body) return;
   if (_gw.step == null || isNaN(_gw.step)) _gw.step = 0;

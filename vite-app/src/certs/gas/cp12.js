@@ -11,7 +11,7 @@ import { buildCertRefSeq, _refSettings, _pcScore, _refAddrPart, _extractPC } fro
 import { navigate } from '../../nav/navigation.js';
 // Circular-safe: wizard.js imports { saveGas, completeGas, setCP12Field, toggleCP12AppRow } from here.
 // These imports are used only inside function bodies — never at module init time.
-import { gwRender, gwInitState, gwPreloadDir, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive } from './wizard.js';
+import { gwRender, gwInitState, gwInitStateFromRecord, gwPreloadDir, _gwUpdateTitle, mgwSyncToDesktopForm, mgwActive } from './wizard.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { doGasPreview, _applyCP12Zoom } from './preview.js';
 import { emailGas } from './history.js';
@@ -467,7 +467,7 @@ export async function loadGasForm(id) {
     else if (el.tagName !== 'INPUT' || !el.readOnly) el.value = '';
   });
   for (let n = 1; n <= 5; n++) { const c = document.getElementById(`cp12App${n}`); if (c && c.classList.contains('is-disabled')) toggleCP12AppRow(n); }
-  populateCP12Form(r); syncSettingsToCP12Form();
+  populateCP12Form(r); syncSettingsToCP12Form(); gwInitStateFromRecord(r);
   if (typeof loadCP12Logo === 'function') loadCP12Logo(); // signatures.js global during migration
   updateAddApplianceBtn();
   setTimeout(function () { if (typeof _attachGasFormAC === 'function') _attachGasFormAC(); }, 0);
