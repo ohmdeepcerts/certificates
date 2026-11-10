@@ -1,8 +1,9 @@
 {
-  "v": "2.1.32",
-  "build": 131,
+  "v": "2.1.33",
+  "build": 132,
   "new": 1,
   "changes": [
+    "Fixed: Date bar on fire certificates is slightly lighter — easier to read against the dark background.",
     "Fixed: Opening an existing gas certificate in wizard mode no longer wipes out the address and all other fields — the data now loads correctly from the saved certificate.",
     "New: Gas certificate wizard now shows all steps as tabs at the top — tap any completed step to jump back to it, and see exactly where you are at a glance.",
     "Fixed: Edit and Delete buttons on Gas CP12 certificates in the history panel were broken and did nothing when clicked — they now work correctly.",

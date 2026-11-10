@@ -614,7 +614,7 @@ a{color:inherit;text-decoration:none}
 .cert-top-strip{background:linear-gradient(90deg,#7a1010,#c01818 55%,#e08830);height:7px;flex-shrink:0}
 
 /* ── Ref bar ── */
-.ch-ref-bar{background:linear-gradient(90deg,#7a1010,#c01818);border-top:1px solid #e08830;padding:8px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.ch-ref-bar{background:linear-gradient(90deg,#891f1f,#cf2727);border-top:1px solid #e08830;padding:8px 28px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .ch-date{font-size:11.5px;color:rgba(255,255,255,.75)}
 .ch-ref{font-family:monospace;font-size:13px;font-weight:700;color:#f8edcc;letter-spacing:.05em}
 
