@@ -1,8 +1,9 @@
 {
   "v": "2.1.44",
-  "build": 144,
+  "build": 145,
   "new": 1,
   "changes": [
+    "Fixed: Emergency Lighting and Fire certificate headers now match — both company logos and NICEIC logos are the same 90px height, company name uses the same font style, and the full address including postcode now shows in the fire certificate header.",
     "Fixed: OHM and NICEIC logos on fire certificates are now the same height — both display at 90px so the header looks balanced.",
     "New: Fire certificates now show a Next Inspection Due banner on page 1 — displays the date in full (e.g. 10 November 2026) with the regulation reference (BS 5839-6 Clause 15 for domestic, BS 5839-1 Clause 25 for commercial).",
     "Fixed: Download PDF button on fire certificates now shows a 'Preparing PDF' message and opens the print dialog faster — the old version waited an unnecessary 600ms even when fonts were already loaded.",
