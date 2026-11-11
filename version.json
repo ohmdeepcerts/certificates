@@ -1,8 +1,9 @@
 {
   "v": "2.1.44",
-  "build": 146,
+  "build": 147,
   "new": 1,
   "changes": [
+    "Fixed: NICEIC logo on Fire and Emergency Lighting certificates no longer has a yellow box around it — the logo now sits cleanly on its own with no background or border.",
     "Fixed: Company and NICEIC logos on Fire and Emergency Lighting certificates are now 80px — slightly smaller than before for a cleaner header layout.",
     "Fixed: Emergency Lighting and Fire certificate headers now match — both company logos and NICEIC logos are the same 90px height, company name uses the same font style, and the full address including postcode now shows in the fire certificate header.",
     "Fixed: OHM and NICEIC logos on fire certificates are now the same height — both display at 90px so the header looks balanced.",
