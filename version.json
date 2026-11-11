@@ -1,6 +1,6 @@
 {
-  "v": "2.1.43",
-  "build": 142,
+  "v": "2.1.44",
+  "build": 143,
   "new": 1,
   "changes": [
     "New: Fire certificates now show a Next Inspection Due banner on page 1 — displays the date in full (e.g. 10 November 2026) with the regulation reference (BS 5839-6 Clause 15 for domestic, BS 5839-1 Clause 25 for commercial).",
