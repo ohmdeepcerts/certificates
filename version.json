@@ -1,8 +1,13 @@
 {
-  "v": "2.1.44",
-  "build": 147,
+  "v": "2.2.0",
+  "build": 148,
   "new": 1,
   "changes": [
+    "New: Fire alarm certificate now includes a full Schedule of Items Inspected — covers control equipment, power supply, detectors, warning devices, cables, and documentation. This is the section authorities require under BS 5839-6 Clause 15 (domestic) and BS 5839-1 Clause 43 (commercial).",
+    "New: Fire alarm certificate wizard now has a dedicated Schedule step — record Pass, Fail or N/A for each item before completing the certificate.",
+    "Fixed: Commercial fire alarm certificates now correctly reference BS 5839-1:2025 — the previous version showed an outdated standard number.",
+    "New: Fire certificate PDF now shows percentage of devices tested in the summary bar.",
+    "New: Works recommended field added to fire certificates — recommendations print on the System Details page.",
     "Fixed: NICEIC logo on Fire and Emergency Lighting certificates no longer has a yellow box around it — the logo now sits cleanly on its own with no background or border.",
     "Fixed: Company and NICEIC logos on Fire and Emergency Lighting certificates are now 80px — slightly smaller than before for a cleaner header layout.",
     "Fixed: Emergency Lighting and Fire certificate headers now match — both company logos and NICEIC logos are the same 90px height, company name uses the same font style, and the full address including postcode now shows in the fire certificate header.",
