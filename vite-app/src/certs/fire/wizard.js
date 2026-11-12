@@ -190,10 +190,13 @@ export function startNewFire() {
     // system — domestic
     sysGrade: '', sysCategory: '', sysMfr: '', sysModel: '',
     sysDomPanelMake: '', sysDomPanelModel: '', sysDomZones: '',
+    sysDomPanelSerial: '', sysDomPanelFirmware: '',
     sysInterlinkMethod: '', sysInterlinked: '', sysPowerSupply: '',
     // system — commercial extra
     sysPanelMake: '', sysPanelModel: '', sysCommType: '',
+    sysPanelSerial: '', sysPanelFirmware: '',
     sysZones: '', sysLoops: '', sysBafe: '', sysFia: '',
+    batType: '', batInstallDate: '', batNextReplacement: '',
     installDate: '', prevServiceDate: '',
     // detectors
     detectors: [],
@@ -377,6 +380,8 @@ export function fireRenderStep() {
       if (_isDomPnl) {
         html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysDomPanelMake||'')}" oninput="fireSet('sysDomPanelMake',this.value)" placeholder="e.g. Advanced, EMS, Morley"></div>`;
         html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysDomPanelModel||'')}" oninput="fireSet('sysDomPanelModel',this.value)" placeholder="e.g. MX-4100"></div>`;
+        html += `<div class="wiz-field"><label>Panel Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysDomPanelSerial||'')}" oninput="fireSet('sysDomPanelSerial',this.value)" placeholder="e.g. AB12345678"></div>`;
+        html += `<div class="wiz-field"><label>Firmware Version <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysDomPanelFirmware||'')}" oninput="fireSet('sysDomPanelFirmware',this.value)" placeholder="e.g. v2.3.1"></div>`;
         html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysDomZones||'')}" oninput="fireSet('sysDomZones',this.value)" style="max-width:100px" placeholder="e.g. 2"></div>`;
       } else {
         var _autoPs = _gradeDefaultPower(_w.sysGrade||'');
@@ -395,6 +400,12 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>Interlink Method</label><div class="chip-row">`;
       ['Wired','Radio (RF)','Not interlinked'].forEach(v => { html += `<button class="chip${_w.sysInterlinkMethod===v?' on':''}" onclick="firePick('sysInterlinkMethod','${esc(v)}')">${esc(v)}</button>`; });
       html += `</div></div>`;
+      if (_w.sysGrade && !_w.sysGrade.startsWith('E')) {
+        html += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Battery Details <span style="font-weight:400;text-transform:none">(optional)</span></div></div>`;
+        html += `<div class="wiz-field"><label>Battery Type</label><input value="${esc(_w.batType||'')}" oninput="fireSet('batType',this.value)" placeholder="e.g. 9V PP3, 12V Sealed Lead Acid, Lithium cell"></div>`;
+        html += `<div class="wiz-field"><label>Battery Installation Date</label><input value="${esc(_w.batInstallDate||'')}" oninput="fireSet('batInstallDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+        html += `<div class="wiz-field"><label>Next Replacement Due</label><input value="${esc(_w.batNextReplacement||'')}" oninput="fireSet('batNextReplacement',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      }
       if (_w.certType === 'FA.1') {
         html += `<div class="wiz-field"><label>Installation Date <span class="lbl-opt">(date system first fitted)</span></label><input value="${esc(_w.installDate||_w.testDate||todayStr())}" oninput="fireSet('installDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
         html += `<div class="wiz-field"><label>Design / scheme reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.designRef||'')}" oninput="fireSet('designRef',this.value)" placeholder="e.g. drawing ref, specification no." style="max-width:280px"></div>`;
@@ -411,10 +422,16 @@ export function fireRenderStep() {
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysPanelMake)}" oninput="fireSet('sysPanelMake',this.value)" placeholder="e.g. Advanced, Notifier, Gent"></div>`;
       html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysPanelModel)}" oninput="fireSet('sysPanelModel',this.value)" placeholder="e.g. MX-4200"></div>`;
+      html += `<div class="wiz-field"><label>Panel Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysPanelSerial||'')}" oninput="fireSet('sysPanelSerial',this.value)" placeholder="e.g. SN-2024-00001"></div>`;
+      html += `<div class="wiz-field"><label>Firmware Version <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysPanelFirmware||'')}" oninput="fireSet('sysPanelFirmware',this.value)" placeholder="e.g. v4.5.2"></div>`;
       html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysZones)}" oninput="fireSet('sysZones',this.value)" style="max-width:100px" placeholder="e.g. 4"></div>`;
       html += `<div class="wiz-field"><label>Number of Loops (addressable)</label><input type="number" min="0" value="${esc(_w.sysLoops)}" oninput="fireSet('sysLoops',this.value)" style="max-width:100px" placeholder="0"></div>`;
       html += `<div class="wiz-field"><label>BAFE Scheme No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysBafe)}" oninput="fireSet('sysBafe',this.value)" placeholder="e.g. SP203"></div>`;
       html += `<div class="wiz-field"><label>FIA Member No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysFia)}" oninput="fireSet('sysFia',this.value)" placeholder="e.g. 12345"></div>`;
+      html += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Battery Details <span style="font-weight:400;text-transform:none">(optional)</span></div></div>`;
+      html += `<div class="wiz-field"><label>Battery Type</label><input value="${esc(_w.batType||'')}" oninput="fireSet('batType',this.value)" placeholder="e.g. 24V Sealed Lead Acid, Lithium"></div>`;
+      html += `<div class="wiz-field"><label>Battery Installation Date</label><input value="${esc(_w.batInstallDate||'')}" oninput="fireSet('batInstallDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      html += `<div class="wiz-field"><label>Next Replacement Due</label><input value="${esc(_w.batNextReplacement||'')}" oninput="fireSet('batNextReplacement',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
       html += `<div class="wiz-field"><label>Agreed limitations &amp; with whom <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('agreedLimitations',this.value)" placeholder="e.g. Limited to zones 1–3 only, agreed with client on 01/11/2026" style="width:100%;font-size:13px;resize:vertical">${esc(_w.agreedLimitations||'')}</textarea></div>`;
     }
     var _deptLabel = _isComm() ? 'Variations from BS 5839-1 Clause 43 <span class="lbl-opt">(optional)</span>' : 'Departures / variations <span class="lbl-opt">(optional)</span>';
@@ -582,9 +599,9 @@ export function fireRenderStep() {
       html += `</tr></thead><tbody>`;
       var SEV_COLORS = _isCommDef
         ? {C1:'color:#9b1c1c;font-weight:700',C2:'color:#dc2626',C3:'color:#d97706',FI:'color:#1d4ed8'}
-        : {'Immediate Action':'color:#9b1c1c;font-weight:700','Action Required':'color:#d97706','Advisory':''};
-      var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['Immediate Action','Action Required','Advisory'];
-      var _sevDefault = _isCommDef ? 'C3' : 'Advisory';
+        : {C1:'color:#9b1c1c;font-weight:700',C2:'color:#dc2626',C3:'color:#d97706'};
+      var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['C1','C2','C3'];
+      var _sevDefault = 'C3';
       (_w.defects||[]).forEach((d, i) => {
         html += `<tr>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.description||'')}" oninput="fireDefectSet(${i},'description',this.value)" placeholder="Describe the defect" style="width:100%;min-width:120px"></td>`;
@@ -957,7 +974,7 @@ export function fireSetFaCheck(id, val) {
 
 export function fireAddDefect() {
   if (!_w.defects) _w.defects = [];
-  _w.defects.push({ description:'', recommendation:'', severity:_isComm() ? 'C3' : 'Advisory', targetDate:'' });
+  _w.defects.push({ description:'', recommendation:'', severity:'C3', targetDate:'' });
   fireRenderStep();
 }
 export function fireRemoveDefect(i) {

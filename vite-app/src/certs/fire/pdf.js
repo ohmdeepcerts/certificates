@@ -302,8 +302,13 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.sysInterlinkMethod) sysDetailCells += _field('Interlink method', r.sysInterlinkMethod);
     else if (r.sysInterlinked)sysDetailCells += _field('Interlinked', r.sysInterlinked);
     if (r.sysDomPanelMake||r.sysDomPanelModel) sysDetailCells += _field('Control panel', [r.sysDomPanelMake,r.sysDomPanelModel].filter(Boolean).join(' '));
+    if (r.sysDomPanelSerial)  sysDetailCells += _field('Panel serial no.', r.sysDomPanelSerial);
+    if (r.sysDomPanelFirmware)sysDetailCells += _field('Firmware', r.sysDomPanelFirmware);
     if (r.sysDomZones)   sysDetailCells += _field('Zones', r.sysDomZones);
     if (r.sysMfr||r.sysModel) sysDetailCells += _field('Make / model', [r.sysMfr,r.sysModel].filter(Boolean).join(' '));
+    if (r.batType)       sysDetailCells += _field('Battery type', r.batType);
+    if (r.batInstallDate)sysDetailCells += _field('Battery installed', r.batInstallDate);
+    if (r.batNextReplacement) sysDetailCells += _field('Battery replace by', r.batNextReplacement);
     if (r.installDate)   sysDetailCells += _field('Installation date', r.installDate);
     if (r.prevServiceDate) sysDetailCells += _field('Previous service date', r.prevServiceDate);
     if (r.designRef)       sysDetailCells += _field('Design / scheme ref', r.designRef);
@@ -315,19 +320,26 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.sysCategory)  sysDetailCells += _field('System category', r.sysCategory);
     if (r.sysCommType)  sysDetailCells += _field('System type', r.sysCommType);
     if (r.sysPanelMake||r.sysPanelModel) sysDetailCells += _field('Control panel', [r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' '));
+    if (r.sysPanelSerial)  sysDetailCells += _field('Panel serial no.', r.sysPanelSerial);
+    if (r.sysPanelFirmware)sysDetailCells += _field('Firmware', r.sysPanelFirmware);
     if (r.sysZones)     sysDetailCells += _field('Zones', r.sysZones);
     if (r.sysLoops)     sysDetailCells += _field('Loops', r.sysLoops);
     if (r.sysBafe)      sysDetailCells += _field('BAFE scheme no.', r.sysBafe);
     if (r.sysFia)       sysDetailCells += _field('FIA member no.', r.sysFia);
+    if (r.batType)       sysDetailCells += _field('Battery type', r.batType);
+    if (r.batInstallDate)sysDetailCells += _field('Battery installed', r.batInstallDate);
+    if (r.batNextReplacement) sysDetailCells += _field('Battery replace by', r.batNextReplacement);
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
     if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
   }
 
   // ── Defects ───────────────────────────────────────────────────────────────
-  var SEV_STYLES = isComm
-    ? {C1:'color:#7a1010;font-weight:700',C2:'color:#c01818;font-weight:700',C3:'color:#a16207;font-weight:600',FI:'color:#1d4ed8;font-weight:600'}
-    : {'Immediate Action':'color:#7a1010;font-weight:700','Action Required':'color:#a16207;font-weight:600','Advisory':''};
+  var SEV_STYLES = {
+    C1:'color:#7a1010;font-weight:700',C2:'color:#c01818;font-weight:700',C3:'color:#a16207;font-weight:600',
+    FI:'color:#1d4ed8;font-weight:600',
+    'Immediate Action':'color:#7a1010;font-weight:700','Action Required':'color:#a16207;font-weight:600','Advisory':''
+  };
   var hasDefects = (r.defects||[]).length > 0 || r.defectsNotes;
   var defectsHtml = '';
   if (hasDefects) {

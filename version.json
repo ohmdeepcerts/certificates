@@ -1,8 +1,12 @@
 {
-  "v": "2.2.1",
-  "build": 149,
-  "new": 1,
+  "v": "2.2.2",
+  "build": 150,
+  "new": 3,
   "changes": [
+    "New: Panel serial number field added to fire certificate System Details — enter the control panel serial number and it prints on the certificate under system details.",
+    "New: Firmware version field added to fire certificate System Details — enter the panel firmware version and it prints alongside the serial number on the certificate.",
+    "New: Battery details section added to fire certificate System Details — record battery type, installation date and next replacement date. All three fields are optional and print on the certificate only when filled.",
+    "New: Defect severity on domestic fire certificates now uses C1 / C2 / C3 codes — matching the commercial format. C1 is immediate danger, C2 is potentially dangerous, C3 is improvement recommended.",
     "New: BAFE registration number field added to Fire Alarm Settings — enter your BAFE number and it will appear in the declaration block on every fire certificate. Leave it blank and it will not show.",
     "New: Liability limitation statement field added to Fire Alarm Settings — enter your standard limitation wording and it will print in small text at the bottom of the declaration page on every fire certificate. Leave it blank and it will not show.",
     "New: Fire alarm certificate now includes a full Schedule of Items Inspected — covers control equipment, power supply, detectors, warning devices, cables, and documentation. This is the section authorities require under BS 5839-6 Clause 15 (domestic) and BS 5839-1 Clause 43 (commercial).",
