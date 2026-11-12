@@ -15,8 +15,8 @@ let _fireDirty = false;
 let _fireAllCerts = [];
 let _firePage = 1, _fireFiltered = [], _fireCurrentQ = '';
 
-const STEPS = ['type','premises','client','system','detectors','testing','defects','outcome','review'];
-const STEP_LABELS = ['Type','Premises','Client','System','Detectors','Testing','Defects','Outcome','Review'];
+const STEPS = ['type','premises','client','system','schedule','detectors','testing','defects','outcome','review'];
+const STEP_LABELS = ['Type','Premises','Client','System','Schedule','Detectors','Testing','Defects','Outcome','Review'];
 let _previewTimer = null;
 
 const CERT_TYPES = [
@@ -32,6 +32,97 @@ const DOM_GRADES  = ['A — full CIE panel','B — domestic panel','C — alarm 
 const DOM_CATS    = ['LD1 — whole building coverage','LD2 — escape routes + high-risk areas','LD3 — escape routes only','PD1 — whole property (property protection)','PD2 — specific area (property protection)'];
 const COM_CATS    = ['M — manual alarm only','L1 — whole building','L2 — defined areas','L3 — escape routes','L4 — circulation areas','L5 — specific risk only','P1 — whole building (property)','P2 — specific area (property)'];
 const COM_TYPES   = ['Conventional','Addressable','Combined'];
+
+const DOM_SCHEDULE_ITEMS = [
+  ['A — Control Equipment',[
+    ['cie_visual','Control equipment / alarm controller — visual indicators operational'],
+    ['cie_fault','Fault indication functional'],
+    ['cie_weekly_log','Weekly test log reviewed and up to date'],
+  ]],
+  ['B — Power Supply',[
+    ['ps_mains','Mains supply confirmed operational'],
+    ['ps_bat','Standby battery / PSU condition satisfactory'],
+    ['ps_bat_volt','Battery voltage measured and confirmed'],
+  ]],
+  ['C — Detectors &amp; Devices',[
+    ['det_smoke_opt','Smoke detectors (optical) tested and responding'],
+    ['det_smoke_ion','Smoke detectors (ionisation) tested and responding'],
+    ['det_heat','Heat detectors tested and responding'],
+    ['det_co','CO detectors tested (or confirmed N/A)'],
+    ['det_multi','Multi-sensor detectors tested (if installed)'],
+  ]],
+  ['D — Warning Devices',[
+    ['snd_sounders','Sounders tested — audible throughout property'],
+    ['snd_interlink','Interlink confirmed — all devices sound when one activates'],
+  ]],
+  ['E — Cables &amp; Installation',[
+    ['inst_cables','Cable condition satisfactory — no damage or deterioration'],
+    ['inst_fixings','Detector mountings and fixings secure'],
+    ['inst_positions','Detector positions appropriate — not obstructed or contaminated'],
+    ['inst_coverage','Escape route coverage complete per system specification'],
+  ]],
+  ['F — Documentation',[
+    ['doc_logbook','Log book / maintenance record available and entries current'],
+    ['doc_user_docs','User instructions and operating documentation present on-site'],
+  ]],
+];
+
+const COM_SCHEDULE_ITEMS = [
+  ['A — Control &amp; Indicating Equipment',[
+    ['cie_visual','CIE — all zone and status indicators operational'],
+    ['cie_fault','Fault indicators operational — fault log reviewed'],
+    ['cie_ack','Acknowledge / silence / reset controls functional'],
+    ['cie_weekly','Weekly test log reviewed and up to date'],
+    ['cie_printer','Printer / event log operational (if installed)'],
+    ['cie_remote','Remote CIE terminals operational (if installed)'],
+    ['cie_cause_effect','Cause and effect programming verified correct'],
+  ]],
+  ['B — Power Supply',[
+    ['ps_mains','Mains supply confirmed operational — voltage measured'],
+    ['ps_bat_term','Battery terminals and connections inspected and clean'],
+    ['ps_bat_volt','Battery voltage measured and recorded'],
+    ['ps_bat_dur','Standby battery duration test satisfactory'],
+    ['ps_bat_charge','Battery charging current confirmed correct'],
+  ]],
+  ['C — Manual Call Points',[
+    ['mcp_tested','Manual call points — all tested (or rotation basis confirmed)'],
+    ['mcp_glass','Break glass elements — all intact'],
+    ['mcp_map','Call point positions match zone map / as-fitted drawings'],
+  ]],
+  ['D — Automatic Detectors',[
+    ['det_smoke','Smoke detectors — functional test satisfactory'],
+    ['det_heat','Heat detectors — functional test satisfactory'],
+    ['det_multi','Multi-sensor detectors — functional test satisfactory'],
+    ['det_beam','Beam detectors — aligned and tested (if installed)'],
+    ['det_aspirating','Aspirating detection system tested (if installed)'],
+    ['det_linear','Linear heat detection tested (if installed)'],
+    ['det_rotation','Rotation testing schedule confirmed and documented'],
+  ]],
+  ['E — Warning Devices',[
+    ['snd_sounders','All sounders tested — audible throughout premises'],
+    ['snd_spl','Sounder dB levels measured and confirmed adequate'],
+    ['snd_vad','Visual alarm devices (VADs) tested and operational'],
+    ['snd_voice','Voice alarm system tested (if installed)'],
+  ]],
+  ['F — Ancillary &amp; Interface Devices',[
+    ['anc_zone_iso','Zone isolation tested and correctly restored'],
+    ['anc_fault_sim','Fault simulation tested and panel cleared'],
+    ['anc_arc','ARC signal transmission confirmed (if monitored)'],
+    ['anc_aov','Smoke control / AOV interface tested (if installed)'],
+    ['anc_lift','Lift recall interface tested (if installed)'],
+    ['anc_door','Door holders / closers released and held on alarm'],
+    ['anc_access','Access control interface tested (if installed)'],
+    ['anc_em_light','Emergency lighting interface tested (if installed)'],
+    ['anc_refuge','Disabled refuge alarm interface tested (if installed)'],
+    ['anc_hvac','HVAC / air handling shutdown tested (if installed)'],
+  ]],
+  ['G — Documentation',[
+    ['doc_drawings','As-installed drawings present and up to date'],
+    ['doc_cause_effect','Cause and effect documentation available on-site'],
+    ['doc_logbook','Fire alarm log book present — entries current'],
+    ['doc_repair','24-hour emergency callout arrangements confirmed in writing'],
+  ]],
+];
 
 const FA1_CHECKS = [
   {id:'c01', label:'All detectors installed and confirmed operational'},
@@ -137,6 +228,9 @@ export function startNewFire() {
     falseAlarms12m: '',
     falseAlarmAction: '',
     designRef: '',
+    scheduleItems: {}, scheduleNotes: {},
+    worksRecommended: '', prevDefectsResolved: '',
+    responsiblePersonTitle: '', responsiblePersonTel: '',
     annexGChecks: {}, annexFa2Checks: {s01:'PASS',s02:'PASS',s03:'PASS',s04:'PASS',s05:'PASS',s06:'PASS',s07:'PASS',s08:'N/A',s09:'PASS',s10:'PASS'},
     changeOfOrg: '',
     prevOrgName: '',
@@ -328,8 +422,35 @@ export function fireRenderStep() {
     html += `<div class="wiz-field" style="margin-top:8px"><label>${_deptLabel}</label><textarea rows="2" oninput="fireSet('departuresNotes',this.value)" placeholder="${_deptPlaceholder}" style="width:100%;font-size:13px;resize:vertical">${esc(_w.departuresNotes||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 4: Detectors ─────────────────────────────────────────────────────
+  // ── Step 4: Schedule of Items Inspected ──────────────────────────────────
   } else if (s === 4) {
+    var _schedDefs = _isComm() ? COM_SCHEDULE_ITEMS : DOM_SCHEDULE_ITEMS;
+    var _sItems = _w.scheduleItems || {};
+    html += `<h2 class="wiz-title">Schedule of Items Inspected</h2>`;
+    html += `<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Record the inspection result for each item — P&nbsp;=&nbsp;Pass, F&nbsp;=&nbsp;Fail, N/A&nbsp;=&nbsp;Not applicable or not installed. This schedule is a legal requirement of BS ${_isComm()?'5839-1:2025 Clause 43':'5839-6:2019 Clause 15'}.</p>`;
+    _schedDefs.forEach(function(section) {
+      var sTitle = section[0], sItems = section[1];
+      html += `<div style="margin-bottom:14px">`;
+      html += `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c01818;border-bottom:2px solid #e08830;padding-bottom:5px;margin-bottom:8px">${sTitle}</div>`;
+      sItems.forEach(function(item) {
+        var id = item[0], lbl = item[1], v = _sItems[id] || '';
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">`;
+        html += `<span style="font-size:12.5px;flex:1;line-height:1.3">${esc(lbl)}</span>`;
+        html += `<div style="display:flex;gap:3px;flex-shrink:0">`;
+        [['PASS','P','chip-pass'],['FAIL','F','chip-fail'],['N/A','N/A','']].forEach(function(opt) {
+          html += `<button class="chip chip-sm ${opt[2]}${v===opt[0]?' on':''}" onclick="fireSetScheduleItem('${id}','${opt[0]}')">${opt[1]}</button>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+    });
+    var _schedTotal = 0, _schedFilled = 0;
+    _schedDefs.forEach(function(sec) { sec[1].forEach(function(item) { _schedTotal++; if ((_sItems[item[0]]||'').length) _schedFilled++; }); });
+    html += `<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">${_schedFilled} of ${_schedTotal} items recorded</div>`;
+    html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
+
+  // ── Step 5: Detectors ─────────────────────────────────────────────────────
+  } else if (s === 5) {
     var _dets4 = _w.detectors || [];
     var _hasDetList = _dets4.length > 0;
     var _autoTotal4 = _hasDetList ? String(_dets4.length) : '';
@@ -360,8 +481,8 @@ export function fireRenderStep() {
     html += `<button onclick="fireAddDetector()" class="fire-det-add-btn"><i class="fa-solid fa-plus"></i> Add device</button>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 5: Testing results ───────────────────────────────────────────────
-  } else if (s === 5) {
+  // ── Step 6: Testing results ───────────────────────────────────────────────
+  } else if (s === 6) {
     if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
     if (_w.sysInterlinkMethod === 'Not interlinked') { _w.tInterlinked = 'N/A'; _w.annexFa2Checks.s03 = 'N/A'; }
     if (_w.coAlarmsPresent === 'No' || _w.coAlarmsPresent === 'N/A') _w.tCO = 'N/A';
@@ -433,8 +554,8 @@ export function fireRenderStep() {
     html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><div style="position:relative"><textarea rows="2" oninput="fireInspLimInput(this.value)" onblur="fireLimBlur(this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea><div id="fire-lim-sugg" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:100;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)"></div></div></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 6: Defects ───────────────────────────────────────────────────────
-  } else if (s === 6) {
+  // ── Step 7: Defects ───────────────────────────────────────────────────────
+  } else if (s === 7) {
     var _isCommDef = _isComm();
     var _defTitle = _isCommDef ? 'Details of Deviations from the Standards' : 'Defects & Recommendations';
     html += `<h2 class="wiz-title">${_defTitle}</h2>`;
@@ -481,8 +602,8 @@ export function fireRenderStep() {
     html += `<div class="wiz-field" style="margin-top:12px"><label>Additional notes <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('defectsNotes',this.value)" placeholder="Any further observations or notes…" style="width:100%">${esc(_w.defectsNotes)}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 7: Outcome ───────────────────────────────────────────────────────
-  } else if (s === 7) {
+  // ── Step 8: Outcome ───────────────────────────────────────────────────────
+  } else if (s === 8) {
     html += `<h2 class="wiz-title">Outcome</h2>`;
     var _hasFailDev = (_w.detectors||[]).some(function(d){ return d.result === 'FAIL'; });
     var _hasFailTest = ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k] === 'FAIL'; });
@@ -515,6 +636,14 @@ export function fireRenderStep() {
     ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="firePick('sysOperational','${v}')">${v}</button>`; });
     html += `</div></div>`;
     html += `<div class="wiz-field"><label>Works carried out <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('worksCarried',this.value)" placeholder="Brief description of work carried out during this visit…" style="width:100%">${esc(_w.worksCarried)}</textarea></div>`;
+    html += `<div class="wiz-field"><label>Works recommended <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('worksRecommended',this.value)" placeholder="e.g. Replace call point in Zone 2, upgrade panel firmware, additional detector required in converted loft…" style="width:100%">${esc(_w.worksRecommended||'')}</textarea></div>`;
+    if (_isComm()) {
+      html += `<div class="wiz-field"><label>Previous defects resolved? <span class="lbl-opt">(optional)</span></label><div class="chip-row">`;
+      ['Yes — all resolved','Partially resolved','No — still outstanding','N/A — first visit'].forEach(v => {
+        html += `<button class="chip${_w.prevDefectsResolved===v?' on':''}" onclick="firePick('prevDefectsResolved','${esc(v)}')">${esc(v)}</button>`;
+      });
+      html += `</div></div>`;
+    }
     if (_w.certType === 'FA.2') {
       html += `<div class="wiz-field"><label>Previous report reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.prevReportRef||'')}" oninput="fireSet('prevReportRef',this.value)" placeholder="e.g. FA2-2024-00123" style="max-width:220px"></div>`;
     }
@@ -538,8 +667,8 @@ export function fireRenderStep() {
     if (!_w.outcome) html += `<p style="color:#dc2626;font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle-exclamation"></i> Select an outcome above to continue</p>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary" ${!_w.outcome?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
-  // ── Step 8: Review ────────────────────────────────────────────────────────
-  } else if (s === 8) {
+  // ── Step 9: Review ────────────────────────────────────────────────────────
+  } else if (s === 9) {
     var addr = [_w.premAddr1, _w.premAddr2, _w.premAddr3, _w.premPostcode].filter(Boolean).join(', ');
     var typeLabel = (CERT_TYPES.find(t => t.id === _w.certType)||{}).label || _w.certType;
     html += `<h2 class="wiz-title">Review & Issue</h2>`;
@@ -785,6 +914,12 @@ export function fireJumpStep(i) {
   if (i >= 0 && i < STEPS.length) { _w.step = i; fireRenderStep(); }
 }
 
+export function fireSetScheduleItem(id, val) {
+  if (!_w.scheduleItems) _w.scheduleItems = {};
+  _w.scheduleItems[id] = (_w.scheduleItems[id] === val) ? '' : val;
+  fireRenderStep();
+}
+
 export function fireDetCalc() {
   if ((_w.detectors||[]).length) return; // list takes priority
   var t = parseInt(_w.detTotal)||0;
@@ -849,13 +984,13 @@ export async function fireNext() {
     if (!(_w.clientAddr1||'').trim()) { toast('Client address line 1 is required','error'); return; }
     if (!(_w.clientPostcode||'').trim()) { toast('Client postcode is required','error'); return; }
   }
-  if (s === 4 && (_w.detectors||[]).some(function(d){ return !(d.location||'').trim(); })) {
+  if (s === 5 && (_w.detectors||[]).some(function(d){ return !(d.location||'').trim(); })) {
     if (!await confirm2('Some devices have no location recorded — location helps identify where each device is fitted. Continue without locations?')) return;
   }
-  if (s === 4 && (_w.detectors||[]).some(function(d){ return !d.result; })) {
+  if (s === 5 && (_w.detectors||[]).some(function(d){ return !d.result; })) {
     if (!await confirm2('Some devices have no test result selected (showing "— select —"). Continue without recording a result for them?')) return;
   }
-  if (s === 5) {
+  if (s === 6) {
     var _tdParts = (_w.testDate||'').trim().split('/');
     if (_tdParts.length !== 3 || isNaN(new Date(+_tdParts[2], +_tdParts[1]-1, +_tdParts[0]).getTime())) {
       toast('Test date is not valid — please enter DD/MM/YYYY', 'error'); return;
@@ -874,7 +1009,7 @@ export async function fireNext() {
       if (!await confirm2('No test results have been recorded. Continue without any test results?')) return;
     }
   }
-  if (s === 5) {
+  if (s === 6) {
     // Auto-populate defects from any FAIL results (only if list is currently empty)
     if (!(_w.defects||[]).length) {
       var _autoD = [];
@@ -886,11 +1021,11 @@ export async function fireNext() {
       if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found'||_w.defectsOverall==='No deviations identified') { _w.defectsOverall = _isCommNow3 ? 'Deviations requiring urgent action' : 'Defects requiring attention'; } }
     }
   }
-  if (s === 6 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {
+  if (s === 7 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {
     toast('Some defect rows have no description — please fill them in or remove the blank rows', 'error'); return;
   }
-  if (s === 7 && !_w.outcome) { toast('Please select an outcome','error'); return; }
-  if (s === 7) {
+  if (s === 8 && !_w.outcome) { toast('Please select an outcome','error'); return; }
+  if (s === 8) {
     var _hasFails7 = (_w.detectors||[]).some(function(d){return d.result==='FAIL';}) || ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){return _w[k]==='FAIL';});
     if (_hasFails7 && (_w.outcome||'').toUpperCase() === 'SATISFACTORY' && (!_w.satJustification || _w.satJustification.trim().length < 20)) {
       toast('Enter a justification (minimum 20 characters) to override with a Satisfactory outcome', 'error'); return;
@@ -921,14 +1056,14 @@ export async function fireSave() {
   var isEdit = !!_w._editId; var editId = _w._editId || null;
   if (!(_w.engineerName||'').trim()) {
     toast('Engineer name is required — go back to the Engineer step', 'error');
-    _w.step = 8; fireRenderStep(); return;
+    _w.step = 9; fireRenderStep(); return;
   }
   var _hasFails = (_w.detectors||[]).some(function(d){ return d.result==='FAIL'; }) ||
     ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k]==='FAIL'; });
   if (_hasFails && (_w.outcome||'').toUpperCase() === 'SATISFACTORY') {
     if (!_w.satJustification || _w.satJustification.trim().length < 20) {
       toast('A justification (minimum 20 characters) is required to issue a Satisfactory certificate when failure results are recorded — go back to the Outcome step', 'error');
-      _w.step = 7; fireRenderStep(); return;
+      _w.step = 8; fireRenderStep(); return;
     }
   }
   if (!navigator.onLine) {
@@ -1081,8 +1216,8 @@ export async function fireOpenByRef(refNum) {
 
 export async function fireDownloadPDF(rec) {
   if (!rec) return;
+  toast('Preparing PDF…', 'info', 2000);
   var siteHistory = await _fetchSiteHistory(rec);
-  var { default: html2pdf } = await import('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js').catch(() => ({}));
   var certHtml = fireBuildCertHTML(rec, siteHistory);
   var iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none';
@@ -1090,10 +1225,10 @@ export async function fireDownloadPDF(rec) {
   iframe.contentDocument.open();
   iframe.contentDocument.write(certHtml);
   iframe.contentDocument.close();
-  setTimeout(() => {
+  (iframe.contentDocument.fonts ? iframe.contentDocument.fonts.ready : Promise.resolve()).then(() => {
     iframe.contentWindow.print();
-    setTimeout(() => document.body.removeChild(iframe), 2000);
-  }, 600);
+    setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 3000);
+  });
 }
 
 // ── History preview panel ─────────────────────────────────────────────────────

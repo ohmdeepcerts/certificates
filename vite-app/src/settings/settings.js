@@ -156,6 +156,8 @@ export function loadSettingsUI() {
   document.getElementById('s-fire-engineer-qual').value = getSetting('fa_engineer_qual', '');
   document.getElementById('s-fire-engineer-reg').value  = getSetting('fa_engineer_reg_no', '');
   document.getElementById('s-fire-niceic-no').value   = getSetting('fire_niceic_scheme_no', getSetting('el_enrol_no', ''));
+  document.getElementById('s-fire-bafe-no').value     = getSetting('fa_bafe_reg_no', '');
+  document.getElementById('s-fire-liability').value   = getSetting('fa_liability_statement', '');
   document.getElementById('s-fire-co-address').value  = getSetting('fire_co_address', '');
   document.getElementById('s-fire-co-postcode').value = getSetting('fire_co_postcode', '');
   document.getElementById('s-fire-co-phone').value    = getSetting('fire_co_phone', '');
@@ -243,6 +245,8 @@ export async function saveSettings() {
     ['fa_engineer_qual',      document.getElementById('s-fire-engineer-qual').value],
     ['fa_engineer_reg_no',    document.getElementById('s-fire-engineer-reg').value],
     ['fire_niceic_scheme_no', document.getElementById('s-fire-niceic-no').value],
+    ['fa_bafe_reg_no',        document.getElementById('s-fire-bafe-no').value],
+    ['fa_liability_statement',document.getElementById('s-fire-liability').value],
     ['fire_co_address',   document.getElementById('s-fire-co-address').value],
     ['fire_co_postcode',  document.getElementById('s-fire-co-postcode').value],
     ['fire_co_phone',     document.getElementById('s-fire-co-phone').value],

@@ -1138,10 +1138,10 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:8px;border-bottom:1.5px solid #d5e5db;}
 .ch-logo-row{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
 .ch-logo{width:40px;height:40px;background:linear-gradient(135deg,#0e4d33,#093423);border:1px solid #b08d2e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f4ecd8;flex-shrink:0;letter-spacing:.05em;}
-.ch-company{font-size:${getSetting('el_coname_size','22')}px;font-weight:900;color:#182420;letter-spacing:-.02em;line-height:1.1;}
-.ch-company-sub{font-size:10px;color:#5a6660;margin-top:2px;}
+.ch-company{font-size:${getSetting('el_coname_size','16')}px;font-weight:600;color:#182420;letter-spacing:.03em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:inline-block;border-bottom:2px solid #0e4d33;padding-bottom:3px}
+.ch-company-sub{font-size:9.5px;color:#5a6660;margin-top:2px;}
 .ch-company-sub a{color:#5a6660;text-decoration:none;}
-.niceic-badge{border:1.5px solid #b08d2e;border-radius:4px;padding:7px 14px;text-align:center;background:#f4ecd8;}
+.niceic-badge{border:none;border-radius:0;padding:0;background:transparent;text-align:center;}
 .niceic-badge .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#093423;}
 .niceic-badge .nb-sub{font-size:8px;color:#5a6660;margin-top:1px;}
 .ch-title-row{padding:6px 0 6px;}
@@ -1245,10 +1245,10 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
   var engPos = esc(engineerPosition||'Qualified Electrician');
   var bodyLabel = esc(elBody||'NICEIC');
   var elLogo = elLogoData
-    ? '<img src="'+elLogoData+'" style="max-height:52px;max-width:130px;object-fit:contain">'
+    ? '<img src="'+elLogoData+'" style="height:80px;max-width:130px;object-fit:contain">'
     : '<div class="ch-logo">'+esc((company||'EL').substring(0,3).toUpperCase())+'</div>';
   var bodyBadge = elBodyLogoData
-    ? '<div class="niceic-badge" style="padding:4px 8px"><img src="'+elBodyLogoData+'" style="max-height:68px;max-width:110px;object-fit:contain"></div>'
+    ? '<div class="niceic-badge"><img src="'+elBodyLogoData+'" style="height:80px;max-width:110px;object-fit:contain"></div>'
     : '<div class="niceic-badge"><div class="nb-title">'+bodyLabel+'</div><div class="nb-sub">Approved Contractor</div></div>';
   var sigImg = elSigData
     ? '<img src="'+elSigData+'" style="max-height:44px;max-width:140px;object-fit:contain;display:block;margin-top:4px">'

@@ -1,8 +1,10 @@
 {
-  "v": "2.2.0",
-  "build": 148,
+  "v": "2.2.1",
+  "build": 149,
   "new": 1,
   "changes": [
+    "New: BAFE registration number field added to Fire Alarm Settings — enter your BAFE number and it will appear in the declaration block on every fire certificate. Leave it blank and it will not show.",
+    "New: Liability limitation statement field added to Fire Alarm Settings — enter your standard limitation wording and it will print in small text at the bottom of the declaration page on every fire certificate. Leave it blank and it will not show.",
     "New: Fire alarm certificate now includes a full Schedule of Items Inspected — covers control equipment, power supply, detectors, warning devices, cables, and documentation. This is the section authorities require under BS 5839-6 Clause 15 (domestic) and BS 5839-1 Clause 43 (commercial).",
     "New: Fire alarm certificate wizard now has a dedicated Schedule step — record Pass, Fail or N/A for each item before completing the certificate.",
     "Fixed: Commercial fire alarm certificates now correctly reference BS 5839-1:2025 — the previous version showed an outdated standard number.",

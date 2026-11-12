@@ -1,8 +1,145 @@
-import { getSetting } from '../../lib/settings.js';
+﻿import { getSetting } from '../../lib/settings.js';
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _field(label, val) {
   return '<div class="f"><div class="fl">'+_esc(label)+'</div><div class="fv">'+_esc(val)+'</div></div>';
+}
+
+// ── Schedule of Items Inspected — section / item definitions ─────────────────
+var _DOM_SCHED_PDF = [
+  ['A — Control Equipment',[
+    ['cie_visual','Control equipment — visual indicators operational'],
+    ['cie_fault','Fault indication functional'],
+    ['cie_weekly_log','Weekly test log reviewed and up to date'],
+  ]],
+  ['B — Power Supply',[
+    ['ps_mains','Mains supply confirmed operational'],
+    ['ps_bat','Standby battery / PSU condition satisfactory'],
+    ['ps_bat_volt','Battery voltage measured and confirmed'],
+  ]],
+  ['C — Detectors &amp; Devices',[
+    ['det_smoke_opt','Smoke detectors (optical) tested and responding'],
+    ['det_smoke_ion','Smoke detectors (ionisation) tested and responding'],
+    ['det_heat','Heat detectors tested and responding'],
+    ['det_co','CO detectors tested (or confirmed N/A)'],
+    ['det_multi','Multi-sensor detectors tested (if installed)'],
+  ]],
+  ['D — Warning Devices',[
+    ['snd_sounders','Sounders tested — audible throughout property'],
+    ['snd_interlink','Interlink confirmed — all devices sound when one activates'],
+  ]],
+  ['E — Cables &amp; Installation',[
+    ['inst_cables','Cable condition satisfactory — no damage or deterioration'],
+    ['inst_fixings','Detector mountings and fixings secure'],
+    ['inst_positions','Detector positions appropriate — not obstructed or contaminated'],
+    ['inst_coverage','Escape route coverage complete per system specification'],
+  ]],
+  ['F — Documentation',[
+    ['doc_logbook','Log book / maintenance record available and entries current'],
+    ['doc_user_docs','User instructions and operating documentation present on-site'],
+  ]],
+];
+
+var _COM_SCHED_PDF = [
+  ['A — Control &amp; Indicating Equipment',[
+    ['cie_visual','CIE — all zone and status indicators operational'],
+    ['cie_fault','Fault indicators operational — fault log reviewed'],
+    ['cie_ack','Acknowledge / silence / reset controls functional'],
+    ['cie_weekly','Weekly test log reviewed and up to date'],
+    ['cie_printer','Printer / event log operational (if installed)'],
+    ['cie_remote','Remote CIE terminals operational (if installed)'],
+    ['cie_cause_effect','Cause and effect programming verified correct'],
+  ]],
+  ['B — Power Supply',[
+    ['ps_mains','Mains supply confirmed operational — voltage measured'],
+    ['ps_bat_term','Battery terminals and connections inspected and clean'],
+    ['ps_bat_volt','Battery voltage measured and recorded'],
+    ['ps_bat_dur','Standby battery duration test satisfactory'],
+    ['ps_bat_charge','Battery charging current confirmed correct'],
+  ]],
+  ['C — Manual Call Points',[
+    ['mcp_tested','Manual call points — all tested (or rotation basis confirmed)'],
+    ['mcp_glass','Break glass elements — all intact'],
+    ['mcp_map','Call point positions match zone map / as-fitted drawings'],
+  ]],
+  ['D — Automatic Detectors',[
+    ['det_smoke','Smoke detectors — functional test satisfactory'],
+    ['det_heat','Heat detectors — functional test satisfactory'],
+    ['det_multi','Multi-sensor detectors — functional test satisfactory'],
+    ['det_beam','Beam detectors — aligned and tested (if installed)'],
+    ['det_aspirating','Aspirating detection system tested (if installed)'],
+    ['det_linear','Linear heat detection tested (if installed)'],
+    ['det_rotation','Rotation testing schedule confirmed and documented'],
+  ]],
+  ['E — Warning Devices',[
+    ['snd_sounders','All sounders tested — audible throughout premises'],
+    ['snd_spl','Sounder dB levels measured and confirmed adequate'],
+    ['snd_vad','Visual alarm devices (VADs) tested and operational'],
+    ['snd_voice','Voice alarm system tested (if installed)'],
+  ]],
+  ['F — Ancillary &amp; Interface Devices',[
+    ['anc_zone_iso','Zone isolation tested and correctly restored'],
+    ['anc_fault_sim','Fault simulation tested and panel cleared'],
+    ['anc_arc','ARC signal transmission confirmed (if monitored)'],
+    ['anc_aov','Smoke control / AOV interface tested (if installed)'],
+    ['anc_lift','Lift recall interface tested (if installed)'],
+    ['anc_door','Door holders / closers released and held on alarm'],
+    ['anc_access','Access control interface tested (if installed)'],
+    ['anc_em_light','Emergency lighting interface tested (if installed)'],
+    ['anc_refuge','Disabled refuge alarm interface tested (if installed)'],
+    ['anc_hvac','HVAC / air handling shutdown tested (if installed)'],
+  ]],
+  ['G — Documentation',[
+    ['doc_drawings','As-installed drawings present and up to date'],
+    ['doc_cause_effect','Cause and effect documentation available on-site'],
+    ['doc_logbook','Fire alarm log book present — entries current'],
+    ['doc_repair','24-hour emergency callout arrangements confirmed in writing'],
+  ]],
+];
+
+function _buildSchedulePdf(schedDefs, schedItems) {
+  var items = schedItems || {};
+  var html = '<table style="width:100%;border-collapse:collapse;border:1px solid #e08830;border-radius:4px;overflow:hidden;margin-bottom:10px;font-size:11px">';
+  html += '<thead><tr style="background:#7a1010">'
+    +'<th colspan="2" style="padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">P</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">F</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
+    +'<th style="padding:6px 4px;width:4px;background:#5a0a0a"></th>'
+    +'<th colspan="2" style="padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">P</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">F</th>'
+    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
+    +'</tr></thead><tbody>';
+
+  schedDefs.forEach(function(section) {
+    var secName = section[0], secItems = section[1];
+    html += '<tr style="background:#f8edcc"><td colspan="11" style="padding:5px 8px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7a1010">'+secName+'</td></tr>';
+    for (var i = 0; i < secItems.length; i += 2) {
+      var a = secItems[i], b = secItems[i+1] || null;
+      var rowBg = (Math.floor(i/2) % 2 === 0) ? '#fdfaf8' : '#fdf5f0';
+      html += '<tr style="background:'+rowBg+';border-bottom:1px solid #ede0e0">';
+      function _cell(item) {
+        if (!item) return '<td style="border-right:1px solid #e2d4d4"></td><td style="border-right:1px solid #ede0e0"></td><td style="width:30px;border-left:1px solid #ede0e0"></td><td style="width:30px;border-left:1px solid #ede0e0"></td><td style="width:36px;border-left:1px solid #ede0e0"></td>';
+        var id = item[0], lbl = item[1], v = items[id] || '';
+        var pCell = v==='PASS' ? '<span style="color:#1a6b40;font-size:14px;font-weight:700">&#10003;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
+        var fCell = v==='FAIL' ? '<span style="color:#7a1010;font-size:13px;font-weight:700">&#10007;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
+        var nCell = v==='N/A' ? '<span style="color:#666;font-size:11px">&#8212;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
+        return '<td style="padding:4px 8px;font-size:11px;color:#1c1010;border-right:1px solid #ede0e0;width:38%">'+_esc(lbl)+'</td>'
+          +'<td style="padding:4px 5px;text-align:center;width:30px;border-left:1px solid #ede0e0">'+pCell+'</td>'
+          +'<td style="padding:4px 5px;text-align:center;width:30px;border-left:1px solid #ede0e0">'+fCell+'</td>'
+          +'<td style="padding:4px 5px;text-align:center;width:36px;border-left:1px solid #ede0e0">'+nCell+'</td>';
+      }
+      html += _cell(a);
+      html += '<td style="padding:0;width:4px;background:#e2d4d4;border-left:2px solid #c9b87a;border-right:2px solid #c9b87a"></td>';
+      html += _cell(b);
+      html += '</tr>';
+    }
+  });
+
+  html += '</tbody></table>';
+  html += '<div style="font-size:9px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:6px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable / not installed. Items recorded as Fail must be listed as deviations in the Defects section.</div>';
+  return html;
 }
 
 export function fireBuildCertHTML(r, siteHistory) {
@@ -10,7 +147,7 @@ export function fireBuildCertHTML(r, siteHistory) {
 
   var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection &amp; Service Certificate', 'FA.3':'Form FA.3 · Installation / Commissioning Certificate', 'FA.4':'Form FA.4 · Inspection &amp; Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
   var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Detection & Alarm System Inspection and Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
-  var stdLabel   = isComm ? 'BS 5839-1:2017+A2:2024 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
+  var stdLabel   = isComm ? 'BS 5839-1:2025 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
 
   var company     = getSetting('fire_co_name') || getSetting('company_name') || 'OHM Electrical Engineering Ltd';
   var _coAddrRaw  = getSetting('fire_co_address') || getSetting('company_address') || '';
@@ -19,6 +156,8 @@ export function fireBuildCertHTML(r, siteHistory) {
   var companyTel  = getSetting('fire_co_phone') || getSetting('company_tel') || '';
   var companyEmail= getSetting('fire_co_email') || getSetting('company_email') || '';
   var niceicNo    = getSetting('fire_niceic_scheme_no') || getSetting('el_enrol_no') || getSetting('niceic_scheme_no') || '';
+  var bafeRegNo   = getSetting('fa_bafe_reg_no') || '';
+  var liabilityStatement = getSetting('fa_liability_statement') || '';
   var logoData    = getSetting('fire_logo_data', getSetting('pat_logo_data',''));
   var niceicLogoData = getSetting('fire_niceic_logo', getSetting('pat_logo2_data',''));
   var enggSigData = r.enggSigData || getSetting('fire_engg_sig_data','') || getSetting('el_sig_data','');
@@ -32,17 +171,17 @@ export function fireBuildCertHTML(r, siteHistory) {
   var eng       = _esc(r.engineerName||'—');
   var engPos    = _esc(r.engineerQual||'Fire Alarm Engineer');
   var coName    = _esc(company);
-  var coAddr    = _esc(companyAddr.split(/[,\n]/)[0].trim());
+  var coAddr    = _esc(companyAddr);
   var coTel     = companyTel ? _esc(companyTel) : '';
   var coEmail   = companyEmail ? _esc(companyEmail) : '';
 
   // ── Logo / NICEIC badge HTML ──────────────────────────────────────────────
   var elLogo = logoData
-    ? '<img src="'+logoData+'" style="max-height:64px;max-width:64px;object-fit:contain;border-radius:4px;border:1px solid var(--a);flex-shrink:0">'
+    ? '<img src="'+logoData+'" style="height:80px;max-width:110px;object-fit:contain;border-radius:4px;border:1px solid var(--a);flex-shrink:0">'
     : '<div class="ch-logo">'+_esc((company.match(/\b\w/g)||[]).slice(0,3).join('').toUpperCase())+'</div>';
 
   var bodyBadge = niceicLogoData
-    ? '<div class="niceic-badge" style="padding:8px 12px"><img src="'+niceicLogoData+'" style="max-height:75px;max-width:110px;object-fit:contain;image-rendering:crisp-edges"></div>'
+    ? '<div class="niceic-badge"><img src="'+niceicLogoData+'" style="height:80px;max-width:110px;object-fit:contain;image-rendering:crisp-edges"></div>'
     : (niceicNo
         ? '<div class="niceic-badge"><div class="nb-title">NICEIC Approved Contractor</div><div class="nb-sub">Enrolment No. '+_esc(niceicNo)+'</div></div>'
         : '');
@@ -57,6 +196,7 @@ export function fireBuildCertHTML(r, siteHistory) {
   var devPass  = _hasDetList ? (r.detectors||[]).filter(function(d){return d.result==='PASS';}).length : (parseInt(r.detPass)||0);
   var devFail  = _hasDetList ? (r.detectors||[]).filter(function(d){return d.result==='FAIL';}).length : (parseInt(r.detFail)||0);
   var devTested= _hasDetList ? (devPass + devFail)                                                   : (parseInt(r.detTested)||(devPass+devFail));
+  var devPct   = devTotal > 0 ? Math.round(devTested / devTotal * 100) : 0;
 
   // ── Outcome ───────────────────────────────────────────────────────────────
   var sat    = (r.outcome||'').toUpperCase() === 'SATISFACTORY';
@@ -170,6 +310,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
+    if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
   } else {
     if (r.sysCategory)  sysDetailCells += _field('System category', r.sysCategory);
     if (r.sysCommType)  sysDetailCells += _field('System type', r.sysCommType);
@@ -180,6 +321,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.sysFia)       sysDetailCells += _field('FIA member no.', r.sysFia);
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
+    if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
   }
 
   // ── Defects ───────────────────────────────────────────────────────────────
@@ -197,7 +339,7 @@ export function fireBuildCertHTML(r, siteHistory) {
     defectsHtml = '<div class="sec-head" style="margin-top:14px">'+_defSectionTitle+'</div>'
       +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
       +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
-      +(r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
+      +(defRows&&r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
   }
 
   // ── Service history ───────────────────────────────────────────────────────
@@ -244,20 +386,29 @@ export function fireBuildCertHTML(r, siteHistory) {
   var purposeMap = {
     'FA.1':'To certify the design, installation and commissioning of a new fire alarm system in accordance with BS 5839-6:2019',
     'FA.2':'To certify continued compliance — annual inspection and testing of an existing fire alarm system',
-    'FA.3':'To certify the installation, commissioning and testing of a new fire detection and alarm system in accordance with BS 5839-1:2017+A2:2024',
+    'FA.3':'To certify the installation, commissioning and testing of a new fire detection and alarm system in accordance with BS 5839-1:2025',
     'FA.4':'To certify the periodic service, inspection and verification of an existing fire detection and alarm system'
   };
   var extentMap = {
     'FA.1':'Design, installation and commissioning — 100% of the new fire alarm system at the premises identified on this certificate.',
     'FA.2':'Annual inspection and testing — 100% of the fire detection and alarm system including all detectors, sounders, control panel, and interconnections at the premises.',
-    'FA.3':'Complete installation, commissioning and testing — 100% of the new fire detection and alarm system in accordance with BS 5839-1:2017+A2:2024.',
+    'FA.3':'Complete installation, commissioning and testing — 100% of the new fire detection and alarm system in accordance with BS 5839-1:2025.',
     'FA.4':'Periodic service, inspection and verification — 100% of the existing fire detection and alarm system at the premises identified on this certificate.'
   };
   var purposeTxt = purposeMap[r.certType] || purposeMap['FA.2'];
   var extentTxt  = extentMap[r.certType]  || extentMap['FA.2'];
 
   // ── Page 1 ────────────────────────────────────────────────────────────────
-  var totalPages = isComm ? (r.changeOfOrg === 'yes' ? 5 : 4) : 3;
+  var totalPages = isComm ? (r.changeOfOrg === 'yes' ? 5 : 4) : 4;
+
+  var nextInspFormatted = '';
+  if (r.nextInspDate) {
+    try {
+      var _nip = r.nextInspDate.split('/');
+      if (_nip.length === 3) nextInspFormatted = new Date(parseInt(_nip[2]), parseInt(_nip[1])-1, parseInt(_nip[0])).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+    } catch(e2) {}
+    if (!nextInspFormatted) nextInspFormatted = r.nextInspDate;
+  }
 
   var premName = _esc(r.premisesName||'');
   var premAddrLines = premAddr.map(function(l){return _esc(l);}).join('<br>');
@@ -275,12 +426,10 @@ export function fireBuildCertHTML(r, siteHistory) {
     else if (r.sysInterlinked) p1Fields += _field('Interlinked', r.sysInterlinked);
     if (r.prevServiceDate) p1Fields += _field('Previous Service Date', r.prevServiceDate);
     if (r.certType === 'FA.2' && r.prevReportRef) p1Fields += _field('Previous Report Reference', r.prevReportRef);
-    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate);
   } else {
     if (r.sysCategory)   p1Fields += _field('System Category', r.sysCategory);
     if (r.sysCommType)   p1Fields += _field('System Type', r.sysCommType);
     if (r.sysZones)      p1Fields += _field('Zones', r.sysZones);
-    if (r.nextInspDate)  p1Fields += _field('Next Inspection Due', r.nextInspDate + (r.nextInspInterval ? ' — ' + r.nextInspInterval : ''));
     if (r.falseAlarmAction) p1Fields += _field('False alarm action', r.falseAlarmAction);
   }
 
@@ -359,7 +508,7 @@ export function fireBuildCertHTML(r, siteHistory) {
       +'</div>'
     +'</div>'
     // Commercial-only: Variations + Reference docs
-    +(isComm && r.departuresNotes ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px"><div class="purp-label">Variations from BS 5839-1:2017+A2:2024 Clause 43</div><div class="purp-extent">'+_esc(r.departuresNotes)+'</div></div>' : '')
+    +(isComm && r.departuresNotes ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px"><div class="purp-label">Variations from BS 5839-1:2025 Clause 43</div><div class="purp-extent">'+_esc(r.departuresNotes)+'</div></div>' : '')
     +(isComm && (r.prevReportRef||r.otherRefDocs) ? '<div style="border-top:1px solid #e2d4d4;padding:9px 28px 10px;display:grid;grid-template-columns:1fr 1fr;gap:0 20px"><div>'+(r.prevReportRef ? '<div class="purp-label">Previous Report Reference</div><div class="purp-extent">'+_esc(r.prevReportRef)+'</div>' : '')+'</div><div>'+(r.otherRefDocs ? '<div class="purp-label">Other Reference Documents</div><div class="purp-extent">'+_esc(r.otherRefDocs)+'</div>' : '')+'</div></div>' : '')
     // Outcome band
     +'<div class="outcome-band" style="background:'+obBg+';border-top:1px solid #e08830;border-bottom:1px solid #e08830">'+obText+'</div>'
@@ -372,11 +521,24 @@ export function fireBuildCertHTML(r, siteHistory) {
           +'<div class="stat-cell"><span class="stat-num">'+devTested+'</span><span class="stat-lbl">Tested</span></div>'
           +'<div class="stat-cell stat-pass"><span class="stat-num">'+devPass+'</span><span class="stat-lbl">Passed</span></div>'
           +'<div class="stat-cell stat-fail"><span class="stat-num">'+devFail+'</span><span class="stat-lbl">Failed</span></div>'
+          +(devTotal > 0 ? '<div class="stat-cell"><span class="stat-num">'+devPct+'%</span><span class="stat-lbl">Tested</span></div>' : '')
           +(isComm && r.falseAlarms12m !== '' && r.falseAlarms12m !== null && r.falseAlarms12m !== undefined
             ? '<div class="stat-cell stat-warn"><span class="stat-num">'+_esc(String(r.falseAlarms12m))+'</span><span class="stat-lbl">False Alarms (12m)</span></div>'
             : '')
           +'</div>'
         : '')
+      +(nextInspFormatted
+        ?'<div style="display:flex;align-items:center;justify-content:space-between;background:#fff0ee;border:1.5px solid #c01818;border-radius:4px;padding:11px 16px;margin-bottom:14px">'
+          +'<div>'
+            +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;margin-bottom:2px">Next Inspection Due</div>'
+            +'<div style="font-size:11px;color:#5a3a3a">'+(isComm?'Periodic service must be completed by this date to maintain BS 5839-1:2025 compliance.':'Annual inspection must be completed by this date to maintain BS 5839-6:2019 compliance.')+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0;margin-left:20px">'
+            +'<div style="font-size:18px;font-weight:800;color:#c01818;white-space:nowrap">'+nextInspFormatted+'</div>'
+            +'<div style="font-size:9px;color:#e08830;font-weight:700;margin-top:2px">'+(isComm?'BS 5839-1:2025 \xb7 Cl. 25':'BS 5839-6:2019 \xb7 Cl. 15')+'</div>'
+          +'</div>'
+        +'</div>'
+        :'')
       +(p1Fields?'<div class="fg">'+p1Fields+'</div>':'')
       +noteBox
     +'</div>'
@@ -392,7 +554,6 @@ export function fireBuildCertHTML(r, siteHistory) {
       +'<table class="ltbl"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>'+(testRows||'<tr><td colspan="2" style="color:#9a948e;font-style:italic">No test results recorded</td></tr>')+'</tbody></table>'
       +(r.inspLimitations?'<div style="margin-top:10px;padding:8px 10px;background:#f8f5ef;border-left:3px solid #c9b87a;border-radius:0 4px 4px 0"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7a6a3a;margin-bottom:3px">Limitations of inspection</div><div style="font-size:11px;line-height:1.5;color:#3d3d3d">'+_esc(r.inspLimitations)+'</div></div>':'')
       +faChecksHtml
-      +(sysDetailCells?'<div class="sec-head" style="margin-top:14px">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
     +'</div>'
     +footer(r.premisesName||premAddr[0]||company, 2, totalPages)
   +'</div>';
@@ -402,9 +563,11 @@ export function fireBuildCertHTML(r, siteHistory) {
     ? 'I, the undersigned, being the competent person responsible for the installation described in this certificate, declare that the fire alarm system has been installed, commissioned and tested in accordance with '+stdLabel.split(' ·')[0]+', and was found to be '+(r.outcome||'—')+' on the date of issue.'
     : 'I, the undersigned, being the competent person who carried out the inspection and testing described in this certificate, declare that the fire alarm system has been inspected and tested in accordance with '+stdLabel.split(' ·')[0]+', and was found to be '+(r.outcome||'—')+' on the date of issue.';
 
+  var _declPageNo = isComm ? 3 : 4;
   var page3 = '<div class="cert-page">'
-    +contHead('Declaration &amp; Sign-off', 3, totalPages)
+    +contHead('Declaration &amp; Sign-off', _declPageNo, totalPages)
     +'<div class="cb">'
+      +(sysDetailCells?'<div class="sec-head">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
       +serviceHistoryHtml
       +defectsHtml
       +'<div class="sec-head" style="margin-top:14px">Competent Person Declaration</div>'
@@ -429,6 +592,7 @@ export function fireBuildCertHTML(r, siteHistory) {
               +'<div style="padding:7px 10px;flex:1">'+engPos+'</div>'
             +'</div>'
             +(niceicNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">NICEIC No.</div><div style="padding:7px 10px;flex:1">'+_esc(niceicNo)+'</div></div>':'')
+            +(bafeRegNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">BAFE No.</div><div style="padding:7px 10px;flex:1">'+_esc(bafeRegNo)+'</div></div>':'')
             +(engineerRegNo?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Reg. / Ref. No.</div><div style="padding:7px 10px;flex:1">'+_esc(engineerRegNo)+'</div></div>':'')
             +'<div style="display:flex">'
               +'<div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Date</div>'
@@ -439,96 +603,45 @@ export function fireBuildCertHTML(r, siteHistory) {
             +'<div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9a7858;margin-bottom:4px">Signature</div>'
             +sigImg
             +'<div style="border-bottom:1px solid #1c1010;margin-top:4px;min-height:30px"></div>'
-            +'<div style="font-size:9px;color:#9a7858;margin-top:3px">For '+coName+(niceicNo?' · NICEIC '+_esc(niceicNo):'')+'</div>'
+            +'<div style="font-size:9px;color:#9a7858;margin-top:3px">For '+coName+(niceicNo?' · NICEIC '+_esc(niceicNo):'')+(bafeRegNo?' · BAFE '+_esc(bafeRegNo):'')+'</div>'
           +'</div>'
         +'</div>'
       +'</div>'
       +(r.satJustification?'<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:9px 11px;margin-bottom:10px;font-size:11px;line-height:1.6"><strong style="color:#7a1010">Override justification (Satisfactory with recorded failures):</strong> '+_esc(r.satJustification)+'</div>':'')
       +(r.certType==='FA.1'?'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;margin-bottom:14px;display:flex;font-size:11px"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Operating instructions<br>provided to occupier</div><div style="padding:7px 10px;flex:1;font-weight:600;color:'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'#1a6b40':r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'#7a1010':'#555')+'">'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'&#10003; Yes':(r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'&#10007; No':'Not recorded'))+'</div></div>':'')
       +tenantHtml
+      +(liabilityStatement?'<div style="font-size:10px;color:#7a7a8a;border-top:1px solid #e2d4d4;padding:7px 10px;margin-top:4px;line-height:1.5;font-style:italic">'+_esc(liabilityStatement)+'</div>':'')
     +'</div>'
-    +footer(r.premisesName||premAddr[0]||company, 3, totalPages)
+    +footer(r.premisesName||premAddr[0]||company, _declPageNo, totalPages)
   +'</div>';
 
-  // ── Page 4: Annex G Checklist (commercial only) ───────────────────────────
-  var _annexGDefs = [
-    ['Control Equipment (BS 5839-1 Cl.44.2)',[
-      ['ctrl_panel','Control panel inspected — all indicators operational'],
-      ['fault_log','Fault log reviewed and all entries noted'],
-      ['weekly_log','Weekly test log reviewed and up to date'],
-    ]],
-    ['Power Supply (Cl.44.3)',[
-      ['mains_supply','Mains supply confirmed operational'],
-      ['bat_inspect','Battery terminals and connections inspected'],
-      ['bat_voltage','Battery voltage measured and recorded'],
-      ['standby_dur','Standby battery duration test satisfactory'],
-    ]],
-    ['Detection (Cl.44.4)',[
-      ['call_pts','Manual call points tested (all or on rotation)'],
-      ['det_rotation','Detectors tested on rotation basis per schedule'],
-      ['beam_det','Beam detectors aligned and tested (if installed)'],
-      ['aspirating','Aspirating detection system tested (if installed)'],
-    ]],
-    ['Warning Devices (Cl.44.5)',[
-      ['sounders','All sounders tested — dB levels confirmed adequate'],
-      ['visual_alarms','Visual alarm devices tested and confirmed operational'],
-    ]],
-    ['Ancillary Functions (Cl.44.6)',[
-      ['zone_iso','Zone isolation tested and restored correctly'],
-      ['fault_sim','Fault simulation tested and panel cleared'],
-      ['remote_mon','Remote monitoring / alarm receiving centre checked'],
-    ]],
-    ['Documentation &amp; Arrangements (Cl.44.7)',[
-      ['drawings','As-installed drawings present and up to date'],
-      ['cause_effect','Cause and effect documentation available'],
-      ['log_book','Log book available with entries up to date'],
-      ['repair_arr','24-hour emergency callout arrangements confirmed'],
-    ]],
-  ];
+  // ── Domestic: Page 3 — Schedule of Items Inspected ───────────────────────
+  var domSchedPage = '';
+  if (!isComm) {
+    var _domSchedHtml = _buildSchedulePdf(_DOM_SCHED_PDF, r.scheduleItems);
+    domSchedPage = '<div class="cert-page">'
+      +contHead('Schedule of Items Inspected (BS 5839-6:2019 Clause 15)', 3, totalPages)
+      +'<div class="cb">'
+        +'<div class="sec-head">Schedule of Items Inspected</div>'
+        +'<div style="font-size:10.5px;color:#5a3a3a;margin-bottom:10px;line-height:1.5">Inspection result for each item: P = Pass, F = Fail, N/A = Not applicable or not installed. This schedule satisfies the BS 5839-6:2019+A1:2020 Clause 15 inspection record requirement.</div>'
+        +_domSchedHtml
+        +(r.scheduleNotes && r.scheduleNotes['_general'] ? '<div class="obs-box" style="margin-top:8px"><b>Schedule notes:</b> '+_esc(r.scheduleNotes['_general'])+'</div>' : '')
+      +'</div>'
+      +footer(r.premisesName||premAddr[0]||company, 3, totalPages)
+    +'</div>';
+  }
 
+  // ── Page 4: Schedule of Items Inspected (commercial only) ───────────────────
   var page4 = '';
   if (isComm) {
-    var _chks4 = r.annexGChecks || {};
-    var _rn4 = 0;
-    var _chklBody = '';
-    _annexGDefs.forEach(function(g) {
-      _chklBody += '<tr><td colspan="5" class="ag-grp">'+g[0]+'</td></tr>';
-      g[1].forEach(function(item) {
-        _rn4++;
-        var id4=item[0], lbl4=item[1], v4=_chks4[id4]||'';
-        var pCell4 = v4==='PASS'
-          ? '<span style="color:#1a6b40;font-size:14px;font-weight:700">&#10003;</span>'
-          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
-        var fCell4 = v4==='FAIL'
-          ? '<span style="color:#7a1010;font-size:13px;font-weight:700">&#10007;</span>'
-          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
-        var naCell4 = v4==='N/A'
-          ? '<span style="color:#666;font-size:11px">&#8212;</span>'
-          : '<span style="color:#d4c0a8;font-size:11px">&#9675;</span>';
-        var rowBg4 = _rn4 % 2 === 0 ? '#fdfaf8' : '#fdf5f0';
-        _chklBody += '<tr style="background:'+rowBg4+';border-bottom:1px solid #ede0e0">'
-          +'<td style="padding:5px 8px;color:#999;font-size:10px;text-align:center;width:28px;border-right:1px solid #ede0e0">'+_rn4+'</td>'
-          +'<td style="padding:5px 10px;font-size:11.5px;color:#1c1010">'+_esc(lbl4)+'</td>'
-          +'<td style="padding:5px 8px;text-align:center;width:32px;border-left:1px solid #ede0e0">'+pCell4+'</td>'
-          +'<td style="padding:5px 8px;text-align:center;width:32px;border-left:1px solid #ede0e0">'+fCell4+'</td>'
-          +'<td style="padding:5px 8px;text-align:center;width:36px;border-left:1px solid #ede0e0">'+naCell4+'</td>'
-          +'</tr>';
-      });
-    });
+    var _comSchedHtml = _buildSchedulePdf(_COM_SCHED_PDF, r.scheduleItems);
     page4 = '<div class="cert-page">'
-      +contHead('Annex G — Systematic Inspection Checklist', 4, totalPages)
+      +contHead('Schedule of Items Inspected (BS 5839-1:2025 Clause 43)', 4, totalPages)
       +'<div class="cb">'
-        +'<table style="width:100%;border-collapse:collapse;border:1px solid #e08830;border-radius:4px;overflow:hidden;margin-bottom:14px;font-size:12px">'
-          +'<thead><tr style="background:#7a1010">'
-            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:28px;text-align:center">#</th>'
-            +'<th style="padding:7px 10px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
-            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:32px;text-align:center">Pass</th>'
-            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:32px;text-align:center">Fail</th>'
-            +'<th style="padding:7px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
-          +'</tr></thead>'
-          +'<tbody>'+_chklBody+'</tbody>'
-        +'</table>'
-        +'<div style="font-size:9.5px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:8px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable or not installed. Items marked Fail should be recorded as deviations. This checklist forms part of the BS 5839-1:2017+A2:2024 Annex G service certificate.</div>'
+        +'<div class="sec-head">Schedule of Items Inspected</div>'
+        +'<div style="font-size:10.5px;color:#5a3a3a;margin-bottom:10px;line-height:1.5">Inspection result for each item: P = Pass, F = Fail, N/A = Not applicable or not installed. This schedule satisfies the BS 5839-1:2025 Clause 43 periodic service record requirement.</div>'
+        +_comSchedHtml
+        +(r.scheduleNotes && r.scheduleNotes['_general'] ? '<div class="obs-box" style="margin-top:8px"><b>Schedule notes:</b> '+_esc(r.scheduleNotes['_general'])+'</div>' : '')
       +'</div>'
       +footer(r.premisesName||premAddr[0]||company, 4, totalPages)
     +'</div>';
@@ -604,7 +717,7 @@ export function fireBuildCertHTML(r, siteHistory) {
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#1c1010;background:#fdfaf8}
 @page{size:A4;margin:0}
-@media print{body{background:#fdfaf8}.cert-page{page-break-after:always;break-after:page}.cert-page:last-of-type{page-break-after:auto;break-after:auto}}
+@media print{body{background:#fdfaf8}.cert-page{page-break-after:always;break-after:page}.cert-page:last-of-type{page-break-after:auto;break-after:auto}.ltbl{page-break-inside:avoid;break-inside:avoid}.sec-head{page-break-after:avoid;break-after:avoid}.obs-box{page-break-inside:avoid;break-inside:avoid}.fg{page-break-inside:avoid;break-inside:avoid}.ob-box{page-break-inside:avoid;break-inside:avoid}}
 a{color:inherit;text-decoration:none}
 
 /* ── Page wrapper ── */
@@ -622,10 +735,10 @@ a{color:inherit;text-decoration:none}
 .ch{background:#fdfaf8;padding:9px 28px 0;flex-shrink:0}
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:9px;border-bottom:1.5px solid #e2d4d4}
 .ch-logo-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
-.ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
-.ch-company{font-size:24px;font-weight:900;color:#1c1010;letter-spacing:-.02em;line-height:1.1}
+.ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
+.ch-company{font-size:16px;font-weight:600;color:#1a1a1a;letter-spacing:.03em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:inline-block;border-bottom:2px solid #a32b2b;padding-bottom:3px}
 .ch-company-sub{font-size:9.5px;color:#666;margin-top:2px}
-.niceic-badge{border:1.5px solid #e08830;border-radius:4px;padding:7px 14px;background:#f8edcc;text-align:center;flex-shrink:0}
+.niceic-badge{border:none;border-radius:0;padding:0;background:transparent;text-align:center;flex-shrink:0}
 .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a1010}
 .nb-sub{font-size:7.5px;color:#666;margin-top:1px}
 .ch-title-row{padding:7px 0 7px}
@@ -690,7 +803,9 @@ a{color:inherit;text-decoration:none}
 /* ── Tables ── */
 .ltbl{width:100%;border-collapse:collapse;font-size:9.5px;background:#fdfaf8;margin-bottom:12px}
 .ltbl th{background:#f8edcc;color:#7a1010;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px;text-align:left}
+.ltbl th:last-child{text-align:right;width:62px}
 .ltbl td{padding:5.5px 8px;border-bottom:1px solid #ede0e0;vertical-align:top}
+.ltbl td:last-child{text-align:right;white-space:nowrap;width:62px}
 .ltbl tr:nth-child(even) td{background:#fdf5ec}
 .ppill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #166534;color:#166534;font-weight:600}
 .fpill{display:inline-block;font-size:8px;letter-spacing:.05em;padding:1px 7px;border-radius:20px;border:1px solid #7a1010;color:#7a1010;font-weight:600}
@@ -709,5 +824,5 @@ a{color:inherit;text-decoration:none}
 .cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
 .ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
 
-  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+page3+page4+page5+'</body></html>';
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+domSchedPage+page3+page4+page5+'</body></html>';
 }
