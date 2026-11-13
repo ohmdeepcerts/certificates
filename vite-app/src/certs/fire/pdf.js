@@ -326,12 +326,47 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.sysLoops)     sysDetailCells += _field('Loops', r.sysLoops);
     if (r.sysBafe)      sysDetailCells += _field('BAFE scheme no.', r.sysBafe);
     if (r.sysFia)       sysDetailCells += _field('FIA member no.', r.sysFia);
+    if (r.sysCommissionDate) sysDetailCells += _field('Commissioning date', r.sysCommissionDate);
+    if (r.sysDrawingRef) sysDetailCells += _field('Drawing / scheme ref', r.sysDrawingRef);
     if (r.batType)       sysDetailCells += _field('Battery type', r.batType);
     if (r.batInstallDate)sysDetailCells += _field('Battery installed', r.batInstallDate);
     if (r.batNextReplacement) sysDetailCells += _field('Battery replace by', r.batNextReplacement);
+    if (r.sysCategoryRiskAssessment) sysDetailCells += _field('Category vs. risk assessment', r.sysCategoryRiskAssessment);
+    if (r.monitoringContractRef) sysDetailCells += _field('Monitoring contract ref', r.monitoringContractRef);
+    if (r.keyholdersConfirmed) sysDetailCells += _field('Keyholders confirmed with ARC', r.keyholdersConfirmed);
+    if (r.logBookLocation) sysDetailCells += _field('Log book location', r.logBookLocation);
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
     if (r.worksCarried) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
     if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
+  }
+
+  // ── Interfaces (commercial only) ─────────────────────────────────────────
+  var ifacesHtml = '';
+  if (isComm && r.interfaces && Object.keys(r.interfaces).filter(function(k){return !k.endsWith('_notes');}).some(function(k){return r.interfaces[k];})) {
+    var _ifaceList = [
+      {key:'iface_door',       label:'Door release holders / door closers'},
+      {key:'iface_aov',        label:'Smoke ventilation / AOV'},
+      {key:'iface_hvac',       label:'HVAC / air handling shutdown'},
+      {key:'iface_lift',       label:'Lift recall interface'},
+      {key:'iface_access',     label:'Access control system'},
+      {key:'iface_em_light',   label:'Emergency lighting interface'},
+      {key:'iface_suppression',label:'Suppression / extinguishing system'},
+      {key:'iface_pa',         label:'PA / voice alarm link'},
+      {key:'iface_refuge',     label:'Disabled refuge alarm interface'},
+      {key:'iface_arc',        label:'Remote monitoring / ARC'},
+    ];
+    var _ifaceRows = _ifaceList.map(function(iface) {
+      var st = (r.interfaces||{})[iface.key] || '';
+      var nt = (r.interfaces||{})[iface.key+'_notes'] || '';
+      if (!st) return '';
+      var stHtml = st==='Tested OK'?'<span class="ppill">Tested OK</span>':st==='Fault Found'?'<span class="fpill">Fault Found</span>':_esc(st);
+      return '<tr><td>'+_esc(iface.label)+'</td><td>'+stHtml+'</td><td>'+_esc(nt)+'</td></tr>';
+    }).filter(Boolean).join('');
+    if (_ifaceRows) {
+      ifacesHtml = '<div class="sec-head" style="margin-top:14px">Interfaces &amp; Ancillary Functions</div>'
+        +'<table class="ltbl"><thead><tr><th>Interface</th><th>Status</th><th>Notes</th></tr></thead><tbody>'+_ifaceRows+'</tbody></table>';
+      if (r.interfacesNotes) ifacesHtml += '<div class="obs-box" style="margin-top:8px">'+_esc(r.interfacesNotes)+'</div>';
+    }
   }
 
   // ── Defects ───────────────────────────────────────────────────────────────
@@ -352,6 +387,21 @@ export function fireBuildCertHTML(r, siteHistory) {
       +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
       +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
       +(defRows&&r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
+  }
+
+  // ── Carry-forward defects (FA.4 only) ────────────────────────────────────
+  var carriedDefHtml = '';
+  if (r.certType === 'FA.4' && (r.carriedDefects||[]).length) {
+    var _cdSevStyles = {C1:'color:#7a1010;font-weight:700',C2:'color:#c01818;font-weight:700',C3:'color:#a16207;font-weight:600'};
+    var cdRows = (r.carriedDefects||[]).map(function(cd) {
+      var res = cd.resolution || 'Not reviewed';
+      var resHtml = res==='Resolved'?'<span class="ppill">Resolved</span>':res==='Escalated'?'<span class="fpill">Escalated</span>':_esc(res);
+      return '<tr><td>'+_esc(cd.description)+'</td><td style="'+((_cdSevStyles[cd.severity||'C3'])||'')+'">'+_esc(cd.severity||'C3')+'</td><td>'+resHtml+'</td></tr>';
+    }).join('');
+    var _prevRef = r._prevCertRef ? ' ('+_esc(r._prevCertRef)+')' : '';
+    var _prevDt  = r._prevCertDate ? ' — '+_esc(r._prevCertDate) : '';
+    carriedDefHtml = '<div class="sec-head" style="margin-top:14px">Previous Defects — Carry-forward Review'+_prevRef+_prevDt+'</div>'
+      +'<table class="ltbl"><thead><tr><th>Previous defect</th><th>Prev. severity</th><th>Resolution this visit</th></tr></thead><tbody>'+cdRows+'</tbody></table>';
   }
 
   // ── Service history ───────────────────────────────────────────────────────
@@ -483,7 +533,7 @@ export function fireBuildCertHTML(r, siteHistory) {
             +'<div class="addr-col-label">Landlord / Client</div>'
             +(clientName!=='—'?'<div class="addr-name">'+clientName+'</div>':'')
             +(clientAddrLines?'<div class="addr-line">'+clientAddrLines+'</div>':'')
-            +(r.responsiblePerson&&r.responsiblePerson!==r.clientName?'<div class="addr-sub" style="margin-top:5px">Resp: '+_esc(r.responsiblePerson)+'</div>':'')
+            +(r.responsiblePerson&&r.responsiblePerson!==r.clientName?'<div class="addr-sub" style="margin-top:5px">Resp: '+_esc(r.responsiblePerson)+(r.responsiblePersonTitle?' ('+_esc(r.responsiblePersonTitle)+')':'')+(r.responsiblePersonTel?' · '+_esc(r.responsiblePersonTel):'')+'</div>':'')
             +(clientName==='—'&&!clientAddrLines?'<div style="color:#9a948e;font-size:12px;margin-top:4px">—</div>':'')
           +'</div>'
           +'<div style="flex:1;padding:12px 24px 16px 14px">'
@@ -580,7 +630,9 @@ export function fireBuildCertHTML(r, siteHistory) {
     +contHead('Declaration &amp; Sign-off', _declPageNo, totalPages)
     +'<div class="cb">'
       +(sysDetailCells?'<div class="sec-head">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
+      +ifacesHtml
       +serviceHistoryHtml
+      +carriedDefHtml
       +defectsHtml
       +'<div class="sec-head" style="margin-top:14px">Competent Person Declaration</div>'
       +'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;font-size:11.5px;margin-bottom:14px">'
