@@ -1,8 +1,10 @@
 {
-  "v": "2.2.2",
-  "build": 150,
-  "new": 3,
+  "v": "2.2.3",
+  "build": 151,
+  "new": 2,
   "changes": [
+    "New: Commercial fire certificates (FA.3 and FA.4) now include an Interfaces step — record the status of connected systems such as door holders, smoke vents, HVAC shutdown, lift recall, access control and remote monitoring. Each interface shows its own status (Tested OK, Fault Found, Not Installed, Not Tested) and prints in the certificate.",
+    "New: FA.4 Inspection and Servicing Reports now carry forward defects from the previous certificate for the same address — the previous defects appear in the Defects step so you can mark each one as Resolved, Still Present or Escalated. All carry-forward results print in the certificate.",
     "New: Panel serial number field added to fire certificate System Details — enter the control panel serial number and it prints on the certificate under system details.",
     "New: Firmware version field added to fire certificate System Details — enter the panel firmware version and it prints alongside the serial number on the certificate.",
     "New: Battery details section added to fire certificate System Details — record battery type, installation date and next replacement date. All three fields are optional and print on the certificate only when filled.",
