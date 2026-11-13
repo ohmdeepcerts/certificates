@@ -1,4 +1,4 @@
-const CACHE = 'ohm-certs-v140';
+const CACHE = 'ohm-certs-v141';
 const SHELL = ['/certificates/', '/certificates/index.html'];
 
 self.addEventListener('install', e => {

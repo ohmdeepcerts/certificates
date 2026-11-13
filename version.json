@@ -1,8 +1,13 @@
 {
-  "v": "2.2.6",
-  "build": 154,
-  "new": 12,
+  "v": "2.2.7",
+  "build": 155,
+  "new": 5,
   "changes": [
+    "Fixed: Luminaire count calculator on EL certificates now updates Pass and Fail totals in real time — previously you had to tap Next and come back to see the calculated numbers.",
+    "New: Emergency Lighting wizard now opens with Operating Mode set to Maintained (Y) — the most common type for UK premises.",
+    "New: Annual full test is now the default inspection type on new EL certificates — change it only if you are doing a monthly or commissioning test.",
+    "New: Self-contained luminaires annual review row is now pre-ticked as Pass when you start a new EL certificate.",
+    "New: Checklist notes on EL certificates now defaults to N/A — clear it if you have something specific to add.",
     "New: HMO licence reference field added to fire certificate premises step — appears when HMO is selected as the property type. Prints on the certificate.",
     "New: Person in control at time of work field added to fire certificate client step — record who was present and responsible on site during the visit.",
     "New: Cable type field added to commercial fire certificates — record the cable specification (e.g. BS 7629-1 Enhanced Fire Resistant). Prints on the certificate.",
