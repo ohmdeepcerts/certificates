@@ -295,6 +295,11 @@ export function fireBuildCertHTML(r, siteHistory) {
   // ── System details grid ───────────────────────────────────────────────────
   var sysDetailCells = '';
   if (!isComm) {
+    if (r.visitType)     sysDetailCells += _field('Visit type', r.visitType);
+    if (r.jobRef)        sysDetailCells += _field('Job / work order ref', r.jobRef);
+    if (r.premFloors)    sysDetailCells += _field('Number of floors', r.premFloors);
+    if (r.hmoLicenceRef) sysDetailCells += _field('HMO licence ref', r.hmoLicenceRef);
+    if (r.personInControl) sysDetailCells += _field('Person in control', r.personInControl);
     if (r.sysCategory)   sysDetailCells += _field('Category', r.sysCategory);
     if (r.sysGrade)      sysDetailCells += _field('Grade', r.sysGrade);
     if (r.sysCoverage)   sysDetailCells += _field('Coverage', r.sysCoverage);
@@ -313,10 +318,20 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.prevServiceDate) sysDetailCells += _field('Previous service date', r.prevServiceDate);
     if (r.designRef)       sysDetailCells += _field('Design / scheme ref', r.designRef);
     if (r.departuresNotes) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Departures / variations')+'</div><div class="fv">'+_esc(r.departuresNotes)+'</div></div>';
+    if (r.testMethod)   sysDetailCells += _field('Test method', r.testMethod);
+    if (r.zonalVerification) sysDetailCells += _field('Zonal verification', r.zonalVerification);
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
+    if (r.partsReplaced) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Parts replaced this visit')+'</div><div class="fv">'+_esc(r.partsReplaced)+'</div></div>';
+    if (r.partsOrdered)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Parts ordered / not yet fitted')+'</div><div class="fv">'+_esc(r.partsOrdered)+'</div></div>';
     if (r.worksCarried)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
     if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
   } else {
+    if (r.visitType)    sysDetailCells += _field('Visit type', r.visitType);
+    if (r.jobRef)       sysDetailCells += _field('Job / work order ref', r.jobRef);
+    if (r.premFloors)   sysDetailCells += _field('Number of floors', r.premFloors);
+    if (r.hmoLicenceRef)sysDetailCells += _field('HMO licence ref', r.hmoLicenceRef);
+    if (r.contractRef)  sysDetailCells += _field('Contract / maintenance ref', r.contractRef);
+    if (r.personInControl) sysDetailCells += _field('Person in control', r.personInControl);
     if (r.sysCategory)  sysDetailCells += _field('System category', r.sysCategory);
     if (r.sysCommType)  sysDetailCells += _field('System type', r.sysCommType);
     if (r.sysPanelMake||r.sysPanelModel) sysDetailCells += _field('Control panel', [r.sysPanelMake,r.sysPanelModel].filter(Boolean).join(' '));
@@ -335,7 +350,21 @@ export function fireBuildCertHTML(r, siteHistory) {
     if (r.monitoringContractRef) sysDetailCells += _field('Monitoring contract ref', r.monitoringContractRef);
     if (r.keyholdersConfirmed) sysDetailCells += _field('Keyholders confirmed with ARC', r.keyholdersConfirmed);
     if (r.logBookLocation) sysDetailCells += _field('Log book location', r.logBookLocation);
+    if (r.fraRef)       sysDetailCells += _field('Fire risk assessment ref', r.fraRef);
+    if (r.fraDate)      sysDetailCells += _field('Fire risk assessment date', r.fraDate);
+    if (r.prevInspDate) sysDetailCells += _field('Date of last full inspection', r.prevInspDate);
+    if (r.cableType)    sysDetailCells += _field('Cable type', r.cableType);
+    if (r.alarmSignalType) sysDetailCells += _field('Alarm signal type', r.alarmSignalType);
+    if (r.panelAccessLevel) sysDetailCells += _field('Panel access level', r.panelAccessLevel);
+    if (r.sysAge)       sysDetailCells += _field('System age (years)', r.sysAge);
+    if (r.testMethod)   sysDetailCells += _field('Test method', r.testMethod);
+    if (r.zonalVerification) sysDetailCells += _field('Zonal verification', r.zonalVerification);
+    if (r.prevVisitsCount) sysDetailCells += _field('Previous visits to site', r.prevVisitsCount);
+    if (r.freeholderNotified) sysDetailCells += _field('Freeholder / agent notified', r.freeholderNotified);
+    if (r.fireBrigadeNotified) sysDetailCells += _field('Fire brigade notified', r.fireBrigadeNotified);
     if (r.sysOperational) sysDetailCells += _field('System operational at leaving', r.sysOperational);
+    if (r.partsReplaced) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Parts replaced this visit')+'</div><div class="fv">'+_esc(r.partsReplaced)+'</div></div>';
+    if (r.partsOrdered)  sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Parts ordered / not yet fitted')+'</div><div class="fv">'+_esc(r.partsOrdered)+'</div></div>';
     if (r.worksCarried) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works carried out')+'</div><div class="fv">'+_esc(r.worksCarried)+'</div></div>';
     if (r.worksRecommended) sysDetailCells += '<div class="f" style="grid-column:1/-1"><div class="fl">'+_esc('Works recommended')+'</div><div class="fv">'+_esc(r.worksRecommended)+'</div></div>';
   }
@@ -380,12 +409,17 @@ export function fireBuildCertHTML(r, siteHistory) {
   if (hasDefects) {
     var defRows = (r.defects||[]).map(function(d,i){
       var sev = d.severity||'Advisory';
-      return '<tr><td>'+(i+1)+'</td><td>'+_esc(d.description)+'</td><td style="'+(SEV_STYLES[sev]||'')+'">'+_esc(sev)+'</td><td>'+_esc(d.recommendation)+'</td></tr>';
+      var urg = d.urgency ? '<span style="font-size:10px;color:#7f1d1d;font-weight:600">'+_esc(d.urgency)+'</span>' : '—';
+      var rpty = d.responsibleParty ? '<span style="font-size:10px">'+_esc(d.responsibleParty)+'</span>' : '—';
+      return '<tr><td>'+(i+1)+'</td><td>'+_esc(d.description)+'</td><td style="'+(SEV_STYLES[sev]||'')+'">'+_esc(sev)+'</td><td>'+urg+'</td><td>'+_esc(d.recommendation)+'</td><td>'+rpty+'</td><td style="font-size:11px;color:#555">'+_esc(d.targetDate||'')+'</td></tr>';
     }).join('');
+    var _sevKeyHtml = isComm
+      ? '<div style="font-size:10px;color:#666;margin-top:5px;padding:4px 8px;background:#fdf9f9;border:1px solid #f0e0e0;border-radius:3px"><b style="color:#7a1010">C1</b> — Immediate danger &nbsp;|&nbsp; <b style="color:#c01818">C2</b> — Potentially dangerous &nbsp;|&nbsp; <b style="color:#a16207">C3</b> — Improvement recommended &nbsp;|&nbsp; <b style="color:#1d4ed8">FI</b> — Further investigation</div>'
+      : '<div style="font-size:10px;color:#666;margin-top:5px;padding:4px 8px;background:#fdf9f9;border:1px solid #f0e0e0;border-radius:3px"><b style="color:#7a1010">C1</b> — Immediate danger &nbsp;|&nbsp; <b style="color:#c01818">C2</b> — Potentially dangerous &nbsp;|&nbsp; <b style="color:#a16207">C3</b> — Improvement recommended</div>';
     var _defSectionTitle = isComm ? 'Details of Deviations from the Standards' : 'Defects &amp; Recommendations';
     defectsHtml = '<div class="sec-head" style="margin-top:14px">'+_defSectionTitle+'</div>'
       +(r.defectsOverall?'<div class="obs-box" style="margin-bottom:10px"><b>Overall condition:</b> '+_esc(r.defectsOverall)+'</div>':'')
-      +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody>'+defRows+'</tbody></table>':'')
+      +(defRows?'<table class="ltbl"><thead><tr><th>#</th><th>Description</th><th>Severity</th><th>Urgency</th><th>Recommendation</th><th>Responsible</th><th>Target date</th></tr></thead><tbody>'+defRows+'</tbody></table>'+_sevKeyHtml:'')
       +(defRows&&r.defectsNotes?'<div class="obs-box" style="margin-top:8px">'+_esc(r.defectsNotes)+'</div>':'');
   }
 

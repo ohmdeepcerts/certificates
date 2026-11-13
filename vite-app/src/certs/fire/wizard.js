@@ -134,6 +134,8 @@ const COM_SCHEDULE_ITEMS = [
     ['doc_cause_effect','Cause and effect documentation available on-site'],
     ['doc_logbook','Fire alarm log book present — entries current'],
     ['doc_repair','24-hour emergency callout arrangements confirmed in writing'],
+    ['doc_om_manuals',"O&M manuals / manufacturer's instructions present on site"],
+    ['doc_zone_chart','Zone chart / schedule of devices available on site'],
   ]],
 ];
 
@@ -254,6 +256,14 @@ export function startNewFire() {
     // carry-forward defects (commercial FA.4)
     carriedDefects: [], _prevCertRef: '', _prevCertDate: '', _prevCertLoaded: false,
     worksRecommended: '', prevDefectsResolved: '',
+    visitType: '', jobRef: '', premFloors: '', contractRef: '',
+    fraRef: '', fraDate: '', prevInspDate: '',
+    partsReplaced: '', partsOrdered: '',
+    hmoLicenceRef: '',
+    cableType: '', alarmSignalType: '', panelAccessLevel: '', sysAge: '',
+    testMethod: '', zonalVerification: '',
+    personInControl: '',
+    prevVisitsCount: '', freeholderNotified: '', fireBrigadeNotified: '',
     responsiblePersonTitle: '', responsiblePersonTel: '',
     annexGChecks: {}, annexFa2Checks: {s01:'PASS',s02:'PASS',s03:'PASS',s04:'PASS',s05:'PASS',s06:'PASS',s07:'PASS',s08:'N/A',s09:'PASS',s10:'PASS'},
     changeOfOrg: '',
@@ -334,6 +344,18 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>${_nextLbl0}</label><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="chip${_w.nextInspDate===_addMonths(_w.testDate,6)?' on':''}" onclick="fireSetNextInsp(6)">6 months</button><button class="chip${_w.nextInspDate===_addMonths(_w.testDate,12)?' on':''}" onclick="fireSetNextInsp(12)">12 months</button>${_calBtn('nextInspDate')}<input value="${esc(_w.nextInspDate)}" oninput="fireSet('nextInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:130px"></div></div>`;
       html += `</div>`;
     }
+    if (_w.certType) {
+      var _visitTypes = _isComm()
+        ? ['Quarterly Service','6-Monthly Service','Annual Service','Emergency Call-out','Commissioning','Handover Inspection','Other']
+        : ['Annual Service','Emergency Call-out','Commissioning','Handover Inspection','Other'];
+      html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">`;
+      html += `<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px"><i class="fa-solid fa-clipboard-list" style="margin-right:5px"></i>Visit Details</div>`;
+      html += `<div class="wiz-field"><label>Visit type / purpose <span class="lbl-opt">(optional)</span></label><div class="chip-row">`;
+      _visitTypes.forEach(function(v){ html += `<button class="chip${_w.visitType===v?' on':''}" onclick="firePick('visitType','${esc(v)}')">${esc(v)}</button>`; });
+      html += `</div></div>`;
+      html += `<div class="wiz-field"><label>Job / work order reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.jobRef||'')}" oninput="fireSet('jobRef',this.value)" placeholder="e.g. WO-2026-00123" style="max-width:200px"></div>`;
+      html += `</div>`;
+    }
     html += `<div class="wiz-nav"><button onclick="fireNext()" class="btn-primary" ${!_w.certType?'disabled':''}>Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 1: Premises ──────────────────────────────────────────────────────
@@ -344,11 +366,15 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Address Line 2</label><input value="${esc(_w.premAddr2)}" oninput="fireSet('premAddr2',this.value)" placeholder="District / area (optional)"></div>`;
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.premAddr3)}" oninput="fireSet('premAddr3',this.value)" placeholder="Town or city"></div>`;
     html += `<div class="wiz-field"><label>Postcode *</label><input value="${esc(_w.premPostcode)}" oninput="fireSet('premPostcode',this.value);fireUpdateSubtitle()" placeholder="e.g. SW1A 1AA" style="max-width:140px"></div>`;
+    html += `<div class="wiz-field"><label>Number of floors / storeys <span class="lbl-opt">(optional)</span></label><input type="number" min="1" max="200" value="${esc(_w.premFloors||'')}" oninput="fireSet('premFloors',this.value)" placeholder="e.g. 3" style="max-width:100px"></div>`;
     html += `<div class="wiz-field"><label>Property Type</label><div class="chip-row">`;
     var showTypes = _w._ptShowMore ? PREMISES_TYPES : PREMISES_TYPES.slice(0,6);
     showTypes.forEach(pt => { html += `<button class="chip${_w.premisesType===pt?' on':''}" onclick="firePick('premisesType','${esc(pt)}')">${esc(pt)}</button>`; });
     if (!_w._ptShowMore) html += `<button class="chip" onclick="firePick('_ptShowMore',true);fireRenderStep()">More…</button>`;
     html += `</div></div>`;
+    if ((_w.premisesType||'').includes('HMO')) {
+      html += `<div class="wiz-field"><label>HMO licence reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.hmoLicenceRef||'')}" oninput="fireSet('hmoLicenceRef',this.value)" placeholder="e.g. HMO/2024/00456" style="max-width:220px"></div>`;
+    }
     html += `<div style="margin-bottom:8px"><button onclick="firePickFromDirectory()" class="btn-sm"><i class="fa-solid fa-address-book"></i> Pick from directory</button></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -372,9 +398,13 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Town / City</label><input value="${esc(_w.clientAddr3)}" oninput="fireSet('clientAddr3',this.value)"></div>`;
     html += `<div class="wiz-field"><label>Postcode *</label><input value="${esc(_w.clientPostcode)}" oninput="fireSet('clientPostcode',this.value)" style="max-width:140px"></div>`;
     html += `<div class="wiz-field"><label>Client Email (for auto-send)</label><input type="email" value="${esc(_w.clientEmail)}" oninput="fireSet('clientEmail',this.value)" placeholder="client@example.com"></div>`;
+    if (_isComm()) {
+      html += `<div class="wiz-field"><label>Contract / maintenance agreement reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.contractRef||'')}" oninput="fireSet('contractRef',this.value)" placeholder="e.g. MAINT-2026-001"></div>`;
+    }
     html += `<div class="wiz-field"><label>Responsible Person <span class="lbl-opt">(on-site contact)</span></label><input value="${esc(_w.responsiblePerson)}" oninput="fireSet('responsiblePerson',this.value)" placeholder="Name of person responsible for premises"></div>`;
     html += `<div class="wiz-field"><label>Responsible Person Title <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.responsiblePersonTitle||'')}" oninput="fireSet('responsiblePersonTitle',this.value)" placeholder="e.g. Facilities Manager, Building Owner" style="max-width:280px"></div>`;
     html += `<div class="wiz-field"><label>Responsible Person Contact Number <span class="lbl-opt">(optional)</span></label><input type="tel" value="${esc(_w.responsiblePersonTel||'')}" oninput="fireSet('responsiblePersonTel',this.value)" placeholder="e.g. 07700 900123" style="max-width:200px"></div>`;
+    html += `<div class="wiz-field"><label>Person in control at time of work <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.personInControl||'')}" oninput="fireSet('personInControl',this.value)" placeholder="Name and role of person present, e.g. Site Manager John Smith" style="max-width:320px"></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 3: System details ────────────────────────────────────────────────
@@ -467,6 +497,24 @@ export function fireRenderStep() {
       ['Yes — confirmed','No — requires update','N/A — not monitored'].forEach(function(v){ html += `<button class="chip${_w.keyholdersConfirmed===v?' on':''}" onclick="firePick('keyholdersConfirmed','${esc(v)}')">${esc(v)}</button>`; });
       html += `</div></div>`;
       html += `<div class="wiz-field"><label>Log book location <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.logBookLocation||'')}" oninput="fireSet('logBookLocation',this.value)" placeholder="e.g. Main reception, plant room, manager's office"></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Wiring &amp; Signal</div></div>`;
+      html += `<div class="wiz-field"><label>Cable type <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.cableType||'')}" oninput="fireSet('cableType',this.value)" placeholder="e.g. BS 7629-1 Enhanced Fire Resistant, Standard CCA, SWA"></div>`;
+      html += `<div class="wiz-field"><label>Alarm signal type <span class="lbl-opt">(optional)</span></label><div class="chip-row">`;
+      ['Continuous','Pulsed','Phased Evacuation (Alert then Evacuation)','Other'].forEach(function(v){ html += `<button class="chip${_w.alarmSignalType===v?' on':''}" onclick="firePick('alarmSignalType','${esc(v)}')">${esc(v)}</button>`; });
+      html += `</div></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Panel Security &amp; Age</div></div>`;
+      html += `<div class="wiz-field"><label>Panel access level confirmed <span class="lbl-opt">(BS EN 54-2)</span></label><div class="chip-row">`;
+      ['Level 1 (Normal)','Level 2 (Service)','Level 3 (Management)','Level 4 (Manufacturer)'].forEach(function(v){ html += `<button class="chip${_w.panelAccessLevel===v?' on':''}" onclick="firePick('panelAccessLevel','${esc(v)}')">${esc(v)}</button>`; });
+      html += `</div></div>`;
+      html += `<div class="wiz-field"><label>System age <span class="lbl-opt">(years installed — optional)</span></label><input type="number" min="0" max="99" value="${esc(_w.sysAge||'')}" oninput="fireSet('sysAge',this.value)" placeholder="e.g. 8" style="max-width:80px">`;
+      if (parseInt(_w.sysAge||'0') >= 10) html += `<div style="font-size:11px;color:#b45309;margin-top:4px"><i class="fa-solid fa-triangle-exclamation" style="margin-right:3px"></i>System is 10+ years old — consider recommending full system review per BS 5839-1</div>`;
+      html += `</div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Fire Risk Assessment &amp; Inspection History <span style="font-weight:400;text-transform:none">(optional)</span></div></div>`;
+      html += `<div class="wiz-field"><label>Fire risk assessment reference</label><input value="${esc(_w.fraRef||'')}" oninput="fireSet('fraRef',this.value)" placeholder="e.g. FRA-2024-001"></div>`;
+      html += `<div class="wiz-field"><label>Fire risk assessment date</label><input value="${esc(_w.fraDate||'')}" oninput="fireSet('fraDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      if (_w.certType === 'FA.3' || _w.certType === 'FA.4') {
+        html += `<div class="wiz-field"><label>Date of last full inspection</label><input value="${esc(_w.prevInspDate||'')}" oninput="fireSet('prevInspDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
+      }
     }
     var _deptLabel = _isComm() ? 'Variations from BS 5839-1 Clause 43 <span class="lbl-opt">(optional)</span>' : 'Departures / variations <span class="lbl-opt">(optional)</span>';
     var _deptPlaceholder = _isComm() ? 'Any agreed variations or departures from BS 5839-1 Clause 43 requirements, with justification…' : 'Any agreed departures from BS 5839-6 standard requirements, with justification…';
@@ -602,6 +650,13 @@ export function fireRenderStep() {
         });
       });
     }
+    html += `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Test Method &amp; Verification</div></div>`;
+    html += `<div class="wiz-field"><label>Test method used <span class="lbl-opt">(optional)</span></label><div class="chip-row">`;
+    ['Aerosol / simulated smoke','Heat gun / simulated heat','Functional test only','Aspirator','Substitution test','Rotation basis per schedule'].forEach(function(v){ html += `<button class="chip${_w.testMethod===v?' on':''}" onclick="firePick('testMethod','${esc(v)}')">${esc(v)}</button>`; });
+    html += `</div></div>`;
+    html += `<div class="wiz-field"><label>Zonal verification confirmed <span class="lbl-opt">(zones match design)</span></label><div class="chip-row">`;
+    ['Yes — all zones verified','Partial — see notes','No — discrepancy found','N/A'].forEach(function(v){ html += `<button class="chip${_w.zonalVerification===v?' on':''}" onclick="firePick('zonalVerification','${esc(v)}')">${esc(v)}</button>`; });
+    html += `</div></div>`;
     html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><div style="position:relative"><textarea rows="2" oninput="fireInspLimInput(this.value)" onblur="fireLimBlur(this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea><div id="fire-lim-sugg" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:100;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)"></div></div></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
@@ -673,7 +728,9 @@ export function fireRenderStep() {
       html += `<thead><tr style="background:var(--surface2,#f9fafb)">`;
       html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Description</th>`;
       html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Severity</th>`;
+      html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Urgency</th>`;
       html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">Recommendation</th>`;
+      html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Responsible party</th>`;
       html += `<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Target date</th>`;
       html += `<th style="padding:6px 4px;border-bottom:1px solid var(--border)"></th>`;
       html += `</tr></thead><tbody>`;
@@ -682,13 +739,19 @@ export function fireRenderStep() {
         : {C1:'color:#9b1c1c;font-weight:700',C2:'color:#dc2626',C3:'color:#d97706'};
       var _sevOptions = _isCommDef ? ['C1','C2','C3','FI'] : ['C1','C2','C3'];
       var _sevDefault = 'C3';
+      var _urgOptions = ['Immediate','Within 24 hrs','Within 7 days','Within 1 month','Advisory'];
       (_w.defects||[]).forEach((d, i) => {
         html += `<tr>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.description||'')}" oninput="fireDefectSet(${i},'description',this.value)" placeholder="Describe the defect" style="width:100%;min-width:120px"></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDefectSet(${i},'severity',this.value)" style="min-width:90px">`;
         _sevOptions.forEach(sv => { html += `<option${(d.severity||_sevDefault)===sv?' selected':''} style="${SEV_COLORS[sv]||''}">${sv}</option>`; });
         html += `</select></td>`;
+        html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><select onchange="fireDefectSet(${i},'urgency',this.value)" style="min-width:110px">`;
+        html += `<option value="">—</option>`;
+        _urgOptions.forEach(function(u){ html += `<option${(d.urgency||'')=== u?' selected':''}>${esc(u)}</option>`; });
+        html += `</select></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.recommendation||'')}" oninput="fireDefectSet(${i},'recommendation',this.value)" placeholder="Recommended action" style="width:100%;min-width:120px"></td>`;
+        html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.responsibleParty||'')}" oninput="fireDefectSet(${i},'responsibleParty',this.value)" placeholder="e.g. Client, Landlord" style="min-width:80px;max-width:110px"></td>`;
         html += `<td style="padding:4px 6px;border-bottom:1px solid var(--border)"><input value="${esc(d.targetDate||'')}" oninput="fireDefectSet(${i},'targetDate',this.value)" placeholder="DD/MM/YYYY" style="min-width:90px"></td>`;
         html += `<td style="padding:4px;border-bottom:1px solid var(--border)"><button onclick="fireRemoveDefect(${i})" style="border:none;background:none;color:#dc2626;cursor:pointer;padding:4px"><i class="fa-solid fa-trash-can"></i></button></td>`;
         html += `</tr>`;
@@ -732,6 +795,8 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>System operational at time of leaving</label><div class="chip-row">`;
     ['Yes','No'].forEach(v => { html += `<button class="chip${_w.sysOperational===v?' on':''}" onclick="firePick('sysOperational','${v}')">${v}</button>`; });
     html += `</div></div>`;
+    html += `<div class="wiz-field"><label>Parts / components replaced during this visit <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('partsReplaced',this.value)" placeholder="e.g. Zone 2 optical detector replaced — Hochiki type DFJ-S, Smoke detector head × 1" style="width:100%;font-size:13px;resize:vertical">${esc(_w.partsReplaced||'')}</textarea></div>`;
+    html += `<div class="wiz-field"><label>Parts ordered / not yet fitted <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('partsOrdered',this.value)" placeholder="e.g. Replacement call point for Zone 1 — ordered, awaiting delivery" style="width:100%;font-size:13px;resize:vertical">${esc(_w.partsOrdered||'')}</textarea></div>`;
     html += `<div class="wiz-field"><label>Works carried out <span class="lbl-opt">(optional)</span></label><textarea rows="3" oninput="fireSet('worksCarried',this.value)" placeholder="Brief description of work carried out during this visit…" style="width:100%">${esc(_w.worksCarried)}</textarea></div>`;
     html += `<div class="wiz-field"><label>Works recommended <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSet('worksRecommended',this.value)" placeholder="e.g. Replace call point in Zone 2, upgrade panel firmware, additional detector required in converted loft…" style="width:100%">${esc(_w.worksRecommended||'')}</textarea></div>`;
     if (_isComm()) {
@@ -751,6 +816,14 @@ export function fireRenderStep() {
       html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">False Alarm Statistics</p></div>`;
       html += `<div class="wiz-field"><label>False alarms in past 12 months <span class="lbl-opt">(optional)</span></label><input type="number" min="0" max="999" value="${esc(_w.falseAlarms12m||'')}" oninput="fireSet('falseAlarms12m',this.value)" placeholder="0" style="max-width:100px"></div>`;
       html += `<div class="wiz-field"><label>Action taken to reduce false alarms <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.falseAlarmAction==='None required'?' on':''}" onclick="firePick('falseAlarmAction','None required')">None required</button><button class="chip${_w.falseAlarmAction==='Under investigation'?' on':''}" onclick="firePick('falseAlarmAction','Under investigation')">Under investigation</button><button class="chip${_w.falseAlarmAction==='Devices adjusted'?' on':''}" onclick="firePick('falseAlarmAction','Devices adjusted')">Devices adjusted</button><button class="chip${_w.falseAlarmAction==='Settings changed'?' on':''}" onclick="firePick('falseAlarmAction','Settings changed')">Settings changed</button><button class="chip${_w.falseAlarmAction==='Complete'?' on':''}" onclick="firePick('falseAlarmAction','Complete')">Complete</button></div></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Notifications &amp; Visit History</p></div>`;
+      html += `<div class="wiz-field"><label>Number of previous visits to this site <span class="lbl-opt">(optional)</span></label><input type="number" min="0" max="999" value="${esc(_w.prevVisitsCount||'')}" oninput="fireSet('prevVisitsCount',this.value)" placeholder="0" style="max-width:80px"></div>`;
+      html += `<div class="wiz-field"><label>Freeholder / managing agent notified of defects? <span class="lbl-opt">(optional)</span></label><div class="chip-row">`;
+      ['Yes — notified','No — not applicable','Notification required'].forEach(function(v){ html += `<button class="chip${_w.freeholderNotified===v?' on':''}" onclick="firePick('freeholderNotified','${esc(v)}')">${esc(v)}</button>`; });
+      html += `</div></div>`;
+      html += `<div class="wiz-field"><label>Fire brigade / local authority notified? <span class="lbl-opt">(C1 defects — optional)</span></label><div class="chip-row">`;
+      ['Yes — notified','No — not required','Recommended'].forEach(function(v){ html += `<button class="chip${_w.fireBrigadeNotified===v?' on':''}" onclick="firePick('fireBrigadeNotified','${esc(v)}')">${esc(v)}</button>`; });
+      html += `</div></div>`;
       html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Change of Servicing Organisation</p></div>`;
       html += `<div class="wiz-field"><label>Has the servicing organisation changed? <span class="lbl-opt">(optional)</span></label><div class="chip-row"><button class="chip${_w.changeOfOrg==='yes'?' on chip-sat':''}" onclick="firePick('changeOfOrg','yes')">Yes</button><button class="chip${_w.changeOfOrg==='no'?' on':''}" onclick="firePick('changeOfOrg','no')">No</button></div></div>`;
       if (_w.changeOfOrg === 'yes') {
@@ -1054,7 +1127,7 @@ export function fireSetFaCheck(id, val) {
 
 export function fireAddDefect() {
   if (!_w.defects) _w.defects = [];
-  _w.defects.push({ description:'', recommendation:'', severity:'C3', targetDate:'' });
+  _w.defects.push({ description:'', recommendation:'', severity:'C3', targetDate:'', urgency:'', responsibleParty:'' });
   fireRenderStep();
 }
 export function fireRemoveDefect(i) {
