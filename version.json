@@ -1,8 +1,9 @@
 {
-  "v": "2.2.7",
-  "build": 158,
-  "new": 8,
+  "v": "2.2.8",
+  "build": 159,
+  "new": 1,
   "changes": [
+    "Improved: Schedule section headers on fire certificates now use a gradient that matches the certificate's colour scheme — dark red blending to amber, the same as the certificate's title bar.",
     "Improved: Schedule of Items Inspected on fire certificates redesigned — each item now shows a clear PASS / FAIL / N/A pill instead of three cramped columns, making the schedule much easier to read.",
     "Fixed: Company logo on fire alarm certificates no longer has a yellow border box — it now displays cleanly with no border, matching the Emergency Lighting certificate style.",
     "New: Self-contained luminaires is now the default system type on new EL certificates — change it only if the system is different.",
