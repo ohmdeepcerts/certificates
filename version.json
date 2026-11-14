@@ -1,8 +1,9 @@
 {
   "v": "2.2.7",
-  "build": 157,
-  "new": 7,
+  "build": 158,
+  "new": 8,
   "changes": [
+    "Improved: Schedule of Items Inspected on fire certificates redesigned — each item now shows a clear PASS / FAIL / N/A pill instead of three cramped columns, making the schedule much easier to read.",
     "Fixed: Company logo on fire alarm certificates no longer has a yellow border box — it now displays cleanly with no border, matching the Emergency Lighting certificate style.",
     "New: Self-contained luminaires is now the default system type on new EL certificates — change it only if the system is different.",
     "Fixed: Luminaire count calculator on EL certificates now updates Pass and Fail totals in real time — previously you had to tap Next and come back to see the calculated numbers.",
