@@ -489,23 +489,21 @@ function _buildGasPreviewHTML(r) {
   const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const fd = s => { if (!s) return '—'; const p = String(s).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; };
   const apps = r.appliances || [];
-  const defs = r.defects || [];
+  const defs = (r.defects || []).filter(d => d && d.description && d.description.trim() && d.description.trim().toLowerCase() !== 'n/a');
   const pipework = r.pipework || [];
-  const pipeLabels = ['Gas tight test', 'Working pressure', 'Visual inspection', 'Meter/governor', 'Emergency control'];
-  const appsHtml = apps.length ? apps.map((a, i) => `
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px">
-      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:8px">Appliance ${i+1}: ${esc(a.type||'—')} — ${esc(a.location||'—')}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        ${[['Make',a.make],['Model',a.model],['Flue',a.flue_type],['Safe to Use',a.safe_to_use],['Serviced',a.serviced],['CO Alarm',a.co_alarm_fitted]].map(([l,v])=>`<tr><td style="color:#64748b;padding:2px 8px 2px 0;width:40%">${l}</td><td style="font-weight:600;color:#1e293b">${esc(v||'—')}</td></tr>`).join('')}
-      </table>
-    </div>`).join('') : '<p style="color:#94a3b8;font-size:13px;padding:8px 0">No appliances recorded</p>';
+  const pipeLabels = ['Gas Tightness Test', 'Standing / Working Pressure', 'Gas Installation Visual Check', 'Meter / Governor Condition', 'Emergency Control Accessible'];
+  const appsHtml = apps.length ? apps.map((a, i) => {
+    const mainFields = [['Make',a.make],['Model',a.model],['Op. Pressure',a.op_pressure],['Flue Type',a.flue_type],['Safety Devices',a.safety_devices],['Ventilation',a.ventilation],['Visual Condition',a.visual_condition],['Flue Flow',a.flue_flow],['Combustion',a.combustion],['Owned by Landlord',a.ownership],['Inspected',a.inspected],['Serviced',a.serviced]].filter(([,v])=>v&&String(v).trim()&&String(v).trim().toLowerCase()!=='n/a');
+    const safeY = a.safe_to_use==='Yes'||a.safe_to_use==='✓', safeN = a.safe_to_use==='No'||a.safe_to_use==='✕';
+    const safeColor = safeY?'#16a34a':safeN?'#dc2626':'#475569', safeBg = safeY?'#dcfce7':safeN?'#fee2e2':'#f1f5f9';
+    return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px"><div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px">Appliance ${i+1}: ${esc(a.type||'—')} — ${esc(a.location||'—')}</div>${mainFields.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;margin-bottom:8px">${mainFields.map(([l,v])=>`<div><span style="color:#64748b">${l}:</span> <strong style="color:#1e293b">${esc(v)}</strong></div>`).join('')}</div>`:''}<div style="padding:7px 10px;border-radius:6px;font-size:12px;font-weight:700;color:${safeColor};background:${safeBg};margin-bottom:8px">Safe to Use: ${esc(a.safe_to_use||'—')}</div><div style="background:#fefce8;border:1px solid #fde68a;border-radius:6px;padding:8px;display:flex;gap:20px;font-size:12px">${[['CO Alarm Fitted',a.co_alarm_fitted],['In Date',a.co_alarm_in_date],['Tested',a.co_alarm_test]].map(([l,v])=>`<div><div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:2px">${l}</div><strong style="color:#1e293b">${esc(v||'—')}</strong></div>`).join('')}</div></div>`;
+  }).join('') : '<p style="color:#94a3b8;font-size:13px;padding:8px 0">No appliances recorded</p>';
   const defsHtml = defs.length ? defs.map((d, i) => `
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:10px;margin-bottom:6px">
-      <div style="font-size:11px;font-weight:700;color:#c2410c">Defect ${i+1}</div>
+      <div style="font-size:11px;font-weight:700;color:#c2410c">Defect ${i+1}${d.warning_type&&d.warning_type!=='N/A'?' — '+esc(d.warning_type):''}</div>
       <div style="font-size:12px;color:#1e293b;margin-top:4px">${esc(d.description||d.text||'—')}</div>
-      ${d.warning_type ? `<div style="font-size:11px;color:#ea580c;margin-top:3px">Warning: ${esc(d.warning_type)}</div>` : ''}
     </div>`).join('') : '';
-  const pipeHtml = pipework.map((val, i) => `<tr><td style="font-size:12px;color:#64748b;padding:3px 8px 3px 0;width:55%">${esc(pipeLabels[i]||'')}</td><td style="font-size:12px;font-weight:700;color:${val==='PASS'?'#16a34a':val==='FAIL'?'#dc2626':'#475569'}">${esc(val||'N/A')}</td></tr>`).join('');
+  const pipeHtml = pipework.map((val, i) => `<tr><td style="font-size:12px;color:#64748b;padding:3px 8px 3px 0;width:60%">${esc(pipeLabels[i]||'')}</td><td style="font-size:12px;font-weight:700;color:${val==='PASS'||val==='✓'?'#16a34a':val==='FAIL'||val==='✕'?'#dc2626':'#475569'}">${esc(val||'N/A')}</td></tr>`).join('');
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
   <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f1f5f9;padding:16px;color:#1e293b}.cert{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}.hdr{background:#1e3a5f;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start}.body{padding:16px 20px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}.ibox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px}.ilbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1e3a5f;margin-bottom:8px}.irow{font-size:12px;color:#64748b;margin-bottom:3px}.stitle{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1e3a5f;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid #1e3a5f}</style></head><body>
   <div class="cert">
@@ -525,13 +523,13 @@ function _buildGasPreviewHTML(r) {
       <div class="row3">
         <div class="ibox"><div class="ilbl">Property</div><div class="irow">${esc(r.install_address||'—')}</div>${r.install_postcode?`<div class="irow">${esc(r.install_postcode)}</div>`:''}</div>
         <div class="ibox"><div class="ilbl">Landlord / Client</div><div class="irow">${esc(r.landlord_address||'—')}</div>${r.landlord_postcode?`<div class="irow">${esc(r.landlord_postcode)}</div>`:''}</div>
-        <div class="ibox"><div class="ilbl">Engineer</div><div class="irow"><strong>${esc(r.engineer||r.sig_issued_name||'—')}</strong></div>${r.gas_safe_no?`<div class="irow">Gas Safe: <strong>${esc(r.gas_safe_no)}</strong></div>`:''}</div>
+        <div class="ibox"><div class="ilbl">Engineer</div><div class="irow"><strong>${esc(r.engineer||r.sig_issued_name||'—')}</strong></div>${r.gas_safe_no?`<div class="irow">Gas Safe: <strong>${esc(r.gas_safe_no)}</strong></div>`:''} ${r.engineer_licence_no?`<div class="irow">Licence: <strong>${esc(r.engineer_licence_no)}</strong></div>`:''} ${r.business_address?`<div class="irow" style="margin-top:5px;padding-top:5px;border-top:1px solid #e2e8f0">${esc(r.business_address)}</div>`:''} ${r.business_phone?`<div class="irow">Tel: ${esc(r.business_phone)}</div>`:''} ${r.business_email?`<div class="irow" style="font-size:11px">${esc(r.business_email)}</div>`:''}</div>
       </div>
-      ${pipework.length?`<div class="stitle">Pipework</div><table style="width:100%;margin-bottom:10px"><tbody>${pipeHtml}</tbody></table>`:''}
+      ${pipework.length?`<div class="stitle">Pipework / Installation Checks</div><table style="width:100%;margin-bottom:10px"><tbody>${pipeHtml}</tbody></table>`:''}
       <div class="stitle">Appliances</div>${appsHtml}
-      ${defs.length?`<div class="stitle">Defects</div>${defsHtml}`:''}
-      ${r.work_details?`<div class="stitle">Work Details</div><p style="font-size:12px;color:#475569;line-height:1.5">${esc(r.work_details)}</p>`:''}
-      ${r.remedial_action?`<div class="stitle">Remedial Action</div><p style="font-size:12px;color:#475569;line-height:1.5;margin-top:14px">${esc(r.remedial_action)}</p>`:''}
+      ${defs.length?`<div class="stitle">Defects / Notices Issued</div>${defsHtml}`:''}
+      ${r.work_details?`<div class="stitle">Work Carried Out</div><p style="font-size:12px;color:#475569;line-height:1.5">${esc(r.work_details)}</p>`:''}
+      ${r.remedial_action?`<div class="stitle">Remedial Action Required</div><p style="font-size:12px;color:#475569;line-height:1.5;margin-top:14px">${esc(r.remedial_action)}</p>`:''}
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
         ${r.sig_issued_name?`<div style="flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f;letter-spacing:.06em;margin-bottom:6px">Issued By</div><div style="font-size:12px;font-weight:600">${esc(r.sig_issued_name)}</div></div>`:''}
         ${r.sig_received_name?`<div style="flex:1;min-width:120px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#1e3a5f;letter-spacing:.06em;margin-bottom:6px">Received By</div><div style="font-size:12px;font-weight:600">${esc(r.sig_received_name)}</div></div>`:''}

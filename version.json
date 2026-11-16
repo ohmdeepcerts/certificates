@@ -1,8 +1,9 @@
 {
-  "v": "2.3.6",
-  "build": 167,
+  "v": "2.3.7",
+  "build": 168,
   "new": 1,
   "changes": [
+    "Improved: Gas CP12 certificate history panel preview now shows the full certificate details — engineer licence number, business address, phone and email added to the Engineer section. All appliance inspection fields now show (operating pressure, safety devices, ventilation, visual condition, flue flow, combustion reading, ownership, inspected status) alongside a colour-coded Safe to Use status and a CO alarm block showing whether the alarm is fitted, in date and tested. Pipework check labels now match the printed certificate exactly. Blank or N/A defects no longer appear in the preview.",
     "Fixed: Fire Alarm certificate count on the dashboard now shows correctly — it was always showing 0 due to an internal query error. The fire certificate total, issued count, search results and recent activity feed now all load properly.",
     "Improved: EL certificate luminaire schedule total row redesigned — now shows a clean mint background with a dark green accent border and inline Pass / Fail count pills. All-pass shows the fail pill in grey; any failures turn it red.",
     "Fixed: Total row on the EL certificate luminaire schedule now shows correctly — dark green background with white text. Previously the row appeared with white text on a near-white background, making it unreadable.",
