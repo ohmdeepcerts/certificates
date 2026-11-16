@@ -399,38 +399,42 @@ function _buildGasCertHTML(r) {
 
   const eng = r.engineer || r.sig_issued_name || '—';
   const apps = r.appliances || [];
-  const defs = r.defects || [];
+  const defs = (r.defects || []).filter(d => d && d.description && d.description.trim() && d.description.trim().toLowerCase() !== 'n/a');
   const pipework = r.pipework || [];
-  const pipeLabels = ['Gas tight test', 'Working pressure', 'Visual inspection', 'Meter/governor', 'Emergency control'];
+  const pipeLabels = ['Gas Tightness Test', 'Standing / Working Pressure', 'Gas Installation Visual Check', 'Meter / Governor Condition', 'Emergency Control Accessible'];
 
   const logoHTML = logoData
     ? `<img src="${logoData}" style="max-width:120px;max-height:46px;object-fit:contain">`
     : `<div style="font-size:11px;font-weight:900;color:#fff;text-align:center;line-height:1.2">GAS SAFE<br><span style="font-size:9px;font-weight:400">REGISTERED</span></div>`;
 
   const appsHTML = apps.length
-    ? apps.map((a, i) => `<div style="border:1px solid #e2cfa0;border-radius:4px;padding:8px 10px;margin-bottom:6px;background:#fffdf7">
-        <div style="font-weight:700;font-size:.8rem;color:${NAVY};margin-bottom:4px">Appliance ${i + 1}: ${esc(a.type || '—')} — <span style="font-weight:500">${esc(a.location || '—')}</span></div>
-        <table style="width:100%;border-collapse:collapse;font-size:.72rem"><tr>
-          <td style="color:#64748b;width:30%;padding:2px 6px 2px 0">Make</td><td style="font-weight:600;color:#1e293b;width:20%">${esc(a.make || '—')}</td>
-          <td style="color:#64748b;width:30%;padding:2px 6px 2px 0">Model</td><td style="font-weight:600;color:#1e293b">${esc(a.model || '—')}</td>
-        </tr><tr>
-          <td style="color:#64748b;padding:2px 6px 2px 0">Flue Type</td><td style="font-weight:600;color:#1e293b">${esc(a.flue_type || '—')}</td>
-          <td style="color:#64748b;padding:2px 6px 2px 0">Safe to Use</td>
-          <td style="font-weight:700;color:${(a.safe_to_use || '').toUpperCase() === 'YES' ? '#16a34a' : '#dc2626'}">${esc(a.safe_to_use || '—')}</td>
-        </tr><tr>
-          <td style="color:#64748b;padding:2px 6px 2px 0">Serviced</td><td style="font-weight:600;color:#1e293b">${esc(a.serviced || '—')}</td>
-          <td style="color:#64748b;padding:2px 6px 2px 0">CO Alarm</td><td style="font-weight:600;color:#1e293b">${esc(a.co_alarm_fitted || '—')}</td>
-        </tr></table>
-      </div>`).join('')
+    ? apps.map((a, i) => {
+        const mainFields = [['Make',a.make],['Model',a.model],['Op. Pressure',a.op_pressure],['Flue Type',a.flue_type],['Safety Devices',a.safety_devices],['Ventilation',a.ventilation],['Visual Condition',a.visual_condition],['Flue Flow',a.flue_flow],['Combustion',a.combustion],['Owned by Landlord',a.ownership],['Inspected',a.inspected],['Serviced',a.serviced]].filter(([,v])=>v&&String(v).trim()&&String(v).trim().toLowerCase()!=='n/a');
+        const safeUp = (a.safe_to_use || '').toUpperCase();
+        const safeY = safeUp==='YES'||safeUp==='✓', safeN = safeUp==='NO'||safeUp==='✕';
+        const safeColor = safeY?'#16a34a':safeN?'#dc2626':'#475569', safeBg = safeY?'#dcfce7':safeN?'#fee2e2':'#f8fafc';
+        return `<div style="border:1px solid #e2cfa0;border-radius:4px;padding:8px 10px;margin-bottom:6px;background:#fffdf7">
+        <div style="font-weight:700;font-size:.8rem;color:${NAVY};margin-bottom:6px">Appliance ${i + 1}: ${esc(a.type || '—')} — <span style="font-weight:500">${esc(a.location || '—')}</span></div>
+        ${mainFields.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:.72rem;margin-bottom:6px">${mainFields.map(([l,v])=>`<div><span style="color:#64748b">${l}:</span> <strong style="color:#1e293b">${esc(v)}</strong></div>`).join('')}</div>`:''}
+        <div style="font-size:.72rem;font-weight:700;color:${safeColor};background:${safeBg};border:1px solid ${safeY?'#86efac':safeN?'#fca5a5':'#e2e8f0'};border-radius:3px;padding:4px 8px;margin-bottom:5px">Safe to Use: ${esc(a.safe_to_use||'—')}</div>
+        <div style="display:flex;gap:14px;font-size:.72rem;background:#fefce8;border:1px solid #fde68a;border-radius:3px;padding:5px 8px">${[['CO Alarm Fitted',a.co_alarm_fitted],['In Date',a.co_alarm_in_date],['Tested',a.co_alarm_test]].map(([l,v])=>`<div><span style="color:#92400e;font-weight:700;text-transform:uppercase;font-size:.62rem">${l}</span><div style="font-weight:700;color:#1e293b;margin-top:1px">${esc(v||'—')}</div></div>`).join('')}</div>
+      </div>`;
+      }).join('')
     : '<p style="color:#94a3b8;font-size:.78rem">No appliances recorded</p>';
 
   const pipeHTML = pipework.length
-    ? `<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:6px">${pipework.map((val, i) => `<tr><td style="padding:3px 8px 3px 0;color:#64748b;width:55%">${esc(pipeLabels[i] || '')}</td><td style="font-weight:700;color:${val === 'PASS' ? '#16a34a' : val === 'FAIL' ? '#dc2626' : '#475569'}">${esc(val || 'N/A')}</td></tr>`).join('')}</table>`
+    ? `<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:6px">${pipework.map((val, i) => `<tr><td style="padding:3px 8px 3px 0;color:#64748b;width:60%">${esc(pipeLabels[i] || '')}</td><td style="font-weight:700;color:${val==='PASS'||val==='✓'?'#16a34a':val==='FAIL'||val==='✕'?'#dc2626':'#475569'}">${esc(val || 'N/A')}</td></tr>`).join('')}</table>`
     : '';
 
-  const defsHTML = defs.length
-    ? defs.map((d, i) => `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:8px;margin-bottom:4px;font-size:.72rem"><div style="font-weight:700;color:#c2410c">Defect ${i + 1}${d.warning_type ? ' — ' + esc(d.warning_type) : ''}</div><div style="color:#1e293b;margin-top:3px">${esc(d.description || d.text || '—')}</div></div>`).join('')
-    : '';
+  const idDefs = defs.filter(d => /danger|^id$/i.test(d.warning_type || ''));
+  const arDefs = defs.filter(d => /risk|^ar$/i.test(d.warning_type || ''));
+  const niDefs = defs.filter(d => /notice|^ni$/i.test(d.warning_type || ''));
+  const otherDefs = defs.filter(d => !idDefs.includes(d) && !arDefs.includes(d) && !niDefs.includes(d));
+  const defRow = (label, color, bg, bdr, list) => `<div style="margin-bottom:6px"><div style="font-size:.62rem;font-weight:700;color:${color};background:${bg};border:1px solid ${bdr};border-radius:3px;padding:2px 7px;display:inline-block;margin-bottom:3px">${label}</div>${list.length ? list.map(d => `<div style="font-size:.68rem;color:#1e293b;padding:2px 0;border-bottom:1px solid #f1f5f9;line-height:1.35">${esc(d.description || d.text || '—')}</div>`).join('') : '<div style="font-size:.68rem;color:#94a3b8;font-style:italic">None</div>'}</div>`;
+  const defColHTML = defRow('Immediately Dangerous', '#991b1b', '#fee2e2', '#fca5a5', idDefs)
+    + defRow('At Risk', '#c2410c', '#fff7ed', '#fed7aa', arDefs)
+    + defRow('Notice Issued', '#1d4ed8', '#eff6ff', '#bfdbfe', niDefs)
+    + (otherDefs.length ? otherDefs.map(d => `<div style="font-size:.68rem;color:#1e293b;padding:1px 0">${esc(d.warning_type ? d.warning_type + ': ' : '')}${esc(d.description || d.text || '—')}</div>`).join('') : '');
 
   const sHdr = t => `<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${NAVY};padding:4px 8px;border-radius:3px;margin:8px 0 5px">${t}</div>`;
   const isDraft = r.status !== 'completed';
@@ -462,11 +466,13 @@ function _buildGasCertHTML(r) {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px">
       <div class="a4-box"><div class="a4-key">Property Address</div><div class="a4-val" style="font-weight:600">${addrHtml || '—'}</div></div>
       <div class="a4-box"><div class="a4-key">Landlord / Client</div><div class="a4-val">${esc(r.landlord_address || '—')}</div></div>
-      <div class="a4-box"><div class="a4-key">Engineer</div><div class="a4-val" style="font-weight:700">${esc(eng)}</div>${r.gas_safe_no ? `<div style="font-size:.67rem;margin-top:3px;color:#94a3b8">Gas Safe No: <strong style="color:${AMBER}">${esc(r.gas_safe_no)}</strong></div>` : ''}</div>
+      <div class="a4-box"><div class="a4-key">Engineer</div><div class="a4-val" style="font-weight:700">${esc(eng)}</div>${r.gas_safe_no ? `<div style="font-size:.67rem;margin-top:3px;color:#94a3b8">Gas Safe No: <strong style="color:${AMBER}">${esc(r.gas_safe_no)}</strong></div>` : ''}${r.engineer_licence_no ? `<div style="font-size:.67rem;margin-top:2px;color:#94a3b8">Licence: <strong style="color:#1e293b">${esc(r.engineer_licence_no)}</strong></div>` : ''}${r.business_address ? `<div style="font-size:.67rem;margin-top:4px;padding-top:4px;border-top:1px solid #e2cfa0;color:#64748b">${esc(r.business_address)}</div>` : ''}${r.business_phone ? `<div style="font-size:.67rem;color:#64748b">Tel: ${esc(r.business_phone)}</div>` : ''}${r.business_email ? `<div style="font-size:.67rem;color:#64748b">${esc(r.business_email)}</div>` : ''}</div>
     </div>
-    ${pipeHTML ? sHdr('Pipework Checks') + pipeHTML : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+      <div>${sHdr('Pipework Checks')}${pipeHTML || '<p style="color:#94a3b8;font-size:.72rem;padding:4px 0">No pipework data recorded</p>'}</div>
+      <div>${sHdr('Defects / Notices Issued')}${defColHTML}</div>
+    </div>
     ${sHdr('Gas Appliances')}${appsHTML}
-    ${defsHTML ? sHdr('Defects / Warnings') + defsHTML : ''}
     ${r.work_details ? sHdr('Work Carried Out') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.work_details)}</p>` : ''}
     ${r.remedial_action ? sHdr('Remedial Action Required') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.remedial_action)}</p>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
