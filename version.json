@@ -1,8 +1,9 @@
 {
-  "v": "2.4.3",
-  "build": 174,
+  "v": "2.4.4",
+  "build": 175,
   "new": 1,
   "changes": [
+    "Improved: EL certificate wizard now shows step names across the top — click any step (Type, Premises, Client, System, etc.) to jump straight to it, with a progress bar showing how far through you are. Same as the Fire Alarm wizard.",
     "Improved: Gas CP12 history preview Defects and Pipework tables now match the printed certificate — column labels are in the header bar (not a separate row), both tables have identical 5-row height so they line up side by side.",
     "Fixed: Gas CP12 history preview signature boxes no longer crop the Engg Sign section — the name and signature now fit side by side without overflowing.",
     "Improved: Gas CP12 history preview signature boxes now show the engineer name on the left and an Engg Sign section on the right — the signature image sits under the Engg Sign label, separated by a divider line.",

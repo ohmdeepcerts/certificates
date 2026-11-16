@@ -17,10 +17,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-CpISLgii.js"></script>
+  <script type="module" crossorigin src="./assets/index-EwniFE70.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-D-eXhiNg.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-O5B2BlI4.css">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-Bm_LgB-t.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-BoFXQLvy.css">
 </head>
 <body>
 <!-- ===== AUTH SCREEN ===== -->
@@ -1621,11 +1621,17 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
 
     <!-- ===== EL NEW (wizard) ===== -->
     <div class="view" id="view-el-new">
-      <div class="page-header">
-        <h1 class="page-title">New EL Certificate</h1>
-        <p class="page-sub" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+      <div style="flex-shrink:0;background:var(--surface)">
+        <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px 0">
+          <h1 style="font-size:15px;font-weight:700;margin:0;color:var(--text)">New EL Certificate</h1>
+          <p style="margin:0;font-size:12px;color:var(--muted)" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+        </div>
+        <div class="wiz-step-tabs" id="el-step-tabs"></div>
+        <div class="wiz-pbar-wrap"><div class="wiz-pbar"><div class="wiz-pbar-fill" id="el-pbar-fill" style="width:0%"></div></div></div>
       </div>
-      <div class="el-wizard" id="el-wizard-body"></div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="el-wizard" id="el-wizard-body"></div>
+      </div>
     </div>
 
     <!-- ===== EL HISTORY ===== -->
