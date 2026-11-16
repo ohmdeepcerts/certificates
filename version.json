@@ -1,8 +1,10 @@
 {
-  "v": "2.3.0",
-  "build": 161,
+  "v": "2.3.1",
+  "build": 162,
   "new": 1,
   "changes": [
+    "New: Annex G Inspection Checklist now prints on commercial fire certificates — the 20-item checklist covering control equipment, power supply, detection, warning devices, ancillary functions and documentation now appears in full on the certificate, with a Pass / Fail / N/A result for each item recorded during the visit.",
+    "New: System age warning now prints on commercial fire certificates when the system is 10 or more years old — a clear amber notice on page 1 flags that an end-of-life review may be required under BS 5839-1:2025 Clause 46.",
     "Fixed: Commercial fire certificate Schedule of Items now includes O&M manuals and zone chart items in the Documentation section — these appeared on the wizard but were missing from the printed certificate.",
     "New: Inspection interval now appears on the Next Inspection Due banner on fire certificates — shows whether the site requires a 6-month or 12-month service cycle.",
     "New: Previous defects status now prints on fire certificates — records whether defects from the last visit were fully resolved, partially resolved, or still outstanding.",
