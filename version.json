@@ -1,8 +1,12 @@
 {
-  "v": "2.2.8",
-  "build": 159,
+  "v": "2.2.9",
+  "build": 160,
   "new": 1,
   "changes": [
+    "New: Technical measurements section added to commercial fire certificate testing step — record battery standby voltage, battery load voltage, earth fault loop voltage, pre-alarm threshold, alarm output delay, zone resistance readings (one per line), and devices tested on rotation this visit. All measurements print on the certificate under Test Results.",
+    "New: Zone resistance readings now print as their own table on the fire certificate — each line from the textarea becomes a row, split automatically on the colon or dash between zone name and reading.",
+    "New: Commissioning engineer block added to FA.1 Installation Certificate — if the commissioning engineer was different from the visiting engineer, enter their name, qualification and registration number. This prints as a separate signed section on the Declaration page.",
+    "New: CO alarm linked system reference field added to domestic fire certificates — appears when CO alarms are present. Record the linked appliance (e.g. gas boiler make and model). Prints on the certificate under Test Results.",
     "Improved: Schedule section headers on fire certificates now use a gradient that matches the certificate's colour scheme — dark red blending to amber, the same as the certificate's title bar.",
     "Improved: Schedule of Items Inspected on fire certificates redesigned — each item now shows a clear PASS / FAIL / N/A pill instead of three cramped columns, making the schedule much easier to read.",
     "Fixed: Company logo on fire alarm certificates no longer has a yellow border box — it now displays cleanly with no border, matching the Emergency Lighting certificate style.",

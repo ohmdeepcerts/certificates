@@ -99,46 +99,39 @@ var _COM_SCHED_PDF = [
 
 function _buildSchedulePdf(schedDefs, schedItems) {
   var items = schedItems || {};
-  var html = '<table style="width:100%;border-collapse:collapse;border:1px solid #e08830;border-radius:4px;overflow:hidden;margin-bottom:10px;font-size:11px">';
-  html += '<thead><tr style="background:#7a1010">'
-    +'<th colspan="2" style="padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">P</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">F</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
-    +'<th style="padding:6px 4px;width:4px;background:#5a0a0a"></th>'
-    +'<th colspan="2" style="padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;text-align:left">Inspection Item</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">P</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:30px;text-align:center">F</th>'
-    +'<th style="padding:6px 5px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f8edcc;width:36px;text-align:center">N/A</th>'
-    +'</tr></thead><tbody>';
+
+  function _pill(v) {
+    if (v==='PASS') return '<span style="display:inline-block;padding:2px 9px;border-radius:10px;background:#dcfce7;color:#166534;font-size:9px;font-weight:700;letter-spacing:.05em;white-space:nowrap">PASS</span>';
+    if (v==='FAIL') return '<span style="display:inline-block;padding:2px 9px;border-radius:10px;background:#fee2e2;color:#991b1b;font-size:9px;font-weight:700;letter-spacing:.05em;white-space:nowrap">FAIL</span>';
+    if (v==='N/A')  return '<span style="display:inline-block;padding:2px 9px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:9px;font-weight:600;letter-spacing:.04em;white-space:nowrap">N/A</span>';
+    return '<span style="display:inline-block;width:14px;height:14px;border:1.5px solid #d1c4b8;border-radius:50%;vertical-align:middle"></span>';
+  }
+
+  function _itemTds(item, bg) {
+    if (!item) return '<td colspan="2" style="background:'+bg+'"></td>';
+    var id = item[0], lbl = item[1], v = items[id] || '';
+    return '<td style="padding:6px 10px;font-size:11px;color:#1c1010;line-height:1.4;background:'+bg+'">'+_esc(lbl)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right;white-space:nowrap;background:'+bg+'">'+_pill(v)+'</td>';
+  }
+
+  var html = '<table style="width:100%;border-collapse:collapse;border:1px solid #e2d4d4;overflow:hidden;font-size:11px">';
 
   schedDefs.forEach(function(section) {
     var secName = section[0], secItems = section[1];
-    html += '<tr style="background:#f8edcc"><td colspan="11" style="padding:5px 8px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7a1010">'+secName+'</td></tr>';
+    html += '<tr><td colspan="5" style="padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f8edcc;background:linear-gradient(90deg,#7a1010,#c01818 60%,#e08830);border-top:2px solid #e08830">'+secName+'</td></tr>';
     for (var i = 0; i < secItems.length; i += 2) {
       var a = secItems[i], b = secItems[i+1] || null;
-      var rowBg = (Math.floor(i/2) % 2 === 0) ? '#fdfaf8' : '#fdf5f0';
-      html += '<tr style="background:'+rowBg+';border-bottom:1px solid #ede0e0">';
-      function _cell(item) {
-        if (!item) return '<td style="border-right:1px solid #e2d4d4"></td><td style="border-right:1px solid #ede0e0"></td><td style="width:30px;border-left:1px solid #ede0e0"></td><td style="width:30px;border-left:1px solid #ede0e0"></td><td style="width:36px;border-left:1px solid #ede0e0"></td>';
-        var id = item[0], lbl = item[1], v = items[id] || '';
-        var pCell = v==='PASS' ? '<span style="color:#1a6b40;font-size:14px;font-weight:700">&#10003;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
-        var fCell = v==='FAIL' ? '<span style="color:#7a1010;font-size:13px;font-weight:700">&#10007;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
-        var nCell = v==='N/A' ? '<span style="color:#666;font-size:11px">&#8212;</span>' : '<span style="color:#d4c0a8;font-size:10px">&#9675;</span>';
-        return '<td style="padding:4px 8px;font-size:11px;color:#1c1010;border-right:1px solid #ede0e0;width:38%">'+_esc(lbl)+'</td>'
-          +'<td style="padding:4px 5px;text-align:center;width:30px;border-left:1px solid #ede0e0">'+pCell+'</td>'
-          +'<td style="padding:4px 5px;text-align:center;width:30px;border-left:1px solid #ede0e0">'+fCell+'</td>'
-          +'<td style="padding:4px 5px;text-align:center;width:36px;border-left:1px solid #ede0e0">'+nCell+'</td>';
-      }
-      html += _cell(a);
-      html += '<td style="padding:0;width:4px;background:#e2d4d4;border-left:2px solid #c9b87a;border-right:2px solid #c9b87a"></td>';
-      html += _cell(b);
+      var bg = (Math.floor(i/2) % 2 === 0) ? '#fdfaf8' : '#fdf5ef';
+      html += '<tr style="border-bottom:1px solid #ede0e0">';
+      html += _itemTds(a, bg);
+      html += '<td style="width:5px;padding:0;background:#e2d4d4;border-left:1px solid #d4c0a8;border-right:1px solid #d4c0a8"></td>';
+      html += _itemTds(b, bg);
       html += '</tr>';
     }
   });
 
-  html += '</tbody></table>';
-  html += '<div style="font-size:9px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:6px;line-height:1.6">P = Pass &nbsp; F = Fail &nbsp; N/A = Not applicable / not installed. Items recorded as Fail must be listed as deviations in the Defects section.</div>';
+  html += '</table>';
+  html += '<div style="font-size:9px;color:#9a7858;border-top:1px solid #e2d4d4;padding-top:6px;margin-top:8px;line-height:1.6">Items recorded as <strong>Fail</strong> must be listed as deviations in the Defects section. &nbsp;N/A = Not applicable or not installed.</div>';
   return html;
 }
 
@@ -177,7 +170,7 @@ export function fireBuildCertHTML(r, siteHistory) {
 
   // ── Logo / NICEIC badge HTML ──────────────────────────────────────────────
   var elLogo = logoData
-    ? '<img src="'+logoData+'" style="height:80px;max-width:110px;object-fit:contain;border-radius:4px;border:1px solid var(--a);flex-shrink:0">'
+    ? '<img src="'+logoData+'" style="height:80px;max-width:130px;object-fit:contain;flex-shrink:0">'
     : '<div class="ch-logo">'+_esc((company.match(/\b\w/g)||[]).slice(0,3).join('').toUpperCase())+'</div>';
 
   var bodyBadge = niceicLogoData
@@ -244,18 +237,25 @@ export function fireBuildCertHTML(r, siteHistory) {
     testRows += _tRow('CO alarms fitted', r.coAlarmsPresent);
     if (r.coAlarmsPresent === 'N/A' && r.coAlarmNaReason) testRows += '<tr><td>CO alarm N/A reason</td><td>'+_esc(r.coAlarmNaReason)+'</td></tr>';
     testRows += _tRow('CO alarm test', r.tCO);
+    if (r.coLinkedSystem) testRows += '<tr><td>CO alarm linked system</td><td>'+_esc(r.coLinkedSystem)+'</td></tr>';
   } else {
     testRows += _tRow('Mains supply test', r.tMains);
     if (r.tMainsVolts) testRows += '<tr><td>Mains voltage</td><td>'+_esc(r.tMainsVolts)+' V</td></tr>';
     testRows += _tRow('Battery standby test', r.tBatResult);
-    if (r.tBatDuration) testRows += '<tr><td>Battery standby duration</td><td>'+_esc(r.tBatDuration)+'</td></tr>';
-    if (r.tBatVolts)   testRows += '<tr><td>Battery voltage</td><td>'+_esc(r.tBatVolts)+' V</td></tr>';
+    if (r.tBatDuration)   testRows += '<tr><td>Battery standby duration</td><td>'+_esc(r.tBatDuration)+'</td></tr>';
+    if (r.tBatStandbyV)   testRows += '<tr><td>Battery standby voltage</td><td>'+_esc(r.tBatStandbyV)+' V</td></tr>';
+    if (r.tBatLoadV)      testRows += '<tr><td>Battery load voltage</td><td>'+_esc(r.tBatLoadV)+' V</td></tr>';
+    if (r.tBatVolts && !r.tBatStandbyV) testRows += '<tr><td>Battery voltage</td><td>'+_esc(r.tBatVolts)+' V</td></tr>';
     testRows += _tRow('Sounder / beacon test', r.tSounder);
-    if (r.tSounderDb)  testRows += '<tr><td>Sounder level</td><td>'+_esc(r.tSounderDb)+' dB</td></tr>';
+    if (r.tSounderDb)     testRows += '<tr><td>Sounder level</td><td>'+_esc(r.tSounderDb)+' dB</td></tr>';
+    if (r.tEarthFaultV)   testRows += '<tr><td>Earth fault loop test voltage</td><td>'+_esc(r.tEarthFaultV)+' V</td></tr>';
+    if (r.tPreAlarmThreshold) testRows += '<tr><td>Pre-alarm threshold</td><td>'+_esc(r.tPreAlarmThreshold)+'</td></tr>';
+    if (r.tAlarmDelay)    testRows += '<tr><td>Alarm output delay</td><td>'+_esc(r.tAlarmDelay)+' sec</td></tr>';
     testRows += _tRow('Visual indicators test', r.tVisual);
     testRows += _tRow('Zone isolation test', r.tZoneIso);
     testRows += _tRow('Fault simulation test', r.tFaultSim);
     testRows += _tRow('Engineer key switch', r.tKeySwitch);
+    if (r.tRotationRecord) testRows += '<tr><td>Rotation record (this visit)</td><td>'+_esc(r.tRotationRecord)+'</td></tr>';
   }
 
   // ── Inspection / commissioning checklist ──────────────────────────────────
@@ -648,6 +648,7 @@ export function fireBuildCertHTML(r, siteHistory) {
       +((r.detectors||[]).length?'<div class="sec-head">Schedule of Detectors &amp; Devices</div><table class="ltbl"><thead><tr>'+detHeaders+'</tr></thead><tbody>'+detRows+'</tbody></table>':'')
       +'<div class="sec-head" style="margin-top:14px">Test Results</div>'
       +'<table class="ltbl"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody>'+(testRows||'<tr><td colspan="2" style="color:#9a948e;font-style:italic">No test results recorded</td></tr>')+'</tbody></table>'
+      +(r.tZoneResistances?function(){var lines=r.tZoneResistances.trim().split('\n').filter(function(l){return l.trim();});if(!lines.length)return '';return '<div class="sec-head" style="margin-top:14px">Zone Resistance Readings</div><table class="ltbl"><thead><tr><th>Zone</th><th>Resistance</th></tr></thead><tbody>'+lines.map(function(l){var m=l.match(/^(.+?)[:–\-]\s*(.+)$/);if(m)return '<tr><td>'+_esc(m[1].trim())+'</td><td>'+_esc(m[2].trim())+'</td></tr>';return '<tr><td colspan="2">'+_esc(l)+'</td></tr>';}).join('')+'</tbody></table>';}():'')
       +(r.inspLimitations?'<div style="margin-top:10px;padding:8px 10px;background:#f8f5ef;border-left:3px solid #c9b87a;border-radius:0 4px 4px 0"><div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7a6a3a;margin-bottom:3px">Limitations of inspection</div><div style="font-size:11px;line-height:1.5;color:#3d3d3d">'+_esc(r.inspLimitations)+'</div></div>':'')
       +faChecksHtml
     +'</div>'
@@ -705,6 +706,12 @@ export function fireBuildCertHTML(r, siteHistory) {
           +'</div>'
         +'</div>'
       +'</div>'
+      +(r.certType==='FA.1'&&r.commEngName?'<div class="sec-head" style="margin-top:14px">Commissioning Engineer</div><div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;margin-bottom:14px;font-size:11px">'
+        +'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Commissioning Engineer</div><div style="padding:7px 10px;font-size:13px;font-weight:700;color:#1c1010;flex:1">'+_esc(r.commEngName)+'</div></div>'
+        +(r.commEngQual?'<div style="display:flex;border-bottom:1px solid #e2d4d4"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Qualification</div><div style="padding:7px 10px;flex:1">'+_esc(r.commEngQual)+'</div></div>':'')
+        +(r.commEngRegNo?'<div style="display:flex"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Reg. / Ref. No.</div><div style="padding:7px 10px;flex:1">'+_esc(r.commEngRegNo)+'</div></div>':'')
+        +(r.commEngRegNo?'':'<div style="padding:7px 10px;color:#9a7858;font-style:italic">If commissioning was carried out by the same engineer as above, no separate record is required.</div>')
+      +'</div>':'')
       +(r.satJustification?'<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:9px 11px;margin-bottom:10px;font-size:11px;line-height:1.6"><strong style="color:#7a1010">Override justification (Satisfactory with recorded failures):</strong> '+_esc(r.satJustification)+'</div>':'')
       +(r.certType==='FA.1'?'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;margin-bottom:14px;display:flex;font-size:11px"><div style="padding:7px 10px;background:#f8f0ee;font-weight:700;font-size:11.5px;width:38%;border-right:1px solid #e2d4d4;flex-shrink:0">Operating instructions<br>provided to occupier</div><div style="padding:7px 10px;flex:1;font-weight:600;color:'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'#1a6b40':r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'#7a1010':'#555')+'">'+(r.annexFa2Checks&&r.annexFa2Checks['c06']==='PASS'?'&#10003; Yes':(r.annexFa2Checks&&r.annexFa2Checks['c06']==='FAIL'?'&#10007; No':'Not recorded'))+'</div></div>':'')
       +tenantHtml

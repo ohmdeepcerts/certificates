@@ -221,6 +221,9 @@ export function startNewFire() {
     // testing — commercial
     tMains: '', tBatDuration: '', tBatResult: '', tSounder: '', tVisual: '', tZoneIso: '', tFaultSim: '', tKeySwitch: '',
     tMainsVolts: '', tBatVolts: '', tSounderDb: '',
+    tBatStandbyV: '', tBatLoadV: '', tEarthFaultV: '', tPreAlarmThreshold: '',
+    tAlarmDelay: '', tZoneResistances: '', tRotationRecord: '',
+    coLinkedSystem: '', commEngName: '', commEngQual: '', commEngRegNo: '',
     // defects
     defects: [],
     defectsOverall: '', defectsNotes: '',
@@ -609,6 +612,9 @@ export function fireRenderStep() {
         html += `</div><div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4">If a combustion appliance is present and no CO alarm is fitted, record as a defect in the Defects step.</div></div></div></div>`;
       } else if (_w.coAlarmsPresent) { _w.coAlarmNaReason = ''; }
       html += _testRow('CO alarm test (if applicable)', 'tCO', ['PASS','FAIL','N/A']);
+      if (_w.coAlarmsPresent === 'Yes') {
+        html += `<div class="wiz-field"><label>CO alarm linked system reference <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.coLinkedSystem)}" oninput="fireSet('coLinkedSystem',this.value)" placeholder="e.g. Linked to gas boiler — Worcester Bosch" style="max-width:320px"></div>`;
+      }
       // BS 5839-6 inspection / commissioning checklist
       var _faChecks = _w.certType === 'FA.2' ? FA2_CHECKS : (_w.certType === 'FA.1' ? FA1_CHECKS : null);
       if (_faChecks) {
@@ -635,6 +641,16 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>Mains supply voltage (V) <span class="lbl-opt">(optional)</span></label><input type="number" value="${esc(_w.tMainsVolts)}" oninput="fireSet('tMainsVolts',this.value)" placeholder="e.g. 230" style="max-width:120px"></div>`;
       html += `<div class="wiz-field"><label>Battery voltage (V) <span class="lbl-opt">(optional)</span></label><input type="number" value="${esc(_w.tBatVolts)}" oninput="fireSet('tBatVolts',this.value)" placeholder="e.g. 27.4" style="max-width:120px"></div>`;
       html += `<div class="wiz-field"><label>Sounder level (dB) <span class="lbl-opt">(optional)</span></label><input type="number" value="${esc(_w.tSounderDb)}" oninput="fireSet('tSounderDb',this.value)" placeholder="e.g. 75" style="max-width:120px"></div>`;
+      html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Technical Measurements <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional — record where measured)</span></div></div>`;
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px">`;
+      html += `<div class="wiz-field"><label>Battery standby voltage (V)</label><input type="number" value="${esc(_w.tBatStandbyV)}" oninput="fireSet('tBatStandbyV',this.value)" placeholder="e.g. 27.4"></div>`;
+      html += `<div class="wiz-field"><label>Battery load voltage (V)</label><input type="number" value="${esc(_w.tBatLoadV)}" oninput="fireSet('tBatLoadV',this.value)" placeholder="e.g. 26.1"></div>`;
+      html += `<div class="wiz-field"><label>Earth fault loop voltage (V)</label><input type="number" value="${esc(_w.tEarthFaultV)}" oninput="fireSet('tEarthFaultV',this.value)" placeholder="e.g. 0.4"></div>`;
+      html += `<div class="wiz-field"><label>Pre-alarm threshold</label><input value="${esc(_w.tPreAlarmThreshold)}" oninput="fireSet('tPreAlarmThreshold',this.value)" placeholder="e.g. 20% / Level 1"></div>`;
+      html += `<div class="wiz-field"><label>Alarm output delay (sec)</label><input type="number" value="${esc(_w.tAlarmDelay)}" oninput="fireSet('tAlarmDelay',this.value)" placeholder="e.g. 30"></div>`;
+      html += `</div>`;
+      html += `<div class="wiz-field" style="margin-top:4px"><label>Zone resistance readings (Ω) <span class="lbl-opt">one per line, e.g. Zone 1: 42 Ω</span></label><textarea rows="4" oninput="fireSet('tZoneResistances',this.value)" placeholder="Zone 1: 42 Ω\nZone 2: 38 Ω\nZone 3: 41 Ω" style="width:100%;font-family:monospace;font-size:12.5px;resize:vertical">${esc(_w.tZoneResistances||'')}</textarea></div>`;
+      html += `<div class="wiz-field"><label>Devices tested on rotation this visit <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.tRotationRecord)}" oninput="fireSet('tRotationRecord',this.value)" placeholder="e.g. Zone 1 optical detectors (5 of 12 rotated)"></div>`;
       html += _testRow('Visual indicators test', 'tVisual', ['PASS','FAIL']);
       html += _testRow('Zone isolation test', 'tZoneIso', ['PASS','FAIL','N/A']);
       html += _testRow('Fault simulation test', 'tFaultSim', ['PASS','FAIL','N/A']);
@@ -847,6 +863,14 @@ export function fireRenderStep() {
     html += `<div class="wiz-field" style="margin-bottom:8px"><label>Tenant / Occupier Name</label><input value="${esc(_w.tenantName)}" oninput="fireSet('tenantName',this.value)" placeholder="Leave blank if not applicable"></div>`;
     html += `<div class="wiz-field" style="margin-bottom:0"><label>Acknowledgment Date</label><input value="${esc(_w.tenantAckDate)}" oninput="fireSet('tenantAckDate',this.value)" placeholder="DD/MM/YYYY" style="max-width:140px"></div>`;
     html += `</div>`;
+    if (_w.certType === 'FA.1') {
+      html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px">`;
+      html += `<div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">COMMISSIONING ENGINEER <span style="font-weight:400;color:var(--muted)">(if different from visiting engineer)</span></div>`;
+      html += `<div class="wiz-field" style="margin-bottom:8px"><label>Commissioning Engineer Name</label><input value="${esc(_w.commEngName)}" oninput="fireSet('commEngName',this.value)" placeholder="Full name"></div>`;
+      html += `<div class="wiz-field" style="margin-bottom:8px"><label>Qualification</label><input value="${esc(_w.commEngQual)}" oninput="fireSet('commEngQual',this.value)" placeholder="e.g. FIA Level 3, BAFE SP203"></div>`;
+      html += `<div class="wiz-field" style="margin-bottom:0"><label>Reg. / Ref. No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.commEngRegNo)}" oninput="fireSet('commEngRegNo',this.value)" placeholder="e.g. FIA membership no." style="max-width:200px"></div>`;
+      html += `</div>`;
+    }
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;font-size:14px">`;
     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">`;
     html += `<div><span style="color:var(--muted);font-size:12px">Type</span><br>${esc(typeLabel)}</div>`;
