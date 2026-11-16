@@ -1,8 +1,9 @@
 {
-  "v": "2.4.1",
-  "build": 172,
+  "v": "2.4.2",
+  "build": 173,
   "new": 1,
   "changes": [
+    "Fixed: Gas CP12 history preview signature boxes no longer crop the Engg Sign section — the name and signature now fit side by side without overflowing.",
     "Improved: Gas CP12 history preview signature boxes now show the engineer name on the left and an Engg Sign section on the right — the signature image sits under the Engg Sign label, separated by a divider line.",
     "Improved: Gas CP12 history preview defects section now matches the printed certificate — shows a 5-row table with number, description and Warning / Notice type (N/A when blank), exactly like the PDF. Columns are now in the correct order: Defects on the left, Pipework checks on the right.",
     "Improved: Gas CP12 history preview signature boxes now show the signature image side by side with the engineer name — cleaner layout matching how signatures appear on printed documents.",
