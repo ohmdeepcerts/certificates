@@ -57,19 +57,19 @@ export function startNewEL() {
     clientName: '', clientType: '',
     clientAddr1: '', clientAddr2: '', clientAddr3: '', clientPostcode: '',
     clientEmail: getSetting('el_client_email_default','gbelectricalcertificates@hotmail.com'),
-    systemType: '', mode: '',
+    systemType: 'Self-contained luminaires', mode: 'Maintained (Y)',
     ratedDuration: '3 hours',
-    testDate: todayStr(), nextTestDate: '', retestPeriod: '12months', inspectionType: '',
+    testDate: todayStr(), nextTestDate: '', retestPeriod: '12months', inspectionType: 'Annual full test',
     purpEscape: '✓', purpStandby: 'N/A', purpEscRoute: '✓',
     purpPartial: 'N/A', purpOpen: 'N/A', purpHighRisk: 'N/A',
-    arSelfContained: 'N/A', arGenerator: 'N/A', arCentral: 'N/A', arCombined: 'N/A',
+    arSelfContained: '✓', arGenerator: 'N/A', arCentral: 'N/A', arCombined: 'N/A',
     inst1Brand: getSetting('el_inst1_brand',''), inst1Model: getSetting('el_inst1_model',''),
     inst2Brand: getSetting('el_inst2_brand',''), inst2Model: getSetting('el_inst2_model',''),
     pItems: {p1:'✓',p2:'✓',p3:'✓',p4:'✓',p5:'✓',p6:'N/A',p7:'✓',
              p9:'✓',p10:'N/A',p11:'✓',p12:'✓',p13:'✓',p14:'N/A',
              p15:'✓',p16:'✓',p17:'✓',p18:'✓',p19:'✓',p20:'✓',
              p21:'✓',p22:'N/A',p23:'✓'},
-    checklistNotes: '',
+    checklistNotes: 'N/A',
     lumTotal: '', lumPass: '', lumFail: '',
     outcome: '', durationAchieved: '3 hours',
     observations: '', observationRows: [],
@@ -560,6 +560,9 @@ export function elLumCalc() {
   else if (t && p && !f) { _w.lumFail = Math.max(0, t-p); }
   else if (t && !p && f) { _w.lumPass = Math.max(0, t-f); }
   _elDirty = true;
+  var ins = document.querySelectorAll('.lum-grid input');
+  if (ins[1]) ins[1].value = _w.lumPass !== '' ? _w.lumPass : '';
+  if (ins[2]) ins[2].value = _w.lumFail !== '' ? _w.lumFail : '';
 }
 
 export function elAddLumRow() {
@@ -1069,7 +1072,7 @@ export function elBuildCertHTML(rec) {
   var lumTotal = r.lumTotal||'—';
   var lumPass  = r.lumPass||'—';
   var lumFail  = r.lumFail||'0';
-  var _lrAll  = (r.lumRows||[]).filter(function(row){return row.loc;});
+  var _lrAll  = (r.lumRows||[]).filter(function(row){return row.location;});
   var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
                 : (r.observations ? [{code:'—',text:r.observations}] : []);
   var _defCnt = _obsAll.length;
@@ -1532,7 +1535,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
   function _buildLumRows(chunk,startNum){
     return chunk.map(function(row,i){
       return '<tr><td>EL-'+String(startNum+i).padStart(2,'0')+'</td>'
-        +'<td>'+esc(row.loc)+'</td><td>LED Emergency Fitting</td>'
+        +'<td>'+esc(row.location)+'</td><td>LED Emergency Fitting</td>'
         +'<td>'+mode+'</td><td>'+rated+'</td>'
         +'<td>'+(row.result==='FAIL'?'<span class="chip-fail">FAIL</span>':'<span class="chip-pass">PASS</span>')+'</td></tr>';
     }).join('');
