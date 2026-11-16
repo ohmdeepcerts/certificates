@@ -1213,7 +1213,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .ltbl th{background:#093423;color:#fff;padding:9px 10px;text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
 .ltbl td{padding:8px 10px;border-bottom:1px solid #e2e6e0;vertical-align:middle;}
 .ltbl tr:nth-child(even) td{background:#eef5f0;}
-.ltbl tr.total-row td{background:#093423!important;color:#fff!important;font-weight:700;font-size:10.5px;padding:9px 10px;}
+.ltbl tr.total-row td{background:#eef5f0!important;border-top:2px solid #093423!important;color:#093423!important;font-weight:700;font-size:10.5px;padding:9px 10px;}
 .chip-pass{display:inline-block;background:#1e7a4c;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
 .chip-fail{display:inline-block;background:#b3452e;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
 .chip-na{display:inline-block;background:#f4ecd8;color:#093423;border:1px solid #b08d2e;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:99px;}
@@ -1527,8 +1527,8 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
   /* PAGE 4+ — Defects & Luminaire Schedule (fully paginated) */
   var _lumSatNote  = '<div class="note-box"><div class="nb-lbl">Schedule Result — Satisfactory</div><p>All luminaires recorded as satisfactory. The system is in full compliance with BS 5266-1:2025 and BS EN 1838:2024. No further action required.</p></div>';
   var _lumFailNote = '<div class="obs-box"><div class="ob-lbl">Failures Noted — Remedial Action Required</div><div class="ob-item">'+lumFail+' luminaire(s) failed to achieve the rated '+rated+' duration. Refer to defects above for full details and recommended remedial action.</div></div>';
-  var _lumTotalRow = '<tr class="total-row"><td colspan="4"><strong>TOTAL</strong></td><td colspan="2">'+lumTotal+' tested &middot; '+lumPass+' pass &middot; '+lumFail+' fail</td></tr>';
-  var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#78716c;font-style:italic;font-weight:400">Continued on next page&hellip;</td></tr>';
+  var _lumTotalRow = '<tr class="total-row"><td colspan="3"><strong>TOTAL &mdash; '+lumTotal+' tested</strong></td><td colspan="3" style="text-align:right"><span style="display:inline-flex;gap:6px;align-items:center"><span style="background:#1e7a4c;color:#fff;font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:99px">'+lumPass+' Pass</span><span style="background:'+(parseInt(lumFail)>0?'#b3452e':'#9ca3af')+';color:#fff;font-size:9.5px;font-weight:700;padding:3px 11px;border-radius:99px">'+lumFail+' Fail</span></span></td></tr>';
+  var _lumContRow  = '<tr class="total-row"><td colspan="6" style="color:#093423;font-style:italic;font-weight:400;text-align:center">Continued on next page&hellip;</td></tr>';
   var _lumTblHd    = '<tr><th>#</th><th>Location / Zone</th><th>Type</th><th>Mode</th><th>Rated</th><th>Result</th></tr>';
   var _codeColor   = function(c){return c==='C1'?'#dc2626':c==='C2'?'#ea580c':c==='FI'?'#7c3aed':'#1d4ed8';};
 
