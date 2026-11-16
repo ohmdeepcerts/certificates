@@ -28,13 +28,13 @@ export async function loadRecycleBin() {
       sb.from('pat_reports').select('id,ref_number,status,test_date,client_name,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
       sb.from('gas_certs').select('id,ref_number,status,cert_date,install_address,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
       sb.from('el_certs').select('id,ref_number,premises_name,deleted_at,deleted_by,created_at').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }),
-      sb.from('fire_certs').select('id,ref_number,premises_address,cert_type,outcome,test_date,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
+      sb.from('fire_certs').select('id,ref_number,premises_name,cert_type,outcome,test_date,deleted_at,deleted_by').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
     ]);
     const items = [
       ...(pats || []).map(r => ({ tbl: 'pat_reports', type: 'PAT', id: r.id, label: r.ref_number || r.id.slice(-6).toUpperCase(), sub: r.client_name || patFd(r.test_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
       ...(gases || []).map(r => ({ tbl: 'gas_certs', type: 'Gas CP12', id: r.id, label: r.ref_number || (r.install_address || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.cert_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
       ...(els || []).map(r => ({ tbl: 'el_certs', type: 'EL', id: r.id, label: r.ref_number || r.premises_name || r.id.slice(-6).toUpperCase(), sub: '', deleted_at: r.deleted_at, deleted_by: r.deleted_by })),
-      ...(fires || []).map(r => ({ tbl: 'fire_certs', type: 'Fire Alarm', id: r.id, label: r.ref_number || (r.premises_address || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.test_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by }))
+      ...(fires || []).map(r => ({ tbl: 'fire_certs', type: 'Fire Alarm', id: r.id, label: r.ref_number || (r.premises_name || '').slice(0, 40) || r.id.slice(-6).toUpperCase(), sub: patFd(r.test_date), deleted_at: r.deleted_at, deleted_by: r.deleted_by }))
     ].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
 
     // Fetch names for all who-deleted UUIDs
@@ -177,17 +177,17 @@ export async function globalSearch(q) {
         sb.from('pat_reports').select('id,ref_number,property_address,status,engineer,test_date').or(`ref_number.ilike.%${q}%,property_address.ilike.%${q}%,landlord_name.ilike.%${q}%`).limit(6),
         sb.from('gas_certs').select('id,ref_number,install_address,status,engineer,cert_date').or(`ref_number.ilike.%${q}%,install_address.ilike.%${q}%,recipient_email.ilike.%${q}%`).limit(6),
         sb.from('el_certs').select('id,ref_number,premises_name,outcome,test_date').or(`ref_number.ilike.%${q}%,premises_name.ilike.%${q}%`).limit(6),
-        sb.from('fire_certs').select('id,ref_number,premises_address,outcome,cert_type').or(`ref_number.ilike.%${q}%,premises_address.ilike.%${q}%`).is('deleted_at', null).limit(6)
+        sb.from('fire_certs').select('id,ref_number,premises_name,outcome,cert_type').or(`ref_number.ilike.%${q}%,premises_name.ilike.%${q}%`).is('deleted_at', null).limit(6)
       ]);
       const wkey = r => r.ref_number || '';
       var patSorted = sortByWordStart(p.data||[], r => (r.ref_number||'')+' '+(r.property_address||''), q);
       var gasSorted = sortByWordStart(g.data||[], r => (r.ref_number||'')+' '+(r.install_address||''), q);
       var elSorted  = sortByWordStart(e.data||[], r => (r.ref_number||'')+' '+(r.premises_name||''), q);
-      var fireSorted = sortByWordStart(f.data||[], r => (r.ref_number||'')+' '+(r.premises_address||''), q);
+      var fireSorted = sortByWordStart(f.data||[], r => (r.ref_number||'')+' '+(r.premises_name||''), q);
       patSorted.forEach(r => rows.push({ type: 'PAT', label: hlText(r.ref_number||'—', q), sub: hlText((r.property_address||'').substring(0,50), q), status: r.status, action: "loadPATForm('"+r.id+"')" }));
       gasSorted.forEach(r => rows.push({ type: 'Gas', label: hlText(r.ref_number||'—', q), sub: hlText((r.install_address||'').substring(0,50), q), status: r.status, action: "navigate('gas-new');loadGasForm('"+r.id+"')" }));
       elSorted.forEach(r  => rows.push({ type: 'EL',  label: hlText(r.ref_number||'—', q), sub: hlText((r.premises_name||'').substring(0,50), q), status: r.outcome, action: "navigate('el-history')" }));
-      fireSorted.forEach(r => rows.push({ type: 'FA',  label: hlText(r.ref_number||'—', q), sub: hlText((r.premises_address||'').substring(0,50), q), status: r.outcome, action: "navigate('fire-history')" }));
+      fireSorted.forEach(r => rows.push({ type: 'FA',  label: hlText(r.ref_number||'—', q), sub: hlText((r.premises_name||'').substring(0,50), q), status: r.outcome, action: "navigate('fire-history')" }));
     } catch (ex) { box.innerHTML = '<div style="padding:12px 16px;color:var(--muted);font-size:13px">Search error</div>'; return; }
     if (!rows.length) { box.innerHTML = '<div style="padding:12px 16px;color:var(--muted);font-size:13px">No results for "' + esc(q) + '"</div>'; return; }
     const typeColor = { PAT: '#dbeafe', Gas: '#fef3c7', EL: '#ede9fe', FA: '#dcfce7' };
@@ -213,7 +213,7 @@ export async function loadDashboard() {
       sb.from('pat_reports').select('id,ref_number,status,test_date,appliances,property_address,engineer,created_at').order('created_at', { ascending: false }),
       sb.from('gas_certs').select('id,ref_number,status,cert_date,next_check_date,install_address,engineer,created_at').order('created_at', { ascending: false }),
       sb.from('el_certs').select('id,ref_number,data,created_at').order('created_at', { ascending: false }),
-      sb.from('fire_certs').select('id,ref_number,status,premises_address,cert_type,created_at').is('deleted_at', null).order('created_at', { ascending: false })
+      sb.from('fire_certs').select('id,ref_number,outcome,premises_name,cert_type,created_at').is('deleted_at', null).order('created_at', { ascending: false })
     ]);
     pats = _dp; gases = _dg; els = _de; fires = _df;
     try { localStorage.setItem('_cache_dashboard', JSON.stringify({ pats, gases, els, fires, ts: Date.now() })); } catch {}
@@ -261,7 +261,7 @@ export async function loadDashboard() {
 
   // Fire stats
   const fireTotal = fires?.length || 0;
-  const fireDone = (fires || []).filter(r => r.status === 'completed').length;
+  const fireDone = (fires || []).filter(r => (r.outcome||'').toUpperCase() === 'SATISFACTORY').length;
 
   // Populate stat IDs (legacy + new)
   const _set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -433,7 +433,7 @@ function _buildDashActivity(pats, gases, fires) {
     rows.push({ type: 'gas', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.install_address || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: r.status === 'completed' ? 'issued' : 'draft', statusLbl: r.status === 'completed' ? 'Issued' : 'Draft' });
   });
   (fires || []).slice(0, 3).forEach(r => {
-    rows.push({ type: 'fire', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.premises_address || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: r.status === 'completed' ? 'issued' : 'draft', statusLbl: r.status === 'completed' ? 'Issued' : 'Draft' });
+    rows.push({ type: 'fire', name: r.ref_number || r.id.slice(-6).toUpperCase(), meta: (r.premises_name || '').substring(0, 45) || 'No address', time: fmt(r.created_at), status: (r.outcome||'').toUpperCase() === 'SATISFACTORY' ? 'issued' : 'draft', statusLbl: (r.outcome||'').toUpperCase() === 'SATISFACTORY' ? 'Issued' : 'Draft' });
   });
   rows.sort((a, b) => (a.time < b.time ? 1 : -1));
   if (!rows.length) { el.innerHTML = '<div class="empty-state" style="padding:8px 0"><div class="empty-icon">📋</div><p>No certificates yet</p></div>'; return; }

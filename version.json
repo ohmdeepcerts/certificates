@@ -1,8 +1,9 @@
 {
-  "v": "2.3.5",
-  "build": 166,
+  "v": "2.3.6",
+  "build": 167,
   "new": 1,
   "changes": [
+    "Fixed: Fire Alarm certificate count on the dashboard now shows correctly — it was always showing 0 due to an internal query error. The fire certificate total, issued count, search results and recent activity feed now all load properly.",
     "Improved: EL certificate luminaire schedule total row redesigned — now shows a clean mint background with a dark green accent border and inline Pass / Fail count pills. All-pass shows the fail pill in grey; any failures turn it red.",
     "Fixed: Total row on the EL certificate luminaire schedule now shows correctly — dark green background with white text. Previously the row appeared with white text on a near-white background, making it unreadable.",
     "Fixed: Location rows from the Luminaires step now print correctly in the Schedule of Emergency Luminaires table on the EL certificate — previously the table was always empty even when locations had been entered.",
