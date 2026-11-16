@@ -1,8 +1,9 @@
 {
-  "v": "2.4.2",
-  "build": 173,
+  "v": "2.4.3",
+  "build": 174,
   "new": 1,
   "changes": [
+    "Improved: Gas CP12 history preview Defects and Pipework tables now match the printed certificate — column labels are in the header bar (not a separate row), both tables have identical 5-row height so they line up side by side.",
     "Fixed: Gas CP12 history preview signature boxes no longer crop the Engg Sign section — the name and signature now fit side by side without overflowing.",
     "Improved: Gas CP12 history preview signature boxes now show the engineer name on the left and an Engg Sign section on the right — the signature image sits under the Engg Sign label, separated by a divider line.",
     "Improved: Gas CP12 history preview defects section now matches the printed certificate — shows a 5-row table with number, description and Warning / Notice type (N/A when blank), exactly like the PDF. Columns are now in the correct order: Defects on the left, Pipework checks on the right.",
