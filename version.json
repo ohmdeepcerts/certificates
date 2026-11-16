@@ -1,8 +1,10 @@
 {
-  "v": "2.3.1",
-  "build": 162,
+  "v": "2.3.2",
+  "build": 163,
   "new": 1,
   "changes": [
+    "New: Schedule notes field added to the Schedule step — type any notes about the inspection schedule (e.g. items checked on rotation, items not accessible) and they print in the schedule section of the certificate.",
+    "New: System operational at leaving now shows on page 1 of every fire certificate — a green tick confirms the system was left fully operational, or a red warning highlights if it was not. Previously this only appeared on the declaration page.",
     "New: Annex G Inspection Checklist now prints on commercial fire certificates — the 20-item checklist covering control equipment, power supply, detection, warning devices, ancillary functions and documentation now appears in full on the certificate, with a Pass / Fail / N/A result for each item recorded during the visit.",
     "New: System age warning now prints on commercial fire certificates when the system is 10 or more years old — a clear amber notice on page 1 flags that an end-of-life review may be required under BS 5839-1:2025 Clause 46.",
     "Fixed: Commercial fire certificate Schedule of Items now includes O&M manuals and zone chart items in the Documentation section — these appeared on the wizard but were missing from the printed certificate.",

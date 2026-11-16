@@ -549,6 +549,7 @@ export function fireRenderStep() {
     var _schedTotal = 0, _schedFilled = 0;
     _schedDefs.forEach(function(sec) { sec[1].forEach(function(item) { _schedTotal++; if ((_sItems[item[0]]||'').length) _schedFilled++; }); });
     html += `<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">${_schedFilled} of ${_schedTotal} items recorded</div>`;
+    html += `<div class="wiz-field" style="margin-top:14px"><label>Schedule notes <span class="lbl-opt">(optional)</span></label><textarea rows="2" oninput="fireSetSchedNote(this.value)" placeholder="e.g. Zone 3 door holder not tested — awaiting replacement part. Items in Section D checked on rotation basis." style="width:100%;font-size:13px">${esc((_w.scheduleNotes&&_w.scheduleNotes['_general'])||'')}</textarea></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 5: Detectors ─────────────────────────────────────────────────────
@@ -1112,6 +1113,12 @@ export function fireSetScheduleItem(id, val) {
   if (!_w.scheduleItems) _w.scheduleItems = {};
   _w.scheduleItems[id] = (_w.scheduleItems[id] === val) ? '' : val;
   fireRenderStep();
+}
+
+export function fireSetSchedNote(val) {
+  if (!_w.scheduleNotes) _w.scheduleNotes = {};
+  _w.scheduleNotes['_general'] = val;
+  _schedulePreview();
 }
 
 export function fireDetCalc() {

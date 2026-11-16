@@ -642,6 +642,7 @@ export function fireBuildCertHTML(r, siteHistory) {
         :'')
       +(p1Fields?'<div class="fg">'+p1Fields+'</div>':'')
       +noteBox
+      +(r.sysOperational?'<div style="margin-top:10px;padding:8px 12px;border-radius:4px;font-size:11.5px;display:flex;align-items:center;gap:10px;'+(r.sysOperational==='Yes'?'background:#f0faf4;border:1.5px solid #4ade80;':'background:#fff0ee;border:1.5px solid #c01818;')+'"><span style="font-weight:700;color:'+(r.sysOperational==='Yes'?'#166534':'#7a1010')+';font-size:13px">'+(r.sysOperational==='Yes'?'&#10003;':'&#9888;')+' System operational at leaving:</span> <span style="color:#1c1010;font-weight:600">'+_esc(r.sysOperational)+'</span></div>':'')
     +'</div>'
     +footer(r.premisesName||premAddr[0]||company, 1, totalPages)
   +'</div>';
