@@ -1,4 +1,4 @@
-﻿import { getSetting } from '../../lib/settings.js';
+import { getSetting } from '../../lib/settings.js';
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _field(label, val) {
@@ -94,6 +94,8 @@ var _COM_SCHED_PDF = [
     ['doc_cause_effect','Cause and effect documentation available on-site'],
     ['doc_logbook','Fire alarm log book present — entries current'],
     ['doc_repair','24-hour emergency callout arrangements confirmed in writing'],
+    ['doc_om_manuals',"O&M manuals / manufacturer's instructions present on site"],
+    ['doc_zone_chart','Zone chart / schedule of devices available on site'],
   ]],
 ];
 
@@ -631,6 +633,7 @@ export function fireBuildCertHTML(r, siteHistory) {
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0;margin-left:20px">'
             +'<div style="font-size:18px;font-weight:800;color:#c01818;white-space:nowrap">'+nextInspFormatted+'</div>'
+            +(r.nextInspInterval?'<div style="font-size:10px;color:#7a1010;font-weight:600;margin-top:2px">'+_esc(r.nextInspInterval)+' interval</div>':'')
             +'<div style="font-size:9px;color:#e08830;font-weight:700;margin-top:2px">'+(isComm?'BS 5839-1:2025 \xb7 Cl. 25':'BS 5839-6:2019 \xb7 Cl. 15')+'</div>'
           +'</div>'
         +'</div>'
@@ -668,6 +671,7 @@ export function fireBuildCertHTML(r, siteHistory) {
       +ifacesHtml
       +serviceHistoryHtml
       +carriedDefHtml
+      +(r.prevDefectsResolved?'<div style="margin:8px 0 10px;padding:7px 12px;background:#faf7f2;border-left:3px solid #c9b87a;border-radius:0 4px 4px 0;font-size:11.5px"><span style="font-weight:700;color:#5a4a2a">Previous defects status:</span> <span style="color:#1c1010">'+_esc(r.prevDefectsResolved)+'</span></div>':'')
       +defectsHtml
       +'<div class="sec-head" style="margin-top:14px">Competent Person Declaration</div>'
       +'<div style="border:1px solid #e2d4d4;border-radius:4px;overflow:hidden;font-size:11.5px;margin-bottom:14px">'
