@@ -476,8 +476,8 @@ function _buildGasCertHTML(r) {
     ${r.work_details ? sHdr('Work Carried Out') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.work_details)}</p>` : ''}
     ${r.remedial_action ? sHdr('Remedial Action Required') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.remedial_action)}</p>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <div class="a4-box"><div class="a4-key">Issued By</div><div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div>
-      <div class="a4-box"><div class="a4-key">Received By</div><div class="a4-val">${esc(r.sig_received_name || '—')}</div></div>
+      <div class="a4-box"><div class="a4-key">Issued By</div>${r.sig_issued_image ? `<img src="${r.sig_issued_image}" style="max-height:44px;max-width:160px;display:block;margin-bottom:4px;object-fit:contain">` : ''}<div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div>
+      <div class="a4-box"><div class="a4-key">Received By</div>${r.sig_received_image ? `<img src="${r.sig_received_image}" style="max-height:44px;max-width:160px;display:block;margin-bottom:4px;object-fit:contain">` : ''}<div class="a4-val">${esc(r.sig_received_name || '—')}</div></div>
     </div>
     ${coAddr ? `<div style="font-size:.67rem;color:#94a3b8;margin-top:6px">${esc(coAddr)}</div>` : ''}
     <div class="a4-foot">
