@@ -426,15 +426,15 @@ function _buildGasCertHTML(r) {
     ? `<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:6px">${pipework.map((val, i) => `<tr><td style="padding:3px 8px 3px 0;color:#64748b;width:60%">${esc(pipeLabels[i] || '')}</td><td style="font-weight:700;color:${val==='PASS'||val==='✓'?'#16a34a':val==='FAIL'||val==='✕'?'#dc2626':'#475569'}">${esc(val || 'N/A')}</td></tr>`).join('')}</table>`
     : '';
 
-  const idDefs = defs.filter(d => /danger|^id$/i.test(d.warning_type || ''));
-  const arDefs = defs.filter(d => /risk|^ar$/i.test(d.warning_type || ''));
-  const niDefs = defs.filter(d => /notice|^ni$/i.test(d.warning_type || ''));
-  const otherDefs = defs.filter(d => !idDefs.includes(d) && !arDefs.includes(d) && !niDefs.includes(d));
-  const defRow = (label, color, bg, bdr, list) => `<div style="margin-bottom:6px"><div style="font-size:.62rem;font-weight:700;color:${color};background:${bg};border:1px solid ${bdr};border-radius:3px;padding:2px 7px;display:inline-block;margin-bottom:3px">${label}</div>${list.length ? list.map(d => `<div style="font-size:.68rem;color:#1e293b;padding:2px 0;border-bottom:1px solid #f1f5f9;line-height:1.35">${esc(d.description || d.text || '—')}</div>`).join('') : '<div style="font-size:.68rem;color:#94a3b8;font-style:italic">None</div>'}</div>`;
-  const defColHTML = defRow('Immediately Dangerous', '#991b1b', '#fee2e2', '#fca5a5', idDefs)
-    + defRow('At Risk', '#c2410c', '#fff7ed', '#fed7aa', arDefs)
-    + defRow('Notice Issued', '#1d4ed8', '#eff6ff', '#bfdbfe', niDefs)
-    + (otherDefs.length ? otherDefs.map(d => `<div style="font-size:.68rem;color:#1e293b;padding:1px 0">${esc(d.warning_type ? d.warning_type + ': ' : '')}${esc(d.description || d.text || '—')}</div>`).join('') : '');
+  const defTableRows = Array.from({length: 5}, (_, i) => {
+    const def = defs[i];
+    const warn = def ? (def.warning_type && def.warning_type !== 'N/A' ? esc(def.warning_type) : 'N/A') : 'N/A';
+    const desc = def ? esc(def.description || def.text || '') : '';
+    const warnColor = warn === 'N/A' ? '#94a3b8' : (/danger/i.test(warn) ? '#991b1b' : /risk/i.test(warn) ? '#c2410c' : '#1d4ed8');
+    const warnBg = warn === 'N/A' ? 'transparent' : (/danger/i.test(warn) ? '#fee2e2' : /risk/i.test(warn) ? '#fff7ed' : '#eff6ff');
+    return `<tr><td style="width:18px;text-align:center;background:#f8fafc;font-weight:700;font-size:.68rem;color:#64748b;padding:4px 3px;border-top:1px solid #e2e8f0">${i+1}</td><td style="font-size:.68rem;color:#1e293b;padding:4px 6px;border-top:1px solid #e2e8f0;line-height:1.3">${desc}</td><td style="width:80px;text-align:center;padding:4px 4px;border-top:1px solid #e2e8f0"><span style="font-size:.62rem;font-weight:700;color:${warnColor};background:${warnBg};border-radius:3px;padding:1px 5px">${warn}</span></td></tr>`;
+  }).join('');
+  const defColHTML = `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="width:18px;background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px;text-align:center">#</th><th style="background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px 6px;text-align:left">Description</th><th style="width:80px;background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px;text-align:center">Warning / Notice</th></tr></thead><tbody>${defTableRows}</tbody></table>`;
 
   const sHdr = t => `<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${NAVY};padding:4px 8px;border-radius:3px;margin:8px 0 5px">${t}</div>`;
   const isDraft = r.status !== 'completed';
@@ -469,15 +469,15 @@ function _buildGasCertHTML(r) {
       <div class="a4-box"><div class="a4-key">Engineer</div><div class="a4-val" style="font-weight:700">${esc(eng)}</div>${r.gas_safe_no ? `<div style="font-size:.67rem;margin-top:3px;color:#94a3b8">Gas Safe No: <strong style="color:${AMBER}">${esc(r.gas_safe_no)}</strong></div>` : ''}${r.engineer_licence_no ? `<div style="font-size:.67rem;margin-top:2px;color:#94a3b8">Licence: <strong style="color:#1e293b">${esc(r.engineer_licence_no)}</strong></div>` : ''}${r.business_address ? `<div style="font-size:.67rem;margin-top:4px;padding-top:4px;border-top:1px solid #e2cfa0;color:#64748b">${esc(r.business_address)}</div>` : ''}${r.business_phone ? `<div style="font-size:.67rem;color:#64748b">Tel: ${esc(r.business_phone)}</div>` : ''}${r.business_email ? `<div style="font-size:.67rem;color:#64748b">${esc(r.business_email)}</div>` : ''}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
-      <div>${sHdr('Pipework Checks')}${pipeHTML || '<p style="color:#94a3b8;font-size:.72rem;padding:4px 0">No pipework data recorded</p>'}</div>
-      <div>${sHdr('Defects / Notices Issued')}${defColHTML}</div>
+      <div>${sHdr('Defects / Immediately Dangerous / At Risk Notices Issued')}${defColHTML}</div>
+      <div>${sHdr('Pipework / Installation Checks')}${pipeHTML || '<p style="color:#94a3b8;font-size:.72rem;padding:4px 0">No pipework data recorded</p>'}</div>
     </div>
     ${sHdr('Gas Appliances')}${appsHTML}
     ${r.work_details ? sHdr('Work Carried Out') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.work_details)}</p>` : ''}
     ${r.remedial_action ? sHdr('Remedial Action Required') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.remedial_action)}</p>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <div class="a4-box"><div class="a4-key">Issued By</div>${r.sig_issued_image ? `<img src="${r.sig_issued_image}" style="max-height:44px;max-width:160px;display:block;margin-bottom:4px;object-fit:contain">` : ''}<div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div>
-      <div class="a4-box"><div class="a4-key">Received By</div>${r.sig_received_image ? `<img src="${r.sig_received_image}" style="max-height:44px;max-width:160px;display:block;margin-bottom:4px;object-fit:contain">` : ''}<div class="a4-val">${esc(r.sig_received_name || '—')}</div></div>
+      <div class="a4-box" style="display:flex;align-items:center;gap:10px">${r.sig_issued_image ? `<img src="${r.sig_issued_image}" style="height:46px;max-width:130px;object-fit:contain;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0">` : `<div style="width:60px;height:46px;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0"></div>`}<div><div class="a4-key">Issued By</div><div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div></div>
+      <div class="a4-box" style="display:flex;align-items:center;gap:10px">${r.sig_received_image ? `<img src="${r.sig_received_image}" style="height:46px;max-width:130px;object-fit:contain;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0">` : `<div style="width:60px;height:46px;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0"></div>`}<div><div class="a4-key">Received By</div><div class="a4-val">${esc(r.sig_received_name || '—')}</div></div></div>
     </div>
     ${coAddr ? `<div style="font-size:.67rem;color:#94a3b8;margin-top:6px">${esc(coAddr)}</div>` : ''}
     <div class="a4-foot">
