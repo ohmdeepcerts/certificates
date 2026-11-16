@@ -1,8 +1,9 @@
 {
-  "v": "2.3.3",
-  "build": 164,
+  "v": "2.3.4",
+  "build": 165,
   "new": 1,
   "changes": [
+    "Fixed: Total row on the EL certificate luminaire schedule now shows correctly — dark green background with white text. Previously the row appeared with white text on a near-white background, making it unreadable.",
     "Fixed: Location rows from the Luminaires step now print correctly in the Schedule of Emergency Luminaires table on the EL certificate — previously the table was always empty even when locations had been entered.",
     "New: Schedule notes field added to the Schedule step — type any notes about the inspection schedule (e.g. items checked on rotation, items not accessible) and they print in the schedule section of the certificate.",
     "New: System operational at leaving now shows on page 1 of every fire certificate — a green tick confirms the system was left fully operational, or a red warning highlights if it was not. Previously this only appeared on the declaration page.",

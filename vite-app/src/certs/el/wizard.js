@@ -1213,7 +1213,7 @@ body{background:#e7e4dc;font-family:'Inter',system-ui,sans-serif;padding:32px 24
 .ltbl th{background:#093423;color:#fff;padding:9px 10px;text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
 .ltbl td{padding:8px 10px;border-bottom:1px solid #e2e6e0;vertical-align:middle;}
 .ltbl tr:nth-child(even) td{background:#eef5f0;}
-.ltbl .total-row td{background:#093423;color:#fff;font-weight:700;font-size:10.5px;padding:9px 10px;}
+.ltbl tr.total-row td{background:#093423!important;color:#fff!important;font-weight:700;font-size:10.5px;padding:9px 10px;}
 .chip-pass{display:inline-block;background:#1e7a4c;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
 .chip-fail{display:inline-block;background:#b3452e;color:#fff;font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:99px;}
 .chip-na{display:inline-block;background:#f4ecd8;color:#093423;border:1px solid #b08d2e;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:99px;}
