@@ -1,8 +1,9 @@
 {
-  "v": "2.4.23",
-  "build": 194,
+  "v": "2.4.24",
+  "build": 195,
   "new": 1,
   "changes": [
+    "Fixed: Numbers in fire alarm certificate section headings (e.g. BS 5839-1:2025, Clause 43) now sit at the same height — the font was using old-style figures where digits bobbed up and down.",
     "Improved: Fire alarm certificate title is now smaller so it fits on one line — no more wrapping to a second row.",
     "Improved: Fire alarm certificate header now shows address, phone and email on one line — company name is larger as a result, filling more of the header.",
     "Improved: Download PDF button on fire alarm certificates now saves the PDF file directly to your Downloads folder — no print dialog, no extra steps.",
