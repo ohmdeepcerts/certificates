@@ -17,6 +17,7 @@ export let patApps = [];
 export let patCurrentBaseRef = '';
 let _offlineQueueId = null;
 let autoCapEnabled = localStorage.getItem('ohm_autocap') !== 'off';
+let _patDirProps = null;
 
 // ─── Helpers ──────────────────────────────────────────
 export function patGe(id) { return document.getElementById(id); }
@@ -307,11 +308,36 @@ export async function newPAT() {
   if (refEl) { refEl.dataset.manual = 'false'; refEl.value = ''; }
   addPATRow(); addPATRow();
   _syncAutoCapBtn();
-  // Attach address autocomplete to property address + landlord address fields
+  // Attach address autocomplete (directory + Ideal Postcodes) to property address field
+  if (!_patDirProps) {
+    window.dirLoad?.('properties').then(data => { if (data) _patDirProps = data; });
+  }
   const _addrEl = patGe('pat-addr');
   if (_addrEl) attachAddressAutocomplete(_addrEl, {
+    minChars: 2,
+    localAlwaysSearch: true,
+    localSuggest(q) {
+      const props = _patDirProps || [];
+      if (!props.length) return [];
+      const lq = q.toLowerCase();
+      function _e(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      return props
+        .filter(p => (p.addr1||'').toLowerCase().includes(lq) || (p.name||'').toLowerCase().includes(lq) || (p.postcode||'').toLowerCase().includes(lq))
+        .slice(0, 6)
+        .map(p => ({
+          label: `<strong>${_e(p.addr1 || '')}</strong>${p.name ? ' &mdash; <span style="color:var(--muted)">' + _e(p.name) + '</span>' : ''}${p.postcode ? ' <span style="color:var(--muted)">(' + _e(p.postcode) + ')</span>' : ''}`,
+          onPick() {
+            const parts = [p.addr1||p.address||'', p.addr2||'', p.addr3||p.town||''].filter(Boolean);
+            const aEl = patGe('pat-addr'); const pEl = patGe('pat-postcode');
+            if (aEl) { aEl.value = parts.join('\n'); if (window.capitalizeAddress) window.capitalizeAddress(aEl); aEl.dispatchEvent(new Event('input', {bubbles:true})); }
+            if (pEl) { pEl.value = p.postcode || ''; pEl.dispatchEvent(new Event('input', {bubbles:true})); }
+            if (window.updatePatRef) window.updatePatRef();
+            if (window.doPatPreview) window.doPatPreview();
+          }
+        }));
+    },
     onSelect(a) {
-      patGe('pat-addr').value    = [a.line1, a.line2, a.line3].filter(Boolean).join('\n');
+      patGe('pat-addr').value = [a.line1, a.line2, a.line3].filter(Boolean).join('\n');
       patGe('pat-postcode').value = a.postcode;
       ['pat-addr', 'pat-postcode'].forEach(id => patGe(id)?.dispatchEvent(new Event('input', { bubbles: true })));
     }
