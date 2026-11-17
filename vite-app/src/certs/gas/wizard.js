@@ -560,11 +560,10 @@ export function gwRender() {
   var tabsHtml = '<div style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px">';
   _GW_STEPS.forEach(function(name, i) {
     var isCur = i === s, isDone = i < s;
-    var bg = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'var(--surface2)' : 'var(--surface2)');
-    var col = isCur ? '#fff' : (isDone ? 'var(--accent,#b91c1c)' : 'var(--muted)');
-    var bord = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'var(--accent,#b91c1c)' : 'var(--border)');
-    var click = isDone ? 'onclick="_gw.step=' + i + ';gwRender()" style="cursor:pointer;' : 'style="cursor:default;';
-    tabsHtml += '<div ' + click + 'display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:' + bg + ';color:' + col + ';border:1px solid ' + bord + ';font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0">'
+    var bg = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'rgba(22,163,74,.12)' : 'var(--surface2)');
+    var col = isCur ? '#fff' : (isDone ? '#16a34a' : 'var(--muted)');
+    var bord = isCur ? 'var(--accent,#b91c1c)' : (isDone ? 'rgba(22,163,74,.35)' : 'var(--border)');
+    tabsHtml += '<div onclick="gwJump(' + i + ')" style="cursor:pointer;display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:' + bg + ';color:' + col + ';border:1px solid ' + bord + ';font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0">'
       + (isDone ? '<span style="font-size:10px">&#10003;</span> ' : '<span style="opacity:.6">' + (i + 1) + '.</span> ')
       + name + '</div>';
   });
@@ -976,6 +975,8 @@ export function gwNext() {
 }
 
 export function gwBack() { if (_gw.step > 0) { _gw.step--; gwRender(); } }
+
+export function gwJump(i) { if (i >= 0 && i < _GW_STEPS.length) { _gw.step = i; gwRender(); } }
 
 export function gwSyncToCP12() {
   setCP12Field('cert_date', _gw.certDate || '');

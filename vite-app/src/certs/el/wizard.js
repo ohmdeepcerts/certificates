@@ -16,6 +16,7 @@ let _elAllCerts = [];
 let _elPage = 1, _elFiltered = [], _elCurrentQ = '';
 
 const STEPS = ['type','premises','client','system','purpose','duration','test','luminaires','instruments','checklist','outcome','observations','engineer','review'];
+const STEP_LABELS = ['Type','Premises','Client','System','Purpose','Duration','Test','Luminaires','Instruments','Checklist','Outcome','Observations','Engineer','Review'];
 const CERT_TYPES = [
   {id:'EL.1', label:'EL.1 — Completion Certificate', sub:'New installation or major modification — BS 5266-1 Annex B'},
   {id:'EL.2', label:'EL.2 — Periodic Inspection & Test', sub:'Annual / monthly service record — BS 5266-1 Annex C'},
@@ -112,8 +113,19 @@ export function elUpdateSubtitle() {
 export function elRenderStep() {
   var el = document.getElementById('el-wizard-body'); if (!el) return;
   var s = _w.step;
-  var prog = STEPS.map((nm,i) => `<div class="wiz-dot${i===s?' on':i<s?' done':''}" title="${nm}"></div>`).join('');
-  var html = `<div class="wiz-progress">${prog}</div>`;
+  if (!_w._visited) _w._visited = {};
+  _w._visited[s] = true;
+  var tabsEl = document.getElementById('el-step-tabs');
+  var pbarEl = document.getElementById('el-pbar-fill');
+  if (tabsEl) {
+    tabsEl.innerHTML = STEP_LABELS.map((lbl,i) => {
+      var visited = !!_w._visited[i];
+      var cls = i === s ? 'active' : visited ? 'done' : '';
+      return `<button class="wiz-step-tab ${cls}" onclick="elJumpStep(${i})" title="${lbl}"><span class="tab-num">${visited && i !== s ? '&#10003;' : i+1}</span><span class="tab-lbl">&nbsp;${lbl}</span></button>`;
+    }).join('');
+  }
+  if (pbarEl) pbarEl.style.width = Math.round(s / (STEPS.length - 1) * 100) + '%';
+  var html = '';
 
   if (s === 0) {
     html += `<h2 class="wiz-title">Certificate Type</h2>`;
@@ -645,6 +657,10 @@ export async function elNext() {
     _w.clientPostcode = _w.premPostcode || '';
   }
   _w.step = nextStep; elRenderStep();
+}
+
+export function elJumpStep(i) {
+  if (i >= 0 && i < STEPS.length) { _w.step = i; elRenderStep(); }
 }
 
 export function elBack() {

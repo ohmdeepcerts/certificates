@@ -71,7 +71,7 @@ function _refSettings(type) {
 export function updatePatRef() {
   const el = patGe('pat-ref');
   if (!el || el.dataset.manual === 'true') return;
-  const addr = (patGv('pat-addr') || '').trim();
+  const addr = (patGv('pat-addr1') || patGv('pat-addr') || '').trim();
   if (!addr) return;
   const pc = (patGv('pat-postcode') || '').trim();
   const { prefix, startN } = _refSettings('pat');
@@ -234,6 +234,8 @@ export function populatePATForm(r) {
   const _ukPc = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
   if (_fl.length > 1 && _ukPc.test(_fl[_fl.length - 1].trim())) { patGe('pat-postcode').value = _fl[_fl.length - 1].trim().toUpperCase(); patGe('pat-addr').value = _fl.slice(0, -1).join('\n'); }
   else { patGe('pat-addr').value = _fa; patGe('pat-postcode').value = ''; }
+  // Split assembled address into visible line inputs
+  { const _ls = (patGe('pat-addr')?.value || '').split('\n'); const _a1=patGe('pat-addr1'),_a2=patGe('pat-addr2'),_a3=patGe('pat-addr3'); if(_a1)_a1.value=_ls[0]||''; if(_a2)_a2.value=_ls[1]||''; if(_a3)_a3.value=_ls[2]||''; }
   patGe('pat-phone').value = r.phone_number || '';
   patGe('pat-email').value = r.email_address || '';
   const _pinEl = patGe('pat-internal-notes'); if (_pinEl) _pinEl.value = r.internal_notes || '';
@@ -301,7 +303,11 @@ export async function newPAT() {
   patGe('pat-eng').value = getSetting('pat_default_engineer', '');
   patGe('pat-landlord').value = ''; patGe('pat-agency').value = '';
   patGe('pat-landlord-addr').value = ''; patGe('pat-agency-addr').value = '';
-  patGe('pat-addr').value = ''; patGe('pat-postcode').value = ''; patGe('pat-phone').value = ''; patGe('pat-email').value = ''; const _pnEl = patGe('pat-internal-notes'); if (_pnEl) _pnEl.value = '';
+  patGe('pat-addr').value = '';
+  const _a1El = patGe('pat-addr1'); if (_a1El) _a1El.value = '';
+  const _a2El = patGe('pat-addr2'); if (_a2El) _a2El.value = '';
+  const _a3El = patGe('pat-addr3'); if (_a3El) _a3El.value = '';
+  patGe('pat-postcode').value = ''; patGe('pat-phone').value = ''; patGe('pat-email').value = ''; const _pnEl = patGe('pat-internal-notes'); if (_pnEl) _pnEl.value = '';
   patGe('pat-app-body').innerHTML = '';
   patCurrentBaseRef = '';
   const refEl = patGe('pat-ref');
@@ -312,7 +318,7 @@ export async function newPAT() {
   if (!_patDirProps) {
     window.dirLoad?.('properties').then(data => { if (data) _patDirProps = data; });
   }
-  const _addrEl = patGe('pat-addr');
+  const _addrEl = patGe('pat-addr1');
   if (_addrEl) attachAddressAutocomplete(_addrEl, {
     minChars: 2,
     localAlwaysSearch: true,
@@ -327,19 +333,22 @@ export async function newPAT() {
         .map(p => ({
           label: `<strong>${_e(p.addr1 || '')}</strong>${p.name ? ' &mdash; <span style="color:var(--muted)">' + _e(p.name) + '</span>' : ''}${p.postcode ? ' <span style="color:var(--muted)">(' + _e(p.postcode) + ')</span>' : ''}`,
           onPick() {
-            const parts = [p.addr1||p.address||'', p.addr2||'', p.addr3||p.town||''].filter(Boolean);
-            const aEl = patGe('pat-addr'); const pEl = patGe('pat-postcode');
-            if (aEl) { aEl.value = parts.join('\n'); if (window.capitalizeAddress) window.capitalizeAddress(aEl); aEl.dispatchEvent(new Event('input', {bubbles:true})); }
+            const a1El = patGe('pat-addr1'), a2El = patGe('pat-addr2'), a3El = patGe('pat-addr3'), pEl = patGe('pat-postcode');
+            if (a1El) { a1El.value = p.addr1||p.address||''; if (window.capitalizeAddress) window.capitalizeAddress(a1El); }
+            if (a2El) a2El.value = p.addr2||'';
+            if (a3El) a3El.value = p.addr3||p.town||'';
             if (pEl) { pEl.value = p.postcode || ''; pEl.dispatchEvent(new Event('input', {bubbles:true})); }
-            if (window.updatePatRef) window.updatePatRef();
-            if (window.doPatPreview) window.doPatPreview();
+            if (window.assemblePatAddr) window.assemblePatAddr();
           }
         }));
     },
     onSelect(a) {
-      patGe('pat-addr').value = [a.line1, a.line2, a.line3].filter(Boolean).join('\n');
-      patGe('pat-postcode').value = a.postcode;
-      ['pat-addr', 'pat-postcode'].forEach(id => patGe(id)?.dispatchEvent(new Event('input', { bubbles: true })));
+      const a1El = patGe('pat-addr1'), a2El = patGe('pat-addr2'), a3El = patGe('pat-addr3'), pEl = patGe('pat-postcode');
+      if (a1El) a1El.value = a.line1 || '';
+      if (a2El) a2El.value = [a.line2, a.line3].filter(Boolean).join(', ');
+      if (a3El) a3El.value = a.town || '';
+      if (pEl) { pEl.value = a.postcode || ''; pEl.dispatchEvent(new Event('input', {bubbles:true})); }
+      if (window.assemblePatAddr) window.assemblePatAddr();
     }
   });
   const _llAddrEl = patGe('pat-landlord-addr');
@@ -532,6 +541,25 @@ export function capitalizeAddress(el) {
   updatePatRef(); doPatPreview(); updatePatSidePanel();
 }
 export function patAutoH(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+export function assemblePatAddr() {
+  const a1 = (patGv('pat-addr1') || '').trim();
+  const a2 = (patGv('pat-addr2') || '').trim();
+  const a3 = (patGv('pat-addr3') || '').trim();
+  const full = [a1, a2, a3].filter(Boolean).join('\n');
+  const aEl = patGe('pat-addr'); if (aEl) aEl.value = full;
+  updatePatRef(); doPatPreview();
+}
+
+export function patCopyAddrToClient() {
+  const a1 = (patGv('pat-addr1') || '').trim();
+  const a2 = (patGv('pat-addr2') || '').trim();
+  const a3 = (patGv('pat-addr3') || '').trim();
+  const pc = (patGv('pat-postcode') || '').trim();
+  const full = [a1, a2, a3, pc].filter(Boolean).join('\n');
+  const el = patGe('pat-landlord-addr');
+  if (el) { el.value = full; el.dispatchEvent(new Event('input', {bubbles:true})); }
+}
 export function liveCapitalize(el) {
   if (!autoCapEnabled) return;
   const pos = el.selectionStart, posEnd = el.selectionEnd;

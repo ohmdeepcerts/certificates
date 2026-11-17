@@ -1,9 +1,10 @@
 {
-  "v": "2.4.10",
-  "build": 181,
+  "v": "2.4.11",
+  "build": 182,
   "new": 3,
   "changes": [
-    "Improved: PAT Test wizard Property step now shows Property Address at the top — start typing to search your saved properties directory and pick in one tap. Landlord and Agency details appear below.",
+    "Improved: PAT Test wizard Property step now uses separate address line fields (Line 1, Line 2, Town, Postcode) — same layout as the Gas certificate. Start typing in Line 1 to search your saved properties directory.",
+    "Improved: PAT Test wizard now has a dedicated Client step — Name, Address, Phone and Email in one clean section, with a 'Same as property' button to copy the address across in one tap.",
     "Improved: PAT Test wizard Job Details step is now cleaner — Ref Number is at the top on its own, Status and Engineer are handled automatically in the background. Just pick the test date and you are done.",
     "New: PAT Test wizard now checks you've filled in Engineer and Test Date before letting you move past step 1 — and Address and Postcode before moving past step 2. Missing fields are highlighted so nothing gets missed.",
     "New: PAT Test wizard now shows a summary under each completed step tab — date under Job Details, address under Property, appliance count with Pass/Fail totals under Appliances.",

@@ -422,9 +422,9 @@ function _buildGasCertHTML(r) {
       }).join('')
     : '<p style="color:#94a3b8;font-size:.78rem">No appliances recorded</p>';
 
-  const pipeHTML = pipework.length
-    ? `<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:6px">${pipework.map((val, i) => `<tr><td style="padding:3px 8px 3px 0;color:#64748b;width:60%">${esc(pipeLabels[i] || '')}</td><td style="font-weight:700;color:${val==='PASS'||val==='✓'?'#16a34a':val==='FAIL'||val==='✕'?'#dc2626':'#475569'}">${esc(val || 'N/A')}</td></tr>`).join('')}</table>`
-    : '';
+  const tblHdr = (title, rightLabel, rightW) =>
+    `<div style="display:flex;align-items:stretch;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:${NAVY};border-radius:3px 3px 0 0;margin:8px 0 0"><div style="flex:1;padding:4px 8px;display:flex;align-items:center">${title}</div><div style="width:${rightW}px;border-left:1px solid rgba(255,255,255,.25);padding:3px 2px;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.2">${rightLabel}</div></div>`;
+  const tblWrap = inner => `<table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none;margin-bottom:5px"><tbody>${inner}</tbody></table>`;
 
   const defTableRows = Array.from({length: 5}, (_, i) => {
     const def = defs[i];
@@ -432,9 +432,18 @@ function _buildGasCertHTML(r) {
     const desc = def ? esc(def.description || def.text || '') : '';
     const warnColor = warn === 'N/A' ? '#94a3b8' : (/danger/i.test(warn) ? '#991b1b' : /risk/i.test(warn) ? '#c2410c' : '#1d4ed8');
     const warnBg = warn === 'N/A' ? 'transparent' : (/danger/i.test(warn) ? '#fee2e2' : /risk/i.test(warn) ? '#fff7ed' : '#eff6ff');
-    return `<tr><td style="width:18px;text-align:center;background:#f8fafc;font-weight:700;font-size:.68rem;color:#64748b;padding:4px 3px;border-top:1px solid #e2e8f0">${i+1}</td><td style="font-size:.68rem;color:#1e293b;padding:4px 6px;border-top:1px solid #e2e8f0;line-height:1.3">${desc}</td><td style="width:80px;text-align:center;padding:4px 4px;border-top:1px solid #e2e8f0"><span style="font-size:.62rem;font-weight:700;color:${warnColor};background:${warnBg};border-radius:3px;padding:1px 5px">${warn}</span></td></tr>`;
+    return `<tr><td style="width:18px;text-align:center;background:#f8fafc;font-weight:700;font-size:.68rem;color:#64748b;padding:4px 3px${i>0?';border-top:1px solid #e2e8f0':''}">${i+1}</td><td style="font-size:.68rem;color:#1e293b;padding:4px 6px;line-height:1.3${i>0?';border-top:1px solid #e2e8f0':''}">${desc}</td><td style="width:72px;text-align:center;padding:4px 3px${i>0?';border-top:1px solid #e2e8f0':''}"><span style="font-size:.62rem;font-weight:700;color:${warnColor};background:${warnBg};border-radius:3px;padding:1px 4px">${warn}</span></td></tr>`;
   }).join('');
-  const defColHTML = `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="width:18px;background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px;text-align:center">#</th><th style="background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px 6px;text-align:left">Description</th><th style="width:80px;background:#f1f5f9;font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;padding:3px;text-align:center">Warning / Notice</th></tr></thead><tbody>${defTableRows}</tbody></table>`;
+  const defBlock = tblHdr('Defects / Immediately Dangerous / At Risk Notices Issued', 'WARNING /<br>NOTICE', 72) + tblWrap(defTableRows);
+
+  const pipeTableRows = Array.from({length: 5}, (_, i) => {
+    const val = pipework[i] || '';
+    const isPass = val === 'PASS' || val === '✓'; const isFail = val === 'FAIL' || val === '✕';
+    const color = isPass ? '#16a34a' : isFail ? '#dc2626' : '#94a3b8';
+    const bg = isPass ? '#f0fdf4' : isFail ? '#fef2f2' : '#f8fafc';
+    return `<tr><td style="font-size:.68rem;color:#1e293b;padding:4px 6px;line-height:1.3${i>0?';border-top:1px solid #e2e8f0':''}">${esc(pipeLabels[i] || '')}</td><td style="width:72px;text-align:center;background:${bg};padding:4px 3px;font-weight:700;font-size:.68rem;color:${color};border-left:1px solid #e2e8f0${i>0?';border-top:1px solid #e2e8f0':''}">${esc(val || '—')}</td></tr>`;
+  }).join('');
+  const pipeBlock = tblHdr('Pipework / Installation Checks', 'SATISFACTORY /<br>PASS', 72) + tblWrap(pipeTableRows);
 
   const sHdr = t => `<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${NAVY};padding:4px 8px;border-radius:3px;margin:8px 0 5px">${t}</div>`;
   const isDraft = r.status !== 'completed';
@@ -469,15 +478,15 @@ function _buildGasCertHTML(r) {
       <div class="a4-box"><div class="a4-key">Engineer</div><div class="a4-val" style="font-weight:700">${esc(eng)}</div>${r.gas_safe_no ? `<div style="font-size:.67rem;margin-top:3px;color:#94a3b8">Gas Safe No: <strong style="color:${AMBER}">${esc(r.gas_safe_no)}</strong></div>` : ''}${r.engineer_licence_no ? `<div style="font-size:.67rem;margin-top:2px;color:#94a3b8">Licence: <strong style="color:#1e293b">${esc(r.engineer_licence_no)}</strong></div>` : ''}${r.business_address ? `<div style="font-size:.67rem;margin-top:4px;padding-top:4px;border-top:1px solid #e2cfa0;color:#64748b">${esc(r.business_address)}</div>` : ''}${r.business_phone ? `<div style="font-size:.67rem;color:#64748b">Tel: ${esc(r.business_phone)}</div>` : ''}${r.business_email ? `<div style="font-size:.67rem;color:#64748b">${esc(r.business_email)}</div>` : ''}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
-      <div>${sHdr('Defects / Immediately Dangerous / At Risk Notices Issued')}${defColHTML}</div>
-      <div>${sHdr('Pipework / Installation Checks')}${pipeHTML || '<p style="color:#94a3b8;font-size:.72rem;padding:4px 0">No pipework data recorded</p>'}</div>
+      <div>${defBlock}</div>
+      <div>${pipeBlock}</div>
     </div>
     ${sHdr('Gas Appliances')}${appsHTML}
     ${r.work_details ? sHdr('Work Carried Out') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.work_details)}</p>` : ''}
     ${r.remedial_action ? sHdr('Remedial Action Required') + `<p style="font-size:.72rem;color:#475569;line-height:1.5;margin-bottom:6px">${esc(r.remedial_action)}</p>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <div class="a4-box" style="display:flex;align-items:center;gap:10px">${r.sig_issued_image ? `<img src="${r.sig_issued_image}" style="height:46px;max-width:130px;object-fit:contain;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0">` : `<div style="width:60px;height:46px;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0"></div>`}<div><div class="a4-key">Issued By</div><div class="a4-val" style="font-weight:700">${esc(r.sig_issued_name || eng)}</div></div></div>
-      <div class="a4-box" style="display:flex;align-items:center;gap:10px">${r.sig_received_image ? `<img src="${r.sig_received_image}" style="height:46px;max-width:130px;object-fit:contain;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0">` : `<div style="width:60px;height:46px;border-right:1px solid #e2cfa0;padding-right:10px;flex-shrink:0"></div>`}<div><div class="a4-key">Received By</div><div class="a4-val">${esc(r.sig_received_name || '—')}</div></div></div>
+      <div class="a4-box" style="display:flex;align-items:center;justify-content:space-between;gap:8px;overflow:hidden"><div style="min-width:0;flex:1"><div class="a4-key">Issued By</div><div class="a4-val" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.sig_issued_name || eng)}</div></div><div style="text-align:center;border-left:1px solid #e2cfa0;padding-left:8px;flex-shrink:0;min-width:0"><div class="a4-key" style="margin-bottom:2px">Engg Sign</div>${r.sig_issued_image ? `<img src="${r.sig_issued_image}" style="height:38px;max-width:90px;object-fit:contain;display:block">` : `<div style="width:60px;height:38px;border-bottom:1px solid #d1c5a0"></div>`}</div></div>
+      <div class="a4-box" style="display:flex;align-items:center;justify-content:space-between;gap:8px;overflow:hidden"><div style="min-width:0;flex:1"><div class="a4-key">Received By</div><div class="a4-val" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.sig_received_name || '—')}</div></div><div style="text-align:center;border-left:1px solid #e2cfa0;padding-left:8px;flex-shrink:0;min-width:0"><div class="a4-key" style="margin-bottom:2px">Engg Sign</div>${r.sig_received_image ? `<img src="${r.sig_received_image}" style="height:38px;max-width:90px;object-fit:contain;display:block">` : `<div style="width:60px;height:38px;border-bottom:1px solid #d1c5a0"></div>`}</div></div>
     </div>
     ${coAddr ? `<div style="font-size:.67rem;color:#94a3b8;margin-top:6px">${esc(coAddr)}</div>` : ''}
     <div class="a4-foot">

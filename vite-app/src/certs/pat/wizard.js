@@ -8,8 +8,8 @@ const _pw = { step: 0 };
 var _pwDirCache = null;
 var _pwKeyBound = false;
 
-const _PW_STEPS = ['Job Details', 'Property', 'Appliances', 'Review'];
-const _PW_IDS   = ['pw-step-details', 'pw-step-property', 'pw-step-appliances', 'pw-step-review'];
+const _PW_STEPS = ['Job Details', 'Property', 'Client', 'Appliances', 'Review'];
+const _PW_IDS   = ['pw-step-details', 'pw-step-property', 'pw-step-client', 'pw-step-appliances', 'pw-step-review'];
 
 function _esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -29,13 +29,17 @@ function _stepSummary(i) {
     return _fmtDate(date);
   }
   if (i === 1) {
-    var addr = (document.getElementById('pat-addr')?.value || '').trim().replace(/\n/g,' ');
+    var addr = (document.getElementById('pat-addr1')?.value || '').trim();
     var pc   = (document.getElementById('pat-postcode')?.value || '').trim();
     if (!addr && !pc) return '';
     var short = addr.length > 32 ? addr.slice(0,32) + '…' : addr;
     return (short || '—') + (pc ? ' · ' + pc : '');
   }
   if (i === 2) {
+    var name = (document.getElementById('pat-landlord')?.value || '').trim();
+    return name || '';
+  }
+  if (i === 3) {
     var apps = window.patApps || [];
     if (!apps.length) return '0 appliances';
     var pass = apps.filter(function(a){ return (a.result||'').toLowerCase()==='pass'; }).length;
@@ -110,9 +114,9 @@ export function pwNext() {
     }
   }
   if (_pw.step === 1) {
-    var addr = document.getElementById('pat-addr');
+    var addr = document.getElementById('pat-addr1');
     if (!addr || !addr.value.trim()) {
-      window.toast?.('Property address is required', 'error');
+      window.toast?.('Property address line 1 is required', 'error');
       addr?.focus();
       return;
     }
@@ -123,6 +127,7 @@ export function pwNext() {
       return;
     }
   }
+  // Step 2 (Client) — all optional, no validation needed
   if (_pw.step < _PW_STEPS.length - 1) {
     _pw.step++;
     pwRender();

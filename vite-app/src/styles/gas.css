@@ -294,6 +294,9 @@
 .el-history-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:8px;}
 .el-history-badge.sat{background:rgba(22,163,74,.12);color:var(--success,#16a34a);}
 .el-history-badge.uns{background:rgba(220,38,38,.1);color:var(--error,#dc2626);}
+/* ===== EL WIZARD ===== */
+#view-el-new{padding:0!important;max-width:none!important}
+#view-el-new.active{display:flex!important;flex-direction:column;overflow:hidden}
 /* ===== FIRE WIZARD ===== */
 #view-fire-new{padding:0!important;max-width:none!important}
 #view-fire-new.active{display:flex!important;flex-direction:column;overflow:hidden}

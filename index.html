@@ -17,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-ctsYG-dM.js"></script>
+  <script type="module" crossorigin src="./assets/index-BXw8nmUg.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-Xb2wHByQ.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-CuGNp6VM.js">
   <link rel="stylesheet" crossorigin href="./assets/index-BfjOiqo6.css">
 </head>
 <body>
@@ -347,28 +347,50 @@
 
         <!-- STEP 2: Property -->
         <div id="pw-step-property" hidden>
-          <!-- Property Address — top, full width, with inline directory auto-search -->
+          <!-- Hidden assembled address — form.js reads this for save/ref generation -->
+          <input type="hidden" id="pat-addr">
           <div class="form-section">
             <div class="form-section-title">Property Address</div>
             <div class="field-group">
-              <label style="display:flex;justify-content:space-between;align-items:center;">Address <span style="color:#ef4444">*</span><button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label>
-              <textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off" placeholder="Start typing to search your directory…"></textarea>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode <span style="color:#ef4444">*</span></label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:#ef4444;font-weight:600">Required — do NOT put postcode in the address box above</span></div>
+              <label style="display:flex;justify-content:space-between;align-items:center;">Address line 1 <span style="color:#ef4444">*</span><button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label>
+              <input type="text" id="pat-addr1" placeholder="Start typing to search your directory…" oninput="capitalizeAddress(this);assemblePatAddr()" autocapitalize="off" style="width:100%;box-sizing:border-box">
             </div>
-          </div>
-          <!-- Client Details — below -->
-          <div class="form-section" style="margin-top:14px">
-            <div class="form-section-title">Client Details</div>
-            <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
-              <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
-              <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
-              <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
-              <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
+            <div class="field-group">
+              <label>Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-addr2" placeholder="Area / district" oninput="assemblePatAddr()" style="width:100%;box-sizing:border-box">
+            </div>
+            <div class="field-group">
+              <label>Town / City <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-addr3" placeholder="Town / city" oninput="assemblePatAddr()" style="width:100%;box-sizing:border-box">
+            </div>
+            <div class="field-group">
+              <label>Postcode <span style="color:#ef4444">*</span><span style="font-size:11px;color:#ef4444;font-weight:600;margin-left:8px">Enter separately — do not include in address lines above</span></label>
+              <input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:140px;text-transform:uppercase" oninput="updatePatRef()">
             </div>
           </div>
         </div>
 
-        <!-- STEP 3: Appliances -->
+        <!-- STEP 3: Client -->
+        <div id="pw-step-client" hidden>
+          <div class="form-section">
+            <div class="form-section-title">Client Details</div>
+            <div class="field-group">
+              <label>Name / Company <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-landlord" oninput="doPatPreview()">
+            </div>
+            <div class="field-group">
+              <label style="display:flex;align-items:center;justify-content:space-between">Address <small style="font-weight:400;color:var(--muted)">(optional)</small><button type="button" onclick="patCopyAddrToClient()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Same as property</button></label>
+              <textarea id="pat-landlord-addr" placeholder="Client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box" oninput="doPatPreview()"></textarea>
+            </div>
+            <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
+            <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
+            <!-- Hidden — keep getPATFormData() working without change -->
+            <input type="hidden" id="pat-agency">
+            <input type="hidden" id="pat-agency-addr">
+          </div>
+        </div>
+
+        <!-- STEP 4: Appliances -->
         <div id="pw-step-appliances" hidden>
           <div class="pat-step3-cols">
             <div class="pat-step3-main">
