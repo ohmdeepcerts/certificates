@@ -1,8 +1,9 @@
 {
-  "v": "2.4.19",
-  "build": 190,
+  "v": "2.4.20",
+  "build": 191,
   "new": 1,
   "changes": [
+    "Improved: Company name on fire alarm certificates is now larger and fills the full header width — bolder font with wider spacing so it reads clearly alongside the logo.",
     "Fixed: EL certificate luminaire schedule Pass / Fail count in the total row now counts the actual row results — previously it showed the manually entered totals which could be out of sync with the individual location results.",
     "Fixed: Selecting a saved client in the PAT Test wizard now fills Name, Address, Phone and Email in one go — no extra address dropdown appearing after the selection.",
     "Improved: PAT Test appliance result now defaults to Pass — a green pill shows in the Result column for every new row. Tap it once to mark as Fail (red), tap again to switch back to Pass. No more dropdown to click through.",
