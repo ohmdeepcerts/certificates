@@ -1,8 +1,9 @@
 {
-  "v": "2.4.29",
-  "build": 200,
+  "v": "2.4.30",
+  "build": 201,
   "new": 1,
   "changes": [
+    "Improved: Fire alarm certificate title now fills the full width of the header — the font scales automatically to fit the row for every certificate type, so there is no empty space on the right.",
     "Fixed: Fire alarm certificate PDF now downloads with a proper file name — 'Fire_Alarm_FA2022657.pdf' instead of just the bare reference number, matching the Gas and PAT certificate naming.",
     "Fixed: Company name no longer overlaps the NICEIC logo on fire alarm certificates — the header layout now handles long company names correctly without spilling over the logo.",
     "New: Schedule checklist and Annex G checklist in commercial fire certificates are now automatically kept in sync — when you mark an item in one, the same item is auto-filled in the other. If you've already set it differently in both places, a popup asks which value to use. You no longer need to fill in the same items twice.",
