@@ -114,7 +114,7 @@ export function addPATRow(data = null) {
     testInstrument: getSetting('pat_default_instrument', ''),
     date: today, retestPeriod: period,
     nextTest: patCalcNext(today, periodMonths),
-    result: ''
+    result: 'Pass'
   };
   patApps.push(a);
   _appendPATRow(patApps.length - 1);
@@ -128,11 +128,11 @@ function _appendPATRow(i) {
   tr.innerHTML =
     `<td><input class="pat-ti" id="pat-a${i}" value="${patEsc(a.assetId)}" onchange="patUpd(${i},'assetId',this.value)" placeholder="A001"></td>`
     + `<td><textarea class="pat-ti" id="pat-d${i}" style="height:auto;min-height:28px;resize:none;overflow:hidden;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this);patAutoH(this)" onkeydown="patDTab(event,${i})">${patEsc(a.description)}</textarea></td>`
-    + `<td><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
-    + `<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
-    + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
-    + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
-    + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
+    + `<td class="pac-extra"><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
+    + `<td class="pac-extra"><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
+    + `<td class="pac-extra"><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
+    + `<td class="pac-extra"><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
+    + `<td style="text-align:center"><button type="button" id="pat-r${i}" class="pat-result-pill ${a.result === 'Fail' ? 'fail' : 'pass'}" onclick="patToggleResult(${i})" title="Click to toggle Pass / Fail">${a.result === 'Fail' ? '✕ Fail' : '✓ Pass'}</button></td>`
     + `<td><div class="row-actions"><button type="button" class="btn-insert-row" title="Insert row below" onclick="insertPATRow(${i})">+</button><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></div></td>`;
   tbody.appendChild(tr);
   setTimeout(() => { const d = patGe('pat-d' + i); if (d) { patAutoH(d); d.focus(); } }, 0);
@@ -148,11 +148,11 @@ export function renderPATRows(opts = {}) {
     tr.innerHTML =
       `<td><input class="pat-ti" id="pat-a${i}" value="${patEsc(a.assetId)}" onchange="patUpd(${i},'assetId',this.value)" placeholder="A001"></td>`
       + `<td><textarea class="pat-ti" id="pat-d${i}" style="height:auto;min-height:28px;resize:none;overflow:hidden;width:100%;box-sizing:border-box" onchange="patUpd(${i},'description',this.value)" oninput="liveCapitalize(this);patAutoH(this)" onkeydown="patDTab(event,${i})">${patEsc(a.description)}</textarea></td>`
-      + `<td><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
-      + `<td><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
-      + `<td><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
-      + `<td><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
-      + `<td><select class="pat-ts" id="pat-r${i}" onchange="patUpd(${i},'result',this.value);this.style.color=this.value==='Pass'?'#16a34a':this.value==='Fail'?'#dc2626':'#dc2626';this.style.fontWeight='700'" style="color:${!a.result?'#dc2626':a.result==='Pass'?'#16a34a':'#dc2626'};font-weight:700"><option value=""${!a.result?' selected':''}>— select —</option><option value="Pass"${a.result==='Pass'?' selected':''}>Pass</option><option value="Fail"${a.result==='Fail'?' selected':''}>Fail</option></select></td>`
+      + `<td class="pac-extra"><input class="pat-ti" id="pat-i${i}" value="${patEsc(a.testInstrument)}" onchange="patUpd(${i},'testInstrument',this.value)"></td>`
+      + `<td class="pac-extra"><input type="date" class="pat-ti" id="pat-t${i}" value="${patEsc(a.date)}" onchange="patUpdDate(${i},this.value)"></td>`
+      + `<td class="pac-extra"><select class="pat-ts" id="pat-p${i}" onchange="patUpdPer(${i},this.value)">${['3', '6', '12', '24', '48'].map(n => `<option value="${n} Months"${a.retestPeriod === n + ' Months' ? ' selected' : ''}>${n}m</option>`).join('')}</select></td>`
+      + `<td class="pac-extra"><input type="date" class="pat-ti" value="${patEsc(a.nextTest)}" readonly style="opacity:.45;cursor:default;"></td>`
+      + `<td style="text-align:center"><button type="button" id="pat-r${i}" class="pat-result-pill ${a.result === 'Fail' ? 'fail' : 'pass'}" onclick="patToggleResult(${i})" title="Click to toggle Pass / Fail">${a.result === 'Fail' ? '✕ Fail' : '✓ Pass'}</button></td>`
       + `<td><div class="row-actions"><button type="button" class="btn-insert-row" title="Insert row below" onclick="insertPATRow(${i})">+</button><button type="button" class="btn-remove-row" title="Delete row" onclick="delPATRow(${i})">✕</button></div></td>`;
     tbody.appendChild(tr);
   });
@@ -163,6 +163,13 @@ export function renderPATRows(opts = {}) {
 }
 
 export function patUpd(i, f, v) { if (patApps[i]) patApps[i][f] = v; doPatPreview(); updatePatSidePanel(); }
+export function togglePatExtraCols() {
+  const tbl = document.getElementById('pat-app-table');
+  if (!tbl) return;
+  const isCompact = tbl.classList.toggle('pat-cols-compact');
+  const btn = document.getElementById('pat-extra-btn');
+  if (btn) btn.innerHTML = isCompact ? '<i class="fa-solid fa-eye"></i> Show Details' : '<i class="fa-solid fa-eye-slash"></i> Hide Details';
+}
 export function patDTab(e, i) {
   if (e.key !== 'Tab' || e.shiftKey) return;
   e.preventDefault();
@@ -204,11 +211,22 @@ export function applyPATDatesToAll() {
 }
 export function applyPatHeaderDate(v) { patDateChanged(v); }
 export function delPATRow(i) { patApps.splice(i, 1); renderPATRows(); updatePatRef(); doPatPreview(); }
+export function patToggleResult(i) {
+  if (!patApps[i]) return;
+  patApps[i].result = patApps[i].result === 'Fail' ? 'Pass' : 'Fail';
+  const btn = document.getElementById('pat-r' + i);
+  if (btn) {
+    const isFail = patApps[i].result === 'Fail';
+    btn.className = 'pat-result-pill ' + (isFail ? 'fail' : 'pass');
+    btn.textContent = isFail ? '✕ Fail' : '✓ Pass';
+  }
+  doPatPreview(); updatePatSidePanel();
+}
 export function insertPATRow(afterIndex) {
   const prev = patApps[afterIndex] || {};
   const m = (prev.assetId || '').match(/^(.*?)(\d+)$/);
   const nextId = m ? m[1] + String(parseInt(m[2], 10) + 1).padStart(m[2].length, '0') : '';
-  patApps.splice(afterIndex + 1, 0, { assetId: nextId, description: '', testInstrument: prev.testInstrument || getSetting('pat_default_instrument', ''), date: prev.date || '', retestPeriod: prev.retestPeriod || '12 Months', nextTest: '', result: '' });
+  patApps.splice(afterIndex + 1, 0, { assetId: nextId, description: '', testInstrument: prev.testInstrument || getSetting('pat_default_instrument', ''), date: prev.date || '', retestPeriod: prev.retestPeriod || '12 Months', nextTest: '', result: 'Pass' });
   renderPATRows({ focusDesc: afterIndex + 1 });
   updatePatRef();
   state._patDirty = true;
@@ -227,7 +245,11 @@ export function populatePATForm(r) {
   const expEl = patGe('pat-expiry'); if (expEl) expEl.value = firstNext || '';
   patGe('pat-eng').value = r.engineer || '';
   patGe('pat-landlord').value = r.landlord_name || '';
-  patGe('pat-landlord-addr').value = r.landlord_address || '';
+  const _cla = (r.landlord_address || '').split('\n');
+  const _cla1 = patGe('pat-cl-addr1'); if (_cla1) _cla1.value = _cla[0] || '';
+  const _cla2 = patGe('pat-cl-addr2'); if (_cla2) _cla2.value = _cla[1] || '';
+  const _clTown = patGe('pat-cl-town'); if (_clTown) _clTown.value = _cla[2] || '';
+  const _clPc = patGe('pat-cl-postcode'); if (_clPc) _clPc.value = _cla[3] || '';
   patGe('pat-agency').value = r.agency_name || '';
   patGe('pat-agency-addr').value = r.agency_address || '';
   const _fa = (r.property_address || '').trim(), _fl = _fa.split('\n');
@@ -261,7 +283,7 @@ export function getPATFormData() {
     test_date: patGv('pat-date'),
     engineer: patGv('pat-eng'),
     landlord_name: patGv('pat-landlord'),
-    landlord_address: patGv('pat-landlord')?.trim() ? patGv('pat-landlord-addr') : '',
+    landlord_address: patGv('pat-landlord')?.trim() ? [patGv('pat-cl-addr1'), patGv('pat-cl-addr2'), patGv('pat-cl-town'), patGv('pat-cl-postcode')].filter(Boolean).join('\n') : '',
     agency_name: patGv('pat-agency'),
     agency_address: patGv('pat-agency')?.trim() ? patGv('pat-agency-addr') : '',
     property_address: ((patGv('pat-addr') || '').trim() + (patGv('pat-postcode') ? '\n' + (patGv('pat-postcode') || '').trim() : '')),
@@ -302,7 +324,8 @@ export async function newPAT() {
   const _expEl = patGe('pat-expiry'); if (_expEl) _expEl.value = exp364.toISOString().split('T')[0];
   patGe('pat-eng').value = getSetting('pat_default_engineer', '');
   patGe('pat-landlord').value = ''; patGe('pat-agency').value = '';
-  patGe('pat-landlord-addr').value = ''; patGe('pat-agency-addr').value = '';
+  ['pat-cl-addr1','pat-cl-addr2','pat-cl-town','pat-cl-postcode'].forEach(id => { const el = patGe(id); if (el) el.value = ''; });
+  patGe('pat-agency-addr').value = '';
   patGe('pat-addr').value = '';
   const _a1El = patGe('pat-addr1'); if (_a1El) _a1El.value = '';
   const _a2El = patGe('pat-addr2'); if (_a2El) _a2El.value = '';
@@ -351,13 +374,31 @@ export async function newPAT() {
       if (window.assemblePatAddr) window.assemblePatAddr();
     }
   });
-  const _llAddrEl = patGe('pat-landlord-addr');
+  const _llAddrEl = patGe('pat-cl-addr1');
   if (_llAddrEl) attachAddressAutocomplete(_llAddrEl, {
     onSelect(a) {
-      patGe('pat-landlord-addr').value = [a.line1, a.line2, a.line3, a.town].filter(Boolean).join('\n');
-      patGe('pat-landlord-addr')?.dispatchEvent(new Event('input', { bubbles: true }));
+      const _ca1 = patGe('pat-cl-addr1'); if (_ca1) _ca1.value = a.line1 || '';
+      const _ca2 = patGe('pat-cl-addr2'); if (_ca2) _ca2.value = [a.line2, a.line3].filter(Boolean).join(', ');
+      const _ctw = patGe('pat-cl-town'); if (_ctw) _ctw.value = a.town || '';
+      const _cpc = patGe('pat-cl-postcode'); if (_cpc) _cpc.value = a.postcode || '';
+      _llAddrEl?.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
+  // Attach combined landlord + agent directory search to client name field
+  const _llNameEl = patGe('pat-landlord');
+  if (_llNameEl && !_llNameEl._acAttached) {
+    window.attachDirACLandlordAgent?.(_llNameEl, function(rec) {
+      const name = rec._dirType === 'agents' ? (rec.agency_name || rec.contact_name || '') : (rec.landlord_name || rec.company_name || '');
+      _llNameEl.value = name;
+      const _ca1 = patGe('pat-cl-addr1'); if (_ca1) _ca1.value = rec.addr1 || '';
+      const _ca2 = patGe('pat-cl-addr2'); if (_ca2) _ca2.value = rec.addr2 || '';
+      const _ctw = patGe('pat-cl-town'); if (_ctw) _ctw.value = rec.town || '';
+      const _cpc = patGe('pat-cl-postcode'); if (_cpc) _cpc.value = rec.postcode || '';
+      const ph = patGe('pat-phone'); if (ph && rec.phone && !ph.value) ph.value = rec.phone;
+      const em = patGe('pat-email'); if (em && rec.email && !em.value) em.value = rec.email;
+      window.doPatPreview?.();
+    });
+  }
   try {
     const saved = localStorage.getItem('pat_autosave');
     if (saved) {
@@ -384,8 +425,8 @@ export async function loadPATForm(id) {
   if (error) { toast('Error loading report', 'error'); return; }
   state._patDirty = false;
   state.editingPATId = id;
-  patGe('pat-form-title').textContent = r.ref_number ? `Edit — ${r.ref_number}` : 'Edit PAT Test';
-  patGe('pat-form-ref').textContent = r.ref_number || 'Draft';
+  patGe('pat-form-title').textContent = 'Edit PAT Test';
+  patGe('pat-form-ref').textContent = 'Editing · Ctrl+S = Save';
   const isDone = r.status === 'completed';
   patGe('pat-edit-banner').hidden = isDone;
   const _cb = patGe('pat-completed-banner'); if (_cb) _cb.hidden = !isDone;
@@ -463,7 +504,7 @@ export async function completePAT() {
     patGe('pat-ref').value = refNum;
     patGe('pat-status').value = 'completed';
     patGe('pat-form-ref').textContent = refNum;
-    patGe('pat-form-title').textContent = `PAT — ${refNum}`;
+    patGe('pat-form-title').textContent = 'PAT Test';
     patGe('btn-pat-email').hidden = false;
     patGe('btn-pat-complete').disabled = true;
     patGe('btn-pat-complete2').disabled = true;
@@ -478,7 +519,7 @@ export async function completePAT() {
   patGe('pat-ref').value = refNum;
   patGe('pat-status').value = 'completed';
   patGe('pat-form-ref').textContent = refNum;
-  patGe('pat-form-title').textContent = `PAT — ${refNum}`;
+  patGe('pat-form-title').textContent = 'PAT Test';
   patGe('btn-pat-email').hidden = false;
   patGe('btn-pat-complete').disabled = true;
   patGe('btn-pat-complete2').disabled = true;
@@ -552,13 +593,11 @@ export function assemblePatAddr() {
 }
 
 export function patCopyAddrToClient() {
-  const a1 = (patGv('pat-addr1') || '').trim();
-  const a2 = (patGv('pat-addr2') || '').trim();
-  const a3 = (patGv('pat-addr3') || '').trim();
-  const pc = (patGv('pat-postcode') || '').trim();
-  const full = [a1, a2, a3, pc].filter(Boolean).join('\n');
-  const el = patGe('pat-landlord-addr');
-  if (el) { el.value = full; el.dispatchEvent(new Event('input', {bubbles:true})); }
+  const a1 = patGe('pat-cl-addr1'); if (a1) a1.value = (patGv('pat-addr1') || '').trim();
+  const a2 = patGe('pat-cl-addr2'); if (a2) a2.value = (patGv('pat-addr2') || '').trim();
+  const tw = patGe('pat-cl-town'); if (tw) tw.value = (patGv('pat-addr3') || '').trim();
+  const pc = patGe('pat-cl-postcode'); if (pc) pc.value = (patGv('pat-postcode') || '').trim();
+  doPatPreview();
 }
 export function liveCapitalize(el) {
   if (!autoCapEnabled) return;

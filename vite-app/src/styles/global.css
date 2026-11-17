@@ -420,6 +420,17 @@ a{color:var(--accent);text-decoration:none}
 .a4-flogos{display:flex;gap:8px;align-items:center}
 .a4-flogo img{max-height:28px;max-width:70px;object-fit:contain}
 .a4-fcontact{display:flex;gap:10px;flex-wrap:wrap}
+/* PAT compact mode — hide extra detail cols */
+#pat-app-table.pat-cols-compact th.pac-extra,
+#pat-app-table.pat-cols-compact td.pac-extra { display: none; }
+#pat-app-table.pat-cols-compact { min-width: 400px; }
+
+/* PAT result pill toggle */
+.pat-result-pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid;white-space:nowrap;transition:opacity .12s;user-select:none;line-height:1.5}
+.pat-result-pill:hover{opacity:.75}
+.pat-result-pill.pass{background:#dcfce7;color:#16a34a;border-color:#16a34a}
+.pat-result-pill.fail{background:#fee2e2;color:#dc2626;border-color:#dc2626}
+
 /* PAT appliance input table row styling */
 .pat-ti{width:100%;border:none;background:transparent;font-size:12px;color:var(--text);padding:2px 4px}
 .pat-ti:focus{outline:1px solid var(--accent);border-radius:2px}

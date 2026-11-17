@@ -1,4 +1,4 @@
-﻿import { getSetting } from '../../lib/settings.js';
+import { getSetting } from '../../lib/settings.js';
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _field(label, val) {
@@ -140,7 +140,7 @@ function _buildSchedulePdf(schedDefs, schedItems) {
 export function fireBuildCertHTML(r, siteHistory) {
   var isComm = r.certType === 'FA.3' || r.certType === 'FA.4';
 
-  var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection &amp; Service Certificate', 'FA.3':'Form FA.3 · Installation / Commissioning Certificate', 'FA.4':'Form FA.4 · Inspection &amp; Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
+  var typeKicker = { 'FA.1':'Form FA.1 · Installation Certificate', 'FA.2':'Form FA.2 · Inspection & Service Certificate', 'FA.3':'Form FA.3 · Installation / Commissioning Certificate', 'FA.4':'Form FA.4 · Inspection & Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
   var typeTitle  = { 'FA.1':'Fire Alarm Installation Certificate', 'FA.2':'Fire Alarm Inspection & Service Certificate', 'FA.3':'Fire Alarm Installation / Commissioning Certificate', 'FA.4':'Fire Detection & Alarm System Inspection and Servicing Report' }[r.certType] || 'Fire Alarm Certificate';
   var stdLabel   = isComm ? 'BS 5839-1:2025 · Fire Detection and Alarm Systems for Buildings' : 'BS 5839-6:2019+A1:2020 · Fire detection and alarm systems for dwellings';
 
@@ -547,10 +547,11 @@ export function fireBuildCertHTML(r, siteHistory) {
           +elLogo
           +'<div style="flex:1;min-width:0">'
           +'<div class="ch-company">'+coName+'</div>'
-          +(companyAddr?'<div class="ch-company-sub">'+coAddr+'</div>':'')
           +'<div class="ch-company-sub">'
+          +(companyAddr?coAddr:'')
+          +(companyAddr&&(coTel||companyEmail)?'&nbsp;&bull;&nbsp;':'')
           +(coTel?'<a href="tel:'+coTel.replace(/\s/g,'')+'">'+coTel+'</a>':'')
-          +(coTel&&(companyEmail)?'&nbsp;&bull;&nbsp;':'')
+          +(coTel&&companyEmail?'&nbsp;&bull;&nbsp;':'')
           +(companyEmail?'<a href="mailto:'+coEmail+'">'+coEmail+'</a>':'')
           +'</div>'
           +'</div>'
@@ -649,7 +650,7 @@ export function fireBuildCertHTML(r, siteHistory) {
 
   // ── Page 2 ────────────────────────────────────────────────────────────────
   var page2 = '<div class="cert-page">'
-    +contHead('Schedule of Devices &amp; Test Results', 2, totalPages)
+    +contHead('Schedule of Devices & Test Results', 2, totalPages)
     +'<div class="cb">'
       +((r.detectors||[]).length?'<div class="sec-head">Schedule of Detectors &amp; Devices</div><table class="ltbl"><thead><tr>'+detHeaders+'</tr></thead><tbody>'+detRows+'</tbody></table>':'')
       +'<div class="sec-head" style="margin-top:14px">Test Results</div>'
@@ -669,7 +670,7 @@ export function fireBuildCertHTML(r, siteHistory) {
 
   var _declPageNo = isComm ? 3 : 4;
   var page3 = '<div class="cert-page">'
-    +contHead('Declaration &amp; Sign-off', _declPageNo, totalPages)
+    +contHead('Declaration & Sign-off', _declPageNo, totalPages)
     +'<div class="cb">'
       +(sysDetailCells?'<div class="sec-head">System Details</div><div class="fg">'+sysDetailCells+'</div>':'')
       +ifacesHtml
@@ -834,7 +835,7 @@ body{font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#1
 a{color:inherit;text-decoration:none}
 
 /* ── Page wrapper ── */
-.cert-page{background:#fdfaf8;width:794px;min-height:1123px;font-size:13px;color:#1c1010;line-height:1.5;display:flex;flex-direction:column;font-family:Inter,"Helvetica Neue",Arial,sans-serif}
+.cert-page{background:#fdfaf8;width:794px;height:1123px;overflow:hidden;font-size:13px;color:#1c1010;line-height:1.5;display:flex;flex-direction:column;font-family:Inter,"Helvetica Neue",Arial,sans-serif}
 
 /* ── Top strip ── */
 .cert-top-strip{background:linear-gradient(90deg,#7a1010,#c01818 55%,#e08830);height:7px;flex-shrink:0}
@@ -849,14 +850,14 @@ a{color:inherit;text-decoration:none}
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:9px;border-bottom:1.5px solid #e2d4d4}
 .ch-logo-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
 .ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
-.ch-company{font-size:16px;font-weight:600;color:#1a1a1a;letter-spacing:.03em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:inline-block;border-bottom:2px solid #a32b2b;padding-bottom:3px}
-.ch-company-sub{font-size:9.5px;color:#666;margin-top:2px}
+.ch-company{font-size:24px;font-weight:700;color:#1a1a1a;letter-spacing:.15em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:block;width:100%;white-space:nowrap;border-bottom:2px solid #a32b2b;padding-bottom:3px}
+.ch-company-sub{font-size:9px;color:#666;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .niceic-badge{border:none;border-radius:0;padding:0;background:transparent;text-align:center;flex-shrink:0}
 .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a1010}
 .nb-sub{font-size:7.5px;color:#666;margin-top:1px}
 .ch-title-row{padding:7px 0 7px}
 .ch-cert-eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#e08830;margin-bottom:4px}
-.ch-cert-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:29px;font-weight:700;color:#c01818;line-height:1.15}
+.ch-cert-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#c01818;line-height:1.15;white-space:nowrap;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
 .ch-cert-std{font-size:9.5px;color:#666;margin-top:5px;line-height:1.6}
 
 /* ── Address panel ── */
@@ -911,7 +912,7 @@ a{color:inherit;text-decoration:none}
 /* ── Continuation header ── */
 .ch-cont{background:#fdfaf8;border-left:5px solid #c01818;border-bottom:2px solid #e08830;padding:16px 28px 14px;flex-shrink:0}
 .ch-cont-eyebrow{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#999;margin-bottom:4px}
-.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#1c1010}
+.ch-cont-title{font-family:'Cormorant Garamond','Crimson Pro',Georgia,serif;font-size:22px;font-weight:700;color:#1c1010;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
 
 /* ── Tables ── */
 .ltbl{width:100%;border-collapse:collapse;font-size:9.5px;background:#fdfaf8;margin-bottom:12px}

@@ -1,8 +1,11 @@
 {
-  "v": "2.4.24",
-  "build": 195,
-  "new": 1,
+  "v": "2.4.25",
+  "build": 196,
+  "new": 3,
   "changes": [
+    "Fixed: & symbol now prints correctly in fire alarm certificate headings — it was appearing as the text &amp; due to a double-encoding error in the PDF generator.",
+    "Fixed: Next Inspection Due banner on commercial fire certificates now references BS 5839-1:2025 Clause 43 (the maintenance and servicing clause) instead of Clause 25 (which covers new installation completion — wrong clause).",
+    "Fixed: Fire alarm certificate PDF pages are now always exactly A4 — content that overflowed onto a short orphaned extra page now stays within the correct page boundaries. Tables and sections that cannot fit on the current page move to the next page instead of splitting mid-row.",
     "Fixed: Numbers in fire alarm certificate section headings (e.g. BS 5839-1:2025, Clause 43) now sit at the same height — the font was using old-style figures where digits bobbed up and down.",
     "Improved: Fire alarm certificate title is now smaller so it fits on one line — no more wrapping to a second row.",
     "Improved: Fire alarm certificate header now shows address, phone and email on one line — company name is larger as a result, filling more of the header.",

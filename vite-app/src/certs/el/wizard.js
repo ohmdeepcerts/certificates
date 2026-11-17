@@ -1086,9 +1086,9 @@ export function elBuildCertHTML(rec) {
   var elBodyLogoData = getSetting('el_body_logo_data','');
   var elSigData = getSetting('el_sig_data','') || getSetting('gas_engg_sig_data','') || getSetting('pat_sig_data','');
   var lumTotal = r.lumTotal||'—';
-  var lumPass  = r.lumPass||'—';
-  var lumFail  = r.lumFail||'0';
   var _lrAll  = (r.lumRows||[]).filter(function(row){return row.location;});
+  var lumPass  = _lrAll.length ? String(_lrAll.filter(function(row){return row.result!=='FAIL';}).length) : (r.lumPass||'—');
+  var lumFail  = _lrAll.length ? String(_lrAll.filter(function(row){return row.result==='FAIL';}).length) : (r.lumFail||'0');
   var _obsAll = (r.observationRows&&r.observationRows.length) ? r.observationRows
                 : (r.observations ? [{code:'—',text:r.observations}] : []);
   var _defCnt = _obsAll.length;

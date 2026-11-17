@@ -303,7 +303,7 @@
     <!-- PAT NEW/EDIT -->
     <div class="view" id="view-pat-new">
       <div class="view-header">
-        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref">Test Date applies to all rows · Ctrl+S = Draft</div></div>
+        <div><div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:2px" id="pat-form-title">New PAT Test</div><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override" style="font-size:20px;font-weight:700;border:none;background:transparent;padding:0;width:360px;max-width:100%;display:block;color:inherit;line-height:1.3;font-family:inherit;outline:none"><div class="view-subtitle" id="pat-form-ref">Set dates then click Apply to All · Ctrl+S = Draft</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="navigate('pat-history')">← Back</button>
           <button class="btn btn-secondary btn-sm" onclick="clearPATForm()">🗑 Clear</button>
@@ -329,10 +329,7 @@
           <input type="text" id="pat-eng" style="display:none" oninput="doPatPreview()">
           <div class="form-section">
             <div class="form-section-title">Job Details</div>
-            <div class="field-group" style="margin-bottom:12px">
-              <label>Ref Number</label>
-              <input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override" style="max-width:220px">
-            </div>
+
             <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
@@ -348,7 +345,7 @@
           <div class="form-section">
             <div class="form-section-title">Property Address</div>
             <div class="field-group">
-              <label style="display:flex;justify-content:space-between;align-items:center;">Address line 1 <span style="color:#ef4444">*</span><button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label>
+              <label style="display:flex;justify-content:space-between;align-items:center;"><span>Address line 1 <span style="color:#ef4444">*</span></span><button type="button" id="autocap-btn" class="autocap-btn on" onclick="event.stopPropagation();toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label>
               <input type="text" id="pat-addr1" placeholder="Start typing to search your directory…" oninput="capitalizeAddress(this);assemblePatAddr()" autocapitalize="off" style="width:100%;box-sizing:border-box">
             </div>
             <div class="field-group">
@@ -375,12 +372,23 @@
               <input type="text" id="pat-landlord" oninput="doPatPreview()">
             </div>
             <div class="field-group">
-              <label style="display:flex;align-items:center;justify-content:space-between">Address <small style="font-weight:400;color:var(--muted)">(optional)</small><button type="button" onclick="patCopyAddrToClient()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Same as property</button></label>
-              <textarea id="pat-landlord-addr" placeholder="Client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box" oninput="doPatPreview()"></textarea>
+              <label style="display:flex;justify-content:space-between;align-items:center;"><span>Address line 1 <small style="font-weight:400;color:var(--muted)">(optional)</small></span><button type="button" onclick="patCopyAddrToClient()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Same as property</button></label>
+              <input type="text" id="pat-cl-addr1" placeholder="Start typing to search your directory…" oninput="doPatPreview()" style="width:100%;box-sizing:border-box">
+            </div>
+            <div class="field-group">
+              <label>Address line 2 <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-cl-addr2" placeholder="Area / district" oninput="doPatPreview()" style="width:100%;box-sizing:border-box">
+            </div>
+            <div class="field-group">
+              <label>Town / City <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-cl-town" placeholder="Town / city" oninput="doPatPreview()" style="width:100%;box-sizing:border-box">
+            </div>
+            <div class="field-group">
+              <label>Postcode <small style="font-weight:400;color:var(--muted)">(optional)</small></label>
+              <input type="text" id="pat-cl-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:140px;text-transform:uppercase" oninput="doPatPreview()">
             </div>
             <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
             <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
-            <!-- Hidden — keep getPATFormData() working without change -->
             <input type="hidden" id="pat-agency">
             <input type="hidden" id="pat-agency-addr">
           </div>
@@ -388,9 +396,7 @@
 
         <!-- STEP 4: Appliances -->
         <div id="pw-step-appliances" hidden>
-          <div class="pat-step3-cols">
-            <div class="pat-step3-main">
-              <div class="form-section">
+          <div class="form-section">
                 <div class="pat-app-header">
                   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                     <div class="form-section-title" style="margin:0">Appliances</div>
@@ -398,18 +404,19 @@
                   </div>
                   <div class="pat-app-header-btns">
                     <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button class="btn btn-secondary btn-sm" id="pat-extra-btn" onclick="togglePatExtraCols()"><i class="fa-solid fa-eye"></i> Show Details</button>
                     <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
                   </div>
                 </div>
                 <div class="appliance-table-wrap">
-                  <table class="appliance-table" id="pat-app-table">
+                  <table class="appliance-table pat-cols-compact" id="pat-app-table">
                     <thead><tr>
                       <th style="width:65px">Asset #</th>
                       <th>Description</th>
-                      <th style="width:75px">Instrument</th>
-                      <th style="width:110px">Date</th>
-                      <th style="width:65px">Period</th>
-                      <th style="width:100px">Next Due</th>
+                      <th class="pac-extra" style="width:75px">Instrument</th>
+                      <th class="pac-extra" style="width:110px">Date</th>
+                      <th class="pac-extra" style="width:65px">Period</th>
+                      <th class="pac-extra" style="width:100px">Next Due</th>
                       <th style="width:76px">Result</th>
                       <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
                     </tr></thead>
@@ -418,49 +425,6 @@
                 </div>
                 <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
               </div>
-            </div>
-            <!-- RIGHT SIDE PANEL: Live Stats -->
-            <div id="pat-side-col">
-              <div class="sw-title">Cert Status</div>
-              <div id="sw-status" class="sw-cert-status empty"><span id="sw-status-dot">◯</span>&nbsp;<span id="sw-status-lbl">No data yet</span></div>
-
-              <div class="sw-card">
-                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Property</div>
-                <div id="sw-prop-addr" style="font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:3px">—</div>
-                <div id="sw-prop-client" style="font-size:.74rem;color:var(--muted)">—</div>
-              </div>
-
-              <div class="sw-card">
-                <div style="text-align:center;padding:6px 0 2px">
-                  <div id="sw-app-count" style="font-size:2rem;font-weight:800;letter-spacing:-1px;line-height:1">0</div>
-                  <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Appliances</div>
-                </div>
-                <svg width="64" height="64" viewBox="0 0 64 64" style="display:block;margin:8px auto;transform:rotate(-90deg)">
-                  <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"/>
-                  <circle id="sw-ring-pass" cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="7" stroke-dasharray="163.4" stroke-dashoffset="163.4" stroke-linecap="round"/>
-                </svg>
-                <div class="sw-kv"><span class="sw-k">✅ Pass</span><span id="sw-pass-count" class="sw-v green">0</span></div>
-                <div class="sw-kv"><span class="sw-k">❌ Fail</span><span id="sw-fail-count" class="sw-v red">0</span></div>
-                <div class="sw-kv"><span class="sw-k">Pass rate</span><span id="sw-rate" class="sw-v">—</span></div>
-              </div>
-
-              <div class="sw-card">
-                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Pages</div>
-                <div id="sw-pages-dots" class="sw-pages-dots"></div>
-              </div>
-
-              <div class="sw-card">
-                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Required Fields</div>
-                <div id="sw-fields" class="sw-field-status"></div>
-              </div>
-
-              <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
-                <button class="btn btn-secondary btn-sm" onclick="addPATRow()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-plus"></i> Add appliance row</button>
-                <button class="btn btn-sm" onclick="openScanModal()" style="justify-content:flex-start;width:100%;background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
-                <button class="btn btn-secondary btn-sm" onclick="generatePATPDF()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
-              </div>
-            </div><!-- /pat-side-col -->
-          </div><!-- /pat-step3-cols -->
         </div>
 
         <!-- STEP 4: Review -->

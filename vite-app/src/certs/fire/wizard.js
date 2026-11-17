@@ -1466,19 +1466,52 @@ export async function fireOpenByRef(refNum) {
 
 export async function fireDownloadPDF(rec) {
   if (!rec) return;
-  toast('Preparing PDF…', 'info', 2000);
+  toast('Saving PDF…', 'info', 10000);
   var siteHistory = await _fetchSiteHistory(rec);
   var certHtml = fireBuildCertHTML(rec, siteHistory);
+  var refNum = (rec.refNumber || rec.ref_number || 'FA-certificate').replace(/[\\/:"*?<>|]/g, '-');
+  var escapedRef = refNum.replace(/'/g, "\\'");
+
+  // Inject html2pdf.js into the hidden iframe so the PDF is generated and
+  // downloaded directly — no print dialog.
+  var pdfScript = '<scr'+'ipt>(function(){'
+    + 'var s=document.createElement(\'script\');'
+    + 's.src=\'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js\';'
+    + 's.onload=function(){'
+    +   '(document.fonts?document.fonts.ready:Promise.resolve()).then(function(){'
+    +     'window.html2pdf().set({'
+    +       'margin:0,'
+    +       'filename:\'' + escapedRef + '.pdf\','
+    +       'image:{type:\'jpeg\',quality:0.98},'
+    +       'html2canvas:{scale:2,useCORS:true,logging:false},'
+    +       'jsPDF:{unit:\'mm\',format:\'a4\',orientation:\'portrait\'},'
+    +       'pagebreak:{mode:[\'css\',\'legacy\'],after:[\'.cert-page\'],avoid:[\'.ltbl\',\'.ob-box\',\'.fg\',\'.addr-panel\',\'.purp-panel\']}'
+    +     '}).from(document.body).save().then(function(){'
+    +       'window.parent&&window.parent.postMessage(\'fire-pdf-saved\',\'*\');'
+    +     '});'
+    +   '});'
+    + '};'
+    + 'document.head.appendChild(s);'
+    + '})();<\/scr'+'ipt>';
+
+  var modifiedHtml = certHtml.replace('</body>', pdfScript + '</body>');
   var iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none';
+  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;border:none';
   document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(certHtml);
-  iframe.contentDocument.close();
-  (iframe.contentDocument.fonts ? iframe.contentDocument.fonts.ready : Promise.resolve()).then(() => {
-    iframe.contentWindow.print();
-    setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 3000);
+
+  await new Promise(function(resolve) {
+    function onMsg(e) {
+      if (e.data === 'fire-pdf-saved') { window.removeEventListener('message', onMsg); resolve(); }
+    }
+    window.addEventListener('message', onMsg);
+    setTimeout(resolve, 20000); // fallback if postMessage never fires
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(modifiedHtml);
+    iframe.contentDocument.close();
   });
+
+  setTimeout(function() { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 500);
+  toast('PDF saved!', 'success', 2000);
 }
 
 // ── History preview panel ─────────────────────────────────────────────────────
