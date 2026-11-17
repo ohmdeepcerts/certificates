@@ -1,8 +1,9 @@
 {
-  "v": "2.4.16",
-  "build": 187,
+  "v": "2.4.17",
+  "build": 188,
   "new": 1,
   "changes": [
+    "Improved: PAT Test appliance result now defaults to Pass — a green pill shows in the Result column for every new row. Tap it once to mark as Fail (red), tap again to switch back to Pass. No more dropdown to click through.",
     "Improved: PAT Test Appliances table is now compact by default — only Asset number, Description and Result are shown. Instrument, Date, Period and Next Due are still filled in automatically but hidden to keep data entry fast. Tap Show Details in the header to reveal them when needed.",
     "Improved: PAT Test Client Details step now has separate Address Line 1, Address Line 2, Town/City and Postcode fields — matching the Property step and other certificates. The Same as Property button fills all four fields in one tap.",
     "Fixed: Address Line 1 asterisk on the Property step now sits right next to the label text — it was appearing in the middle of the row due to a layout issue.",
