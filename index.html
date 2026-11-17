@@ -17,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-BXw8nmUg.js"></script>
+  <script type="module" crossorigin src="./assets/index-DHkFMH-g.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-CuGNp6VM.js">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-DgAitlus.js">
   <link rel="stylesheet" crossorigin href="./assets/index-BfjOiqo6.css">
 </head>
 <body>
@@ -307,7 +307,7 @@
     <!-- PAT NEW/EDIT -->
     <div class="view" id="view-pat-new">
       <div class="view-header">
-        <div><div class="view-title" id="pat-form-title">New PAT Test</div><div class="view-subtitle" id="pat-form-ref">Test Date applies to all rows · Ctrl+S = Draft</div></div>
+        <div><div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:2px" id="pat-form-title">New PAT Test</div><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override" style="font-size:20px;font-weight:700;border:none;background:transparent;padding:0;width:360px;max-width:100%;display:block;color:inherit;line-height:1.3;font-family:inherit;outline:none"><div class="view-subtitle" id="pat-form-ref">Set dates then click Apply to All · Ctrl+S = Draft</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" onclick="navigate('pat-history')">← Back</button>
           <button class="btn btn-secondary btn-sm" onclick="clearPATForm()">🗑 Clear</button>
@@ -333,10 +333,7 @@
           <input type="text" id="pat-eng" style="display:none" oninput="doPatPreview()">
           <div class="form-section">
             <div class="form-section-title">Job Details</div>
-            <div class="field-group" style="margin-bottom:12px">
-              <label>Ref Number</label>
-              <input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override" style="max-width:220px">
-            </div>
+
             <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>

@@ -1,8 +1,9 @@
 {
-  "v": "2.4.11",
-  "build": 182,
+  "v": "2.4.12",
+  "build": 183,
   "new": 3,
   "changes": [
+    "Improved: PAT Test certificate reference number now appears at the very top of the page — large and easy to read, right where the title was. It updates automatically as you fill in the form and you can still edit it manually if needed.",
     "Improved: PAT Test wizard Property step now uses separate address line fields (Line 1, Line 2, Town, Postcode) — same layout as the Gas certificate. Start typing in Line 1 to search your saved properties directory.",
     "Improved: PAT Test wizard now has a dedicated Client step — Name, Address, Phone and Email in one clean section, with a 'Same as property' button to copy the address across in one tap.",
     "Improved: PAT Test wizard Job Details step is now cleaner — Ref Number is at the top on its own, Status and Engineer are handled automatically in the background. Just pick the test date and you are done.",
