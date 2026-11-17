@@ -1,8 +1,9 @@
 {
-  "v": "2.4.22",
-  "build": 193,
+  "v": "2.4.23",
+  "build": 194,
   "new": 1,
   "changes": [
+    "Improved: Fire alarm certificate title is now smaller so it fits on one line — no more wrapping to a second row.",
     "Improved: Fire alarm certificate header now shows address, phone and email on one line — company name is larger as a result, filling more of the header.",
     "Improved: Download PDF button on fire alarm certificates now saves the PDF file directly to your Downloads folder — no print dialog, no extra steps.",
     "Improved: Company name on fire alarm certificates is now larger and fills the full header width — bolder font with wider spacing so it reads clearly alongside the logo.",
