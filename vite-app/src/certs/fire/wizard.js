@@ -1158,8 +1158,21 @@ export function fireSetScheduleItem(id, val) {
 }
 
 function _fireShowSyncPopup(conflictStore, conflictKey, oldVal, newVal) {
-  var storeLabel = conflictStore === 'schedule' ? 'Schedule checklist' : 'Annex G checklist';
-  var html = '<div id="fire-sync-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:var(--surface);border-radius:12px;padding:20px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.3)"><p style="font-weight:700;font-size:15px;margin:0 0 8px">Same item in two places</p><p style="font-size:13px;margin:0 0 16px;line-height:1.5">You just marked this <strong>' + newVal + '</strong> here, but the ' + storeLabel + ' has it set to <strong>' + oldVal + '</strong>.<br>Update the ' + storeLabel + ' to match?</p><div style="display:flex;gap:8px;justify-content:flex-end"><button onclick="fireSyncDecline()" class="btn-sm">Keep separate</button><button onclick="fireSyncAccept(\'' + conflictStore + '\',\'' + conflictKey + '\',\'' + newVal + '\')" class="btn-primary" style="font-size:13px">Yes — update ' + storeLabel + '</button></div></div></div>';
+  var storeLabel = conflictStore === 'schedule' ? 'Schedule' : 'Annex G';
+  var valColor = { PASS:'#16a34a', FAIL:'#dc2626', 'N/A':'#6b7280' };
+  var pill = function(v){ return '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;color:#fff;background:' + (valColor[v]||'#6b7280') + '">' + v + '</span>'; };
+  var html = '<div id="fire-sync-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px">'
+    + '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+    + '<div style="width:36px;height:36px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'
+    + '<p style="font-weight:700;font-size:15px;margin:0;line-height:1.3">Same item in two places</p>'
+    + '</div>'
+    + '<p style="font-size:13px;margin:0 0 20px;line-height:1.6;color:var(--fg)">You set this to ' + pill(newVal) + ' here, but ' + storeLabel + ' shows ' + pill(oldVal) + '.<br>Update ' + storeLabel + ' to match?</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<button onclick="fireSyncDecline()" style="padding:10px 0;border-radius:10px;border:1.5px solid var(--border);background:transparent;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)">Keep separate</button>'
+    + '<button onclick="fireSyncAccept(\'' + conflictStore + '\',\'' + conflictKey + '\',\'' + newVal + '\')" style="padding:10px 0;border-radius:10px;border:none;background:#1d4ed8;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Update ' + storeLabel + '</button>'
+    + '</div>'
+    + '</div></div>';
   document.body.insertAdjacentHTML('beforeend', html);
 }
 export function fireSyncDecline() {
