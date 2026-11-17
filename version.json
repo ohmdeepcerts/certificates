@@ -1,8 +1,9 @@
 {
-  "v": "2.4.18",
-  "build": 189,
+  "v": "2.4.19",
+  "build": 190,
   "new": 1,
   "changes": [
+    "Fixed: EL certificate luminaire schedule Pass / Fail count in the total row now counts the actual row results — previously it showed the manually entered totals which could be out of sync with the individual location results.",
     "Fixed: Selecting a saved client in the PAT Test wizard now fills Name, Address, Phone and Email in one go — no extra address dropdown appearing after the selection.",
     "Improved: PAT Test appliance result now defaults to Pass — a green pill shows in the Result column for every new row. Tap it once to mark as Fail (red), tap again to switch back to Pass. No more dropdown to click through.",
     "Improved: PAT Test Appliances table is now compact by default — only Asset number, Description and Result are shown. Instrument, Date, Period and Next Due are still filled in automatically but hidden to keep data entry fast. Tap Show Details in the header to reveal them when needed.",
