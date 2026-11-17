@@ -1,6 +1,6 @@
 {
-  "v": "2.4.31",
-  "build": 202,
+  "v": "2.4.32",
+  "build": 203,
   "new": 1,
   "changes": [
     "New: Clear Cache & Reload button added to Settings → Backend — clears the app's service worker cache and reloads. Use this if the dashboard shows wrong numbers or a new update isn't appearing.",

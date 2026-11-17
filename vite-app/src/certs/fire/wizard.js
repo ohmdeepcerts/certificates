@@ -1569,7 +1569,7 @@ export async function fireDownloadPDF(rec) {
   toast('Saving PDF…', 'info', 10000);
   var siteHistory = await _fetchSiteHistory(rec);
   var certHtml = fireBuildCertHTML(rec, siteHistory);
-  var refNum = (rec.refNumber || rec.ref_number || 'FA-certificate').replace(/[\\/:"*?<>|]/g, '-');
+  var refNum = 'Fire_Alarm_' + (rec.refNumber || rec.ref_number || 'FA-certificate').replace(/[\\/:"*?<>|]/g, '-');
   var escapedRef = refNum.replace(/'/g, "\\'");
 
   // Inject html2pdf.js into the hidden iframe so the PDF is generated and

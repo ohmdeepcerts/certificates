@@ -850,7 +850,7 @@ a{color:inherit;text-decoration:none}
 .ch-top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:9px;border-bottom:1.5px solid #e2d4d4}
 .ch-logo-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
 .ch-logo{background:linear-gradient(135deg,#c01818,#7a1010);border:1px solid #e08830;border-radius:4px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.05em;flex-shrink:0}
-.ch-company{font-size:24px;font-weight:700;color:#1a1a1a;letter-spacing:.15em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:block;width:100%;white-space:nowrap;border-bottom:2px solid #a32b2b;padding-bottom:3px}
+.ch-company{font-size:21px;font-weight:700;color:#1a1a1a;letter-spacing:.1em;line-height:1.2;font-family:'Segoe UI',Arial,sans-serif;display:block;border-bottom:2px solid #a32b2b;padding-bottom:3px}
 .ch-company-sub{font-size:9px;color:#666;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .niceic-badge{border:none;border-radius:0;padding:0;background:transparent;text-align:center;flex-shrink:0}
 .nb-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7a1010}
@@ -938,5 +938,6 @@ a{color:inherit;text-decoration:none}
 .cf-ref{font-family:monospace;font-size:10px;font-weight:700;color:#e08830}
 .ag-grp{background:#f8edcc;padding:6px 10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a1010;border-top:1px solid #e08830}`;
 
-  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+domSchedPage+page3+page4+page5+'</body></html>';
+  var fitScript = '<scr'+'ipt>(function(){function f(){document.querySelectorAll(\'.ch-cert-title\').forEach(function(el){var w=el.offsetWidth;if(!w)return;el.style.whiteSpace=\'nowrap\';var fs=12;el.style.fontSize=fs+\'px\';while(fs<42&&el.scrollWidth<w-1){fs+=0.25;el.style.fontSize=fs+\'px\';}if(el.scrollWidth>w){fs-=0.25;el.style.fontSize=fs+\'px\';}});}(document.fonts?document.fonts.ready:Promise.resolve()).then(f);})()<\/scr'+'ipt>';
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'+_esc(r.certType||'FA')+' Certificate — '+ref+'</title><style>'+css+'</style></head><body>'+page1+page2+domSchedPage+page3+page4+page5+fitScript+'</body></html>';
 }
