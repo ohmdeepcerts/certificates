@@ -160,6 +160,20 @@ const FA2_CHECKS = [
   {id:'s10', label:'Maintenance documentation updated'},
 ];
 
+// Cross-validation map: Annex G key → COM_SCHEDULE_ITEMS key
+// Same physical item appears in both the Schedule step and the Annex G panel on the Testing step.
+// When one is set, the other is auto-synced (silent if empty, popup if conflicting).
+const _ANNEX_SCHED_MAP = {
+  ctrl_panel:'cie_visual', fault_log:'cie_fault', weekly_log:'cie_weekly',
+  mains_supply:'ps_mains', bat_inspect:'ps_bat_term', bat_voltage:'ps_bat_volt',
+  standby_dur:'ps_bat_dur', call_pts:'mcp_tested', det_rotation:'det_rotation',
+  beam_det:'det_beam', aspirating:'det_aspirating', sounders:'snd_sounders',
+  visual_alarms:'snd_vad', zone_iso:'anc_zone_iso', fault_sim:'anc_fault_sim',
+  remote_mon:'anc_arc', drawings:'doc_drawings', cause_effect:'doc_cause_effect',
+  log_book:'doc_logbook', repair_arr:'doc_repair'
+};
+const _SCHED_ANNEX_MAP = Object.fromEntries(Object.entries(_ANNEX_SCHED_MAP).map(function(e){return[e[1],e[0]];}));
+
 function _isComm() { return _w.certType === 'FA.3' || _w.certType === 'FA.4'; }
 
 function todayStr() {
@@ -526,6 +540,11 @@ export function fireRenderStep() {
 
   // ── Step 4: Schedule of Items Inspected ──────────────────────────────────
   } else if (s === 4) {
+    // Silent pre-select from Annex G if already filled there
+    if (_isComm() && _w.annexGChecks && Object.keys(_w.annexGChecks).length) {
+      if (!_w.scheduleItems) _w.scheduleItems = {};
+      Object.entries(_ANNEX_SCHED_MAP).forEach(function(e){var v=_w.annexGChecks[e[0]]||'';if(v&&!_w.scheduleItems[e[1]])_w.scheduleItems[e[1]]=v;});
+    }
     var _schedDefs = _isComm() ? COM_SCHEDULE_ITEMS : DOM_SCHEDULE_ITEMS;
     var _sItems = _w.scheduleItems || {};
     html += `<h2 class="wiz-title">Schedule of Items Inspected</h2>`;
@@ -656,6 +675,11 @@ export function fireRenderStep() {
       html += _testRow('Zone isolation test', 'tZoneIso', ['PASS','FAIL','N/A']);
       html += _testRow('Fault simulation test', 'tFaultSim', ['PASS','FAIL','N/A']);
       html += _testRow('Engineer key switch / access control', 'tKeySwitch', ['PASS','FAIL','N/A']);
+      // Silent pre-select from Schedule if already filled there
+      if (_w.scheduleItems && Object.keys(_w.scheduleItems).length) {
+        if (!_w.annexGChecks) _w.annexGChecks = {};
+        Object.entries(_ANNEX_SCHED_MAP).forEach(function(e){var v=_w.scheduleItems[e[1]]||'';if(v&&!_w.annexGChecks[e[0]])_w.annexGChecks[e[0]]=v;});
+      }
       var _annexG = _w.annexGChecks || {};
       var _AG = [['Control Equipment',[['ctrl_panel','Control panel — all indicators operational'],['fault_log','Fault log reviewed and entries noted'],['weekly_log','Weekly test log reviewed and up to date']]],['Power Supply',[['mains_supply','Mains supply confirmed operational'],['bat_inspect','Battery terminals and connections inspected'],['bat_voltage','Battery voltage measured and recorded'],['standby_dur','Standby battery duration test satisfactory']]],['Detection',[['call_pts','Manual call points tested (all or rotation)'],['det_rotation','Detectors tested on rotation basis per schedule'],['beam_det','Beam detectors aligned and tested (if installed)'],['aspirating','Aspirating detection system tested (if installed)']]],['Warning Devices',[['sounders','All sounders tested — dB levels adequate'],['visual_alarms','Visual alarm devices tested and operational']]],['Ancillary Functions',[['zone_iso','Zone isolation tested and restored'],['fault_sim','Fault simulation tested and cleared'],['remote_mon','Remote monitoring / receiving centre checked']]],['Documentation',[['drawings','As-installed drawings present and up to date'],['cause_effect','Cause and effect documentation available'],['log_book','Log book available with entries up to date'],['repair_arr','24-hour emergency callout arrangements confirmed']]]];
       html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)"><p style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Annex G Inspection Checklist</p></div>`;
@@ -674,7 +698,7 @@ export function fireRenderStep() {
     html += `<div class="wiz-field"><label>Zonal verification confirmed <span class="lbl-opt">(zones match design)</span></label><div class="chip-row">`;
     ['Yes — all zones verified','Partial — see notes','No — discrepancy found','N/A'].forEach(function(v){ html += `<button class="chip${_w.zonalVerification===v?' on':''}" onclick="firePick('zonalVerification','${esc(v)}')">${esc(v)}</button>`; });
     html += `</div></div>`;
-    html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label>Limitations of inspection <span class="lbl-opt">(optional)</span></label><div style="position:relative"><textarea rows="2" oninput="fireInspLimInput(this.value)" onblur="fireLimBlur(this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea><div id="fire-lim-sugg" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:100;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)"></div></div></div>`;
+    html += `<div class="wiz-field" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><label style="display:flex;align-items:center;justify-content:space-between">Limitations of inspection <span class="lbl-opt">(optional)</span><button id="fire-lim-ai-btn" onclick="fireRewriteLimitations()" title="Rewrite with AI" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--fg);letter-spacing:.02em"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg> AI Rewrite</button></label><div style="position:relative"><textarea rows="2" oninput="fireInspLimInput(this.value)" onblur="fireLimBlur(this.value)" placeholder="e.g. Concealed cables not accessible for inspection. Loft hatch locked — detectors in loft space not tested." style="width:100%;font-size:13px;resize:vertical">${esc(_w.inspLimitations||'')}</textarea><div id="fire-lim-sugg" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:100;display:none;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)"></div></div></div>`;
     html += `<div class="wiz-nav"><button onclick="fireBack()" class="btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</button><button onclick="fireNext()" class="btn-primary">Continue <i class="fa-solid fa-arrow-right"></i></button></div>`;
 
   // ── Step 7: Interfaces (commercial only) ─────────────────────────────────
@@ -1097,6 +1121,15 @@ export function fireLimBlur(val) {
 export function fireSetAnnexG(id, val) {
   if (!_w.annexGChecks) _w.annexGChecks = {};
   _w.annexGChecks[id] = (_w.annexGChecks[id] === val) ? '' : val;
+  var newVal = _w.annexGChecks[id];
+  if (newVal) {
+    var schedKey = _ANNEX_SCHED_MAP[id];
+    if (schedKey) {
+      var existing = (_w.scheduleItems || {})[schedKey] || '';
+      if (!existing) { if (!_w.scheduleItems) _w.scheduleItems = {}; _w.scheduleItems[schedKey] = newVal; }
+      else if (existing !== newVal) { _fireShowSyncPopup('schedule', schedKey, existing, newVal); return; }
+    }
+  }
   fireRenderStep();
 }
 export function fireLoadSig(evt) {
@@ -1112,7 +1145,61 @@ export function fireJumpStep(i) {
 export function fireSetScheduleItem(id, val) {
   if (!_w.scheduleItems) _w.scheduleItems = {};
   _w.scheduleItems[id] = (_w.scheduleItems[id] === val) ? '' : val;
+  var newVal = _w.scheduleItems[id];
+  if (newVal) {
+    var annexKey = _SCHED_ANNEX_MAP[id];
+    if (annexKey) {
+      var existing = (_w.annexGChecks || {})[annexKey] || '';
+      if (!existing) { if (!_w.annexGChecks) _w.annexGChecks = {}; _w.annexGChecks[annexKey] = newVal; }
+      else if (existing !== newVal) { _fireShowSyncPopup('annexG', annexKey, existing, newVal); return; }
+    }
+  }
   fireRenderStep();
+}
+
+function _fireShowSyncPopup(conflictStore, conflictKey, oldVal, newVal) {
+  var storeLabel = conflictStore === 'schedule' ? 'Schedule checklist' : 'Annex G checklist';
+  var html = '<div id="fire-sync-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:var(--surface);border-radius:12px;padding:20px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.3)"><p style="font-weight:700;font-size:15px;margin:0 0 8px">Same item in two places</p><p style="font-size:13px;margin:0 0 16px;line-height:1.5">You just marked this <strong>' + newVal + '</strong> here, but the ' + storeLabel + ' has it set to <strong>' + oldVal + '</strong>.<br>Update the ' + storeLabel + ' to match?</p><div style="display:flex;gap:8px;justify-content:flex-end"><button onclick="fireSyncDecline()" class="btn-sm">Keep separate</button><button onclick="fireSyncAccept(\'' + conflictStore + '\',\'' + conflictKey + '\',\'' + newVal + '\')" class="btn-primary" style="font-size:13px">Yes — update ' + storeLabel + '</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+export function fireSyncDecline() {
+  var el = document.getElementById('fire-sync-popup'); if (el) el.remove();
+  fireRenderStep();
+}
+export function fireSyncAccept(store, key, val) {
+  var el = document.getElementById('fire-sync-popup'); if (el) el.remove();
+  if (store === 'schedule') { if (!_w.scheduleItems) _w.scheduleItems = {}; _w.scheduleItems[key] = val; }
+  else { if (!_w.annexGChecks) _w.annexGChecks = {}; _w.annexGChecks[key] = val; }
+  fireRenderStep();
+}
+
+export async function fireRewriteLimitations() {
+  var key = getSetting('gemini_key', '');
+  if (!key) { toast('No Gemini API key set — add it in Settings'); return; }
+  var text = (_w.inspLimitations || '').trim();
+  if (!text) { toast('Type something in the Limitations field first'); return; }
+  var btn = document.getElementById('fire-lim-ai-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rewriting…'; }
+  var prompt = 'You are writing for a UK fire alarm inspection report. Rewrite the following "Limitations of Inspection" text to be professional, clear and concise. Fix all spelling and grammar. Use formal, passive-voice wording suitable for a legal inspection document. Keep all factual content intact. Return ONLY the rewritten text with no commentary, no markdown, no quotation marks:\n\n' + text;
+  var models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+  var result = null;
+  for (var i = 0; i < models.length; i++) {
+    try {
+      var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(key), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!resp.ok) continue;
+      var data = await resp.json();
+      result = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+      if (result) break;
+    } catch (e) { continue; }
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg> AI Rewrite'; }
+  if (!result) { toast('AI rewrite failed — check your Gemini key in Settings'); return; }
+  _w.inspLimitations = result;
+  fireRenderStep();
+  toast('Limitations rewritten by AI');
 }
 
 export function fireSetSchedNote(val) {

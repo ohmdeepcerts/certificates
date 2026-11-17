@@ -1,8 +1,10 @@
 {
-  "v": "2.4.25",
-  "build": 196,
-  "new": 3,
+  "v": "2.4.26",
+  "build": 197,
+  "new": 2,
   "changes": [
+    "New: Schedule checklist and Annex G checklist in commercial fire certificates are now automatically kept in sync — when you mark an item in one, the same item is auto-filled in the other. If you've already set it differently in both places, a popup asks which value to use. You no longer need to fill in the same items twice.",
+    "New: AI Rewrite button added to the Limitations of Inspection field on the fire certificate Testing step — tap the star button next to the field label and Gemini will professionally rewrite your notes into formal inspection report language, fixing spelling and grammar while keeping all your facts.",
     "Fixed: & symbol now prints correctly in fire alarm certificate headings — it was appearing as the text &amp; due to a double-encoding error in the PDF generator.",
     "Fixed: Next Inspection Due banner on commercial fire certificates now references BS 5839-1:2025 Clause 43 (the maintenance and servicing clause) instead of Clause 25 (which covers new installation completion — wrong clause).",
     "Fixed: Fire alarm certificate PDF pages are now always exactly A4 — content that overflowed onto a short orphaned extra page now stays within the correct page boundaries. Tables and sections that cannot fit on the current page move to the next page instead of splitting mid-row.",
