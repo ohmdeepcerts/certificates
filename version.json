@@ -1,8 +1,11 @@
 {
-  "v": "2.4.14",
-  "build": 185,
+  "v": "2.4.15",
+  "build": 186,
   "new": 1,
   "changes": [
+    "Improved: PAT Test Client Details step now has separate Address Line 1, Address Line 2, Town/City and Postcode fields — matching the Property step and other certificates. The Same as Property button fills all four fields in one tap.",
+    "Fixed: Address Line 1 asterisk on the Property step now sits right next to the label text — it was appearing in the middle of the row due to a layout issue.",
+    "Fixed: Auto-Capitalize button on the Property Address step now toggles correctly when clicked.",
     "Fixed: PAT Test Client Name field now searches your landlords and agents directory as you type — pick a name from the suggestions to auto-fill their address, phone and email. New clients are automatically saved to the central directory when you complete the certificate.",
     "Improved: PAT Test Appliances step is now full width — the status panel on the right has been removed, giving the appliance table more space to breathe.",
     "Improved: PAT Test certificate reference number now appears at the very top of the page — large and easy to read, right where the title was. It updates automatically as you fill in the form and you can still edit it manually if needed.",
