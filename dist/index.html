@@ -17,7 +17,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-DIx_oxBt.js"></script>
+  <script type="module" crossorigin src="./assets/index-9gFxRAAk.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
   <link rel="modulepreload" crossorigin href="./assets/cert-pat-DpxiwH9-.js">
   <link rel="stylesheet" crossorigin href="./assets/index-BfjOiqo6.css">
@@ -328,14 +328,16 @@
 
         <!-- STEP 1: Job Details -->
         <div id="pw-step-details" hidden>
+          <!-- Hidden fields form.js reads — not shown in wizard -->
+          <input type="hidden" id="pat-status" value="draft">
+          <input type="text" id="pat-eng" style="display:none" oninput="doPatPreview()">
           <div class="form-section">
             <div class="form-section-title">Job Details</div>
-            <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
-              <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
-              <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
-              <div class="field-group"><label>Engineer *</label><div style="display:flex;gap:6px;align-items:center"><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,'pat')" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div></div>
+            <div class="field-group" style="margin-bottom:12px">
+              <label>Ref Number</label>
+              <input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override" style="max-width:220px">
             </div>
-            <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
               <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
               <button type="button" onclick="applyPATDatesToAll()" style="flex-shrink:0;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">Apply to All Appliances →</button>

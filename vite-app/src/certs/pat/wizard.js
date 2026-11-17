@@ -24,10 +24,9 @@ function _fmtDate(val) {
 
 function _stepSummary(i) {
   if (i === 0) {
-    var eng  = (document.getElementById('pat-eng')?.value  || '').trim();
-    var date = document.getElementById('pat-date')?.value  || '';
-    if (!eng && !date) return '';
-    return (eng || '—') + (date ? ' · ' + _fmtDate(date) : '');
+    var date = document.getElementById('pat-date')?.value || '';
+    if (!date) return '';
+    return _fmtDate(date);
   }
   if (i === 1) {
     var addr = (document.getElementById('pat-addr')?.value || '').trim().replace(/\n/g,' ');
@@ -103,12 +102,6 @@ export function pwRender() {
 export function pwNext() {
   // Step validators before advancing
   if (_pw.step === 0) {
-    var eng = document.getElementById('pat-eng');
-    if (!eng || !eng.value.trim()) {
-      window.toast?.('Engineer name is required', 'error');
-      eng?.focus();
-      return;
-    }
     var date = document.getElementById('pat-date');
     if (!date || !date.value) {
       window.toast?.('Test date is required', 'error');

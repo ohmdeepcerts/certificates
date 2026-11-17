@@ -1,10 +1,11 @@
 {
-  "v": "2.4.8",
-  "build": 179,
+  "v": "2.4.9",
+  "build": 180,
   "new": 3,
   "changes": [
+    "Improved: PAT Test wizard Job Details step is now cleaner — Ref Number is at the top on its own, Status and Engineer are handled automatically in the background. Just pick the test date and you are done.",
     "New: PAT Test wizard now checks you've filled in Engineer and Test Date before letting you move past step 1 — and Address and Postcode before moving past step 2. Missing fields are highlighted so nothing gets missed.",
-    "New: PAT Test wizard now shows a summary under each completed step tab — engineer name and date under Job Details, address under Property, appliance count with Pass/Fail totals under Appliances.",
+    "New: PAT Test wizard now shows a summary under each completed step tab — date under Job Details, address under Property, appliance count with Pass/Fail totals under Appliances.",
     "New: Appliance count badge now appears on the Appliances step tab as you add items — see at a glance how many appliances are on the certificate without opening that step.",
     "New: Pick from directory button added to the Property step — tap to browse your saved properties and auto-fill the address in one click, the same as Gas, Fire and EL certificates.",
     "New: Press Enter in any PAT Test wizard text field to advance to the next step — no need to reach for the Next button.",
