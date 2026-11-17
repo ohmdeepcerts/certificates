@@ -17,10 +17,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-BzVfLDy-.js"></script>
+  <script type="module" crossorigin src="./assets/index-LnI9U-oD.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-DC34kE0f.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-BfjOiqo6.css">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-ByWvaxXr.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-C2_iUTin.css">
 </head>
 <body>
 <!-- ===== AUTH SCREEN ===== -->
@@ -408,18 +408,19 @@
                   </div>
                   <div class="pat-app-header-btns">
                     <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button class="btn btn-secondary btn-sm" id="pat-extra-btn" onclick="togglePatExtraCols()"><i class="fa-solid fa-eye"></i> Show Details</button>
                     <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
                   </div>
                 </div>
                 <div class="appliance-table-wrap">
-                  <table class="appliance-table" id="pat-app-table">
+                  <table class="appliance-table pat-cols-compact" id="pat-app-table">
                     <thead><tr>
                       <th style="width:65px">Asset #</th>
                       <th>Description</th>
-                      <th style="width:75px">Instrument</th>
-                      <th style="width:110px">Date</th>
-                      <th style="width:65px">Period</th>
-                      <th style="width:100px">Next Due</th>
+                      <th class="pac-extra" style="width:75px">Instrument</th>
+                      <th class="pac-extra" style="width:110px">Date</th>
+                      <th class="pac-extra" style="width:65px">Period</th>
+                      <th class="pac-extra" style="width:100px">Next Due</th>
                       <th style="width:76px">Result</th>
                       <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
                     </tr></thead>
