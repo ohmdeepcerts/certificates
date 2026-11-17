@@ -319,130 +319,147 @@
       <div id="pat-restore-banner" hidden style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">💾 Unsaved PAT found — restore it?<button type="button" onclick="restorePATAutosave()" style="margin-left:auto;background:#3b82f6;color:#fff;border:none;padding:4px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Restore</button><button type="button" onclick="discardPATAutosave()" style="background:none;color:#6b7280;border:1px solid var(--border);padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer">Discard</button></div>
       <div id="pat-completed-banner" hidden style="background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;display:flex;align-items:center;gap:8px">✓ COMPLETED — This certificate has been issued. Edit fields above if a correction is needed, then save as draft or re-complete.</div>
 
-      <div class="pat-two-col">
-      <div id="pat-main-col">
+      <div id="pat-wizard">
+        <div id="pat-wiz-tabs"></div>
 
-      <!-- Report Details -->
-      <div class="form-section">
-        <div class="form-section-title">Report Details</div>
-        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
-          <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
-          <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
-          <div class="field-group"><label>Engineer *</label><div style="display:flex;gap:6px;align-items:center"><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,'pat')" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div></div>
-        </div>
-        <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
-          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
-          <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
-          <button type="button" onclick="applyPATDatesToAll()" style="flex-shrink:0;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">Apply to All Appliances →</button>
-        </div>
-      </div>
-
-      <!-- Property & Client -->
-      <div class="form-section">
-        <div class="form-section-title">Property &amp; Client</div>
-        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
-          <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
-          <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
-          <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode <span style="color:#ef4444">*</span></label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:#ef4444;font-weight:600">Required — do NOT put postcode in the address box above</span></div></div>
-          <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
-          <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
-        </div>
-      </div>
-      <div class="form-section">
-        <div class="form-section-title" style="color:var(--muted)">🔒 Internal Notes</div>
-        <textarea id="pat-internal-notes" placeholder="Private notes — not printed on the certificate or emailed to clients" style="width:100%;box-sizing:border-box;height:72px;resize:vertical;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--muted);font-family:inherit"></textarea>
-      </div>
-
-      <!-- Appliances -->
-      <div class="form-section">
-        <div class="pat-app-header">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div class="form-section-title" style="margin:0">Appliances</div>
-            <span id="pat-app-sum" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
-          </div>
-          <div class="pat-app-header-btns">
-            <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
-            <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+        <!-- STEP 1: Job Details -->
+        <div id="pw-step-details" hidden>
+          <div class="form-section">
+            <div class="form-section-title">Job Details</div>
+            <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+              <div class="field-group"><label>Ref Number</label><input type="text" id="pat-ref" placeholder="Generating…" data-manual="false" oninput="this.dataset.manual='true';doPatPreview()" title="Auto-updates with appliance count · edit to override"></div>
+              <div class="field-group"><label>Status</label><select id="pat-status" onchange="doPatPreview()"><option value="draft">📝 Draft</option><option value="completed">✅ Completed</option></select></div>
+              <div class="field-group"><label>Engineer *</label><div style="display:flex;gap:6px;align-items:center"><input type="text" id="pat-eng" placeholder="Full name" oninput="doPatPreview()" style="flex:1;margin:0"><button type="button" onclick="_showEngineerPicker(this,'pat')" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:15px;flex-shrink:0;line-height:1" title="Pick engineer from list">👤</button></div></div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+              <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Test Date *</label><input type="date" id="pat-date" onchange="patDateChanged(this.value)" style="width:100%;box-sizing:border-box"></div>
+              <div class="field-group" style="margin:0;flex:1;min-width:140px"><label style="font-size:11px">Expiry / Next Due Date</label><input type="date" id="pat-expiry" oninput="doPatPreview()" style="width:100%;box-sizing:border-box"></div>
+              <button type="button" onclick="applyPATDatesToAll()" style="flex-shrink:0;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">Apply to All Appliances →</button>
+            </div>
           </div>
         </div>
-        <div class="appliance-table-wrap">
-          <table class="appliance-table" id="pat-app-table">
-            <thead><tr>
-              <th style="width:65px">Asset #</th>
-              <th>Description</th>
-              <th style="width:75px">Instrument</th>
-              <th style="width:110px">Date</th>
-              <th style="width:65px">Period</th>
-              <th style="width:100px">Next Due</th>
-              <th style="width:76px">Result</th>
-              <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
-            </tr></thead>
-            <tbody id="pat-app-body"></tbody>
-          </table>
-        </div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
-      </div>
 
-      <div class="form-actions">
-        <button class="btn btn-primary" onclick="savePAT()">💾 Save Draft</button>
-        <button class="btn btn-success" id="btn-pat-complete2" onclick="completePAT()">✓ Complete &amp; Issue</button>
-        <button class="btn btn-secondary" onclick="navigate('pat-history')">Cancel</button>
-      </div>
-
-      <!-- Live Certificate Preview -->
-      <div id="pat-preview-wrap" style="margin-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          <span>Live Certificate Preview</span>
-          <span style="font-size:11px">Use ⬇ PDF above for exact A4 output</span>
-        </div>
-        <div class="pat-cert-scroll" id="pat-cert-pages"></div>
-      </div>
-
-      </div><!-- /pat-main-col -->
-
-      <!-- RIGHT SIDE PANEL: Live Stats -->
-      <div id="pat-side-col">
-        <div class="sw-title">Cert Status</div>
-        <div id="sw-status" class="sw-cert-status empty"><span id="sw-status-dot">◯</span>&nbsp;<span id="sw-status-lbl">No data yet</span></div>
-
-        <div class="sw-card">
-          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Property</div>
-          <div id="sw-prop-addr" style="font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:3px">—</div>
-          <div id="sw-prop-client" style="font-size:.74rem;color:var(--muted)">—</div>
-        </div>
-
-        <div class="sw-card">
-          <div style="text-align:center;padding:6px 0 2px">
-            <div id="sw-app-count" style="font-size:2rem;font-weight:800;letter-spacing:-1px;line-height:1">0</div>
-            <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Appliances</div>
+        <!-- STEP 2: Property -->
+        <div id="pw-step-property" hidden>
+          <div class="form-section">
+            <div class="form-section-title">Property &amp; Client</div>
+            <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+              <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
+              <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
+              <div class="field-group" style="grid-column:1/-1"><label style="display:flex;justify-content:space-between;align-items:center;">Property Address *<button type="button" id="autocap-btn" class="autocap-btn on" onclick="toggleAutoCap()"><i class="fa-solid fa-toggle-on"></i> Auto-Capitalize: On</button></label><textarea id="pat-addr" style="height:72px;resize:vertical;width:100%;box-sizing:border-box" oninput="capitalizeAddress(this)" autocapitalize="off"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><label style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;margin:0">Postcode <span style="color:#ef4444">*</span></label><input type="text" id="pat-postcode" placeholder="e.g. IG1 1JP" maxlength="9" style="width:110px;text-transform:uppercase;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)" oninput="updatePatRef()"><span style="font-size:11px;color:#ef4444;font-weight:600">Required — do NOT put postcode in the address box above</span></div></div>
+              <div class="field-group"><label>Phone</label><input type="tel" id="pat-phone"></div>
+              <div class="field-group"><label>Email</label><input type="email" id="pat-email"></div>
+            </div>
           </div>
-          <svg width="64" height="64" viewBox="0 0 64 64" style="display:block;margin:8px auto;transform:rotate(-90deg)">
-            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"/>
-            <circle id="sw-ring-pass" cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="7" stroke-dasharray="163.4" stroke-dashoffset="163.4" stroke-linecap="round"/>
-          </svg>
-          <div class="sw-kv"><span class="sw-k">✅ Pass</span><span id="sw-pass-count" class="sw-v green">0</span></div>
-          <div class="sw-kv"><span class="sw-k">❌ Fail</span><span id="sw-fail-count" class="sw-v red">0</span></div>
-          <div class="sw-kv"><span class="sw-k">Pass rate</span><span id="sw-rate" class="sw-v">—</span></div>
         </div>
 
-        <div class="sw-card">
-          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Pages</div>
-          <div id="sw-pages-dots" class="sw-pages-dots"></div>
+        <!-- STEP 3: Appliances -->
+        <div id="pw-step-appliances" hidden>
+          <div class="pat-step3-cols">
+            <div class="pat-step3-main">
+              <div class="form-section">
+                <div class="pat-app-header">
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <div class="form-section-title" style="margin:0">Appliances</div>
+                    <span id="pat-app-sum" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+                  </div>
+                  <div class="pat-app-header-btns">
+                    <button class="btn btn-secondary btn-sm" onclick="addPATRow()"><i class="fa-solid fa-plus"></i> Add Row</button>
+                    <button class="btn btn-sm" onclick="openScanModal()" style="background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+                  </div>
+                </div>
+                <div class="appliance-table-wrap">
+                  <table class="appliance-table" id="pat-app-table">
+                    <thead><tr>
+                      <th style="width:65px">Asset #</th>
+                      <th>Description</th>
+                      <th style="width:75px">Instrument</th>
+                      <th style="width:110px">Date</th>
+                      <th style="width:65px">Period</th>
+                      <th style="width:100px">Next Due</th>
+                      <th style="width:76px">Result</th>
+                      <th style="width:34px;text-align:center"><i class="fa-solid fa-trash-can" style="color:#dc2626;opacity:.6;font-size:10px"></i></th>
+                    </tr></thead>
+                    <tbody id="pat-app-body"></tbody>
+                  </table>
+                </div>
+                <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addPATRow()">+ Add Row (Tab advances)</button>
+              </div>
+            </div>
+            <!-- RIGHT SIDE PANEL: Live Stats -->
+            <div id="pat-side-col">
+              <div class="sw-title">Cert Status</div>
+              <div id="sw-status" class="sw-cert-status empty"><span id="sw-status-dot">◯</span>&nbsp;<span id="sw-status-lbl">No data yet</span></div>
+
+              <div class="sw-card">
+                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Property</div>
+                <div id="sw-prop-addr" style="font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:3px">—</div>
+                <div id="sw-prop-client" style="font-size:.74rem;color:var(--muted)">—</div>
+              </div>
+
+              <div class="sw-card">
+                <div style="text-align:center;padding:6px 0 2px">
+                  <div id="sw-app-count" style="font-size:2rem;font-weight:800;letter-spacing:-1px;line-height:1">0</div>
+                  <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Appliances</div>
+                </div>
+                <svg width="64" height="64" viewBox="0 0 64 64" style="display:block;margin:8px auto;transform:rotate(-90deg)">
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"/>
+                  <circle id="sw-ring-pass" cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="7" stroke-dasharray="163.4" stroke-dashoffset="163.4" stroke-linecap="round"/>
+                </svg>
+                <div class="sw-kv"><span class="sw-k">✅ Pass</span><span id="sw-pass-count" class="sw-v green">0</span></div>
+                <div class="sw-kv"><span class="sw-k">❌ Fail</span><span id="sw-fail-count" class="sw-v red">0</span></div>
+                <div class="sw-kv"><span class="sw-k">Pass rate</span><span id="sw-rate" class="sw-v">—</span></div>
+              </div>
+
+              <div class="sw-card">
+                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Pages</div>
+                <div id="sw-pages-dots" class="sw-pages-dots"></div>
+              </div>
+
+              <div class="sw-card">
+                <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Required Fields</div>
+                <div id="sw-fields" class="sw-field-status"></div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+                <button class="btn btn-secondary btn-sm" onclick="addPATRow()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-plus"></i> Add appliance row</button>
+                <button class="btn btn-sm" onclick="openScanModal()" style="justify-content:flex-start;width:100%;background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
+                <button class="btn btn-secondary btn-sm" onclick="generatePATPDF()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+              </div>
+            </div><!-- /pat-side-col -->
+          </div><!-- /pat-step3-cols -->
         </div>
 
-        <div class="sw-card">
-          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600">Required Fields</div>
-          <div id="sw-fields" class="sw-field-status"></div>
+        <!-- STEP 4: Review -->
+        <div id="pw-step-review" hidden>
+          <div class="form-section">
+            <div class="form-section-title" style="color:var(--muted)">🔒 Internal Notes</div>
+            <textarea id="pat-internal-notes" placeholder="Private notes — not printed on the certificate or emailed to clients" style="width:100%;box-sizing:border-box;height:72px;resize:vertical;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--muted);font-family:inherit"></textarea>
+          </div>
+
+          <!-- Live Certificate Preview -->
+          <div id="pat-preview-wrap" style="margin-top:16px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+              <span>Live Certificate Preview</span>
+              <span style="font-size:11px">Use ⬇ PDF above for exact A4 output</span>
+            </div>
+            <div class="pat-cert-scroll" id="pat-cert-pages"></div>
+          </div>
+
+          <div class="form-actions" style="margin-top:16px">
+            <button class="btn btn-success" id="btn-pat-complete2" onclick="completePAT()">✓ Complete &amp; Issue</button>
+            <button class="btn btn-primary" onclick="savePAT()">💾 Save Draft</button>
+            <button class="btn btn-secondary" onclick="navigate('pat-history')">Cancel</button>
+          </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
-          <button class="btn btn-secondary btn-sm" onclick="addPATRow()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-plus"></i> Add appliance row</button>
-          <button class="btn btn-sm" onclick="openScanModal()" style="justify-content:flex-start;width:100%;background:var(--accent);color:#fff"><i class="fa-solid fa-camera"></i> Scan Handwriting</button>
-          <button class="btn btn-secondary btn-sm" onclick="generatePATPDF()" style="justify-content:flex-start;width:100%"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+        <!-- WIZARD NAV BAR -->
+        <div id="pat-wiz-nav">
+          <button id="pat-wiz-back" class="elwiz-back" onclick="pwBack()" hidden>← Back</button>
+          <span id="pat-wiz-step-info" style="font-size:12px;color:var(--muted)"></span>
+          <button id="pat-wiz-next" class="elwiz-next" onclick="pwNext()">Next →</button>
         </div>
-      </div><!-- /pat-side-col -->
-
-      </div><!-- /pat-two-col -->
+      </div><!-- /pat-wizard -->
     </div>
 
     <!-- PAT HISTORY -->
@@ -1617,11 +1634,17 @@ ALTER TABLE public.el_certs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;</pr
 
     <!-- ===== EL NEW (wizard) ===== -->
     <div class="view" id="view-el-new">
-      <div class="page-header">
-        <h1 class="page-title">New EL Certificate</h1>
-        <p class="page-sub" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+      <div style="flex-shrink:0;background:var(--surface)">
+        <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px 0">
+          <h1 style="font-size:15px;font-weight:700;margin:0;color:var(--text)">New EL Certificate</h1>
+          <p style="margin:0;font-size:12px;color:var(--muted)" id="elwiz-header-sub">BS 5266-1 Emergency Lighting</p>
+        </div>
+        <div class="wiz-step-tabs" id="el-step-tabs"></div>
+        <div class="wiz-pbar-wrap"><div class="wiz-pbar"><div class="wiz-pbar-fill" id="el-pbar-fill" style="width:0%"></div></div></div>
       </div>
-      <div class="el-wizard" id="el-wizard-body"></div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="el-wizard" id="el-wizard-body"></div>
+      </div>
     </div>
 
     <!-- ===== EL HISTORY ===== -->

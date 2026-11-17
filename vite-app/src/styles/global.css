@@ -427,11 +427,15 @@ a{color:var(--accent);text-decoration:none}
 .cert-badge-pass{background:#dcfce7;color:#16a34a;border:1px solid #16a34a}
 .cert-badge-fail{background:#fee2e2;color:#dc2626;border:1px solid #dc2626}
 
-/* ---- PAT SIDE PANEL ---- */
-.pat-two-col{display:flex;gap:0;align-items:flex-start}
-#pat-main-col{flex:1;min-width:0}
+/* ---- PAT WIZARD ---- */
+#pat-wizard{display:flex;flex-direction:column;gap:0}
+#pw-step-details,#pw-step-property,#pw-step-appliances,#pw-step-review{padding-top:4px}
+.pat-step3-cols{display:flex;gap:0;align-items:flex-start}
+.pat-step3-main{flex:1;min-width:0}
 #pat-side-col{width:258px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;align-self:flex-start}
+#pat-wiz-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);margin-top:4px;gap:12px}
 @media(max-width:1050px){#pat-side-col{display:none}}
+@media(max-width:768px){.pat-step3-cols{flex-direction:column}#pat-side-col{width:100%;position:static;max-height:none;border-left:none;border-top:1px solid var(--border)}}
 @media(max-width:768px){
   #pat-preview-wrap{height:0;overflow:hidden;margin:0!important;padding:0!important}
   #pat-cert-pages{position:fixed;left:-12000px;top:-12000px;width:826px;pointer-events:none}

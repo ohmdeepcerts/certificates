@@ -47,8 +47,9 @@ async function _loadCertGlobals() {
   Object.assign(window, gas);
   Object.assign(window, el);
   Object.assign(window, fire);
-  const [gasWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist, patScan, gasSig, staff, audit, csv, dash] = await Promise.all([
+  const [gasWiz, patWiz, gasPdf, gasPrev, gasHist, dir, eng, settings, patEmail, patPdf, patHist, patScan, gasSig, staff, audit, csv, dash] = await Promise.all([
     import('./certs/gas/wizard.js'),
+    import('./certs/pat/wizard.js'),
     import('./certs/gas/pdf.js'),
     import('./certs/gas/preview.js'),
     import('./certs/gas/history.js'),
@@ -66,6 +67,7 @@ async function _loadCertGlobals() {
     import('./dashboard/dashboard.js'),
   ]);
   Object.assign(window, gasWiz);
+  Object.assign(window, patWiz);
   Object.assign(window, gasPdf);
   Object.assign(window, gasPrev);
   Object.assign(window, gasHist);

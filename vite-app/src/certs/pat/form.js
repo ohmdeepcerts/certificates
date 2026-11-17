@@ -280,7 +280,7 @@ export function discardPATAutosave() {
   try { localStorage.removeItem('pat_autosave'); } catch(e) {}
   const rb = patGe('pat-restore-banner'); if (rb) rb.hidden = true;
 }
-export function startNewPAT() { state.editingPATId = null; _offlineQueueId = null; navigate('pat-new'); }
+export function startNewPAT() { state.editingPATId = null; _offlineQueueId = null; navigate('pat-new'); window.pwInit?.(); }
 export async function newPAT() {
   state.editingPATId = null; _offlineQueueId = null; patApps.splice(0); state._patDirty = false;
   state._cachedNextPATSerial = null;
@@ -332,6 +332,7 @@ export async function newPAT() {
       }
     }
   } catch (e) {}
+  window.pwInit?.();
 }
 
 export function _syncAutoCapBtn() {
@@ -361,6 +362,7 @@ export async function loadPATForm(id) {
   populatePATForm(r);
   navigate('pat-new');
   _syncAutoCapBtn();
+  window.pwInit?.();
 }
 
 // ─── Save & Complete ─────────────────────────────────
