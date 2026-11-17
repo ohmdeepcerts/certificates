@@ -342,7 +342,10 @@
         <!-- STEP 2: Property -->
         <div id="pw-step-property" hidden>
           <div class="form-section">
-            <div class="form-section-title">Property &amp; Client</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="form-section-title" style="margin:0">Property &amp; Client</div>
+              <button type="button" onclick="patPickFromDirectory()" class="btn btn-secondary btn-sm"><i class="fa-solid fa-address-book"></i> Pick from directory</button>
+            </div>
             <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
               <div class="field-group"><label style="display:flex;align-items:center;justify-content:space-between">Landlord Name<button type="button" onclick="patCopyAddrToLandlord()" style="font-size:10.5px;font-weight:600;background:var(--accent-dim);border:none;color:var(--accent);padding:2px 8px;border-radius:5px;cursor:pointer;line-height:1.6">↓ Use property address</button></label><input type="text" id="pat-landlord" oninput="doPatPreview()"><textarea id="pat-landlord-addr" placeholder="Landlord address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
               <div class="field-group"><label>Agency / Client Name</label><input type="text" id="pat-agency" oninput="doPatPreview()"><textarea id="pat-agency-addr" placeholder="Agency / client address (optional)" style="height:52px;resize:vertical;width:100%;box-sizing:border-box;margin-top:4px" oninput="doPatPreview()"></textarea></div>
