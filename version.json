@@ -1,8 +1,9 @@
 {
-  "v": "2.4.20",
-  "build": 191,
+  "v": "2.4.21",
+  "build": 192,
   "new": 1,
   "changes": [
+    "Improved: Download PDF button on fire alarm certificates now saves the PDF file directly to your Downloads folder — no print dialog, no extra steps.",
     "Improved: Company name on fire alarm certificates is now larger and fills the full header width — bolder font with wider spacing so it reads clearly alongside the logo.",
     "Fixed: EL certificate luminaire schedule Pass / Fail count in the total row now counts the actual row results — previously it showed the manually entered totals which could be out of sync with the individual location results.",
     "Fixed: Selecting a saved client in the PAT Test wizard now fills Name, Address, Phone and Email in one go — no extra address dropdown appearing after the selection.",
