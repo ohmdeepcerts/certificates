@@ -1,8 +1,9 @@
 {
-  "v": "2.4.5",
-  "build": 176,
+  "v": "2.4.6",
+  "build": 177,
   "new": 1,
   "changes": [
+    "Fixed: Clicking a Gas CP12 wizard step tab now actually jumps to that step — the tabs were showing but tapping a completed step was not navigating back to it.",
     "Improved: Gas CP12 wizard step tabs are now all clickable — click any step to jump to it. Completed steps now show green so you can see at a glance how far through the form you are.",
     "Improved: EL certificate wizard now shows step names across the top — click any step (Type, Premises, Client, System, etc.) to jump straight to it, with a progress bar showing how far through you are. Same as the Fire Alarm wizard.",
     "Improved: Gas CP12 history preview Defects and Pipework tables now match the printed certificate — column labels are in the header bar (not a separate row), both tables have identical 5-row height so they line up side by side.",
