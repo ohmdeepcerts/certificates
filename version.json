@@ -1,8 +1,9 @@
 {
-  "v": "2.4.13",
-  "build": 184,
-  "new": 3,
+  "v": "2.4.14",
+  "build": 185,
+  "new": 1,
   "changes": [
+    "Fixed: PAT Test Client Name field now searches your landlords and agents directory as you type — pick a name from the suggestions to auto-fill their address, phone and email. New clients are automatically saved to the central directory when you complete the certificate.",
     "Improved: PAT Test Appliances step is now full width — the status panel on the right has been removed, giving the appliance table more space to breathe.",
     "Improved: PAT Test certificate reference number now appears at the very top of the page — large and easy to read, right where the title was. It updates automatically as you fill in the form and you can still edit it manually if needed.",
     "Improved: PAT Test wizard Property step now uses separate address line fields (Line 1, Line 2, Town, Postcode) — same layout as the Gas certificate. Start typing in Line 1 to search your saved properties directory.",
