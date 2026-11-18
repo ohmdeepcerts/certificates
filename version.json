@@ -1,8 +1,9 @@
 {
-  "v": "2.4.43",
-  "build": 214,
+  "v": "2.4.44",
+  "build": 215,
   "new": 1,
   "changes": [
+    "Fixed: Fire certificate Client Details step — clicking the address line to override the auto-filled premises address now works correctly. Previously clicking the field reset it back to the premises address in a loop, making it impossible to enter a different client address.",
     "Improved: Dashboard quick action buttons replaced with a live insights strip — shows total certificate count, PAT issued, Gas issued, EL satisfactory and Fire issued at a glance across the top of the dashboard.",
     "Improved: Health score badge now shows all four certificate type counts — PAT, Gas, EL and Fire issued counts all appear as green pills so you can see your full portfolio status at a glance.",
     "Fixed: Fire alarm certificate System Summary no longer has empty space on the right side — fields that have no pair now stretch to fill the full width of the section.",

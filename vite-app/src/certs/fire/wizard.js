@@ -244,7 +244,7 @@ export function startNewFire() {
     defectsOverall: '', defectsNotes: '',
     // outcome
     outcome: '', nextInspDate: '', worksCarried: '', sysOperational: '', satJustification: '',
-    _clientAddrPrefilled: false,
+    _clientAddrPrefilled: null,
     // engineer
     engineerName: getSetting('fire_default_engineer', getSetting('fa_engineer', getSetting('default_engineer',''))),
     engineerQual: getSetting('fa_engineer_qual', ''),
@@ -399,7 +399,7 @@ export function fireRenderStep() {
   // ── Step 2: Client ────────────────────────────────────────────────────────
   } else if (s === 2) {
     // Auto-prefill client address from premises on first visit to this step
-    if (!_w.clientAddr1 && !_w.clientAddr2 && !_w.clientAddr3 && !_w.clientPostcode && (_w.premAddr1 || _w.premPostcode)) {
+    if (_w._clientAddrPrefilled !== false && !_w.clientAddr1 && !_w.clientAddr2 && !_w.clientAddr3 && !_w.clientPostcode && (_w.premAddr1 || _w.premPostcode)) {
       _w.clientAddr1 = _w.premAddr1; _w.clientAddr2 = _w.premAddr2;
       _w.clientAddr3 = _w.premAddr3; _w.clientPostcode = _w.premPostcode;
       _w._clientAddrPrefilled = true;
