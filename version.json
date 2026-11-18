@@ -1,6 +1,6 @@
 {
-  "v": "2.4.39",
-  "build": 210,
+  "v": "2.4.40",
+  "build": 211,
   "new": 1,
   "changes": [
     "Improved: Sidebar navigation labels removed for PAT Testing, Gas Safety, Emergency Lighting and Fire Safety — the item names already make it clear, so the labels were just taking up space.",
