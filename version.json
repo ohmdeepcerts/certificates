@@ -1,9 +1,9 @@
 {
-  "v": "2.4.38",
-  "build": 209,
+  "v": "2.4.39",
+  "build": 210,
   "new": 1,
   "changes": [
-    "Fixed: Fire alarm certificate title 'Fire Alarm Inspection & Service Certificate' now displays at the correct large size again — it was stuck at tiny 12px text due to a measurement bug in the auto-fit script.",
+    "Improved: Sidebar navigation labels removed for PAT Testing, Gas Safety, Emergency Lighting and Fire Safety — the item names already make it clear, so the labels were just taking up space.",
     "New: Clear Cache & Reload button added to Settings → Backend — clears the app's service worker cache and reloads. Use this if the dashboard shows wrong numbers or a new update isn't appearing.",
     "Improved: Fire alarm certificate title now fills the full width of the header — the font scales automatically to fit the row for every certificate type, so there is no empty space on the right.",
     "Fixed: Fire alarm certificate PDF now downloads with a proper file name — 'Fire_Alarm_FA2022657.pdf' instead of just the bare reference number, matching the Gas and PAT certificate naming.",
