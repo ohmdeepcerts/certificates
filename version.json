@@ -1,6 +1,6 @@
 {
-  "v": "2.4.41",
-  "build": 212,
+  "v": "2.4.42",
+  "build": 213,
   "new": 1,
   "changes": [
     "Fixed: Fire alarm certificate System Summary no longer has empty space on the right side — fields that have no pair now stretch to fill the full width of the section.",
