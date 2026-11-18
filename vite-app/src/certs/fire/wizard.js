@@ -6,6 +6,7 @@ import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
 import { fireBuildCertHTML } from './pdf.js';
+
 import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
 import { idbEnqueue, refreshSyncBadge } from '../../lib/offline.js';
 
@@ -1527,7 +1528,7 @@ export async function fireOpenCert(rec) {
     <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
       ${prevBtn}
       <button onclick="firePrintCert()" style="background:#b91c1c;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-print"></i> Print</button>
-      <button onclick="fireDownloadPDF(window._fireCertRec)" style="background:#1d4ed8;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-download"></i> PDF</button>
+      <button onclick="fireDownloadPDF(window._fireCertRec)" style="background:#1d4ed8;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-file-pdf"></i> Save as PDF</button>
       <button onclick="fireCertEmailBtn()" style="background:#15803d;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-envelope"></i> Email</button>
       <button onclick="fireCloseCert()" style="background:#44403c;color:#fff;border:none;padding:8px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px"><i class="fa-solid fa-xmark"></i></button>
     </div>
@@ -1564,54 +1565,125 @@ export async function fireOpenByRef(refNum) {
   toast('Certificate ' + refNum + ' not found', 'error');
 }
 
-export async function fireDownloadPDF(rec) {
-  if (!rec) return;
-  toast('Saving PDF…', 'info', 10000);
-  var siteHistory = await _fetchSiteHistory(rec);
-  var certHtml = fireBuildCertHTML(rec, siteHistory);
-  var refNum = 'Fire_Alarm_' + (rec.refNumber || rec.ref_number || 'FA-certificate').replace(/[\\/:"*?<>|]/g, '-');
-  var escapedRef = refNum.replace(/'/g, "\\'");
-
-  // Inject html2pdf.js into the hidden iframe so the PDF is generated and
-  // downloaded directly — no print dialog.
-  var pdfScript = '<scr'+'ipt>(function(){'
-    + 'var s=document.createElement(\'script\');'
-    + 's.src=\'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js\';'
-    + 's.onload=function(){'
-    +   '(document.fonts?document.fonts.ready:Promise.resolve()).then(function(){'
-    +     'window.html2pdf().set({'
-    +       'margin:0,'
-    +       'filename:\'' + escapedRef + '.pdf\','
-    +       'image:{type:\'jpeg\',quality:0.98},'
-    +       'html2canvas:{scale:2,useCORS:true,logging:false},'
-    +       'jsPDF:{unit:\'mm\',format:\'a4\',orientation:\'portrait\'},'
-    +       'pagebreak:{mode:[\'css\',\'legacy\'],after:[\'.cert-page\'],avoid:[\'.ltbl\',\'.ob-box\',\'.fg\',\'.addr-panel\',\'.purp-panel\']}'
-    +     '}).from(document.body).save().then(function(){'
-    +       'window.parent&&window.parent.postMessage(\'fire-pdf-saved\',\'*\');'
-    +     '});'
-    +   '});'
-    + '};'
-    + 'document.head.appendChild(s);'
-    + '})();<\/scr'+'ipt>';
-
-  var modifiedHtml = certHtml.replace('</body>', pdfScript + '</body>');
-  var iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;border:none';
-  document.body.appendChild(iframe);
-
-  await new Promise(function(resolve) {
-    function onMsg(e) {
-      if (e.data === 'fire-pdf-saved') { window.removeEventListener('message', onMsg); resolve(); }
-    }
-    window.addEventListener('message', onMsg);
-    setTimeout(resolve, 20000); // fallback if postMessage never fires
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(modifiedHtml);
-    iframe.contentDocument.close();
+function _showFirePrintHint() {
+  document.getElementById('fire-print-hint')?.remove();
+  var skip = false; try { skip = localStorage.getItem('fire_print_hint_hide') === '1'; } catch(e) {}
+  if (skip) return;
+  var d = document.createElement('div');
+  d.id = 'fire-print-hint';
+  d.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#1c1917;color:#fafaf9;border-radius:12px;padding:14px 18px;font-size:13px;max-width:500px;width:calc(100% - 32px);display:flex;align-items:center;gap:10px;box-shadow:0 12px 40px rgba(0,0,0,.5);border:1px solid #44403c';
+  d.innerHTML = '<span style="font-size:18px;flex-shrink:0">📄</span>'
+    + '<div style="flex:1;min-width:0">In the dialog: set Destination to <strong style="color:#fbbf24">Save as PDF</strong>. Margins &amp; paper size are set automatically.</div>'
+    + '<label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#78716c;cursor:pointer;flex-shrink:0;white-space:nowrap"><input type="checkbox" id="fire-hint-no-more" style="cursor:pointer"> Hide</label>'
+    + '<button id="fire-hint-x" style="background:none;border:none;color:#78716c;cursor:pointer;font-size:20px;padding:0;line-height:1;flex-shrink:0">&times;</button>';
+  document.body.appendChild(d);
+  var t = setTimeout(function() { document.getElementById('fire-print-hint')?.remove(); }, 15000);
+  document.getElementById('fire-hint-x').onclick = function() { clearTimeout(t); document.getElementById('fire-print-hint')?.remove(); };
+  document.getElementById('fire-hint-no-more').addEventListener('change', function(e) {
+    if (e.target.checked) { try { localStorage.setItem('fire_print_hint_hide','1'); } catch(err) {} }
   });
+}
 
-  setTimeout(function() { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 500);
-  toast('PDF saved!', 'success', 2000);
+async function _fireGeneratePDF(rec, returnBlob) {
+  if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+    throw new Error('jsPDF not loaded');
+  }
+  var _gfId = '_fire-cert-gf';
+  if (!document.getElementById(_gfId)) {
+    var _gfl = document.createElement('link');
+    _gfl.id = _gfId;
+    _gfl.rel = 'stylesheet';
+    _gfl.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;600;700;900&display=swap';
+    document.head.appendChild(_gfl);
+  }
+  try {
+    var _mainFontLink = document.getElementById(_gfId);
+    await new Promise(function(res) {
+      if (_mainFontLink.sheet) { res(); return; }
+      _mainFontLink.addEventListener('load', res, { once: true });
+      _mainFontLink.addEventListener('error', res, { once: true });
+      setTimeout(res, 5000);
+    });
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('700 1em "Cormorant Garamond"'),
+      document.fonts.load('600 1em "Cormorant Garamond"'),
+      document.fonts.load('400 1em "Inter"'),
+      document.fonts.load('700 1em "Inter"'),
+    ]).catch(function(){});
+  } catch(e) {}
+
+  var siteHistory = null;
+  try {
+    var addr = rec.premAddr1 || rec.premisesName || '';
+    if (addr) {
+      var { data: hist } = await sb.from('fire_certs')
+        .select('test_date,cert_type,outcome,ref_number')
+        .ilike('prem_addr1', addr)
+        .order('test_date', { ascending: false })
+        .limit(10);
+      siteHistory = hist || null;
+    }
+  } catch(_) {}
+
+  var certHtml = fireBuildCertHTML(rec, siteHistory);
+  var iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;height:6000px;border:none;';
+  document.body.appendChild(iframe);
+  await new Promise(function(resolve) {
+    iframe.addEventListener('load', resolve, { once: true });
+    iframe.srcdoc = certHtml;
+  });
+  await new Promise(function(res) { setTimeout(res, 400); });
+  try {
+    if (iframe.contentWindow && iframe.contentWindow.document.fonts) {
+      await iframe.contentWindow.document.fonts.ready;
+    }
+  } catch(e) {}
+  try {
+    var iDoc = iframe.contentDocument || iframe.contentWindow.document;
+    Array.from(iDoc.querySelectorAll('[style*="inline-block"]')).forEach(function(el) {
+      el.style.display = 'block';
+    });
+    Array.from(iDoc.querySelectorAll('*')).forEach(function(el) {
+      try {
+        if ((iframe.contentWindow.getComputedStyle(el)||{}).display === 'inline-block') {
+          el.style.display = 'block';
+        }
+      } catch(ee) {}
+    });
+    var JsPDF = window.jspdf ? window.jspdf.jsPDF : jsPDF;
+    var pdf = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    var pages = iDoc.querySelectorAll('.cert-page');
+    if (!pages.length) { document.body.removeChild(iframe); throw new Error('No certificate pages found'); }
+    for (var i = 0; i < pages.length; i++) {
+      if (i > 0) pdf.addPage();
+      var canvas = await html2canvas(pages[i], {
+        scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
+        logging: false, windowWidth: 794, scrollX: 0, scrollY: 0
+      });
+      var imgData = canvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+    }
+    document.body.removeChild(iframe);
+    if (returnBlob) return pdf.output('blob');
+    pdf.save('Fire_Alarm_' + (rec.ref || 'certificate') + '.pdf');
+  } catch(e) {
+    try { document.body.removeChild(iframe); } catch(ee) {}
+    throw e;
+  }
+}
+
+export async function fireDownloadPDF(rec) {
+  var r = rec || window._fireCertRec;
+  if (!r) return;
+  showOverlay('Generating PDF…');
+  try {
+    await _fireGeneratePDF(r, false);
+  } catch(e) {
+    toast('PDF error: ' + e.message, 'error');
+  }
+  hideOverlay();
 }
 
 // ── History preview panel ─────────────────────────────────────────────────────
@@ -1660,7 +1732,7 @@ export async function fireShowPreview(idx) {
   var addr = certData.premAddr1 || certData.premisesName || r.premises_address || '';
   toolbar.innerHTML = '<span style="flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
     +esc(r.ref_number||certData.ref||'—')+(addr?' &mdash; '+esc(addr):'')+'</span>'
-    +_ibtn('Download PDF','fa-download','fireDownloadPDF(window._fireCertRec)')
+    +_ibtn('Save as PDF','fa-file-pdf','fireDownloadPDF(window._fireCertRec)')
     +_ibtn('Email','fa-envelope','fireCertEmailBtn()')
     +(certData.certType==='FA.2'&&certData.prevReportRef ? _ibtn('Previous: '+certData.prevReportRef,'fa-clock-rotate-left',"fireOpenByRef('"+certData.prevReportRef+"')") : '')
     +(isAdmin()?_ibtn('Edit','fa-pen','fireEditCert(window._fireHistRec)'):'')
@@ -1806,7 +1878,7 @@ function renderFireList(certs, page, q) {
         +'<div class="pat-card-btns" style="margin-top:5px;margin-left:0;justify-content:flex-end">'
           +_ibtn('View','fa-eye','event.stopPropagation();fireShowPreview('+idx+')')
           +(isAdmin()?_ibtn('Edit','fa-pen','event.stopPropagation();fireEditCertIdx('+idx+')'):'')
-          +_ibtn('Download PDF','fa-download','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
+          +_ibtn('Save as PDF','fa-file-pdf','event.stopPropagation();fireDownloadPDFIdx('+idx+')')
           +_ibtn('Email','fa-envelope','event.stopPropagation();fireEmailCertIdx('+idx+')')
           +_ibtn('Delete','fa-trash','event.stopPropagation();fireDeleteCert(\''+r.id+'\')',true)
         +'</div>'

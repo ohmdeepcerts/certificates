@@ -1,8 +1,10 @@
 {
-  "v": "2.4.42",
-  "build": 213,
+  "v": "2.4.43",
+  "build": 214,
   "new": 1,
   "changes": [
+    "Improved: Dashboard quick action buttons replaced with a live insights strip — shows total certificate count, PAT issued, Gas issued, EL satisfactory and Fire issued at a glance across the top of the dashboard.",
+    "Improved: Health score badge now shows all four certificate type counts — PAT, Gas, EL and Fire issued counts all appear as green pills so you can see your full portfolio status at a glance.",
     "Fixed: Fire alarm certificate System Summary no longer has empty space on the right side — fields that have no pair now stretch to fill the full width of the section.",
     "Improved: Sidebar navigation labels removed for PAT Testing, Gas Safety, Emergency Lighting and Fire Safety — the item names already make it clear, so the labels were just taking up space.",
     "New: Clear Cache & Reload button added to Settings → Backend — clears the app's service worker cache and reloads. Use this if the dashboard shows wrong numbers or a new update isn't appearing.",

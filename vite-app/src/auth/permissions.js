@@ -17,10 +17,8 @@ export function _rolePerms(role) {
 export function applySidebarPermissions(role) {
   const { isAdmin, hasFull, hasPAT, hasGas, hasEL, hasFire } = _rolePerms(role);
   function secVis(label, show) {
-    document.querySelectorAll('.nav-section-label').forEach(lbl => {
-      if (lbl.textContent.trim() === label)
-        lbl.closest('.nav-section').style.display = show ? '' : 'none';
-    });
+    const sec = document.querySelector('.nav-section[data-section="' + label + '"]');
+    if (sec) sec.style.display = show ? '' : 'none';
   }
   secVis('Overview', hasFull);
   secVis('PAT Testing', hasPAT);

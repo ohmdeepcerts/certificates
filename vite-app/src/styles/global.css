@@ -517,15 +517,22 @@ a{color:var(--accent);text-decoration:none}
 .dhpill-w{background:var(--warn-dim);color:var(--warn);border-color:var(--warn)}
 .dhpill-e{background:var(--red-dim);color:var(--error);border-color:var(--error)}
 
-.dash-qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-@media(max-width:700px){.dash-qa-grid{grid-template-columns:repeat(2,1fr)}}
-.dash-qa{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 8px;font-size:12px;font-weight:600;color:var(--text);transition:border-color .15s,transform .1s;cursor:pointer}
-.dash-qa:hover{transform:translateY(-1px)}
-.dash-qa.pat:hover{border-color:#3b82f6}
-.dash-qa.gas:hover{border-color:#10b981}
-.dash-qa.el:hover{border-color:#8b5cf6}
-.dash-qa.fire:hover{border-color:#ef4444}
-.dash-qa-ico{font-size:22px}
+.dash-insights-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.dash-insights-strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:420px){.dash-insights-strip{grid-template-columns:repeat(2,1fr)}}
+.dash-ins-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;border-top:3px solid var(--border)}
+.dash-ins-tile.all{border-top-color:#6b7280}
+.dash-ins-tile.pat{border-top-color:#3b82f6}
+.dash-ins-tile.gas{border-top-color:#f59e0b}
+.dash-ins-tile.el{border-top-color:#8b5cf6}
+.dash-ins-tile.fire{border-top-color:#ef4444}
+.dash-ins-num{font-size:26px;font-weight:700;line-height:1;margin-bottom:5px}
+.dash-ins-tile.all .dash-ins-num{color:var(--text)}
+.dash-ins-tile.pat .dash-ins-num{color:#3b82f6}
+.dash-ins-tile.gas .dash-ins-num{color:#f59e0b}
+.dash-ins-tile.el .dash-ins-num{color:#8b5cf6}
+.dash-ins-tile.fire .dash-ins-num{color:#ef4444}
+.dash-ins-lbl{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .dash-sec-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 
 .dash-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}

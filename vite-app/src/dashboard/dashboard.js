@@ -269,13 +269,14 @@ export async function loadDashboard() {
   _set('stat-gas-total', gasTotal); _set('stat-gas-complete', gasDone); _set('stat-gas-due', gasDue);
   _set('stat-el-total', elTotal); _set('stat-el-sat', elSat); _set('stat-el-unsat', elUnsat);
   _set('stat-fire-total', fireTotal); _set('stat-fire-complete', fireDone);
+  _set('ins-total', patTotal+gasTotal+elTotal+fireTotal); _set('ins-pat', patDone); _set('ins-gas', gasDone); _set('ins-el', elSat); _set('ins-fire', fireDone);
 
   // Compliance badge
   const compBadge = document.getElementById('compliance-badge');
   if (compBadge) { const tot = patDue + gasDue; compBadge.textContent = tot; compBadge.hidden = tot === 0; }
 
   // Health score
-  _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal);
+  _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal, fireDone);
 
   // Sparklines (from last 6 months of created_at)
   _drawDashSparks(pats, gases, els, fires);
@@ -318,7 +319,7 @@ export async function loadDashboard() {
   } catch (e) { }
 }
 
-function _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal) {
+function _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue, elTotal, elSat, elUnsat, fireTotal, fireDone) {
   const total = patTotal + gasTotal + elTotal + fireTotal;
   if (!total) { const s = document.getElementById('dash-health-score'); if (s) s.innerHTML = '—<sup>%</sup>'; return; }
   const issues = patDue + gasDue + elUnsat;
@@ -329,11 +330,13 @@ function _renderHealthScore(patTotal, patDone, patDue, gasTotal, gasDone, gasDue
   if (sub) sub.textContent = `${total} active certificates · ${issues || 'no'} issue${issues === 1 ? '' : 's'} · updated just now`;
   const pills = document.getElementById('dash-health-pills'); if (!pills) return;
   const parts = [];
-  if (patDone > 0) parts.push(`<span class="dhpill dhpill-g">PAT ${patDone} issued</span>`);
-  if (gasDone > 0) parts.push(`<span class="dhpill dhpill-g">Gas ${gasDone} issued</span>`);
-  if (patDue > 0)  parts.push(`<span class="dhpill dhpill-w">${patDue} PAT due</span>`);
-  if (gasDue > 0)  parts.push(`<span class="dhpill dhpill-w">${gasDue} Gas due</span>`);
-  if (elUnsat > 0) parts.push(`<span class="dhpill dhpill-e">${elUnsat} EICR unsatisfactory</span>`);
+  if (patDone > 0)  parts.push(`<span class="dhpill dhpill-g">PAT ${patDone} issued</span>`);
+  if (gasDone > 0)  parts.push(`<span class="dhpill dhpill-g">Gas ${gasDone} issued</span>`);
+  if (elSat > 0)    parts.push(`<span class="dhpill dhpill-g">EL ${elSat} satisfactory</span>`);
+  if (fireDone > 0) parts.push(`<span class="dhpill dhpill-g">Fire ${fireDone} issued</span>`);
+  if (patDue > 0)   parts.push(`<span class="dhpill dhpill-w">${patDue} PAT due</span>`);
+  if (gasDue > 0)   parts.push(`<span class="dhpill dhpill-w">${gasDue} Gas due</span>`);
+  if (elUnsat > 0)  parts.push(`<span class="dhpill dhpill-e">${elUnsat} EICR unsatisfactory</span>`);
   pills.innerHTML = parts.join('');
 }
 

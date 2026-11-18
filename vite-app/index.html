@@ -145,41 +145,37 @@
       <span class="sidebar-collapse-icon">‹</span>
     </div>
     <div class="sidebar-nav">
-      <div class="nav-section">
+      <div class="nav-section" data-section="Overview">
         <div class="nav-section-label">Overview</div>
         <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">⊞</span>Dashboard</div>
       </div>
-      <div class="nav-section">
-        <div class="nav-section-label">PAT Testing</div>
+      <div class="nav-section" data-section="PAT Testing">
         <div class="nav-item" data-view="pat-history" onclick="navigate('pat-history')"><span class="nav-icon">⚡</span>PAT Certificates</div>
       </div>
-      <div class="nav-section">
-        <div class="nav-section-label">Gas Safety</div>
+      <div class="nav-section" data-section="Gas Safety">
         <div class="nav-item" data-view="gas-history" onclick="navigate('gas-history')"><span class="nav-icon">🔥</span>Gas Certificates</div>
       </div>
-      <div class="nav-section">
-        <div class="nav-section-label">Emergency Lighting</div>
+      <div class="nav-section" data-section="Emergency Lighting">
         <div class="nav-item" data-view="el-history" onclick="navigate('el-history')"><span class="nav-icon">⚡</span>EL Certificates</div>
       </div>
-      <div class="nav-section">
-        <div class="nav-section-label">Fire Safety</div>
+      <div class="nav-section" data-section="Fire Safety">
         <div class="nav-item" data-view="fire-history" onclick="navigate('fire-history')"><span class="nav-icon">🔴</span>Fire Alarm Certs</div>
       </div>
-      <div class="nav-section">
+      <div class="nav-section" data-section="Library">
         <div class="nav-section-label">Library</div>
         <div class="nav-item" data-view="directory" onclick="navigate('directory')"><span class="nav-icon"><i class="fa-solid fa-address-book"></i></span>Directory</div>
         <div class="nav-item" data-view="appliances" onclick="navigate('appliances')"><span class="nav-icon"><i class="fa-solid fa-wrench"></i></span>Appliances</div>
       </div>
-      <div class="nav-section">
+      <div class="nav-section" data-section="Compliance">
         <div class="nav-section-label">Compliance</div>
         <div class="nav-item" data-view="compliance" onclick="navigate('compliance')"><span class="nav-icon">⚠</span>Renewals &amp; Expiry <span id="compliance-badge" class="nav-badge" hidden>0</span></div>
         <div class="nav-item" data-view="analytics" onclick="navigate('analytics')"><span class="nav-icon">📊</span>Analytics</div>
       </div>
-      <div class="nav-section">
+      <div class="nav-section" data-section="Upcoming">
         <div class="nav-section-label">Upcoming</div>
         <div class="nav-item disabled"><span class="nav-icon">🌀</span>AOV Panel<span class="nav-coming">Soon</span></div>
       </div>
-      <div class="nav-section">
+      <div class="nav-section" data-section="System">
         <div class="nav-section-label">System</div>
         <div class="nav-item" data-view="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</div>
         <div class="nav-item" id="audit-nav" data-view="audit" onclick="navigate('audit')" style="display:none"><span class="nav-icon">📄</span>Audit Log</div>
@@ -220,12 +216,13 @@
         </div>
         <div class="dash-health-pills" id="dash-health-pills"></div>
       </div>
-      <!-- Quick actions -->
-      <div class="dash-qa-grid">
-        <button class="dash-qa pat" onclick="startNewPAT()"><span class="dash-qa-ico">🔌</span><span>New PAT Test</span></button>
-        <button class="dash-qa gas" onclick="startNewGas()"><span class="dash-qa-ico">🔥</span><span>New Gas CP12</span></button>
-        <button class="dash-qa el"  onclick="startNewEL()"><span class="dash-qa-ico">⚡</span><span>New EL Cert</span></button>
-        <button class="dash-qa fire" onclick="startNewFire()"><span class="dash-qa-ico">🚨</span><span>New Fire Cert</span></button>
+      <!-- Smart Insights -->
+      <div class="dash-insights-strip">
+        <div class="dash-ins-tile all"><div class="dash-ins-num" id="ins-total">—</div><div class="dash-ins-lbl">Total Certs</div></div>
+        <div class="dash-ins-tile pat"><div class="dash-ins-num" id="ins-pat">—</div><div class="dash-ins-lbl">PAT Issued</div></div>
+        <div class="dash-ins-tile gas"><div class="dash-ins-num" id="ins-gas">—</div><div class="dash-ins-lbl">Gas Issued</div></div>
+        <div class="dash-ins-tile el"><div class="dash-ins-num" id="ins-el">—</div><div class="dash-ins-lbl">EL Satisfactory</div></div>
+        <div class="dash-ins-tile fire"><div class="dash-ins-num" id="ins-fire">—</div><div class="dash-ins-lbl">Fire Issued</div></div>
       </div>
       <!-- 4 cert type stat cards -->
       <div class="dash-sec-label">Certificate Overview</div>

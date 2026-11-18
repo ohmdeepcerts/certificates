@@ -17,10 +17,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-yhyoZoFK.js"></script>
+  <script type="module" crossorigin src="./assets/index-m328xqMe.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/supabase-7KcKRj6y.js">
-  <link rel="modulepreload" crossorigin href="./assets/cert-pat-C41MmUkS.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-NW3QTIHs.css">
+  <link rel="modulepreload" crossorigin href="./assets/cert-pat-D5peup1h.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-CJ6NimPu.css">
 </head>
 <body>
 <!-- ===== AUTH SCREEN ===== -->
@@ -220,12 +220,13 @@
         </div>
         <div class="dash-health-pills" id="dash-health-pills"></div>
       </div>
-      <!-- Quick actions -->
-      <div class="dash-qa-grid">
-        <button class="dash-qa pat" onclick="startNewPAT()"><span class="dash-qa-ico">🔌</span><span>New PAT Test</span></button>
-        <button class="dash-qa gas" onclick="startNewGas()"><span class="dash-qa-ico">🔥</span><span>New Gas CP12</span></button>
-        <button class="dash-qa el"  onclick="startNewEL()"><span class="dash-qa-ico">⚡</span><span>New EL Cert</span></button>
-        <button class="dash-qa fire" onclick="startNewFire()"><span class="dash-qa-ico">🚨</span><span>New Fire Cert</span></button>
+      <!-- Smart Insights -->
+      <div class="dash-insights-strip">
+        <div class="dash-ins-tile all"><div class="dash-ins-num" id="ins-total">—</div><div class="dash-ins-lbl">Total Certs</div></div>
+        <div class="dash-ins-tile pat"><div class="dash-ins-num" id="ins-pat">—</div><div class="dash-ins-lbl">PAT Issued</div></div>
+        <div class="dash-ins-tile gas"><div class="dash-ins-num" id="ins-gas">—</div><div class="dash-ins-lbl">Gas Issued</div></div>
+        <div class="dash-ins-tile el"><div class="dash-ins-num" id="ins-el">—</div><div class="dash-ins-lbl">EL Satisfactory</div></div>
+        <div class="dash-ins-tile fire"><div class="dash-ins-num" id="ins-fire">—</div><div class="dash-ins-lbl">Fire Issued</div></div>
       </div>
       <!-- 4 cert type stat cards -->
       <div class="dash-sec-label">Certificate Overview</div>
