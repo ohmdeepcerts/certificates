@@ -1,9 +1,9 @@
 {
-  "v": "2.4.33",
-  "build": 204,
+  "v": "2.4.34",
+  "build": 205,
   "new": 1,
   "changes": [
-    "Improved: Fire alarm certificate 'Save as PDF' button now produces sharp, vector-quality output — text, logos and table lines are crisp at any zoom level and when printed. The old blurry JPEG method has been replaced. Clicking Save as PDF opens your browser's print dialog where you can select 'Save as PDF' — margins and paper size are set automatically, so just pick the destination and save.",
+    "Improved: Fire alarm certificate 'Save as PDF' now downloads the PDF file directly to your Downloads folder — no print dialog needed. Each page is rendered at high resolution so text and logos are sharp. If anything goes wrong it falls back to the print dialog automatically.",
     "New: Clear Cache & Reload button added to Settings → Backend — clears the app's service worker cache and reloads. Use this if the dashboard shows wrong numbers or a new update isn't appearing.",
     "Improved: Fire alarm certificate title now fills the full width of the header — the font scales automatically to fit the row for every certificate type, so there is no empty space on the right.",
     "Fixed: Fire alarm certificate PDF now downloads with a proper file name — 'Fire_Alarm_FA2022657.pdf' instead of just the bare reference number, matching the Gas and PAT certificate naming.",
