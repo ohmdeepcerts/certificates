@@ -808,7 +808,7 @@ export function fireRenderStep() {
   } else if (s === 9) {
     html += `<h2 class="wiz-title">Outcome</h2>`;
     var _hasFailDev = (_w.detectors||[]).some(function(d){ return d.result === 'FAIL'; });
-    var _hasFailTest = ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k] === 'FAIL'; });
+    var _hasFailTest = ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual','tCO','tFaultSim','tZoneIso','tKeySwitch'].some(function(k){ return _w[k] === 'FAIL'; });
     var _hasFail = _hasFailDev || _hasFailTest;
     if (_hasFail && !_w.outcome) { _w.outcome = 'UNSATISFACTORY'; }
     if (_hasFail) {
@@ -1068,7 +1068,7 @@ export function firePick(key, val) {
   if (key === 'certType' && !_w.nextInspDate && _w.testDate) {
     _w.nextInspDate = _addMonths(_w.testDate, (val === 'FA.3' || val === 'FA.4') ? 6 : 12);
   }
-  if (key === 'defectsOverall' && !(_w.defectsNotes||'').trim()) _w.defectsNotes = val;
+
   if (key === 'sysInterlinkMethod') {
     if (!_w.annexFa2Checks) _w.annexFa2Checks = {};
     if (val === 'Not interlinked') { _w.tInterlinked = 'N/A'; _w.annexFa2Checks.s03 = 'N/A'; }
@@ -1317,7 +1317,7 @@ export async function fireNext() {
       var _autoD = [];
       var _failTestLbls = {tFunctional:'Functional test',tInterlinked:'Interlinked test (alarm interconnection)',tBattery:'Battery backup / standby test',tCO:'CO alarm test',tMains:'Mains supply test',tBatResult:'Battery standby test',tSounder:'Sounder / beacon test',tVisual:'Visual indicators test',tZoneIso:'Zone isolation test',tFaultSim:'Fault simulation test',tKeySwitch:'Engineer key switch test'};
       var _isCommNow3 = _w.certType==='FA.3'||_w.certType==='FA.4';
-      var _autoSev = _isCommNow3 ? 'C2' : 'Action Required';
+      var _autoSev = _isCommNow3 ? 'C2' : 'C3';
       (_w.detectors||[]).forEach(function(d){ if(d.result==='FAIL'){ _autoD.push({description:(d.type||'Device')+' at '+(d.location||'unknown location')+' — failed test',severity:_autoSev,recommendation:'Inspect, repair or replace the device and re-test to confirm rectification.',targetDate:''}); } });
       Object.keys(_failTestLbls).forEach(function(k){ if(_w[k]==='FAIL'){ _autoD.push({description:_failTestLbls[k]+' — failed',severity:_autoSev,recommendation:'Investigate cause of failure, rectify fault and re-test.',targetDate:''}); } });
       if (_autoD.length) { _w.defects = _autoD; if (!_w.defectsOverall||_w.defectsOverall==='No defects found'||_w.defectsOverall==='No deviations identified') { _w.defectsOverall = _isCommNow3 ? 'Deviations requiring urgent action' : 'Defects requiring attention'; } }
@@ -1355,7 +1355,7 @@ export async function fireNext() {
   }
   if (s === 9 && !_w.outcome) { toast('Please select an outcome','error'); return; }
   if (s === 9) {
-    var _hasFails7 = (_w.detectors||[]).some(function(d){return d.result==='FAIL';}) || ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){return _w[k]==='FAIL';});
+    var _hasFails7 = (_w.detectors||[]).some(function(d){return d.result==='FAIL';}) || ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual','tCO','tFaultSim','tZoneIso','tKeySwitch'].some(function(k){return _w[k]==='FAIL';});
     if (_hasFails7 && (_w.outcome||'').toUpperCase() === 'SATISFACTORY' && (!_w.satJustification || _w.satJustification.trim().length < 20)) {
       toast('Enter a justification (minimum 20 characters) to override with a Satisfactory outcome', 'error'); return;
     }
@@ -1410,7 +1410,7 @@ export async function fireSave() {
     _w.step = 10; fireRenderStep(); return;
   }
   var _hasFails = (_w.detectors||[]).some(function(d){ return d.result==='FAIL'; }) ||
-    ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual'].some(function(k){ return _w[k]==='FAIL'; });
+    ['tFunctional','tInterlinked','tBattery','tMains','tBatResult','tSounder','tVisual','tCO','tFaultSim','tZoneIso','tKeySwitch'].some(function(k){ return _w[k]==='FAIL'; });
   if (_hasFails && (_w.outcome||'').toUpperCase() === 'SATISFACTORY') {
     if (!_w.satJustification || _w.satJustification.trim().length < 20) {
       toast('A justification (minimum 20 characters) is required to issue a Satisfactory certificate when failure results are recorded — go back to the Outcome step', 'error');
@@ -1615,11 +1615,11 @@ async function _fireGeneratePDF(rec, returnBlob) {
 
   var siteHistory = null;
   try {
-    var addr = rec.premAddr1 || rec.premisesName || '';
+    var addr = rec.premises_address || rec.premAddr1 || rec.premisesName || '';
     if (addr) {
       var { data: hist } = await sb.from('fire_certs')
         .select('test_date,cert_type,outcome,ref_number')
-        .ilike('prem_addr1', addr)
+        .ilike('premises_address', '%' + addr.split(',')[0].trim() + '%')
         .order('test_date', { ascending: false })
         .limit(10);
       siteHistory = hist || null;

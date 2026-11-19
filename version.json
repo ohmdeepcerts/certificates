@@ -1,8 +1,12 @@
 {
-  "v": "2.4.44",
-  "build": 215,
+  "v": "2.4.45",
+  "build": 216,
   "new": 1,
   "changes": [
+    "Fixed: Fire certificate site history (previous visits to the same address) now loads correctly when downloading a PDF — it was not finding the previous certificates due to an internal field name mismatch.",
+    "Fixed: Auto-generated defects on domestic fire certificates now show the correct C2 or C3 severity code — they were incorrectly labelled 'Action Required' which is not a valid code.",
+    "Fixed: CO alarms, fault simulation, zone isolation and key switch tests are now correctly counted when checking if the outcome should be Unsatisfactory — previously a failure on these tests was not being picked up.",
+    "Fixed: Typing a note in the Defects Notes field and then changing the Overall Condition no longer overwrites what you typed — the notes field now stays independent.",
     "Fixed: Fire certificate Client Details step — clicking the address line to override the auto-filled premises address now works correctly. Previously clicking the field reset it back to the premises address in a loop, making it impossible to enter a different client address.",
     "Improved: Dashboard quick action buttons replaced with a live insights strip — shows total certificate count, PAT issued, Gas issued, EL satisfactory and Fire issued at a glance across the top of the dashboard.",
     "Improved: Health score badge now shows all four certificate type counts — PAT, Gas, EL and Fire issued counts all appear as green pills so you can see your full portfolio status at a glance.",
