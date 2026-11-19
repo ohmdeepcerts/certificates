@@ -1,8 +1,12 @@
 {
-  "v": "2.4.45",
-  "build": 216,
+  "v": "2.4.46",
+  "build": 217,
   "new": 1,
   "changes": [
+    "New: When you enter an address on the fire certificate Premises step and move to the next step, the app now checks if a certificate has already been issued for that address. If one is found, a popup shows the previous certificate reference, date, outcome, and how many days until the next inspection is due — so you know whether the site is still in-date before continuing.",
+    "Fixed: Fire certificate premises addresses are now automatically saved to your properties directory when you issue a new certificate — previously new addresses were lost and would not appear in the address picker on future visits.",
+    "New: When a previous certificate is found for the same address, the system details step (grade, category, panel make, model, zones, power supply, cable type etc.) is automatically pre-filled from the last visit. A green banner at the top of the step confirms this and tells you which certificate it came from. Tap any field to change it.",
+    "Fixed: Duplicate certificate check at the final save stage now covers the full 12-month service period — previously it only looked back 30 days, so a certificate issued 31 days ago would not trigger the warning.",
     "Fixed: Fire certificate site history (previous visits to the same address) now loads correctly when downloading a PDF — it was not finding the previous certificates due to an internal field name mismatch.",
     "Fixed: Auto-generated defects on domestic fire certificates now show the correct C2 or C3 severity code — they were incorrectly labelled 'Action Required' which is not a valid code.",
     "Fixed: CO alarms, fault simulation, zone isolation and key switch tests are now correctly counted when checking if the outcome should be Unsatisfactory — previously a failure on these tests was not being picked up.",

@@ -428,6 +428,9 @@ export function fireRenderStep() {
   // ── Step 3: System details ────────────────────────────────────────────────
   } else if (s === 3) {
     html += `<h2 class="wiz-title">System Details</h2>`;
+    if (_w._sysPrefillNote) {
+      html += `<div style="display:flex;gap:8px;align-items:flex-start;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 13px;margin-bottom:12px"><i class="fa-solid fa-rotate" style="color:#16a34a;font-size:13px;margin-top:2px;flex-shrink:0"></i><span style="font-size:12px;color:#166534;line-height:1.5">${esc(_w._sysPrefillNote)}</span></div>`;
+    }
     if (!_isComm()) {
       // Domestic grades A–F
       var _isDomPnl = /^[ABC]/.test(_w.sysGrade||'');
@@ -1350,6 +1353,51 @@ export async function fireNext() {
       }
     } catch(e) {}
   }
+  // Live check when leaving Premises: show previous cert info, days remaining, and offer auto-fill
+  if (s === 1 && (_w.premAddr1||'').trim() && !_w._prevAddrChecked) {
+    _w._prevAddrChecked = true;
+    try {
+      var { data: _plData } = await sb.from('fire_certs')
+        .select('ref_number,test_date,outcome,cert_type,data')
+        .ilike('premises_address', '%' + (_w.premAddr1||'').trim() + '%')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (_plData && _plData.length) {
+        var _pl = _plData[0]; var _pld = _pl.data || {};
+        var _plNi = _pld.nextInspDate || ''; var _plDaysMsg = '';
+        if (_plNi) {
+          var _plP = _plNi.split('/');
+          if (_plP.length === 3) {
+            var _plD = new Date(+_plP[2], +_plP[1]-1, +_plP[0]); _plD.setHours(0,0,0,0);
+            var _plNow = new Date(); _plNow.setHours(0,0,0,0);
+            var _plDl = Math.round((_plD - _plNow) / 86400000);
+            _plDaysMsg = _plDl > 0
+              ? '\n\nNext inspection due: ' + _plNi + ' — still valid, ' + _plDl + ' days remaining.'
+              : '\n\nNext inspection was due: ' + _plNi + ' — OVERDUE by ' + Math.abs(_plDl) + ' days.';
+          }
+        }
+        var _plMsg = 'A fire certificate was already issued for this address:\n\n' +
+          'Ref: ' + (_pl.ref_number||'') + '\n' +
+          'Type: ' + (_pl.cert_type||_pld.certType||'') + '\n' +
+          'Date: ' + (_pl.test_date||'') + '\n' +
+          'Outcome: ' + (_pl.outcome||'') +
+          _plDaysMsg + '\n\nContinue issuing a new certificate?';
+        if (!await confirm2('Existing Certificate Found', _plMsg)) { return; }
+        // Auto-fill system details from previous cert (only blank fields)
+        if (!_w._sysPrefilled) {
+          _w._sysPrefilled = true;
+          var _sfList = ['sysGrade','sysCategory','sysMfr','sysModel','sysInterlinkMethod','sysPowerSupply',
+            'sysDomPanelMake','sysDomPanelModel','sysDomZones','sysPanelMake','sysPanelModel','sysZones',
+            'sysLoops','sysCommType','sysAge','cableType','alarmSignalType','panelAccessLevel',
+            'sysCommissionDate','sysDrawingRef','monitoringContractRef'];
+          var _sfFilled = [];
+          _sfList.forEach(function(f){ if (!(_w[f]||'').toString().trim() && (_pld[f]||'').toString().trim()) { _w[f] = _pld[f]; _sfFilled.push(f); } });
+          if (_sfFilled.length) { _w._sysPrefillNote = 'System details pre-filled from last visit — ' + (_pl.ref_number||'previous cert') + ' on ' + (_pl.test_date||'') + '. Tap any field to change.'; }
+        }
+      }
+    } catch(e) {}
+  }
   if (s === 8 && (_w.defects||[]).some(function(d){ return !(d.description||'').trim(); })) {
     toast('Some defect rows have no description — please fill them in or remove the blank rows', 'error'); return;
   }
@@ -1432,16 +1480,18 @@ export async function fireSave() {
   }
   if (!isEdit && (_w.premAddr1||'').trim()) {
     try {
-      var _dupCutoff = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+      var _dupCutoff = new Date(Date.now() - 365*24*60*60*1000).toISOString();
       var _dupQ = await sb.from('fire_certs')
-        .select('ref_number,test_date,outcome')
+        .select('ref_number,test_date,outcome,data')
         .ilike('premises_address', '%' + (_w.premAddr1||'').trim() + '%')
         .is('deleted_at', null)
         .gte('created_at', _dupCutoff)
         .limit(1);
       if (_dupQ.data && _dupQ.data.length) {
-        var _dr = _dupQ.data[0];
-        if (!await confirm2('A fire certificate for this address was already issued in the last 30 days (' + esc(_dr.ref_number||'unknown') + ', ' + esc(_dr.test_date||'') + ', ' + esc(_dr.outcome||'') + '). Issue another certificate anyway?')) return;
+        var _dr = _dupQ.data[0]; var _drd = _dr.data || {};
+        var _drNi = _drd.nextInspDate || ''; var _drDays = '';
+        if (_drNi) { var _drP = _drNi.split('/'); if (_drP.length===3) { var _drD = new Date(+_drP[2],+_drP[1]-1,+_drP[0]); _drD.setHours(0,0,0,0); var _drNow = new Date(); _drNow.setHours(0,0,0,0); var _drl = Math.round((_drD-_drNow)/86400000); _drDays = _drl>0?' — still valid, '+_drl+' days remaining':' — overdue by '+Math.abs(_drl)+' days'; } }
+        if (!await confirm2('A fire certificate for this address was issued in the last 12 months (' + esc(_dr.ref_number||'unknown') + ', ' + esc(_dr.test_date||'') + ', ' + esc(_dr.outcome||'') + (_drNi ? ', next due ' + esc(_drNi) + _drDays : '') + '). Issue another certificate anyway?')) return;
       }
     } catch(e) {}
   }
@@ -1486,6 +1536,19 @@ export async function fireSave() {
   _fireDirty = false; try { localStorage.removeItem('fire_autosave'); } catch(e) {}
   rec.id = savedId;
   toast((isEdit ? 'Certificate updated — ' : 'Fire Alarm Certificate issued — ') + rec.ref, 'success', 3000);
+  if (!isEdit && (_w.premAddr1||'').trim()) {
+    try {
+      var _dpa1 = (_w.premAddr1||'').trim();
+      var _dppc = (_w.premPostcode||'').trim().toUpperCase();
+      var _dpNorm = function(s){ return (s||'').toLowerCase().replace(/\s+/g,''); };
+      var _dpExists = (_dir.properties||[]).some(function(r){ return _dpNorm(r.addr1)===_dpNorm(_dpa1) && (!_dppc||_dpNorm(r.postcode)===_dpNorm(_dppc)); });
+      if (!_dpExists) {
+        var _dpRec = { addr1:_dpa1, addr2:_w.premAddr2||'', town:_w.premAddr3||'', county:'', postcode:_dppc, is_active:true, usage_count:0, created_at:new Date().toISOString(), created_by:state.currentUser.id };
+        var { data:_dpC } = await sb.from('directory_properties').insert(_dpRec).select().single();
+        if (_dpC) { if (!_dir.properties) _dir.properties=[]; _dir.properties.push(_dpC); }
+      }
+    } catch(e) {}
+  }
   if (isAdmin()) { fireOpenCert(rec); } else { navigate('fire-history'); }
   if (!isEdit && (rec.clientEmail||'').trim()) {
     import('./email.js').then(m => m.fireAutoEmail(rec, true)).catch(() => {});
