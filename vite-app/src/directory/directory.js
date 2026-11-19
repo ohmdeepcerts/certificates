@@ -6,6 +6,7 @@ import { navigate } from '../nav/navigation.js';
 // ── Cache ──────────────────────────────────────────────────────────────────
 const _dir = { agents: null, landlords: null, properties: null, contacts: null, appliances: null, appFields: null };
 const _dirTable = { agents: 'directory_agents', landlords: 'directory_landlords', properties: 'directory_properties', contacts: 'directory_contacts' };
+window._dirInvalidate = function(type) { if (type) _dir[type] = null; };
 let _dirActiveTab = 'agents';
 window._dirActiveTab = 'agents';
 let _dirPage = 1;

@@ -1545,7 +1545,7 @@ export async function fireSave() {
       if (!_dpExists) {
         var _dpRec = { addr1:_dpa1, addr2:_w.premAddr2||'', town:_w.premAddr3||'', county:'', postcode:_dppc, is_active:true, usage_count:0, created_at:new Date().toISOString(), created_by:state.currentUser.id };
         var { data:_dpC } = await sb.from('directory_properties').insert(_dpRec).select().single();
-        if (_dpC) { if (!_dir.properties) _dir.properties=[]; _dir.properties.push(_dpC); }
+        if (_dpC) { if (!_dir.properties) _dir.properties=[]; _dir.properties.push(_dpC); window._dirInvalidate?.('properties'); }
       }
     } catch(e) {}
   }
