@@ -225,6 +225,7 @@ function _dirMatchScore(type, r, ql) {
   for (const f of fields) {
     if (!f) continue; const fl = f.toLowerCase();
     if (fl.startsWith(ql)) s += 3;
+    else if (fl.includes(ql)) s += 1;
   }
   return s;
 }

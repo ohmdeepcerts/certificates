@@ -1,8 +1,9 @@
 {
-  "v": "2.4.47",
-  "build": 218,
+  "v": "2.4.48",
+  "build": 219,
   "new": 1,
   "changes": [
+    "Fixed: Directory search now finds addresses by any part of the text — for example searching 'Ashburton' now finds '99 Ashburton Avenue'. Previously only results where the field started with the search term would appear.",
     "Fixed: Fire alarm certificate addresses now appear in the Properties directory straight away — previously issuing a fire cert added the address to the database but the directory page would not show it until you reloaded the app.",
     "New: When you enter an address on the fire certificate Premises step and move to the next step, the app now checks if a certificate has already been issued for that address. If one is found, a popup shows the previous certificate reference, date, outcome, and how many days until the next inspection is due — so you know whether the site is still in-date before continuing.",
     "Fixed: Fire certificate premises addresses are now automatically saved to your properties directory when you issue a new certificate — previously new addresses were lost and would not appear in the address picker on future visits.",
