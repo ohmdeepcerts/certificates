@@ -5,6 +5,7 @@ import { getSetting } from '../../lib/settings.js';
 import { navigate } from '../../nav/navigation.js';
 import { buildCertRefSeq, _pcScore, _refAddrPart } from '../_core/refgen.js';
 import { attachAddressAutocomplete } from '../../lib/address-autocomplete.js';
+import { attachFireFieldAC } from '../../directory/directory.js';
 import { fireBuildCertHTML } from './pdf.js';
 
 import { PAGE_SIZE, hlText, sortByWordStart, paginationHtml } from '../../lib/search.js';
@@ -452,8 +453,8 @@ export function fireRenderStep() {
       DOM_CATS.forEach(c => { html += `<button class="chip${_w.sysCategory===c?' on':''}" onclick="firePick('sysCategory','${esc(c)}')">${esc(c)}</button>`; });
       html += `</div></div>`;
       if (_isDomPnl) {
-        html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysDomPanelMake||'')}" oninput="fireSet('sysDomPanelMake',this.value)" placeholder="e.g. Advanced, EMS, Morley"></div>`;
-        html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysDomPanelModel||'')}" oninput="fireSet('sysDomPanelModel',this.value)" placeholder="e.g. MX-4100"></div>`;
+        html += `<div class="wiz-field"><label>Control Panel Make</label><input id="fa-dom-pmake" value="${esc(_w.sysDomPanelMake||'')}" oninput="fireSet('sysDomPanelMake',this.value)" placeholder="e.g. Advanced, EMS, Morley"></div>`;
+        html += `<div class="wiz-field"><label>Control Panel Model</label><input id="fa-dom-pmodel" value="${esc(_w.sysDomPanelModel||'')}" oninput="fireSet('sysDomPanelModel',this.value)" placeholder="e.g. MX-4100"></div>`;
         html += `<div class="wiz-field"><label>Panel Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysDomPanelSerial||'')}" oninput="fireSet('sysDomPanelSerial',this.value)" placeholder="e.g. AB12345678"></div>`;
         html += `<div class="wiz-field"><label>Firmware Version <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysDomPanelFirmware||'')}" oninput="fireSet('sysDomPanelFirmware',this.value)" placeholder="e.g. v2.3.1"></div>`;
         html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysDomZones||'')}" oninput="fireSet('sysDomZones',this.value)" style="max-width:100px" placeholder="e.g. 2"></div>`;
@@ -468,8 +469,8 @@ export function fireRenderStep() {
           html += `<div style="font-size:11px;color:var(--muted);margin-top:3px"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:3px"></i>Auto-set from grade — override above if needed</div>`;
         }
         html += `</div>`;
-        html += `<div class="wiz-field"><label>Manufacturer / Make</label><input value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
-        html += `<div class="wiz-field"><label>Model</label><input value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
+        html += `<div class="wiz-field"><label>Manufacturer / Make</label><input id="fa-sys-mfr" value="${esc(_w.sysMfr)}" oninput="fireSet('sysMfr',this.value)" placeholder="e.g. Aico, Kidde, FireAngel"></div>`;
+        html += `<div class="wiz-field"><label>Model</label><input id="fa-sys-model" value="${esc(_w.sysModel)}" oninput="fireSet('sysModel',this.value)" placeholder="e.g. Ei650RF"></div>`;
       }
       html += `<div class="wiz-field"><label>Interlink Method</label><div class="chip-row">`;
       ['Wired','Radio (RF)','Not interlinked'].forEach(v => { html += `<button class="chip${_w.sysInterlinkMethod===v?' on':''}" onclick="firePick('sysInterlinkMethod','${esc(v)}')">${esc(v)}</button>`; });
@@ -494,8 +495,8 @@ export function fireRenderStep() {
       html += `<div class="wiz-field"><label>System Type</label><div class="chip-row">`;
       COM_TYPES.forEach(t => { html += `<button class="chip${_w.sysCommType===t?' on':''}" onclick="firePick('sysCommType','${esc(t)}')">${esc(t)}</button>`; });
       html += `</div></div>`;
-      html += `<div class="wiz-field"><label>Control Panel Make</label><input value="${esc(_w.sysPanelMake)}" oninput="fireSet('sysPanelMake',this.value)" placeholder="e.g. Advanced, Notifier, Gent"></div>`;
-      html += `<div class="wiz-field"><label>Control Panel Model</label><input value="${esc(_w.sysPanelModel)}" oninput="fireSet('sysPanelModel',this.value)" placeholder="e.g. MX-4200"></div>`;
+      html += `<div class="wiz-field"><label>Control Panel Make</label><input id="fa-com-pmake" value="${esc(_w.sysPanelMake)}" oninput="fireSet('sysPanelMake',this.value)" placeholder="e.g. Advanced, Notifier, Gent"></div>`;
+      html += `<div class="wiz-field"><label>Control Panel Model</label><input id="fa-com-pmodel" value="${esc(_w.sysPanelModel)}" oninput="fireSet('sysPanelModel',this.value)" placeholder="e.g. MX-4200"></div>`;
       html += `<div class="wiz-field"><label>Panel Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysPanelSerial||'')}" oninput="fireSet('sysPanelSerial',this.value)" placeholder="e.g. SN-2024-00001"></div>`;
       html += `<div class="wiz-field"><label>Firmware Version <span class="lbl-opt">(optional)</span></label><input value="${esc(_w.sysPanelFirmware||'')}" oninput="fireSet('sysPanelFirmware',this.value)" placeholder="e.g. v4.5.2"></div>`;
       html += `<div class="wiz-field"><label>Number of Zones</label><input type="number" min="1" value="${esc(_w.sysZones)}" oninput="fireSet('sysZones',this.value)" style="max-width:100px" placeholder="e.g. 4"></div>`;
@@ -928,6 +929,23 @@ export function fireRenderStep() {
   try { localStorage.setItem('fire_autosave', JSON.stringify(_w)); } catch(e) {}
   _schedulePreview();
 
+  // Fire field autocomplete — panel make/model on step 3
+  if (s === 3) {
+    const _fa = (id, field) => { const inp = document.getElementById(id); if (inp) attachFireFieldAC(inp, field, v => { inp.value = v; inp.dispatchEvent(new Event('input')); }); };
+    _fa('fa-dom-pmake','panelMake'); _fa('fa-dom-pmodel','panelModel');
+    _fa('fa-sys-mfr','panelMake');   _fa('fa-sys-model','panelModel');
+    _fa('fa-com-pmake','panelMake'); _fa('fa-com-pmodel','panelModel');
+  }
+  // Fire field autocomplete — detector location + make/model on step 5
+  if (s === 5) {
+    (_w.detectors || []).forEach((_d, i) => {
+      const lEl = document.getElementById('fa-det-loc-' + i);
+      const mEl = document.getElementById('fa-det-mdl-' + i);
+      if (lEl) attachFireFieldAC(lEl, 'detLocation', v => { lEl.value = v; lEl.dispatchEvent(new Event('input')); });
+      if (mEl) attachFireFieldAC(mEl, 'detModel', v => { mEl.value = v; mEl.dispatchEvent(new Event('input')); });
+    });
+  }
+
   // Address autocomplete on step 1
   if (s === 1) {
     if (!_dir.properties) {
@@ -1029,11 +1047,11 @@ function _detCard(det, i) {
   var isD1 = !comm && _w.sysGrade && _w.sysGrade.startsWith('D1');
   var html = `<div class="fire-det-card" id="fire-det-${i}">`;
   html += `<div class="fire-det-header"><div class="fire-det-num">Device ${i+1}</div><button onclick="fireRemoveDet(${i})" class="fire-det-remove"><i class="fa-solid fa-trash-can"></i> Remove</button></div>`;
-  html += `<div class="wiz-field"><label>Location</label><input value="${esc(det.location||'')}" oninput="fireDetSet(${i},'location',this.value)" placeholder="e.g. Hallway, Landing, Kitchen"></div>`;
+  html += `<div class="wiz-field"><label>Location</label><input id="fa-det-loc-${i}" value="${esc(det.location||'')}" oninput="fireDetSet(${i},'location',this.value)" placeholder="e.g. Hallway, Landing, Kitchen"></div>`;
   html += `<div class="wiz-field"><label>Type</label><select onchange="fireDetSet(${i},'type',this.value)" style="max-width:260px">`;
   DETECTOR_TYPES.forEach(t => { html += `<option${(det.type||'Smoke (optical)')===t?' selected':''}>${esc(t)}</option>`; });
   html += `</select></div>`;
-  html += `<div class="wiz-field"><label>Make / Model <span class="lbl-opt">(optional)</span></label><input value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="e.g. Aico 3000 series"></div>`;
+  html += `<div class="wiz-field"><label>Make / Model <span class="lbl-opt">(optional)</span></label><input id="fa-det-mdl-${i}" value="${esc(det.model||'')}" oninput="fireDetSet(${i},'model',this.value)" placeholder="e.g. Aico 3000 series"></div>`;
   html += `<div class="wiz-field"><label>Serial No. <span class="lbl-opt">(optional)</span></label><input value="${esc(det.serialNo||'')}" oninput="fireDetSet(${i},'serialNo',this.value)" placeholder="e.g. 123456789"></div>`;
   if (comm) { html += `<div class="wiz-field"><label>Zone / Circuit</label><input value="${esc(det.zone||'')}" oninput="fireDetSet(${i},'zone',this.value)" placeholder="e.g. Zone 1"></div>`; }
   html += `<div class="wiz-field"><label>Test result</label><div class="chip-row">`;

@@ -1,8 +1,9 @@
 {
-  "v": "2.4.48",
-  "build": 219,
+  "v": "2.4.49",
+  "build": 220,
   "new": 1,
   "changes": [
+    "New: Panel make, panel model and detector location and model fields on fire certificates now suggest what you've used before as you type — same as how Gas certificate appliance fields work.",
     "Fixed: Directory search now finds addresses by any part of the text — for example searching 'Ashburton' now finds '99 Ashburton Avenue'. Previously only results where the field started with the search term would appear.",
     "Fixed: Fire alarm certificate addresses now appear in the Properties directory straight away — previously issuing a fire cert added the address to the database but the directory page would not show it until you reloaded the app.",
     "New: When you enter an address on the fire certificate Premises step and move to the next step, the app now checks if a certificate has already been issued for that address. If one is found, a popup shows the previous certificate reference, date, outcome, and how many days until the next inspection is due — so you know whether the site is still in-date before continuing.",

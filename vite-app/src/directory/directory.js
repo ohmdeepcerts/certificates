@@ -500,6 +500,54 @@ export async function attachApplianceFieldAC(inputEl, field, onSelect) {
   inputEl.addEventListener('keydown', _acKbd);
 }
 
+// ── Fire cert field history AC ─────────────────────────────────────────────
+let _fireFields = null;
+async function _loadFireFields() {
+  if (_fireFields) return;
+  _fireFields = { panelMake: [], panelModel: [], detLocation: [], detModel: [] };
+  try {
+    const { data } = await sb.from('fire_certs').select('data').is('deleted_at', null).not('data', 'is', null);
+    const seen = { panelMake: new Set(), panelModel: new Set(), detLocation: new Set(), detModel: new Set() };
+    (data || []).forEach(cert => {
+      let d = cert.data;
+      if (typeof d === 'string') { try { d = JSON.parse(d); } catch { d = {}; } }
+      if (!d) return;
+      [d.sysMfr, d.sysDomPanelMake, d.sysPanelMake].forEach(v => {
+        v = (v || '').trim(); if (v && !seen.panelMake.has(v.toLowerCase())) { seen.panelMake.add(v.toLowerCase()); _fireFields.panelMake.push(v); }
+      });
+      [d.sysModel, d.sysDomPanelModel, d.sysPanelModel].forEach(v => {
+        v = (v || '').trim(); if (v && !seen.panelModel.has(v.toLowerCase())) { seen.panelModel.add(v.toLowerCase()); _fireFields.panelModel.push(v); }
+      });
+      (d.detectors || []).forEach(det => {
+        let v = (det.location || '').trim(); if (v && !seen.detLocation.has(v.toLowerCase())) { seen.detLocation.add(v.toLowerCase()); _fireFields.detLocation.push(v); }
+        v = (det.model || '').trim(); if (v && !seen.detModel.has(v.toLowerCase())) { seen.detModel.add(v.toLowerCase()); _fireFields.detModel.push(v); }
+      });
+    });
+  } catch {}
+}
+
+export async function attachFireFieldAC(inputEl, field, onSelect) {
+  if (!_acDD) _initAcDD();
+  if (inputEl._acFireAttached) return; inputEl._acFireAttached = true;
+  const search = async q => {
+    await _loadFireFields();
+    const vals = (_fireFields && _fireFields[field]) || [];
+    if (!q || q.length < 2) return vals.slice(0, 8).map(v => ({ _fv: v }));
+    const ql = q.toLowerCase();
+    return vals.filter(v => v.toLowerCase().includes(ql)).slice(0, 10).map(v => ({ _fv: v }));
+  };
+  inputEl.addEventListener('focus', async () => {
+    _acCurInput = inputEl; const q = inputEl.value.trim();
+    const items = await search(q.length >= 2 ? q : '');
+    if (items.length) _renderFieldAcDD(items, inputEl, q, onSelect);
+  });
+  inputEl.addEventListener('input', () => {
+    clearTimeout(_acTimer); _acCurInput = inputEl; const q = inputEl.value.trim();
+    _acTimer = setTimeout(async () => { const items = await search(q); _renderFieldAcDD(items, inputEl, q, onSelect); }, 200);
+  });
+  inputEl.addEventListener('keydown', _acKbd);
+}
+
 function _renderFieldAcDD(items, inputEl, q, onSelect) {
   _acItems = items; _acCurInput = inputEl;
   if (!items.length) { _hideAcDD(); return; }
